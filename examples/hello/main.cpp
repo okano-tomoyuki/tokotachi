@@ -108,6 +108,26 @@ int main(int argc, char** argv)
     color_box->add_stretch();
     column->add(color_row);
     column->add(greeting);
+
+    // 値の部品(docs/adr/0024)。Slider・SpinBox・ProgressBar を同じ変数に結び、どれを動かしても揃う。
+    gui::Widget* level_row = new gui::Widget(&window);
+    gui::BoxLayout* level_box = new gui::BoxLayout(level_row, gui::Orientation::HORIZONTAL);
+    level_box->spacing = 12;
+    gui::Slider* level_slider = new gui::Slider(level_row);
+    gui::SpinBox* level_spin = new gui::SpinBox(level_row);
+    gui::ProgressBar* level_bar = new gui::ProgressBar(level_row);
+    level_bar->text_visible = true;
+    level_box->add(new gui::Label(level_row, "進み具合"), 0, gui::Align::CENTER);
+    level_box->add(level_slider, 1, gui::Align::CENTER);
+    level_box->add(level_spin, 0, gui::Align::CENTER);
+    level_box->add(level_bar, 1, gui::Align::CENTER);
+    gui::DoubleVariable* level = new gui::DoubleVariable(&window, 40);
+    gui::bind(level_slider->value, level->value);
+    gui::bind(level_spin->value, level->value);
+    level->on_change = [=](gui::Object*) { level_bar->value = level->value.get(); };
+    level_bar->value = level->value.get();
+    level_slider->tooltip = "ドラッグ・矢印キーで動かす";
+    column->add(level_row);
     column->add(new gui::Label(&window, "メモ(複数行。Enter で改行)"));
     gui::TextEdit* memo =
         new gui::TextEdit(&window, "TextEdit は複数行の入力欄。折り返し・縦のスクロール・IME に対応する。\n2 行目");

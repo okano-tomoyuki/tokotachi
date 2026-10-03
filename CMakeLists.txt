@@ -46,9 +46,13 @@ add_library(gui STATIC
     src/widgets/combo_box.cpp
     src/widgets/menu.cpp
     src/widgets/popup_list.cpp
+    src/widgets/progress_bar.cpp
     src/widgets/radio_button.cpp
+    src/widgets/range_base.cpp
     src/widgets/scroll_area.cpp
     src/widgets/scroll_bar.cpp
+    src/widgets/slider.cpp
+    src/widgets/spin_box.cpp
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
     src/widgets/label.cpp

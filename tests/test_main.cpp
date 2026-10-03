@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <functional>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -1551,6 +1552,158 @@ TEST(save_png)
         std::fclose(f);
         std::remove("gui_test_save.png");
     }
+}
+
+void dispatch_text(gui::Window& window, const char* text)
+{
+    SDL_Event e;
+    SDL_zero(e);
+    e.type = SDL_EVENT_TEXT_INPUT;
+    e.text.windowID = SDL_GetWindowID(window.impl()->window);
+    e.text.text = text;
+    gui::Application::instance()->impl()->dispatch(e);
+}
+
+TEST(range_base_clamps_and_moves_bounds)
+{
+    gui::Window window("t", 300, 100);
+    gui::Slider* slider = new gui::Slider(&window);
+    int changes = 0;
+    slider->on_change = [&](gui::Object*) { ++changes; };
+    slider->value = 150;  // 範囲(既定 0〜100)に丸める
+    CHECK(slider->value == 100.0);
+    slider->value = -1;
+    CHECK(slider->value == 0.0);
+    CHECK(changes == 2);
+    slider->value = 30;
+    slider->minimum = 50;  // value も丸める
+    CHECK(slider->value == 50.0);
+    slider->maximum = 20;  // minimum より小さくすると minimum も動く
+    CHECK(slider->minimum == 20.0 && slider->maximum == 20.0 && slider->value == 20.0);
+    slider->minimum = 0;
+    slider->maximum = 100;
+    CHECK(slider->value == 20.0);
+    slider->value = std::numeric_limits<double>::quiet_NaN();  // 数でない値は無視する
+    CHECK(slider->value == 20.0);
+
+    gui::DoubleVariable* level = new gui::DoubleVariable(&window, 0);
+    gui::bind(slider->value, level->value);
+    level->value = 75;
+    CHECK(slider->value == 75.0);
+}
+
+TEST(slider_keys_and_mouse)
+{
+    gui::Window window("t", 300, 100);
+    window.visible = true;
+    gui::Slider* slider = new gui::Slider(&window);
+    slider->bounds = gui::Rect(10, 10, 216, 24);  // つまみの中心が動ける長さは 200
+    window.apply_layout();
+    slider->value = 20;
+    slider->focused = true;
+    dispatch_key(window, SDLK_RIGHT);
+    CHECK(slider->value == 21.0);
+    dispatch_key(window, SDLK_PAGEUP);
+    CHECK(slider->value == 31.0);
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(slider->value == 30.0);
+    dispatch_key(window, SDLK_END);
+    CHECK(slider->value == 100.0);
+    dispatch_key(window, SDLK_HOME);
+    CHECK(slider->value == 0.0);
+
+    // 溝を押すと、その位置の値になる(single_step に合わせる)。
+    dispatch_click(window, gui::Point(10 + 8 + 100.4f, 22));
+    CHECK(slider->value == 50.0);
+    // 代入した値は合わせないが、操作した値は single_step に合わせる。
+    slider->single_step = 10;
+    slider->value = 33;
+    CHECK(slider->value == 33.0);
+    dispatch_key(window, SDLK_RIGHT);
+    CHECK(slider->value == 40.0);
+
+    // 縦は下が minimum。
+    slider->orientation = gui::Orientation::VERTICAL;
+    slider->bounds = gui::Rect(10, 10, 24, 216);
+    window.apply_layout();
+    slider->single_step = 1;
+    dispatch_click(window, gui::Point(22, 10 + 8 + 50));  // 上から 1/4 の位置
+    CHECK(slider->value == 75.0);
+}
+
+TEST(spin_box_commit_and_steps)
+{
+    gui::Window window("t", 300, 100);
+    window.visible = true;
+    gui::SpinBox* spin = new gui::SpinBox(&window);
+    spin->bounds = gui::Rect(10, 10, 120, 32);
+    spin->maximum = 10;
+    spin->decimals = 1;
+    spin->value = 2.5;
+    window.apply_layout();
+    CHECK(spin->text == "2.5");
+    int changes = 0;
+    spin->on_change = [&](gui::Object*) { ++changes; };
+
+    // 入力欄を押し、打ち込んで Enter で決める(桁数に丸める)。
+    dispatch_click(window, gui::Point(30, 26));
+    dispatch_key(window, SDLK_END);
+    for (int i = 0; i < 3; ++i)
+    {
+        dispatch_key(window, SDLK_BACKSPACE);
+    }
+    dispatch_text(window, "7.25");
+    CHECK(spin->value == 2.5);  // 決めるまでは変わらない
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(near(static_cast<float>(spin->value.get()), 7.3f));
+    CHECK(spin->text == "7.3");
+    CHECK(changes == 1);
+
+    // 数値として読めなければ元に戻す。範囲の外は丸める。
+    dispatch_key(window, SDLK_END);
+    for (int i = 0; i < 3; ++i)
+    {
+        dispatch_key(window, SDLK_BACKSPACE);
+    }
+    dispatch_text(window, "abc");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(spin->text == "7.3");
+    dispatch_key(window, SDLK_END);
+    for (int i = 0; i < 3; ++i)
+    {
+        dispatch_key(window, SDLK_BACKSPACE);
+    }
+    dispatch_text(window, "99");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(spin->value == 10.0 && spin->text == "10.0");
+
+    // ↑↓ は single_step ずつ(範囲の中で)。
+    dispatch_key(window, SDLK_UP);
+    CHECK(spin->value == 10.0);
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(spin->value == 9.0 && spin->text == "9.0");
+    // 上のボタンを押す。
+    dispatch_click(window, gui::Point(10 + 120 - 10, 14));
+    CHECK(spin->value == 10.0);
+    dispatch_click(window, gui::Point(10 + 120 - 10, 38));
+    CHECK(spin->value == 9.0);
+
+    spin->decimals = 0;
+    CHECK(spin->text == "9");
+}
+
+TEST(progress_bar_range)
+{
+    gui::Window window("t", 300, 100);
+    gui::ProgressBar* progress = new gui::ProgressBar(&window);
+    progress->value = 150;
+    CHECK(progress->value == 100.0);
+    progress->value = 40;
+    const float plain = progress->preferred_size.get().width;
+    progress->text_visible = true;
+    CHECK(progress->preferred_size.get().width > plain);  // 割合の文字の分だけ広い
+    progress->minimum = 200;
+    CHECK(progress->maximum == 200.0 && progress->value == 200.0);
 }
 
 // 描画の結果のピクセル(ARGB8888)と比べるための値。
