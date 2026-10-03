@@ -1,0 +1,36 @@
+// まとめて読み込むためのヘッダ。
+#ifndef GUI_GUI_HPP
+#define GUI_GUI_HPP
+
+#include "alignment.hpp"
+#include "application.hpp"
+#include "binding.hpp"
+#include "button.hpp"
+#include "box_layout.hpp"
+#include "button_base.hpp"
+#include "canvas.hpp"
+#include "check_box.hpp"
+#include "clipboard.hpp"
+#include "combo_box.hpp"
+#include "event.hpp"
+#include "geometry.hpp"
+#include "grid_layout.hpp"
+#include "label.hpp"
+#include "layout.hpp"
+#include "line_edit.hpp"
+#include "menu.hpp"
+#include "place_layout.hpp"
+#include "popup.hpp"
+#include "property.hpp"
+#include "radio_button.hpp"
+#include "scroll_area.hpp"
+#include "scroll_bar.hpp"
+#include "text_edit.hpp"
+#include "text_input_base.hpp"
+#include "text_layout.hpp"
+#include "timer.hpp"
+#include "variable.hpp"
+#include "widget.hpp"
+#include "window.hpp"
+
+#endif
