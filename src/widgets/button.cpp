@@ -33,10 +33,10 @@ void Button::paint(Canvas& canvas)
     {
         fill = theme::accent_hover();
     }
-    canvas.fill_round_rect(r, theme::RADIUS, fill);
+    canvas.fill_round_rect(r, theme::radius(), fill);
     if (focused)
     {
-        canvas.stroke_round_rect(r.adjusted(2, 2, 2, 2), theme::RADIUS - 2, 1.5f, theme::focus_ring());
+        canvas.stroke_round_rect(r.adjusted(2, 2, 2, 2), theme::radius() - 2, 1.5f, theme::focus_ring());
     }
 
     const TextLayout& l = text_layout();

@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "theme.hpp"
 #include "widget.hpp"
 
 namespace gui
@@ -23,7 +24,8 @@ public:
     ~Window();
 
     Property<std::string> title;
-    Property<Color> background;
+    // 背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。
+    Property<ThemeColor> background;
     // フォーカスのあるウィジェット(無ければ nullptr)。
     ReadOnlyProperty<Widget*> focused_widget;
 
@@ -46,12 +48,12 @@ protected:
 private:
     std::string get_title() const;
     void set_title(const std::string& v);
-    Color get_background() const { return background_; }
-    void set_background(const Color& v);
+    ThemeColor get_background() const { return background_; }
+    void set_background(const ThemeColor& v);
     Widget* get_focused_widget() const;
 
     detail::WindowImpl* d_;
-    Color background_;
+    ThemeColor background_;
     CloseHandler on_close_;
 };
 

@@ -4,12 +4,17 @@
 
 #include <SDL3/SDL.h>
 
+#include <gui/theme.hpp>
+
 #include <functional>
 #include <map>
 #include <vector>
 
 namespace gui
 {
+
+class Application;
+
 namespace detail
 {
 
@@ -31,7 +36,11 @@ struct ApplicationImpl
         SDL_TimerID sdl_id;
     };
 
-    ApplicationImpl() : running(false), exit_code(0), next_timer_id(0) {}
+    explicit ApplicationImpl(Application* q_)
+        : q(q_), running(false), exit_code(0), next_timer_id(0), color_scheme(ColorScheme::SYSTEM),
+          light_theme(Theme::light()), dark_theme(Theme::dark()), system_dark(false), dark(false)
+    {
+    }
 
     void dispatch(const SDL_Event& e);
     // interval_ms ごとに fn をメインスレッドで呼ぶ(repeat が false なら 1 回だけ)。戻り値は stop_timer() に渡す番号。
@@ -43,7 +52,11 @@ struct ApplicationImpl
     void quit_if_no_window();
     // 開いているメニューの種類のポップアップをすべて閉じる。
     void close_menus();
+    // color_scheme・OS の設定・light_theme・dark_theme から使うテーマを決め直す。変わっていれば、
+    // プロパティ(dark・theme)の変更を知らせ、すべてのウィンドウを描き直し、on_theme_change を呼ぶ(docs/adr/0023)。
+    void update_theme();
 
+    Application* q;
     std::vector<WindowImpl*> windows;
     // 開いているメニューの種類のポップアップ(開いた順。docs/adr/0022)。
     std::vector<WindowImpl*> open_menus;
@@ -51,6 +64,13 @@ struct ApplicationImpl
     bool running;
     int exit_code;
     int next_timer_id;
+
+    ColorScheme color_scheme;
+    Theme light_theme;
+    Theme dark_theme;
+    bool system_dark;     // OS の設定がダークか
+    bool dark;            // 今ダークのテーマを使っているか
+    Theme current_theme;  // 今使っているテーマ
 };
 
 }  // namespace detail

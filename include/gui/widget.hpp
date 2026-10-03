@@ -146,6 +146,8 @@ protected:
     virtual void focus_out();
     // 倍率が変わった(テキストのレイアウトなど、ピクセルに依存するキャッシュを捨てる)。
     virtual void scale_changed();
+    // アプリケーションのテーマが変わった(色・寸法から作ったキャッシュを捨てる)。この後、描き直しと配置のやり直しが行われる。
+    virtual void theme_changed();
     // IME の候補窓を置く位置(キャレットの矩形。自分の座標系)。
     virtual Rect input_method_rect() const;
     // 子を配置する(配置のやり直しの印が付いているときに、描画の前に呼ばれる)。既定の実装はレイアウトに任せる。

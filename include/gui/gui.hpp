@@ -28,6 +28,7 @@
 #include "text_edit.hpp"
 #include "text_input_base.hpp"
 #include "text_layout.hpp"
+#include "theme.hpp"
 #include "timer.hpp"
 #include "variable.hpp"
 #include "widget.hpp"

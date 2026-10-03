@@ -38,7 +38,7 @@ Rect TextEdit::text_area() const
 {
     // 右にスクロールバーの幅を常に空けておく(出し入れで折り返しが変わらないように)。
     const Rect r = local_rect;
-    return r.adjusted(theme::FIELD_PADDING_X, PADDING_Y, theme::FIELD_PADDING_X + ScrollBar::THICKNESS, PADDING_Y);
+    return r.adjusted(theme::field_padding(), PADDING_Y, theme::field_padding() + ScrollBar::THICKNESS, PADDING_Y);
 }
 
 float TextEdit::wrap_width() const { return word_wrap_ ? std::max(1.0f, text_area().width) : 0; }
@@ -66,8 +66,8 @@ void TextEdit::paint(Canvas& canvas)
 {
     const bool has_focus = focused;
     const Rect r = local_rect;
-    canvas.fill_round_rect(r, theme::FIELD_RADIUS, effectively_enabled ? theme::field() : theme::field_disabled());
-    canvas.stroke_round_rect(r, theme::FIELD_RADIUS, has_focus ? 2.0f : 1.0f,
+    canvas.fill_round_rect(r, theme::field_radius(), effectively_enabled ? theme::field() : theme::field_disabled());
+    canvas.stroke_round_rect(r, theme::field_radius(), has_focus ? 2.0f : 1.0f,
                              has_focus ? theme::accent() : theme::border());
     paint_text(canvas);
     Widget::paint(canvas);

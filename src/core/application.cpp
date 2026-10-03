@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "application_impl.hpp"
+#include "property_impl.hpp"
 #include "window_impl.hpp"
 
 namespace gui
@@ -81,6 +82,31 @@ void ApplicationImpl::quit_if_no_window()
         }
     }
     running = false;
+}
+
+void ApplicationImpl::update_theme()
+{
+    const bool next_dark =
+        color_scheme == ColorScheme::DARK || (color_scheme == ColorScheme::SYSTEM && system_dark);
+    const Theme& next = next_dark ? dark_theme : light_theme;
+    const bool dark_changed = next_dark != dark;
+    if (!dark_changed && next == current_theme)
+    {
+        return;
+    }
+    dark = next_dark;
+    current_theme = next;
+    if (dark_changed)
+    {
+        property_changed(q, &q->dark);
+    }
+    property_changed(q, &q->theme);
+    for (std::size_t i = 0; i < windows.size(); ++i)
+    {
+        windows[i]->theme_changed();
+    }
+    Object* sender = q;
+    fire(q->on_theme_change_, sender);
 }
 
 void ApplicationImpl::close_menus()
@@ -214,6 +240,12 @@ void ApplicationImpl::dispatch(const SDL_Event& e)
         fn();
         return;
     }
+    if (e.type == SDL_EVENT_SYSTEM_THEME_CHANGED)
+    {
+        system_dark = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK;
+        update_theme();
+        return;
+    }
     if (e.type == SDL_EVENT_QUIT)
     {
         running = false;
@@ -274,7 +306,14 @@ void ApplicationImpl::stop_timer(int id)
 
 }  // namespace detail
 
-Application::Application(int, char**) : d_(new detail::ApplicationImpl)
+Application::Application(int, char**)
+    : GUI_PROPERTY_GETTER_SELF_NOTIFY(Application, ColorScheme, color_scheme),
+      GUI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, light_theme),
+      GUI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, dark_theme),
+      GUI_READONLY_PROPERTY(Application, bool, dark),
+      GUI_READONLY_PROPERTY(Application, Theme, theme),
+      GUI_HANDLER_PROPERTY(Application, NotifyHandler, on_theme_change),
+      d_(new detail::ApplicationImpl(this))
 {
     g_instance = this;
 #if defined(__linux__)
@@ -295,6 +334,8 @@ Application::Application(int, char**) : d_(new detail::ApplicationImpl)
     }
     g_timer_event = SDL_RegisterEvents(1);
     SDL_AddEventWatch(&event_watch, d_);
+    d_->system_dark = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK;
+    d_->update_theme();
 }
 
 Application::~Application()
@@ -311,6 +352,49 @@ Application::~Application()
 }
 
 Application* Application::instance() { return g_instance; }
+
+ColorScheme Application::get_color_scheme() const { return d_->color_scheme; }
+
+void Application::set_color_scheme(const ColorScheme& v)
+{
+    if (v == d_->color_scheme)
+    {
+        return;
+    }
+    d_->color_scheme = v;
+    detail::property_changed(this, &color_scheme);
+    d_->update_theme();
+}
+
+Theme Application::get_light_theme() const { return d_->light_theme; }
+
+void Application::set_light_theme(const Theme& v)
+{
+    if (v == d_->light_theme)
+    {
+        return;
+    }
+    d_->light_theme = v;
+    detail::property_changed(this, &light_theme);
+    d_->update_theme();
+}
+
+Theme Application::get_dark_theme() const { return d_->dark_theme; }
+
+void Application::set_dark_theme(const Theme& v)
+{
+    if (v == d_->dark_theme)
+    {
+        return;
+    }
+    d_->dark_theme = v;
+    detail::property_changed(this, &dark_theme);
+    d_->update_theme();
+}
+
+bool Application::get_dark() const { return d_->dark; }
+
+Theme Application::get_theme() const { return d_->current_theme; }
 
 int Application::exec()
 {

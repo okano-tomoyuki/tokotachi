@@ -15,11 +15,11 @@ Label::Label(Widget* parent_widget, const std::string& initial_text)
     : Widget(parent_widget),
       GUI_PROPERTY_MEMBER(Label, std::string, text),
       GUI_PROPERTY_MEMBER(Label, Font, font),
-      GUI_PROPERTY_MEMBER(Label, Color, color),
+      GUI_PROPERTY_MEMBER(Label, ThemeColor, color),
       GUI_PROPERTY_MEMBER(Label, Align, alignment),
       GUI_PROPERTY_MEMBER(Label, bool, word_wrap),
       text_(initial_text),
-      color_(theme::text()),
+      color_(ColorRole::TEXT),
       alignment_(Align::START),
       word_wrap_(false),
       layout_wrap_(0)
@@ -50,7 +50,7 @@ void Label::set_font(const Font& v)
     request_layout();
 }
 
-void Label::set_color(const Color& v)
+void Label::set_color(const ThemeColor& v)
 {
     color_ = v;
     invalidate();
@@ -135,7 +135,7 @@ void Label::paint(Canvas& canvas)
     {
         tx = w - l.width();
     }
-    canvas.draw_text(l, Point(tx, (height - l.height()) / 2), effectively_enabled ? color_ : theme::text_disabled());
+    canvas.draw_text(l, Point(tx, (height - l.height()) / 2), effectively_enabled ? color_.resolve() : theme::text_disabled());
     Widget::paint(canvas);
 }
 

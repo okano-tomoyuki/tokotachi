@@ -46,6 +46,8 @@ struct WindowImpl
     void request_size(const Size& size);
     // 倍率を取り直す。変わっていればウィジェットに知らせる。
     void update_scale();
+    // テーマが変わった: ウィジェットに知らせ、配置をやり直し、全体を描き直す。
+    void theme_changed();
     // SDL3 のウィンドウの大きさを、ウィンドウのウィジェットの大きさ(dp)に反映し、変わったプロパティを知らせる。
     void sync_size();
 

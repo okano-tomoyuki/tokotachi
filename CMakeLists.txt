@@ -28,6 +28,7 @@ add_library(gui STATIC
     src/core/object.cpp
     src/core/popup.cpp
     src/core/clipboard.cpp
+    src/core/theme.cpp
     src/core/timer.cpp
     src/core/widget.cpp
     src/core/window.cpp

@@ -6,6 +6,7 @@
 
 #include "alignment.hpp"
 #include "text_layout.hpp"
+#include "theme.hpp"
 #include "widget.hpp"
 
 namespace gui
@@ -18,7 +19,8 @@ public:
 
     Property<std::string> text;
     Property<Font> font;
-    Property<Color> color;
+    // 文字の色(既定はテーマの TEXT。無効なときは TEXT_DISABLED で描く)。
+    Property<ThemeColor> color;
     // 文字の横のそろえ方(既定 START。FILL は START と同じ)。複数行なら各行をそろえる。
     Property<Align> alignment;
     // 幅で折り返すか(既定 false)。折り返すと、望む高さは今の幅で折り返したときの高さになり、最小の幅は最も長い単語の幅になる。
@@ -35,14 +37,14 @@ protected:
 private:
     void set_text(const std::string& v);
     void set_font(const Font& v);
-    void set_color(const Color& v);
+    void set_color(const ThemeColor& v);
     void set_alignment(const Align& v);
     void set_word_wrap(const bool& v);
     const TextLayout& layout() const;
 
     std::string text_;
     Font font_;
-    Color color_;
+    ThemeColor color_;
     Align alignment_;
     bool word_wrap_;
     mutable TextLayout layout_;

@@ -1,6 +1,6 @@
 // gui ライブラリのサンプル: Label・Button・LineEdit・CheckBox・RadioButton、変数による結びつけ、レイアウト。
 //   hello                     ウィンドウを開く
-//   hello --screenshot a.png  1 回描いて PNG に保存して終える
+//   hello --screenshot a.png  1 回描いて PNG に保存して終える(--dark を先に付けるとダークのテーマで描く)
 #include <gui/gui.hpp>
 
 #include <cstdint>
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
         &window, "このラベルは word_wrap で、ウィンドウの幅に合わせて折り返す。日本語の禁則(行の始めに「、」や「。」を置かない)にも従う。"
                  " English text wraps at spaces.");
     description->word_wrap = true;
-    description->color = gui::Color::rgb(0x475569);
+    description->color = gui::ColorRole::TEXT_SECONDARY;  // テーマの「控えめな文字」(ダークでも読める)
 
     gui::Widget* click_row = new gui::Widget(&window);
     gui::BoxLayout* click_box = new gui::BoxLayout(click_row, gui::Orientation::HORIZONTAL);
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
     gui::Label* caption = new gui::Label(&window, "名前(IME で日本語も入力できる。Tab でフォーカスを移す)");
     caption->font = gui::Font(12);
-    caption->color = gui::Color::rgb(0x475569);
+    caption->color = gui::ColorRole::TEXT_SECONDARY;
     gui::LineEdit* edit = new gui::LineEdit(&window);
     edit->placeholder_text = "ここに入力";
 
@@ -87,6 +87,24 @@ int main(int argc, char** argv)
     color->items = colors;
     color->current_index = 0;
     color_box->add(color);
+    color_box->add_spacing(24);
+    // テーマ(docs/adr/0023)。既定は OS の設定に従う。
+    color_box->add(new gui::Label(color_row, "テーマ"), 0, gui::Align::CENTER);
+    gui::ComboBox* scheme = new gui::ComboBox(color_row);
+    std::vector<std::string> schemes;
+    schemes.push_back("OS に従う");
+    schemes.push_back("ライト");
+    schemes.push_back("ダーク");
+    scheme->items = schemes;
+    scheme->current_index = 0;
+    scheme->on_change = [=](gui::Object*)
+    {
+        static const gui::ColorScheme SCHEMES[] = {gui::ColorScheme::SYSTEM, gui::ColorScheme::LIGHT,
+                                                   gui::ColorScheme::DARK};
+        const int i = scheme->current_index;
+        gui::Application::instance()->color_scheme = SCHEMES[i >= 0 ? i : 0];
+    };
+    color_box->add(scheme);
     color_box->add_stretch();
     column->add(color_row);
     column->add(greeting);
@@ -114,9 +132,10 @@ int main(int argc, char** argv)
         const std::string n = name->value;
         greeting->text = n.empty() ? std::string() : "こんにちは、" + n + " " + SUFFIX[honorific->value.get()];
         greeting->font = gui::Font(large->value ? 20.0f : 14.0f);
-        static const std::uint32_t RGB[] = {0x111827, 0x2563eb, 0x059669, 0xdc2626};
+        // 「黒」はテーマの文字の色にする(ダークでは明るい色になる)。他は固定の色。
         const int c = color->current_index;
-        greeting->color = gui::Color::rgb(RGB[c >= 0 ? c : 0]);
+        static const std::uint32_t RGB[] = {0, 0x2563eb, 0x059669, 0xdc2626};
+        greeting->color = c <= 0 ? gui::ThemeColor(gui::ColorRole::TEXT) : gui::ThemeColor(gui::Color::rgb(RGB[c]));
     };
     name->on_change = update_greeting;
     honorific->on_change = update_greeting;
@@ -154,9 +173,14 @@ int main(int argc, char** argv)
     edit->focused = true;
     window.visible = true;
 
-    for (int i = 1; i + 1 < argc; ++i)
+    for (int i = 1; i < argc; ++i)
     {
-        if (std::string(argv[i]) == "--screenshot")
+        if (std::string(argv[i]) == "--dark")
+        {
+            app.color_scheme = gui::ColorScheme::DARK;
+            scheme->current_index = 2;
+        }
+        else if (std::string(argv[i]) == "--screenshot" && i + 1 < argc)
         {
             name->value = "Ünïcödé と日本語 AVA ffi";  // 変数への代入が入力欄と挨拶に伝わる
             honorific->value = 2;

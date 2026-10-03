@@ -18,7 +18,7 @@ LineEdit::LineEdit(Widget* parent_widget, const std::string& initial_text)
 Rect LineEdit::text_area() const
 {
     const Rect r = local_rect;
-    return r.adjusted(theme::FIELD_PADDING_X, 0, theme::FIELD_PADDING_X, 0);
+    return r.adjusted(theme::field_padding(), 0, theme::field_padding(), 0);
 }
 
 void LineEdit::submit()
@@ -36,8 +36,8 @@ void LineEdit::paint(Canvas& canvas)
 {
     const bool has_focus = focused;
     const Rect r = local_rect;
-    canvas.fill_round_rect(r, theme::FIELD_RADIUS, effectively_enabled ? theme::field() : theme::field_disabled());
-    canvas.stroke_round_rect(r, theme::FIELD_RADIUS, has_focus ? 2.0f : 1.0f,
+    canvas.fill_round_rect(r, theme::field_radius(), effectively_enabled ? theme::field() : theme::field_disabled());
+    canvas.stroke_round_rect(r, theme::field_radius(), has_focus ? 2.0f : 1.0f,
                              has_focus ? theme::accent() : theme::border());
     paint_text(canvas);
     Widget::paint(canvas);

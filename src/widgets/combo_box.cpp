@@ -149,7 +149,7 @@ Size ComboBox::compute_preferred_size() const
     {
         w = std::max(w, TextLayout(items_[i], font_, display_scale).width());
     }
-    return Size(std::ceil(w) + theme::FIELD_PADDING_X * 2 + ARROW_AREA, std::ceil(text_layout().height()) + 16);
+    return Size(std::ceil(w) + theme::field_padding() * 2 + ARROW_AREA, std::ceil(text_layout().height()) + 16);
 }
 
 Size ComboBox::compute_minimum_size() const { return Size(ARROW_AREA * 3, compute_preferred_size().height); }
@@ -158,13 +158,13 @@ void ComboBox::paint(Canvas& canvas)
 {
     const bool enabled_now = effectively_enabled, has_focus = focused;
     const Rect r = local_rect;
-    canvas.fill_round_rect(r, theme::FIELD_RADIUS, enabled_now ? theme::field() : theme::field_disabled());
+    canvas.fill_round_rect(r, theme::field_radius(), enabled_now ? theme::field() : theme::field_disabled());
     const bool strong = has_focus || is_popup_open();
-    canvas.stroke_round_rect(r, theme::FIELD_RADIUS, strong ? 2.0f : 1.0f,
+    canvas.stroke_round_rect(r, theme::field_radius(), strong ? 2.0f : 1.0f,
                              strong || (hovered_ && enabled_now) ? theme::accent() : theme::border());
 
     const TextLayout& l = text_layout();
-    const Rect text_area = r.adjusted(theme::FIELD_PADDING_X, 0, ARROW_AREA, 0);
+    const Rect text_area = r.adjusted(theme::field_padding(), 0, ARROW_AREA, 0);
     canvas.save();
     canvas.clip_rect(text_area);
     const Color fg = !enabled_now ? theme::text_disabled() : current_index_ >= 0 ? theme::text() : theme::placeholder();

@@ -1,37 +1,48 @@
-// 標準のウィジェットの見た目の定数(内部)。テーマの仕組みを作るまでの仮置き。
+// 標準のウィジェットが今のテーマの色・寸法を読むための関数(内部。docs/adr/0023)。
+// 色は描くたびに読む(キャッシュしない)ので、テーマを切り替えたら描き直すだけで変わる。
 #ifndef GUI_SRC_WIDGETS_THEME_HPP
 #define GUI_SRC_WIDGETS_THEME_HPP
 
-#include <gui/geometry.hpp>
+#include <gui/theme.hpp>
 
 namespace gui
 {
+namespace detail
+{
+// 今のアプリケーションのテーマ(Application が無ければ Theme::light())。
+const Theme& current_theme();
+}  // namespace detail
+
 namespace theme
 {
 
-inline Color text() { return Color::rgb(0x111827); }
-inline Color text_disabled() { return Color::rgb(0x9ca3af); }
-inline Color placeholder() { return Color::rgb(0x9ca3af); }
-inline Color accent() { return Color::rgb(0x2563eb); }
-inline Color accent_hover() { return Color::rgb(0x1d4ed8); }
-inline Color accent_pressed() { return Color::rgb(0x1e40af); }
-inline Color accent_disabled() { return Color::rgb(0xbfdbfe); }
-inline Color on_accent() { return Color::rgb(0xffffff); }
-inline Color focus_ring() { return Color::rgb(0x93c5fd); }
-inline Color field() { return Color::rgb(0xffffff); }
-inline Color field_disabled() { return Color::rgb(0xf3f4f6); }
-inline Color border() { return Color::rgb(0xc8ccd2); }
-inline Color selection() { return Color::rgb(0x2563eb); }
-inline Color selection_inactive() { return Color::rgb(0xd1d5db); }
-inline Color on_selection() { return Color::rgb(0xffffff); }
-inline Color preedit_underline() { return Color::rgb(0x334155); }
-inline Color scroll_track() { return Color::rgb(0xeef0f3); }
-inline Color scroll_thumb() { return Color::rgb(0xb8bec7); }
-inline Color scroll_thumb_active() { return Color::rgb(0x8b93a0); }
+inline Color color(ColorRole role) { return detail::current_theme()[role]; }
 
-const float RADIUS = 6;
-const float FIELD_RADIUS = 4;
-const float FIELD_PADDING_X = 8;
+inline Color window() { return color(ColorRole::WINDOW); }
+inline Color popup() { return color(ColorRole::POPUP); }
+inline Color text() { return color(ColorRole::TEXT); }
+inline Color text_disabled() { return color(ColorRole::TEXT_DISABLED); }
+inline Color placeholder() { return color(ColorRole::PLACEHOLDER); }
+inline Color accent() { return color(ColorRole::ACCENT); }
+inline Color accent_hover() { return color(ColorRole::ACCENT_HOVER); }
+inline Color accent_pressed() { return color(ColorRole::ACCENT_PRESSED); }
+inline Color accent_disabled() { return color(ColorRole::ACCENT_DISABLED); }
+inline Color on_accent() { return color(ColorRole::ON_ACCENT); }
+inline Color focus_ring() { return color(ColorRole::FOCUS_RING); }
+inline Color field() { return color(ColorRole::FIELD); }
+inline Color field_disabled() { return color(ColorRole::FIELD_DISABLED); }
+inline Color border() { return color(ColorRole::BORDER); }
+inline Color selection() { return color(ColorRole::SELECTION); }
+inline Color selection_inactive() { return color(ColorRole::SELECTION_INACTIVE); }
+inline Color on_selection() { return color(ColorRole::ON_SELECTION); }
+inline Color preedit_underline() { return color(ColorRole::PREEDIT_UNDERLINE); }
+inline Color scroll_track() { return color(ColorRole::SCROLL_TRACK); }
+inline Color scroll_thumb() { return color(ColorRole::SCROLL_THUMB); }
+inline Color scroll_thumb_active() { return color(ColorRole::SCROLL_THUMB_ACTIVE); }
+
+inline float radius() { return detail::current_theme().radius; }
+inline float field_radius() { return detail::current_theme().field_radius; }
+inline float field_padding() { return detail::current_theme().field_padding; }
 
 }  // namespace theme
 }  // namespace gui

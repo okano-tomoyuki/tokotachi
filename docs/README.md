@@ -38,6 +38,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0020](adr/0020-bidi-and-text-rendering-quality.md) | 双方向テキストは SheenBidi で行の中を見た目の順に並べ、文字の描画は被覆率の補正とサブピクセルの位置決めで品質を上げる | 承認 |
 | [0021](adr/0021-scrolling-and-multi-line-input.md) | スクロールはホイールのイベント・ScrollBar・ScrollArea で扱い、複数行の入力欄は LineEdit と共通の基底から作る | 承認 |
 | [0022](adr/0022-popups-combo-box-menu-tooltip.md) | ポップアップは Popup とし、開いているメニューは Application がまとめて扱う。ComboBox・Menu・ツールチップをその上に作る | 承認 |
+| [0023](adr/0023-theme-and-dark-mode.md) | テーマはアプリケーションが 1 つ持ち、色は役割か具体的な色で指定する。ライト・ダークは既定で OS の設定に従う | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

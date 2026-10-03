@@ -1553,6 +1553,79 @@ TEST(save_png)
     }
 }
 
+// 描画の結果のピクセル(ARGB8888)と比べるための値。
+std::uint32_t packed(const gui::Color& c)
+{
+    return (std::uint32_t(c.a) << 24) | (std::uint32_t(c.r) << 16) | (std::uint32_t(c.g) << 8) | c.b;
+}
+
+TEST(theme_color_resolves_role_or_fixed)
+{
+    gui::Application* app = gui::Application::instance();
+    app->color_scheme = gui::ColorScheme::LIGHT;
+    const gui::ThemeColor role(gui::ColorRole::ACCENT);
+    const gui::ThemeColor fixed(gui::Color::rgb(0x123456));
+    CHECK(role.is_role() && role.role() == gui::ColorRole::ACCENT);
+    CHECK(!fixed.is_role() && fixed.color() == gui::Color::rgb(0x123456));
+    CHECK(role.resolve() == gui::Theme::light()[gui::ColorRole::ACCENT]);
+    CHECK(role != fixed);
+    CHECK(gui::ThemeColor(gui::ColorRole::TEXT) == gui::ThemeColor());
+    app->color_scheme = gui::ColorScheme::DARK;
+    CHECK(role.resolve() == gui::Theme::dark()[gui::ColorRole::ACCENT]);
+    CHECK(fixed.resolve() == gui::Color::rgb(0x123456));  // 固定の色はテーマで変わらない
+    app->color_scheme = gui::ColorScheme::SYSTEM;
+}
+
+TEST(theme_switch_notifies_and_repaints)
+{
+    gui::Application* app = gui::Application::instance();
+    app->color_scheme = gui::ColorScheme::LIGHT;
+    int changes = 0;
+    int dark_changes = 0;
+    app->on_theme_change = [&](gui::Object* sender)
+    {
+        CHECK(sender == app);
+        ++changes;
+    };
+    gui::BoolVariable* dark = new gui::BoolVariable(nullptr, false);
+    gui::bind(dark->value, app->dark);
+    dark->on_change = [&](gui::Object*) { ++dark_changes; };
+
+    gui::Window window("t", 120, 60);
+    gui::Label* label = new gui::Label(&window, "テスト");
+    window.visible = true;
+    window.impl()->render(false);
+    CHECK(window.background.get() == gui::ThemeColor(gui::ColorRole::WINDOW));
+    CHECK(window.impl()->buffer[0] == packed(gui::Theme::light()[gui::ColorRole::WINDOW]));
+
+    app->color_scheme = gui::ColorScheme::DARK;
+    CHECK(app->dark);
+    CHECK(app->theme.get() == gui::Theme::dark());
+    CHECK(changes == 1);
+    CHECK(dark_changes == 1 && dark->value);
+    CHECK(!window.impl()->dirty.empty());  // 描き直しを依頼済み
+    window.impl()->render(false);
+    CHECK(window.impl()->buffer[0] == packed(gui::Theme::dark()[gui::ColorRole::WINDOW]));
+    CHECK(label->color.get().resolve() == gui::Theme::dark()[gui::ColorRole::TEXT]);
+
+    app->color_scheme = gui::ColorScheme::DARK;  // 同じ値: 知らせない
+    CHECK(changes == 1);
+
+    // 使っていない方のテーマを変えても、使うテーマは変わらない。使っている方を変えると変わる。
+    gui::Theme custom = gui::Theme::light();
+    custom[gui::ColorRole::ACCENT] = gui::Color::rgb(0x059669);
+    app->light_theme = custom;
+    CHECK(changes == 1);
+    app->color_scheme = gui::ColorScheme::LIGHT;
+    CHECK(changes == 2 && !app->dark);
+    CHECK(gui::ThemeColor(gui::ColorRole::ACCENT).resolve() == gui::Color::rgb(0x059669));
+
+    app->on_theme_change = gui::NotifyHandler();
+    delete dark;
+    app->light_theme = gui::Theme::light();
+    app->color_scheme = gui::ColorScheme::SYSTEM;
+}
+
 }  // namespace
 
 int main(int argc, char** argv)

@@ -48,6 +48,17 @@ struct WidgetAccess
     static void focus_out(Widget* w) { w->focus_out(); }
     static Rect input_method_rect(const Widget* w) { return w->input_method_rect(); }
 
+    // w と子孫すべてに theme_changed を送る。
+    static void theme_changed(Widget* w)
+    {
+        w->theme_changed();
+        w->layout_dirty_ = true;  // 寸法(余白など)が変わり、望む大きさが変わりうる
+        for (std::size_t i = 0; i < w->children_.size(); ++i)
+        {
+            theme_changed(w->children_[i]);
+        }
+    }
+
     // w と子孫すべてに scale_changed を送る。
     static void scale_changed(Widget* w)
     {

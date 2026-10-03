@@ -608,6 +608,8 @@ void Widget::focus_out()
 
 void Widget::scale_changed() {}
 
+void Widget::theme_changed() {}
+
 Rect Widget::input_method_rect() const { return get_local_rect(); }
 
 Size Widget::compute_preferred_size() const

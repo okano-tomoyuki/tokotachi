@@ -468,9 +468,9 @@ void WindowImpl::schedule_tooltip()
             if (!tooltip)
             {
                 tooltip = new Popup(q, PopupKind::TOOLTIP);
-                tooltip->background = Color::rgb(0x1f2937);
+                tooltip->background = ColorRole::TOOLTIP;
                 Label* text = new Label(tooltip);
-                text->color = Color::rgb(0xffffff);
+                text->color = ColorRole::ON_TOOLTIP;
                 text->font = Font(12);
                 BoxLayout* box = new BoxLayout(tooltip);
                 box->margins = Margins(6, 4, 6, 4);
@@ -503,6 +503,13 @@ void WindowImpl::request_size(const Size& size)
     SDL_SetWindowSize(window, static_cast<int>(std::floor(size.width * scale / density + 0.5f)),
                       static_cast<int>(std::floor(size.height * scale / density + 0.5f)));
     sync_size();
+}
+
+void WindowImpl::theme_changed()
+{
+    WidgetAccess::theme_changed(q);
+    layout_pending = true;
+    invalidate_all();
 }
 
 void WindowImpl::update_scale()
@@ -879,11 +886,11 @@ void WindowImpl::handle(const SDL_Event& e)
 
 Window::Window(const std::string& title_text, float width_dp, float height_dp)
     : GUI_PROPERTY_GETTER(Window, std::string, title),
-      GUI_PROPERTY_GETTER(Window, Color, background),
+      GUI_PROPERTY_GETTER(Window, ThemeColor, background),
       GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
       GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
-      background_(Color::rgb(0xf5f6f8))
+      background_(ColorRole::WINDOW)
 {
     Application* app = Application::instance();
     if (!app)
@@ -932,7 +939,7 @@ std::string Window::get_title() const
 
 void Window::set_title(const std::string& v) { SDL_SetWindowTitle(d_->window, v.c_str()); }
 
-void Window::set_background(const Color& v)
+void Window::set_background(const ThemeColor& v)
 {
     background_ = v;
     invalidate();
@@ -942,11 +949,11 @@ Widget* Window::get_focused_widget() const { return d_->focus; }
 
 Window::Window(Object* owner_object)
     : GUI_PROPERTY_GETTER(Window, std::string, title),
-      GUI_PROPERTY_GETTER(Window, Color, background),
+      GUI_PROPERTY_GETTER(Window, ThemeColor, background),
       GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
       GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
-      background_(Color::rgb(0xffffff))
+      background_(ColorRole::POPUP)
 {
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
@@ -985,7 +992,7 @@ bool Window::save_png(const std::string& path)
 
 void Window::paint(Canvas& canvas)
 {
-    canvas.fill_rect(local_rect, background_);
+    canvas.fill_rect(local_rect, background_.resolve());
     Widget::paint(canvas);
 }
 
