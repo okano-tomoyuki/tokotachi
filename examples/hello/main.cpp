@@ -180,25 +180,37 @@ int main(int argc, char** argv)
     level->on_change = [=](gui::Object*) { level_bar->value = level->value.get(); };
     level_bar->value = level->value.get();
     level_slider->tooltip = "ドラッグ・矢印キーで動かす";
-    // 別のスレッドで数え、進み具合を post でメインスレッドへ返す(docs/adr/0029)。
-    // ウィジェット・変数は別のスレッドから触らない。WeakRef はメインスレッドで作り、別のスレッドへはコピーで渡す。
+    // 別のスレッドで数える(Task。docs/adr/0029)。仕事の関数は別のスレッドで動くので、ウィジェット・変数には触らず、
+    // 進み具合を report_progress で知らせる。on_progress・on_finish はメインスレッドで呼ばれる。
+    // (常駐するスレッドなら std::thread で作り、gui::post と gui::WeakRef で結果を返す。)
     gui::Button* count_button = new gui::Button(level_page, "裏で数える");
-    count_button->tooltip = "std::thread で 0 から 100 まで数え、gui::post で値を返す";
+    count_button->tooltip = "Task で 0 から 100 まで数える。数えている間に押すと取り消す";
     level_box->add(count_button, 0, gui::Align::START);
+    gui::Task<int>* counter = new gui::Task<int>(&window);
+    counter->on_progress = [=](gui::Object*) { level->value = counter->progress.get(); };
+    counter->on_finish = [=](gui::Object*)
+    {
+        count_button->text = "裏で数える";
+        count->text = counter->cancelled ? "数えるのを取り消した" : "数え終えた: " + std::to_string(counter->result.get());
+    };
     count_button->on_click = [=](gui::Object*)
     {
-        count_button->enabled = false;
-        const gui::WeakRef<gui::DoubleVariable> target(level);
-        const gui::WeakRef<gui::Button> button(count_button);
-        std::thread([target, button]()
+        if (counter->running)
         {
-            for (int i = 0; i <= 100; ++i)
+            counter->cancel();
+            return;
+        }
+        count_button->text = "取り消す";
+        counter->start([](gui::TaskContext& ctx) -> int
+        {
+            int i = 0;
+            for (; i <= 100 && !ctx.cancel_requested(); ++i)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(20));  // 重い処理の代わり
-                gui::post(target, [i](gui::DoubleVariable* v) { v->value = i; });
+                ctx.report_progress(i);
             }
-            gui::post(button, [](gui::Button* b) { b->enabled = true; });
-        }).detach();
+            return i - 1;
+        });
     };
     tabs->add_tab(level_page, "進み具合");
 

@@ -42,6 +42,7 @@
 #include "slider.hpp"
 #include "spin_box.hpp"
 #include "tab_widget.hpp"
+#include "task.hpp"
 #include "text_edit.hpp"
 #include "text_input_base.hpp"
 #include "text_layout.hpp"

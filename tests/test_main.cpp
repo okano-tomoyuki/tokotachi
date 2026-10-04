@@ -15,6 +15,7 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -2612,6 +2613,119 @@ TEST(post_with_weak_ref)
     const gui::WeakRef<gui::Label> again(label);
     delete label;
     CHECK(live.expired() && again.expired());
+}
+
+// done() が true になるまでイベントを処理する(最長 timeout_ms)。
+template <typename F>
+bool run_until(F done, int timeout_ms = 5000)
+{
+    const Uint64 end = SDL_GetTicks() + static_cast<Uint64>(timeout_ms);
+    SDL_Event e;
+    while (!done() && SDL_GetTicks() < end)
+    {
+        if (SDL_WaitEventTimeout(&e, 20))
+        {
+            gui::Application::instance()->impl()->dispatch(e);
+        }
+    }
+    return done();
+}
+
+TEST(task_result_and_progress)
+{
+    gui::Window window("t", 100, 100);
+    gui::Task<long>* task = new gui::Task<long>(&window);
+    int progress_calls = 0, finishes = 0;
+    double last_progress = -1;
+    bool increasing = true;
+    task->on_progress = [&](gui::Object* sender)
+    {
+        CHECK(sender == task && gui::is_main_thread());
+        ++progress_calls;
+        increasing = increasing && task->progress > last_progress;
+        last_progress = task->progress;
+    };
+    task->on_finish = [&](gui::Object*)
+    {
+        ++finishes;
+        CHECK(!task->running && !task->cancelled && task->error.get().empty());
+    };
+    const bool started = task->start(
+        [](gui::TaskContext& ctx) -> long
+        {
+            long sum = 0;
+            for (int i = 1; i <= 2000; ++i)
+            {
+                sum += i;
+                ctx.report_progress(i);
+            }
+            return sum;
+        });
+    CHECK(started && task->running);
+    CHECK(!task->start([](gui::TaskContext&) -> long { return 0; }));  // 動いている間は始めない
+    CHECK(run_until([&]() { return finishes > 0; }));
+    CHECK(finishes == 1 && task->result == 2001000L);
+    CHECK(task->progress == 2000.0 && increasing);
+    CHECK(progress_calls >= 0 && progress_calls < 2000);  // 間引いて届く
+
+    // 終わった後は、もう一度始められる(進み具合などは戻る)。
+    CHECK(task->start([](gui::TaskContext&) -> long { return 7; }) && task->progress == 0.0);
+    CHECK(run_until([&]() { return finishes > 1; }));
+    CHECK(task->result == 7L);
+}
+
+TEST(task_cancel_and_error)
+{
+    gui::Window window("t", 100, 100);
+    gui::Task<void>* waiter = new gui::Task<void>(&window);
+    bool finished = false;
+    waiter->on_finish = [&](gui::Object*) { finished = true; };
+    waiter->start(
+        [](gui::TaskContext& ctx)
+        {
+            while (!ctx.cancel_requested())  // 取り消されるまで待つ
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        });
+    waiter->cancel();
+    CHECK(run_until([&]() { return finished; }));
+    CHECK(waiter->cancelled && !waiter->running && waiter->error.get().empty());
+
+    gui::Task<std::string>* failing = new gui::Task<std::string>(&window);
+    bool failed = false;
+    failing->on_finish = [&](gui::Object*) { failed = true; };
+    failing->start([](gui::TaskContext&) -> std::string { throw std::runtime_error("読めなかった"); });
+    CHECK(run_until([&]() { return failed; }));
+    CHECK(failing->error.get() == "読めなかった" && failing->result.get().empty() && !failing->cancelled);
+}
+
+TEST(task_destroyed_while_running)
+{
+    gui::Window window("t", 100, 100);
+    gui::Task<int>* task = new gui::Task<int>(&window);
+    bool called = false;
+    task->on_finish = [&](gui::Object*) { called = true; };
+    task->on_progress = [&](gui::Object*) { called = true; };
+    std::atomic<bool> gate(false), saw_cancel(false), returned(false);
+    task->start(
+        [&](gui::TaskContext& ctx) -> int
+        {
+            while (!gate)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            saw_cancel = ctx.cancel_requested();
+            ctx.report_progress(1);
+            returned = true;
+            return 1;
+        });
+    delete task;  // 動いている間に破棄する: 取り消しを頼み、結果は捨てる
+    gate = true;
+    CHECK(run_until([&]() { return returned.load(); }));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));  // 戻った後の post が届くのを待つ
+    run_until([]() { return false; }, 100);
+    CHECK(saw_cancel && !called);
 }
 
 }  // namespace
