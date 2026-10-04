@@ -76,6 +76,7 @@ target_include_directories(gui PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_compile_features(gui PUBLIC cxx_std_11)
 set_target_properties(gui PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_options(gui PRIVATE -Wall -Wextra -pedantic)
+target_link_libraries(gui PUBLIC Threads::Threads)
 target_link_libraries(gui PRIVATE SDL3::SDL3-static plutovg::plutovg harfbuzz::harfbuzz Freetype::Freetype unibreak::unibreak SheenBidi::SheenBidi)
 
 # MinGW のランタイムも静的にリンクし、exe が OS の DLL だけに依存するようにする(docs/adr/0004)。

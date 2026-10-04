@@ -11,6 +11,7 @@
 #ifndef GUI_PROPERTY_HPP
 #define GUI_PROPERTY_HPP
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -25,7 +26,17 @@ struct PropertyAccess;
 // owner の property(Property・ReadOnlyProperty のアドレス)の値が変わったことを知らせる。
 // 結びつけた相手のプロパティへ値を伝える(docs/adr/0016)。
 void property_changed(Object* owner, const void* property);
+
+// Object が生きているかの目印(WeakRef が共有する。docs/adr/0029)。メインスレッドだけで読み書きする。
+struct Liveness
+{
+    bool alive;
+    Liveness() : alive(true) {}
+};
 }  // namespace detail
+
+template <typename T>
+class WeakRef;
 
 template <typename T>
 class Property
@@ -203,10 +214,15 @@ protected:
     }
 
 private:
+    template <typename T>
+    friend class WeakRef;
+
     static Object* get_owner(Object* self) { return self->owner_; }
 
     Object* owner_;
     std::vector<Object*> owned_;
+    // WeakRef が作られたときだけ持つ。破棄するときに alive を false にする。
+    std::shared_ptr<detail::Liveness> liveness_;
 };
 
 // std::string のプロパティを std::string の演算子と直接組み合わせる

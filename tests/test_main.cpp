@@ -7,6 +7,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <atomic>
+#include <chrono>
+#include <thread>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -2516,6 +2519,99 @@ TEST(message_dialog_show_finishes_and_deletes)
                                                         { answer = static_cast<gui::Dialog*>(sender)->result; });
     dispatch_key(*info, SDLK_ESCAPE);
     CHECK(answer == gui::DialogButton::OK);
+}
+
+// 溜まっているイベントをすべて処理する(SDL3 の 1 回りの終わりの印で止まらないよう 2 回り)。
+void pump_events()
+{
+    SDL_Event e;
+    for (int round = 0; round < 2; ++round)
+    {
+        while (SDL_PollEvent(&e))
+        {
+            gui::Application::instance()->impl()->dispatch(e);
+        }
+    }
+}
+
+TEST(post_from_worker_threads)
+{
+    gui::Application* app = gui::Application::instance();
+    CHECK(gui::is_main_thread());
+    gui::Window window("t", 100, 100);  // 表示しているウィンドウが無いと exec はすぐに終わる
+    window.visible = true;
+    const int THREADS = 4, PER_THREAD = 100;
+    std::vector<int> last(THREADS, -1);
+    int received = 0;
+    bool in_order = true;
+    bool on_main = true;
+    std::atomic<int> worker_on_main(0);
+    std::vector<std::thread> workers;
+    for (int t = 0; t < THREADS; ++t)
+    {
+        workers.push_back(std::thread(
+            [&, t]()
+            {
+                if (gui::is_main_thread())
+                {
+                    ++worker_on_main;
+                }
+                // メインスレッドが exec で眠ってから頼む(頼むと起きることを確かめる)。
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                for (int i = 0; i < PER_THREAD; ++i)
+                {
+                    gui::post(
+                        [&, t, i]()
+                        {
+                            on_main = on_main && gui::is_main_thread();
+                            in_order = in_order && last[t] == i - 1;  // 同じスレッドからは頼んだ順
+                            last[t] = i;
+                            if (++received == THREADS * PER_THREAD)
+                            {
+                                app->quit();
+                            }
+                        });
+                }
+            }));
+    }
+    gui::Timer guard;  // 届かなかったときに終えるため
+    guard.interval = 5000;
+    guard.on_timer = [&](gui::Object*) { app->quit(); };
+    guard.enabled = true;
+    app->exec();
+    for (std::size_t i = 0; i < workers.size(); ++i)
+    {
+        workers[i].join();
+    }
+    CHECK(received == THREADS * PER_THREAD);
+    CHECK(in_order && on_main && worker_on_main == 0);
+    CHECK(!gui::post(std::function<void()>()));  // 空の関数は頼まない
+}
+
+TEST(post_with_weak_ref)
+{
+    gui::Window window("t", 100, 100);
+    gui::Label* label = new gui::Label(&window, "前");
+    gui::Label* doomed = new gui::Label(&window, "消える");
+    const gui::WeakRef<gui::Label> live(label);
+    const gui::WeakRef<gui::Label> dead(doomed);
+    CHECK(live.get() == label && dead.get() == doomed && gui::WeakRef<gui::Label>().expired());
+    int calls = 0;
+    std::thread worker(
+        [&]()
+        {
+            gui::post(live, [&](gui::Label* l) { l->text = "後"; ++calls; });
+            gui::post(dead, [&](gui::Label*) { ++calls; });
+        });
+    worker.join();
+    delete doomed;  // 頼んだ処理が呼ばれる前に破棄する
+    CHECK(dead.expired() && !live.expired());
+    pump_events();
+    CHECK(calls == 1 && label->text.get() == "後");
+    // 同じ Object から作った WeakRef は目印を共有する。
+    const gui::WeakRef<gui::Label> again(label);
+    delete label;
+    CHECK(live.expired() && again.expired());
 }
 
 }  // namespace

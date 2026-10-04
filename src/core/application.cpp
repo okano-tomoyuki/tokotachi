@@ -3,10 +3,15 @@
 #include <SDL3/SDL.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
+#include <mutex>
+
+#include <gui/thread.hpp>
 
 #include "application_impl.hpp"
 #include "property_impl.hpp"
@@ -20,7 +25,16 @@ namespace
 
 Application* g_instance = nullptr;
 Uint32 g_timer_event = 0;
-Uint32 g_call_event = 0;  // ApplicationImpl::post
+Uint32 g_call_event = 0;  // gui::post
+
+// post を受け付けているか(Application が生きている間)。別のスレッドから読むので、mutex で守る。
+std::mutex& post_mutex()
+{
+    static std::mutex m;
+    return m;
+}
+bool g_accepting_posts = false;
+std::atomic<SDL_ThreadID> g_main_thread(0);
 
 // タイマーのスレッドで呼ばれる。イベントを積むだけにし、関数はメインスレッドで呼ぶ。
 // userdata には 番号 * 2 + 繰り返すか を入れる(マップをこのスレッドから読まないため)。
@@ -224,17 +238,7 @@ void trace_event(const SDL_Event& e, const WindowImpl* w, std::size_t open_menus
 
 }  // namespace
 
-void ApplicationImpl::post(const std::function<void()>& fn)
-{
-    SDL_Event ev;
-    SDL_zero(ev);
-    ev.type = g_call_event;
-    ev.user.data1 = new std::function<void()>(fn);
-    if (!SDL_PushEvent(&ev))
-    {
-        delete static_cast<std::function<void()>*>(ev.user.data1);
-    }
-}
+void ApplicationImpl::post(const std::function<void()>& fn) { gui::post(fn); }
 
 void ApplicationImpl::flush_doomed()
 {
@@ -407,6 +411,11 @@ Application::Application(int, char**)
     }
     g_timer_event = SDL_RegisterEvents(1);
     g_call_event = SDL_RegisterEvents(1);
+    g_main_thread = SDL_GetCurrentThreadID();
+    {
+        std::lock_guard<std::mutex> lock(post_mutex());
+        g_accepting_posts = true;
+    }
     SDL_AddEventWatch(&event_watch, d_);
     d_->system_dark = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK;
     d_->update_theme();
@@ -418,6 +427,20 @@ Application::~Application()
          ++it)
     {
         SDL_RemoveTimer(it->second.sdl_id);
+    }
+    // これからの post は受け付けず、届いていない依頼は呼ばずに捨てる。
+    {
+        std::lock_guard<std::mutex> lock(post_mutex());
+        g_accepting_posts = false;
+    }
+    SDL_Event pending[64];
+    int n = 0;
+    while ((n = SDL_PeepEvents(pending, 64, SDL_GETEVENT, g_call_event, g_call_event)) > 0)
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            delete static_cast<std::function<void()>*>(pending[i].user.data1);
+        }
     }
     SDL_RemoveEventWatch(&event_watch, d_);
     delete d_;
@@ -499,6 +522,31 @@ void Application::quit(int code)
 {
     d_->exit_code = code;
     d_->running = false;
+}
+
+bool is_main_thread() { return g_main_thread != 0 && SDL_GetCurrentThreadID() == g_main_thread; }
+
+bool post(const std::function<void()>& fn)
+{
+    if (!fn)
+    {
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(post_mutex());
+    if (!g_accepting_posts)
+    {
+        return false;
+    }
+    SDL_Event ev;
+    SDL_zero(ev);
+    ev.type = g_call_event;
+    ev.user.data1 = new std::function<void()>(fn);
+    if (!SDL_PushEvent(&ev))
+    {
+        delete static_cast<std::function<void()>*>(ev.user.data1);  // キューが一杯など
+        return false;
+    }
+    return true;
 }
 
 }  // namespace gui

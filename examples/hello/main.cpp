@@ -4,11 +4,13 @@
 //                             --tab N を先に付けると N 番目のタブを選んで描く)
 #include <gui/gui.hpp>
 
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 // 16 × 16 の簡単なアイコン(フォルダー・ファイル)を画素から作る(普通は gui::Image::load で画像ファイルを読む)。
@@ -178,6 +180,26 @@ int main(int argc, char** argv)
     level->on_change = [=](gui::Object*) { level_bar->value = level->value.get(); };
     level_bar->value = level->value.get();
     level_slider->tooltip = "ドラッグ・矢印キーで動かす";
+    // 別のスレッドで数え、進み具合を post でメインスレッドへ返す(docs/adr/0029)。
+    // ウィジェット・変数は別のスレッドから触らない。WeakRef はメインスレッドで作り、別のスレッドへはコピーで渡す。
+    gui::Button* count_button = new gui::Button(level_page, "裏で数える");
+    count_button->tooltip = "std::thread で 0 から 100 まで数え、gui::post で値を返す";
+    level_box->add(count_button, 0, gui::Align::START);
+    count_button->on_click = [=](gui::Object*)
+    {
+        count_button->enabled = false;
+        const gui::WeakRef<gui::DoubleVariable> target(level);
+        const gui::WeakRef<gui::Button> button(count_button);
+        std::thread([target, button]()
+        {
+            for (int i = 0; i <= 100; ++i)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));  // 重い処理の代わり
+                gui::post(target, [i](gui::DoubleVariable* v) { v->value = i; });
+            }
+            gui::post(button, [](gui::Button* b) { b->enabled = true; });
+        }).detach();
+    };
     tabs->add_tab(level_page, "進み具合");
 
     // 一覧と木(docs/adr/0026)。項目はモデル(ListModel・TreeModel)に持たせ、ビューに表示させる。

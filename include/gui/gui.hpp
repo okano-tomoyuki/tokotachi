@@ -46,6 +46,7 @@
 #include "text_input_base.hpp"
 #include "text_layout.hpp"
 #include "theme.hpp"
+#include "thread.hpp"
 #include "timer.hpp"
 #include "tree_model.hpp"
 #include "tree_view.hpp"

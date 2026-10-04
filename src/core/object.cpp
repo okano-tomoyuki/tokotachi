@@ -20,6 +20,10 @@ Object::Object(Object* owner_object) : owner(this, &Object::get_owner), owner_(o
 
 Object::~Object()
 {
+    if (liveness_)
+    {
+        liveness_->alive = false;
+    }
     if (Application* app = Application::instance())
     {
         std::vector<Object*>& doomed = app->impl()->doomed;
