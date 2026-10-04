@@ -10,6 +10,7 @@
 namespace gui
 {
 
+class Image;
 class TextLayout;
 
 class Path
@@ -108,6 +109,8 @@ public:
     virtual void stroke_path(const Path& path, float width, const Paint& paint, LineCap cap = LineCap::BUTT) = 0;
     // pos はレイアウトの左上(ベースラインは pos.y + layout.ascent())。
     virtual void draw_text(const TextLayout& layout, const Point& pos, const Color& color) = 0;
+    // 画像を矩形 dst(dp)に合わせて伸縮して描く。opacity は 0〜1(無効な部品のアイコンを薄くするときなど)。
+    virtual void draw_image(const Image& image, const Rect& dst, float opacity = 1) = 0;
 };
 
 }  // namespace gui

@@ -32,11 +32,15 @@ add_library(gui STATIC
     src/core/timer.cpp
     src/core/widget.cpp
     src/core/window.cpp
+    src/gfx/image.cpp
     src/gfx/path.cpp
     src/layout/box_layout.cpp
     src/layout/grid_layout.cpp
     src/layout/layout.cpp
     src/layout/place_layout.cpp
+    src/models/item_model.cpp
+    src/models/list_model.cpp
+    src/models/tree_model.cpp
     src/gfx/raster_canvas.cpp
     src/text/font_cache.cpp
     src/text/text_layout.cpp
@@ -54,8 +58,10 @@ add_library(gui STATIC
     src/widgets/slider.cpp
     src/widgets/spin_box.cpp
     src/widgets/tab_widget.cpp
+    src/widgets/tree_view.cpp
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
+    src/widgets/item_view.cpp
     src/widgets/label.cpp
     src/widgets/line_edit.cpp)
 add_library(gui::gui ALIAS gui)

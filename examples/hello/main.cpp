@@ -1,11 +1,47 @@
 // gui ライブラリのサンプル: Label・Button・LineEdit・CheckBox・RadioButton・TabWidget など、変数による結びつけ、レイアウト。
 //   hello                     ウィンドウを開く
-//   hello --screenshot a.png  1 回描いて PNG に保存して終える(--dark を先に付けるとダークのテーマで描く)
+//   hello --screenshot a.png  1 回描いて PNG に保存して終える(--dark を先に付けるとダークのテーマで描く。
+//                             --tab N を先に付けると N 番目のタブを選んで描く)
 #include <gui/gui.hpp>
 
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 #include <vector>
+
+// 16 × 16 の簡単なアイコン(フォルダー・ファイル)を画素から作る(普通は gui::Image::load で画像ファイルを読む)。
+gui::Image make_icon(bool folder)
+{
+    std::vector<gui::Color> pixels(16 * 16, gui::Color(0, 0, 0, 0));
+    const gui::Color fill = folder ? gui::Color::rgb(0xf6c344) : gui::Color::rgb(0xffffff);
+    const gui::Color edge = folder ? gui::Color::rgb(0xc98f0a) : gui::Color::rgb(0x6b7280);
+    for (int y = 0; y < 16; ++y)
+    {
+        for (int x = 0; x < 16; ++x)
+        {
+            bool inside, border;
+            if (folder)
+            {
+                inside = (y >= 4 && y <= 13 && x >= 1 && x <= 14) || (y >= 2 && y < 4 && x >= 1 && x <= 6);
+                border = inside && (y == 13 || x == 1 || x == 14 || (y == 2 && x <= 6) || (y == 4 && x >= 6) || (x == 6 && y < 4));
+            }
+            else
+            {
+                inside = y >= 1 && y <= 14 && x >= 3 && x <= 12;
+                border = inside && (y == 1 || y == 14 || x == 3 || x == 12);
+                if (inside && !border && (y == 5 || y == 8 || y == 11) && x >= 5 && x <= 10)
+                {
+                    border = true;  // 文字の行
+                }
+            }
+            if (inside)
+            {
+                pixels[y * 16 + x] = border ? edge : fill;
+            }
+        }
+    }
+    return gui::Image::from_pixels(16, 16, pixels);
+}
 
 int main(int argc, char** argv)
 {
@@ -141,8 +177,66 @@ int main(int argc, char** argv)
     level_bar->value = level->value.get();
     level_slider->tooltip = "ドラッグ・矢印キーで動かす";
     tabs->add_tab(level_page, "進み具合");
+
+    // 一覧と木(docs/adr/0026)。項目はモデル(ListModel・TreeModel)に持たせ、ビューに表示させる。
+    const gui::Image folder_icon = make_icon(true);
+    const gui::Image file_icon = make_icon(false);
+    gui::ListModel* files = new gui::ListModel(&window);
+    static const char* const FILES[][3] = {{"報告書.txt", "12 KB", "2026-10-01"},   {"写真.png", "2.4 MB", "2026-09-12"},
+                                           {"見積もり.xlsx", "48 KB", "2026-09-30"}, {"README.md", "3 KB", "2026-08-05"},
+                                           {"議事録.docx", "31 KB", "2026-10-03"},   {"build.log", "880 KB", "2026-10-04"},
+                                           {"予定表.ics", "6 KB", "2026-07-21"},     {"archive.zip", "15 MB", "2026-06-30"}};
+    for (std::size_t i = 0; i < sizeof(FILES) / sizeof(FILES[0]); ++i)
+    {
+        gui::Item* item = files->add_item(FILES[i][0]);
+        item->column_texts = std::vector<std::string>{FILES[i][1], FILES[i][2]};
+        item->icon = file_icon;
+        item->checkable = true;
+    }
+    gui::Widget* list_page = new gui::Widget();
+    gui::BoxLayout* list_box = new gui::BoxLayout(list_page);
+    list_box->margins = gui::Margins(0, 12, 0, 0);
+    list_box->spacing = 8;
+    gui::ListView* file_list = new gui::ListView(list_page);
+    file_list->add_column("名前", 200);
+    file_list->add_column("大きさ", 90)->alignment = gui::Align::END;
+    file_list->add_column("更新日", 110);
+    file_list->sorting_enabled = true;  // 見出しを押すと並べ替える
+    file_list->selection_mode = gui::SelectionMode::MULTI;
+    file_list->model = files;
+    gui::Label* list_status = new gui::Label(list_page, "Ctrl・Shift+クリックで複数選べる。ダブルクリック・Enter で開く");
+    list_status->color = gui::ColorRole::TEXT_SECONDARY;
+    file_list->on_selection_change = [=](gui::Object*)
+    { list_status->text = std::to_string(file_list->selection.get().size()) + " 個を選んでいる"; };
+    file_list->on_activate = [=](gui::Object*)
+    { list_status->text = "開く: " + files->text(file_list->current, 0); };
+    list_box->add(file_list, 1);
+    list_box->add(list_status);
+    tabs->add_tab(list_page, "一覧");
+
+    gui::TreeModel* tree = new gui::TreeModel(&window);
+    gui::TreeItem* documents = tree->add_item("文書");
+    documents->icon = folder_icon;
+    gui::TreeItem* work = documents->add_child("仕事");
+    work->icon = folder_icon;
+    work->add_child("報告書.txt")->icon = file_icon;
+    work->add_child("見積もり.xlsx")->icon = file_icon;
+    documents->add_child("README.md")->icon = file_icon;
+    gui::TreeItem* pictures = tree->add_item("画像");
+    pictures->icon = folder_icon;
+    for (int i = 1; i <= 30; ++i)
+    {
+        pictures->add_child("写真 " + std::to_string(i) + ".png")->icon = file_icon;
+    }
+    gui::TreeItem* empty = tree->add_item("空のフォルダー");
+    empty->icon = folder_icon;
+    gui::TreeView* tree_view = new gui::TreeView();
+    tree_view->model = tree;
+    tree_view->expand(tree->index_of(documents));
+    tabs->add_tab(tree_view, "木");
+
     tabs->add_tab(new gui::Widget(), "無効なタブ")->enabled = false;
-    tabs->minimum_size = gui::Size(0, 200);
+    tabs->minimum_size = gui::Size(0, 240);
     column->add(tabs, 1);
     column->add(disabled, 0, gui::Align::START);  // 横に広げない
 
@@ -210,6 +304,10 @@ int main(int argc, char** argv)
         {
             app.color_scheme = gui::ColorScheme::DARK;
             scheme->current_index = 2;
+        }
+        else if (std::string(argv[i]) == "--tab" && i + 1 < argc)
+        {
+            tabs->current_index = std::atoi(argv[++i]);
         }
         else if (std::string(argv[i]) == "--screenshot" && i + 1 < argc)
         {

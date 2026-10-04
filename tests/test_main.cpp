@@ -5,6 +5,8 @@
 #include "../src/core/application_impl.hpp"
 #include "../src/core/window_impl.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <functional>
 #include <limits>
@@ -1904,6 +1906,325 @@ TEST(tab_widget_scrolls_overflowing_titles)
     CHECK(tabs->current_index == 2);
     dispatch_click(window, gui::Point(138, 10));  // ▶ では選ぶタブは変わらない
     CHECK(tabs->current_index == 2);
+}
+
+// マウスのボタン・移動のイベント(位置は dp)。修飾キーは SDL_SetModState で決める。
+void dispatch_mouse(gui::Window& window, SDL_EventType type, const gui::Point& p, int clicks = 1)
+{
+    const float k = window.impl()->scale / window.impl()->density;
+    SDL_Event e;
+    SDL_zero(e);
+    e.type = type;
+    if (type == SDL_EVENT_MOUSE_MOTION)
+    {
+        e.motion.windowID = SDL_GetWindowID(window.impl()->window);
+        e.motion.x = p.x * k;
+        e.motion.y = p.y * k;
+    }
+    else
+    {
+        e.button.windowID = SDL_GetWindowID(window.impl()->window);
+        e.button.button = SDL_BUTTON_LEFT;
+        e.button.down = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+        e.button.clicks = static_cast<Uint8>(clicks);
+        e.button.x = p.x * k;
+        e.button.y = p.y * k;
+    }
+    gui::Application::instance()->impl()->dispatch(e);
+}
+
+void click_with(gui::Window& window, const gui::Point& p, SDL_Keymod mod, int clicks = 1)
+{
+    SDL_SetModState(mod);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, p, clicks);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, p, clicks);
+    SDL_SetModState(SDL_KMOD_NONE);
+}
+
+// ItemView の行の高さ(倍率 1)と、行 r の中ほど(枠の 1dp と見出しの高さを足す)。
+float view_row_height() { return std::max(std::ceil(gui::TextLayout("Ag", gui::Font(), 1).height()), 16.0f) + 8; }
+
+gui::Point row_point(int r, float x = 100, float header = 0)
+{
+    const float h = view_row_height();
+    return gui::Point(x, 1 + header + r * h + h / 2);
+}
+
+TEST(image_from_pixels_and_draw)
+{
+    std::vector<gui::Color> pixels(4, gui::Color(255, 0, 0, 255));
+    pixels[3] = gui::Color(0, 0, 255, 128);
+    const gui::Image image = gui::Image::from_pixels(2, 2, pixels);
+    CHECK(!image.is_null() && image.width() == 2 && image.height() == 2);
+    CHECK(image.pixel(0, 0) == gui::Color(255, 0, 0, 255));
+    CHECK(image.pixel(1, 1).a == 128 && image.pixel(1, 1).b >= 254);  // アルファ乗算を戻す
+    CHECK(image.pixel(5, 5).a == 0);
+    CHECK(gui::Image::from_pixels(3, 3, pixels).is_null());  // 数が合わない
+    CHECK(gui::Image::load("no-such-file.png").is_null());
+
+    // 描くと、伸縮して矩形を塗る。
+    gui::Window window("t", 40, 40);
+    gui::Widget* w = new gui::Widget(&window);
+    w->bounds = gui::Rect(0, 0, 40, 40);
+    w->on_paint = [=](gui::Object*, gui::Canvas& canvas) { canvas.draw_image(image, gui::Rect(0, 0, 20, 20)); };
+    window.visible = true;
+    window.impl()->render(false);
+    const int stride = window.impl()->pixel_width;
+    CHECK(window.impl()->buffer[2 * stride + 2] == 0xffff0000u);
+}
+
+TEST(list_view_selection_and_keys)
+{
+    gui::Window window("t", 300, 300);
+    window.visible = true;
+    gui::ListModel* list = new gui::ListModel(&window);
+    std::vector<gui::Item*> items;
+    for (int i = 0; i < 5; ++i)
+    {
+        items.push_back(list->add_item("項目 " + std::to_string(i)));
+    }
+    items[2]->enabled = false;
+    gui::ListView* view = new gui::ListView(&window);
+    view->bounds = gui::Rect(0, 0, 200, 250);
+    view->model = list;
+    window.apply_layout();
+    int changes = 0;
+    view->on_selection_change = [&](gui::Object* sender)
+    {
+        CHECK(sender == view);
+        ++changes;
+    };
+
+    // SINGLE: 押した行を選び、current も移る。
+    dispatch_click(window, row_point(1));
+    CHECK(view->current == list->index_of(items[1]) && view->is_selected(list->index_of(items[1])));
+    CHECK(view->selection.get().size() == 1 && changes == 1 && view->focused);
+    CHECK(view->index_at(row_point(3)) == list->index_of(items[3]));
+    dispatch_key(window, SDLK_DOWN);  // 無効な項目は飛ばす
+    CHECK(view->current == list->index_of(items[3]) && changes == 2);
+    dispatch_key(window, SDLK_HOME);
+    CHECK(view->current == list->index_of(items[0]));
+    dispatch_key(window, SDLK_END);
+    CHECK(view->current == list->index_of(items[4]) && view->selection.get().size() == 1);
+    dispatch_click(window, row_point(2));  // 無効な項目は選べない
+    CHECK(view->current == list->index_of(items[4]));
+    view->current = list->index_of(items[0]);  // SINGLE では代入でも選ぶ
+    CHECK(view->is_selected(list->index_of(items[0])) && !view->is_selected(list->index_of(items[4])));
+
+    // MULTI: Ctrl+クリックで加え、Shift+クリックで範囲(無効な項目は除く)、Ctrl+A ですべて。
+    view->selection_mode = gui::SelectionMode::MULTI;
+    click_with(window, row_point(3), SDL_KMOD_LCTRL);
+    CHECK(view->selection.get().size() == 2);
+    click_with(window, row_point(4), SDL_KMOD_LSHIFT);  // 起点は 3
+    CHECK(view->selection.get().size() == 2 && view->is_selected(list->index_of(items[4])));
+    click_with(window, row_point(0), SDL_KMOD_LSHIFT);
+    const std::vector<gui::ModelIndex> range = view->selection;
+    CHECK(range.size() == 3 && range[0] == list->index_of(items[0]) && range[2] == list->index_of(items[3]));  // 表示の順
+    dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+    CHECK(view->selection.get().size() == 4);
+    dispatch_key(window, SDLK_DOWN, true, SDL_KMOD_LSHIFT);  // current は 0 から 1 へ。起点 3 から 1 まで
+    CHECK(view->selection.get().size() == 2 && view->current == list->index_of(items[1]));
+    click_with(window, row_point(4), SDL_KMOD_NONE);
+    CHECK(view->selection.get().size() == 1);
+
+    // 行の無いところを押すと選択を外す。
+    dispatch_click(window, gui::Point(100, 240));
+    CHECK(view->selection.get().empty());
+
+    // ダブルクリック・Enter で on_activate。
+    int activations = 0;
+    view->on_activate = [&](gui::Object*) { ++activations; };
+    click_with(window, row_point(1), SDL_KMOD_NONE, 2);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(activations == 2);
+    view->on_selection_change = gui::NotifyHandler();
+}
+
+TEST(list_view_follows_model_changes)
+{
+    gui::Window window("t", 300, 300);
+    window.visible = true;
+    gui::ListModel* list = new gui::ListModel(&window);
+    gui::Item* b = list->add_item("b");
+    gui::Item* c = list->add_item("c");
+    gui::Item* a = list->add_item("a");
+    gui::ListView* view = new gui::ListView(&window);
+    view->bounds = gui::Rect(0, 0, 200, 250);
+    view->model = list;
+    view->selection_mode = gui::SelectionMode::MULTI;
+    view->select(list->index_of(c));
+    view->current = list->index_of(c);
+    int changes = 0;
+    view->on_selection_change = [&](gui::Object*) { ++changes; };
+
+    // 前に加えると番号がずれるが、同じ項目を選んだまま。
+    list->insert_item(0, "z");
+    CHECK(view->is_selected(list->index_of(c)) && view->current == list->index_of(c) && list->index_of(c).row() == 2);
+    // 並べ替えても同じ項目。
+    list->sort(0, gui::SortOrder::ASCENDING);
+    CHECK(list->items.get()[0] == a && list->items.get()[3]->text.get() == "z");
+    CHECK(view->is_selected(list->index_of(c)) && view->current == list->index_of(c) && changes == 0);
+    // 選んでいる項目を除くと、選択から外れて知らせる。
+    list->remove_item(c);
+    CHECK(view->selection.get().empty() && !view->current.get().is_valid() && changes == 1);
+    // 項目のチェックは、チェックボックスを押すか Space で変わる。
+    b->checkable = true;
+    window.apply_layout();
+    const int row_b = list->index_of(b).row();
+    dispatch_click(window, row_point(row_b, 1 + 8 + 8));
+    CHECK(b->checked && view->current == list->index_of(b));
+    dispatch_key(window, SDLK_SPACE);
+    CHECK(!b->checked);
+    // モデルを破棄すると、ビューは model を手放す。
+    delete list;
+    CHECK(view->model == nullptr && view->selection.get().empty());
+    view->on_selection_change = gui::NotifyHandler();
+}
+
+TEST(list_view_columns_sort_and_resize)
+{
+    gui::Window window("t", 400, 300);
+    window.visible = true;
+    gui::ListModel* list = new gui::ListModel(&window);
+    const char* const NAMES[] = {"b", "c", "a"};
+    const char* const SIZES[] = {"2", "1", "3"};
+    for (int i = 0; i < 3; ++i)
+    {
+        list->add_item(NAMES[i])->column_texts = std::vector<std::string>(1, SIZES[i]);
+    }
+    gui::ListView* view = new gui::ListView(&window);
+    view->bounds = gui::Rect(0, 0, 300, 250);
+    gui::Column* name = view->add_column("名前", 100);
+    view->add_column("大きさ", 60);
+    view->model = list;
+    window.apply_layout();
+    CHECK(list->text(list->index(0), 1) == "2");
+    const float header = view_row_height();
+
+    // 見出しを押すと並べ替える(sorting_enabled のときだけ)。もう一度押すと逆順。
+    dispatch_click(window, gui::Point(50, 1 + header / 2));
+    CHECK(view->sort_column == -1);
+    view->sorting_enabled = true;
+    dispatch_click(window, gui::Point(130, 1 + header / 2));
+    CHECK(view->sort_column == 1 && view->sort_order == gui::SortOrder::ASCENDING);
+    CHECK(list->items.get()[0]->text.get() == "c");
+    dispatch_click(window, gui::Point(130, 1 + header / 2));
+    CHECK(view->sort_order == gui::SortOrder::DESCENDING && list->items.get()[0]->text.get() == "a");
+    view->sort_column = 0;  // 代入でも並べ替える
+    CHECK(list->items.get()[0]->text.get() == "c");
+    // 見出しの下の行を押す。
+    dispatch_click(window, row_point(0, 100, header));
+    CHECK(view->current == list->index(0));
+
+    // 境目をドラッグして幅を変える(最小 24)。
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, gui::Point(1 + 100, 1 + header / 2));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, gui::Point(1 + 150, 1 + header / 2));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, gui::Point(1 + 150, 1 + header / 2));
+    CHECK(near(name->width, 150));
+    name->width = 5;
+    CHECK(near(name->width, 24));
+    view->remove_column(name);
+    CHECK(view->columns.get().size() == 1 && view->sort_column == -1);
+}
+
+TEST(tree_view_expand_and_keys)
+{
+    gui::Window window("t", 300, 400);
+    window.visible = true;
+    gui::TreeModel* tree = new gui::TreeModel(&window);
+    gui::TreeItem* docs = tree->add_item("文書");
+    gui::TreeItem* work = docs->add_child("仕事");
+    gui::TreeItem* report = work->add_child("報告書");
+    gui::TreeItem* readme = docs->add_child("README");
+    gui::TreeItem* pics = tree->add_item("画像");
+    CHECK(report->parent_item == work && docs->children.get().size() == 2 && tree->items.get().size() == 2);
+    CHECK(tree->parent_of(tree->index_of(report)) == tree->index_of(work));
+    CHECK(tree->row_count(tree->index_of(docs)) == 2 && tree->index(1, tree->index_of(docs)) == tree->index_of(readme));
+
+    gui::TreeView* view = new gui::TreeView(&window);
+    view->bounds = gui::Rect(0, 0, 250, 350);
+    view->model = tree;
+    window.apply_layout();
+    // 最初は一番上だけ。
+    CHECK(view->index_at(row_point(1)) == tree->index_of(pics));
+    CHECK(!view->index_at(row_point(2)).is_valid());
+
+    // 印を押すと開く。
+    dispatch_click(window, row_point(0, 1 + 4 + 10));
+    CHECK(view->is_expanded(tree->index_of(docs)));
+    CHECK(view->index_at(row_point(1)) == tree->index_of(work) && view->index_at(row_point(3)) == tree->index_of(pics));
+    CHECK(!view->current.get().is_valid());  // 印を押しても選ばない
+
+    // → で開く・子へ、← で閉じる・親へ。
+    dispatch_click(window, row_point(1));
+    CHECK(view->current == tree->index_of(work));
+    dispatch_key(window, SDLK_RIGHT);
+    CHECK(view->is_expanded(tree->index_of(work)) && view->current == tree->index_of(work));
+    dispatch_key(window, SDLK_RIGHT);
+    CHECK(view->current == tree->index_of(report));
+    dispatch_key(window, SDLK_LEFT);
+    CHECK(view->current == tree->index_of(work));
+    dispatch_key(window, SDLK_LEFT);
+    CHECK(!view->is_expanded(tree->index_of(work)));
+    dispatch_key(window, SDLK_LEFT);
+    CHECK(view->current == tree->index_of(docs));
+
+    // 閉じた中に current があれば、閉じた項目へ移す。
+    view->current = tree->index_of(readme);
+    view->collapse(tree->index_of(docs));
+    CHECK(view->current == tree->index_of(docs) && view->is_selected(tree->index_of(docs)));
+
+    // scroll_to は祖先を開く。
+    view->scroll_to(tree->index_of(report));
+    CHECK(view->is_expanded(tree->index_of(docs)) && view->is_expanded(tree->index_of(work)));
+    CHECK(view->index_at(row_point(2)) == tree->index_of(report));
+
+    // 項目を除くと、その子孫の選択も外れる。
+    view->current = tree->index_of(report);
+    tree->remove_item(work);
+    CHECK(view->selection.get().empty() && docs->children.get().size() == 1);
+    CHECK(view->index_at(row_point(1)) == tree->index_of(readme));
+    // 子を加えると表示に現れる(開いていれば)。
+    gui::TreeItem* added = docs->insert_child(0, "新しい");
+    CHECK(view->index_at(row_point(1)) == tree->index_of(added));
+
+    view->expand_all();
+    view->collapse_all();
+    CHECK(view->index_at(row_point(1)) == tree->index_of(pics));
+    tree->clear();
+    CHECK(!view->index_at(row_point(0)).is_valid());
+}
+
+
+// 項目のオブジェクトを作らないモデル: 100 万行でも、描くときに問い合わせるのは見えている行だけ。
+struct CountingModel : gui::ItemModel
+{
+    mutable int queries;
+    CountingModel() : queries(0) {}
+    int row_count(const gui::ModelIndex& parent) const override { return parent.is_valid() ? 0 : 1000000; }
+    std::string text(const gui::ModelIndex& index, int) const override
+    {
+        ++queries;
+        return std::to_string(index.row());
+    }
+};
+
+TEST(item_view_queries_only_visible_rows)
+{
+    gui::Window window("t", 300, 300);
+    window.visible = true;
+    CountingModel* model = new CountingModel();
+    gui::ListView* view = new gui::ListView(&window);
+    view->bounds = gui::Rect(0, 0, 200, 250);
+    view->model = model;
+    window.impl()->render(false);
+    CHECK(model->queries > 0 && model->queries < 20);
+    dispatch_click(window, row_point(0));
+    dispatch_key(window, SDLK_END);
+    CHECK(view->current.get().row() == 999999);
+    CHECK(view->index_at(row_point(0)).row() > 999980);  // 最後までスクロールした
+    delete model;
+    CHECK(view->model == nullptr);
 }
 
 }  // namespace

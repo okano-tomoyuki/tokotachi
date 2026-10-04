@@ -54,6 +54,7 @@ public:
     void fill_path(const Path& path, const Paint& paint) override;
     void stroke_path(const Path& path, float width, const Paint& paint, LineCap cap) override;
     void draw_text(const TextLayout& layout, const Point& pos, const Color& color) override;
+    void draw_image(const Image& image, const Rect& dst, float opacity) override;
 
 private:
     struct State

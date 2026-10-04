@@ -6,7 +6,10 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <gui/image.hpp>
 #include <gui/text_layout.hpp>
+
+#include "image_data.hpp"
 
 #include "../text/font_cache.hpp"
 #include "../text/text_layout_data.hpp"
@@ -286,6 +289,24 @@ void RasterCanvas::stroke_path(const Path& path, float width, const Paint& paint
     plutovg_canvas_set_line_cap(canvas_, c);
     plutovg_canvas_stroke(canvas_);
     plutovg_canvas_set_line_cap(canvas_, PLUTOVG_LINE_CAP_BUTT);
+}
+
+void RasterCanvas::draw_image(const Image& image, const Rect& dst, float opacity)
+{
+    const PixelRect p = snap(dst);
+    if (image.is_null() || p.empty() || opacity <= 0)
+    {
+        return;
+    }
+    // 画像の画素を、ピクセルに揃えた dst へ写す行列。
+    const float sx = static_cast<float>(p.x1 - p.x0) / image.width();
+    const float sy = static_cast<float>(p.y1 - p.y0) / image.height();
+    plutovg_matrix_t m;
+    plutovg_matrix_init(&m, sx, 0, 0, sy, static_cast<float>(p.x0), static_cast<float>(p.y0));
+    plutovg_canvas_set_texture(canvas_, image.data()->surface, PLUTOVG_TEXTURE_TYPE_PLAIN, std::min(opacity, 1.0f),
+                               &m);
+    plutovg_canvas_fill_rect(canvas_, static_cast<float>(p.x0), static_cast<float>(p.y0),
+                             static_cast<float>(p.x1 - p.x0), static_cast<float>(p.y1 - p.y0));
 }
 
 // グリフの被覆率の補正(docs/adr/0020)。sRGB の値をそのまま線形に混ぜると、文字が細く見える(明るい文字では特に)。
