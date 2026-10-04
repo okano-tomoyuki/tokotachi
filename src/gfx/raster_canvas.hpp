@@ -1,5 +1,6 @@
-// plutovg と自前のグリフの合成で、ARGB32(アルファ乗算済み)のバッファに描く Canvas(内部。docs/adr/0006)。
-// 座標は呼び出し側で dp からピクセルに直し、plutovg には常にピクセルの座標を渡す(plutovg の変換の行列は使わない)。
+// plutovg と自前のグリフの合成で、ARGB32(アルファ乗算済み)のバッファに描く Canvas(内部。docs/adr/0006、0032)。
+// 座標は呼び出し側で dp からピクセルに直し、plutovg には常にピクセルの座標を渡す(plutovg の変換の行列は使わない。
+// グラデーション・画像の模様の行列は除く)。
 #ifndef GUI_SRC_GFX_RASTER_CANVAS_HPP
 #define GUI_SRC_GFX_RASTER_CANVAS_HPP
 
@@ -42,37 +43,54 @@ public:
     void begin(const PixelRect& clip);
     void end();
 
+    using Canvas::draw_text;
+    using Canvas::stroke_path;
+
     float scale() const override { return scale_; }
     void save() override;
     void restore() override;
     void translate(float dx, float dy) override;
+    void scale_by(float sx, float sy) override;
+    void rotate(float radians) override;
     void clip_rect(const Rect& r) override;
+    void clip_path(const Path& path) override;
     Rect clip_bounds() const override;
     void fill_rect(const Rect& r, const Color& color) override;
     void fill_round_rect(const Rect& r, float radius, const Paint& paint) override;
     void stroke_round_rect(const Rect& r, float radius, float width, const Color& color) override;
     void fill_path(const Path& path, const Paint& paint) override;
-    void stroke_path(const Path& path, float width, const Paint& paint, LineCap cap) override;
+    void stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint) override;
     void draw_text(const TextLayout& layout, const Point& pos, const Color& color) override;
     void draw_image(const Image& image, const Rect& dst, float opacity) override;
 
 private:
     struct State
     {
-        float tx, ty;  // dp
-        PixelRect clip;
+        // dp の座標の変換(x' = a x + c y + e、y' = b x + d y + f)。ピクセルはこれに倍率を掛けたもの。
+        float a, b, c, d, e, f;
+        PixelRect clip;     // クリップを囲む矩形(ピクセル)
+        bool clip_is_rect;  // クリップが clip の矩形そのものか(回転した矩形・パスでクリップしていない)
     };
 
-    // dp(現在の原点からの相対)からピクセルへ。
-    float px(float x) const { return (x + state_.tx) * scale_; }
-    float py(float y) const { return (y + state_.ty) * scale_; }
-    // 矩形の辺をピクセルの整数に揃える。
+    // 変換が平行移動だけか(矩形と文字をピクセルに揃えて描ける)。
+    bool axis_aligned() const { return state_.a == 1 && state_.b == 0 && state_.c == 0 && state_.d == 1; }
+    // dp(今の座標系)からピクセルへ。
+    float px(float x, float y) const { return (state_.a * x + state_.c * y + state_.e) * scale_; }
+    float py(float x, float y) const { return (state_.b * x + state_.d * y + state_.f) * scale_; }
+    // 変換の拡大の大きさ(線の太さに掛ける)。
+    float linear_scale() const;
+    // 矩形の辺をピクセルの整数に揃える(axis_aligned のときだけ使う)。
     PixelRect snap(const Rect& r) const;
-    void set_path(const Path& path);
+    // path をピクセルの座標で plutovg に渡す。bounds があれば、点の範囲(ピクセル)を返す。
+    void set_path(const Path& path, PixelRect* bounds = nullptr);
     void set_paint(const Paint& paint);
+    void set_stroke(const StrokeStyle& style);
+    // 今のクリップの内側に、plutovg のクリップを合わせる(begin・矩形のクリップの後)。
+    void apply_clip();
+    // グリフを輪郭として描く(拡大・回転しているとき・パスでクリップしているとき)。
+    void draw_text_outlines(const TextLayout& layout, const Point& pos, const Color& color);
     // グリフのビットマップを (gx, gy)(ピクセル)に、現在のクリップの中で合成する。table は被覆率の補正の表。
     void blend_glyph(const GlyphBitmap& g, int gx, int gy, const Color& color, const std::uint8_t* table);
-    void apply_clip();
 
     plutovg_surface* surface_;
     plutovg_canvas* canvas_;

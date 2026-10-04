@@ -50,12 +50,23 @@ void set_color(plutovg_canvas_t* canvas, const Color& c)
     plutovg_canvas_set_rgba(canvas, c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f);
 }
 
+// 点の範囲を広げる。
+void extend(float x, float y, float& x0, float& y0, float& x1, float& y1)
+{
+    x0 = std::min(x0, x);
+    y0 = std::min(y0, y);
+    x1 = std::max(x1, x);
+    y1 = std::max(y1, y);
+}
+
 }  // namespace
 
 RasterCanvas::RasterCanvas() : surface_(nullptr), canvas_(nullptr), buffer_(nullptr), width_(0), height_(0), scale_(1)
 {
-    state_.tx = state_.ty = 0;
+    state_.a = state_.d = 1;
+    state_.b = state_.c = state_.e = state_.f = 0;
     state_.clip.x0 = state_.clip.y0 = state_.clip.x1 = state_.clip.y1 = 0;
+    state_.clip_is_rect = true;
 }
 
 RasterCanvas::~RasterCanvas()
@@ -88,6 +99,8 @@ void RasterCanvas::set_target(std::uint32_t* buffer, int width, int height)
     height_ = height;
 }
 
+// ---- 状態 ----
+
 void RasterCanvas::apply_clip()
 {
     plutovg_canvas_clip_rect(canvas_, static_cast<float>(state_.clip.x0), static_cast<float>(state_.clip.y0),
@@ -98,8 +111,10 @@ void RasterCanvas::apply_clip()
 void RasterCanvas::begin(const PixelRect& clip)
 {
     const PixelRect all = {0, 0, width_, height_};
-    state_.tx = state_.ty = 0;
+    state_.a = state_.d = 1;
+    state_.b = state_.c = state_.e = state_.f = 0;
     state_.clip = intersect(clip, all);
+    state_.clip_is_rect = true;
     stack_.clear();
     plutovg_canvas_save(canvas_);
     apply_clip();
@@ -133,98 +148,132 @@ void RasterCanvas::restore()
 
 void RasterCanvas::translate(float dx, float dy)
 {
-    state_.tx += dx;
-    state_.ty += dy;
+    state_.e += state_.a * dx + state_.c * dy;
+    state_.f += state_.b * dx + state_.d * dy;
 }
+
+void RasterCanvas::scale_by(float sx, float sy)
+{
+    state_.a *= sx;
+    state_.b *= sx;
+    state_.c *= sy;
+    state_.d *= sy;
+}
+
+void RasterCanvas::rotate(float radians)
+{
+    const float cs = std::cos(radians), sn = std::sin(radians);
+    const float a = state_.a, b = state_.b, c = state_.c, d = state_.d;
+    state_.a = a * cs + c * sn;
+    state_.b = b * cs + d * sn;
+    state_.c = c * cs - a * sn;
+    state_.d = d * cs - b * sn;
+}
+
+float RasterCanvas::linear_scale() const { return std::sqrt(std::fabs(state_.a * state_.d - state_.b * state_.c)); }
 
 PixelRect RasterCanvas::snap(const Rect& r) const
 {
-    const PixelRect p = {round_px(px(r.x)), round_px(py(r.y)), round_px(px(r.right())), round_px(py(r.bottom()))};
+    const PixelRect p = {round_px(px(r.x, r.y)), round_px(py(r.x, r.y)), round_px(px(r.right(), r.bottom())),
+                         round_px(py(r.right(), r.bottom()))};
     return p;
 }
 
 void RasterCanvas::clip_rect(const Rect& r)
 {
-    state_.clip = intersect(state_.clip, snap(r));
-    apply_clip();
+    if (axis_aligned())
+    {
+        state_.clip = intersect(state_.clip, snap(r));
+        apply_clip();
+        return;
+    }
+    Path p;
+    p.add_rect(r);
+    clip_path(p);
+}
+
+void RasterCanvas::clip_path(const Path& path)
+{
+    PixelRect bounds;
+    set_path(path, &bounds);
+    plutovg_canvas_clip(canvas_);
+    state_.clip = intersect(state_.clip, bounds);
+    state_.clip_is_rect = false;
 }
 
 Rect RasterCanvas::clip_bounds() const
 {
-    return Rect(state_.clip.x0 / scale_ - state_.tx, state_.clip.y0 / scale_ - state_.ty,
-                (state_.clip.x1 - state_.clip.x0) / scale_, (state_.clip.y1 - state_.clip.y0) / scale_);
+    const PixelRect& c = state_.clip;
+    if (axis_aligned())
+    {
+        return Rect(c.x0 / scale_ - state_.e, c.y0 / scale_ - state_.f, (c.x1 - c.x0) / scale_, (c.y1 - c.y0) / scale_);
+    }
+    // クリップの矩形の角を、今の座標系に戻して囲む。
+    const float det = state_.a * state_.d - state_.b * state_.c;
+    if (det == 0)
+    {
+        return Rect();
+    }
+    float x0 = 1e30f, y0 = 1e30f, x1 = -1e30f, y1 = -1e30f;
+    const float xs[2] = {static_cast<float>(c.x0), static_cast<float>(c.x1)};
+    const float ys[2] = {static_cast<float>(c.y0), static_cast<float>(c.y1)};
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 2; ++j)
+        {
+            const float u = xs[i] / scale_ - state_.e, v = ys[j] / scale_ - state_.f;
+            extend((state_.d * u - state_.c * v) / det, (-state_.b * u + state_.a * v) / det, x0, y0, x1, y1);
+        }
+    }
+    return Rect(x0, y0, x1 - x0, y1 - y0);
 }
 
-void RasterCanvas::fill_rect(const Rect& r, const Color& color)
-{
-    const PixelRect p = snap(r);
-    if (p.empty())
-    {
-        return;
-    }
-    set_color(canvas_, color);
-    plutovg_canvas_fill_rect(canvas_, static_cast<float>(p.x0), static_cast<float>(p.y0),
-                             static_cast<float>(p.x1 - p.x0), static_cast<float>(p.y1 - p.y0));
-}
+// ---- 描画 ----
 
-void RasterCanvas::fill_round_rect(const Rect& r, float radius, const Paint& paint)
+void RasterCanvas::set_path(const Path& path, PixelRect* bounds)
 {
-    const PixelRect p = snap(r);
-    if (p.empty())
-    {
-        return;
-    }
-    const float rad = radius * scale_;
-    plutovg_canvas_new_path(canvas_);
-    plutovg_canvas_round_rect(canvas_, static_cast<float>(p.x0), static_cast<float>(p.y0),
-                              static_cast<float>(p.x1 - p.x0), static_cast<float>(p.y1 - p.y0), rad, rad);
-    set_paint(paint);
-    plutovg_canvas_fill(canvas_);
-}
-
-void RasterCanvas::stroke_round_rect(const Rect& r, float radius, float width, const Color& color)
-{
-    const PixelRect p = snap(r);
-    if (p.empty())
-    {
-        return;
-    }
-    // 線幅をピクセルの整数にし、線の中心を半ピクセルずらしてにじまないようにする。
-    const float sw = std::max(1.0f, std::floor(width * scale_ + 0.5f));
-    const float x0 = p.x0 + sw / 2, y0 = p.y0 + sw / 2, x1 = p.x1 - sw / 2, y1 = p.y1 - sw / 2;
-    if (x1 <= x0 || y1 <= y0)
-    {
-        return;
-    }
-    const float rad = std::max(0.0f, radius * scale_ - sw / 2);
-    plutovg_canvas_new_path(canvas_);
-    plutovg_canvas_round_rect(canvas_, x0, y0, x1 - x0, y1 - y0, rad, rad);
-    set_color(canvas_, color);
-    plutovg_canvas_set_line_width(canvas_, sw);
-    plutovg_canvas_stroke(canvas_);
-}
-
-void RasterCanvas::set_path(const Path& path)
-{
+    float x0 = 1e30f, y0 = 1e30f, x1 = -1e30f, y1 = -1e30f;
     plutovg_canvas_new_path(canvas_);
     const std::vector<Path::Element>& els = path.elements();
     for (std::size_t i = 0; i < els.size(); ++i)
     {
         const float* p = els[i].pts;
+        const int points = els[i].op == Path::Op::CUBIC_TO ? 3 : els[i].op == Path::Op::CLOSE ? 0 : 1;
+        float q[6];
+        for (int k = 0; k < points; ++k)
+        {
+            q[k * 2] = px(p[k * 2], p[k * 2 + 1]);
+            q[k * 2 + 1] = py(p[k * 2], p[k * 2 + 1]);
+            extend(q[k * 2], q[k * 2 + 1], x0, y0, x1, y1);
+        }
         switch (els[i].op)
         {
         case Path::Op::MOVE_TO:
-            plutovg_canvas_move_to(canvas_, px(p[0]), py(p[1]));
+            plutovg_canvas_move_to(canvas_, q[0], q[1]);
             break;
         case Path::Op::LINE_TO:
-            plutovg_canvas_line_to(canvas_, px(p[0]), py(p[1]));
+            plutovg_canvas_line_to(canvas_, q[0], q[1]);
             break;
         case Path::Op::CUBIC_TO:
-            plutovg_canvas_cubic_to(canvas_, px(p[0]), py(p[1]), px(p[2]), py(p[3]), px(p[4]), py(p[5]));
+            plutovg_canvas_cubic_to(canvas_, q[0], q[1], q[2], q[3], q[4], q[5]);
             break;
         case Path::Op::CLOSE:
             plutovg_canvas_close_path(canvas_);
             break;
+        }
+    }
+    if (bounds)
+    {
+        if (x1 < x0)
+        {
+            const PixelRect none = {0, 0, 0, 0};
+            *bounds = none;
+        }
+        else
+        {
+            const PixelRect r = {static_cast<int>(std::floor(x0)), static_cast<int>(std::floor(y0)),
+                                 static_cast<int>(std::ceil(x1)), static_cast<int>(std::ceil(y1))};
+            *bounds = r;
         }
     }
 }
@@ -244,17 +293,132 @@ void RasterCanvas::set_paint(const Paint& paint)
     }
     const plutovg_gradient_stop_t* data = stops.empty() ? nullptr : &stops[0];
     const int n = static_cast<int>(stops.size());
+    // グラデーションは dp の座標で指定し、変換と倍率は行列で渡す(回転・拡大しても形が正しい)。
+    plutovg_matrix_t m;
+    plutovg_matrix_init(&m, state_.a * scale_, state_.b * scale_, state_.c * scale_, state_.d * scale_,
+                        state_.e * scale_, state_.f * scale_);
     if (paint.type == Paint::Type::LINEAR)
     {
-        plutovg_canvas_set_linear_gradient(canvas_, px(paint.p0.x), py(paint.p0.y), px(paint.p1.x), py(paint.p1.y),
-                                           PLUTOVG_SPREAD_METHOD_PAD, data, n, nullptr);
+        plutovg_canvas_set_linear_gradient(canvas_, paint.p0.x, paint.p0.y, paint.p1.x, paint.p1.y,
+                                           PLUTOVG_SPREAD_METHOD_PAD, data, n, &m);
     }
     else
     {
-        plutovg_canvas_set_radial_gradient(canvas_, px(paint.p0.x), py(paint.p0.y), paint.radius * scale_,
-                                           px(paint.p1.x), py(paint.p1.y), 0, PLUTOVG_SPREAD_METHOD_PAD, data, n,
-                                           nullptr);
+        plutovg_canvas_set_radial_gradient(canvas_, paint.p0.x, paint.p0.y, paint.radius, paint.p1.x, paint.p1.y, 0,
+                                           PLUTOVG_SPREAD_METHOD_PAD, data, n, &m);
     }
+}
+
+void RasterCanvas::set_stroke(const StrokeStyle& style)
+{
+    const float k = scale_ * linear_scale();
+    plutovg_canvas_set_line_width(canvas_, style.width * k);
+    plutovg_line_cap_t cap = PLUTOVG_LINE_CAP_BUTT;
+    if (style.cap == LineCap::ROUND)
+    {
+        cap = PLUTOVG_LINE_CAP_ROUND;
+    }
+    else if (style.cap == LineCap::SQUARE)
+    {
+        cap = PLUTOVG_LINE_CAP_SQUARE;
+    }
+    plutovg_canvas_set_line_cap(canvas_, cap);
+    plutovg_line_join_t join = PLUTOVG_LINE_JOIN_MITER;
+    if (style.join == LineJoin::ROUND)
+    {
+        join = PLUTOVG_LINE_JOIN_ROUND;
+    }
+    else if (style.join == LineJoin::BEVEL)
+    {
+        join = PLUTOVG_LINE_JOIN_BEVEL;
+    }
+    plutovg_canvas_set_line_join(canvas_, join);
+    if (style.dashes.empty())
+    {
+        plutovg_canvas_set_dash(canvas_, 0, nullptr, 0);
+    }
+    else
+    {
+        std::vector<float> dashes(style.dashes.size());
+        for (std::size_t i = 0; i < dashes.size(); ++i)
+        {
+            dashes[i] = style.dashes[i] * k;
+        }
+        plutovg_canvas_set_dash(canvas_, style.dash_offset * k, &dashes[0], static_cast<int>(dashes.size()));
+    }
+}
+
+void RasterCanvas::fill_rect(const Rect& r, const Color& color)
+{
+    if (!axis_aligned())
+    {
+        Path p;
+        p.add_rect(r);
+        fill_path(p, color);
+        return;
+    }
+    const PixelRect p = snap(r);
+    if (p.empty())
+    {
+        return;
+    }
+    set_color(canvas_, color);
+    plutovg_canvas_fill_rect(canvas_, static_cast<float>(p.x0), static_cast<float>(p.y0),
+                             static_cast<float>(p.x1 - p.x0), static_cast<float>(p.y1 - p.y0));
+}
+
+void RasterCanvas::fill_round_rect(const Rect& r, float radius, const Paint& paint)
+{
+    if (!axis_aligned())
+    {
+        Path p;
+        p.add_round_rect(r, radius);
+        fill_path(p, paint);
+        return;
+    }
+    const PixelRect p = snap(r);
+    if (p.empty())
+    {
+        return;
+    }
+    const float rad = radius * scale_;
+    plutovg_canvas_new_path(canvas_);
+    plutovg_canvas_round_rect(canvas_, static_cast<float>(p.x0), static_cast<float>(p.y0),
+                              static_cast<float>(p.x1 - p.x0), static_cast<float>(p.y1 - p.y0), rad, rad);
+    set_paint(paint);
+    plutovg_canvas_fill(canvas_);
+}
+
+void RasterCanvas::stroke_round_rect(const Rect& r, float radius, float width, const Color& color)
+{
+    if (!axis_aligned())
+    {
+        // 線を r の内側に描く(線の中心を太さの半分だけ内側へ)。
+        Path p;
+        p.add_round_rect(r.adjusted(width / 2, width / 2, width / 2, width / 2), std::max(0.0f, radius - width / 2));
+        stroke_path(p, StrokeStyle(width), color);
+        return;
+    }
+    const PixelRect p = snap(r);
+    if (p.empty())
+    {
+        return;
+    }
+    // 線幅をピクセルの整数にし、線の中心を半ピクセルずらしてにじまないようにする。
+    const float sw = std::max(1.0f, std::floor(width * scale_ + 0.5f));
+    const float x0 = p.x0 + sw / 2, y0 = p.y0 + sw / 2, x1 = p.x1 - sw / 2, y1 = p.y1 - sw / 2;
+    if (x1 <= x0 || y1 <= y0)
+    {
+        return;
+    }
+    const float rad = std::max(0.0f, radius * scale_ - sw / 2);
+    plutovg_canvas_new_path(canvas_);
+    plutovg_canvas_round_rect(canvas_, x0, y0, x1 - x0, y1 - y0, rad, rad);
+    set_color(canvas_, color);
+    plutovg_canvas_set_line_width(canvas_, sw);
+    plutovg_canvas_set_line_join(canvas_, PLUTOVG_LINE_JOIN_MITER);
+    plutovg_canvas_set_dash(canvas_, 0, nullptr, 0);
+    plutovg_canvas_stroke(canvas_);
 }
 
 void RasterCanvas::fill_path(const Path& path, const Paint& paint)
@@ -268,7 +432,7 @@ void RasterCanvas::fill_path(const Path& path, const Paint& paint)
     plutovg_canvas_fill(canvas_);
 }
 
-void RasterCanvas::stroke_path(const Path& path, float width, const Paint& paint, LineCap cap)
+void RasterCanvas::stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint)
 {
     if (path.empty())
     {
@@ -276,38 +440,50 @@ void RasterCanvas::stroke_path(const Path& path, float width, const Paint& paint
     }
     set_path(path);
     set_paint(paint);
-    plutovg_canvas_set_line_width(canvas_, width * scale_);
-    plutovg_line_cap_t c = PLUTOVG_LINE_CAP_BUTT;
-    if (cap == LineCap::ROUND)
-    {
-        c = PLUTOVG_LINE_CAP_ROUND;
-    }
-    else if (cap == LineCap::SQUARE)
-    {
-        c = PLUTOVG_LINE_CAP_SQUARE;
-    }
-    plutovg_canvas_set_line_cap(canvas_, c);
+    set_stroke(style);
     plutovg_canvas_stroke(canvas_);
-    plutovg_canvas_set_line_cap(canvas_, PLUTOVG_LINE_CAP_BUTT);
 }
 
 void RasterCanvas::draw_image(const Image& image, const Rect& dst, float opacity)
 {
-    const PixelRect p = snap(dst);
-    if (image.is_null() || p.empty() || opacity <= 0)
+    if (image.is_null() || dst.width <= 0 || dst.height <= 0 || opacity <= 0)
     {
         return;
     }
-    // 画像の画素を、ピクセルに揃えた dst へ写す行列。
-    const float sx = static_cast<float>(p.x1 - p.x0) / image.width();
-    const float sy = static_cast<float>(p.y1 - p.y0) / image.height();
     plutovg_matrix_t m;
-    plutovg_matrix_init(&m, sx, 0, 0, sy, static_cast<float>(p.x0), static_cast<float>(p.y0));
-    plutovg_canvas_set_texture(canvas_, image.data()->surface, PLUTOVG_TEXTURE_TYPE_PLAIN, std::min(opacity, 1.0f),
-                               &m);
-    plutovg_canvas_fill_rect(canvas_, static_cast<float>(p.x0), static_cast<float>(p.y0),
-                             static_cast<float>(p.x1 - p.x0), static_cast<float>(p.y1 - p.y0));
+    PixelRect area;
+    if (axis_aligned())
+    {
+        // ピクセルに揃えた dst へ写す。
+        area = snap(dst);
+        if (area.empty())
+        {
+            return;
+        }
+        const float sx = static_cast<float>(area.x1 - area.x0) / image.width();
+        const float sy = static_cast<float>(area.y1 - area.y0) / image.height();
+        plutovg_matrix_init(&m, sx, 0, 0, sy, static_cast<float>(area.x0), static_cast<float>(area.y0));
+        plutovg_canvas_new_path(canvas_);
+        plutovg_canvas_rect(canvas_, static_cast<float>(area.x0), static_cast<float>(area.y0),
+                            static_cast<float>(area.x1 - area.x0), static_cast<float>(area.y1 - area.y0));
+    }
+    else
+    {
+        // 画像の画素 → dst(dp)→ 変換 → ピクセル。
+        const float sx = dst.width / image.width(), sy = dst.height / image.height();
+        const float k = scale_;
+        plutovg_matrix_init(&m, state_.a * sx * k, state_.b * sx * k, state_.c * sy * k, state_.d * sy * k,
+                            (state_.a * dst.x + state_.c * dst.y + state_.e) * k,
+                            (state_.b * dst.x + state_.d * dst.y + state_.f) * k);
+        Path p;
+        p.add_rect(dst);
+        set_path(p);
+    }
+    plutovg_canvas_set_texture(canvas_, image.data()->surface, PLUTOVG_TEXTURE_TYPE_PLAIN, std::min(opacity, 1.0f), &m);
+    plutovg_canvas_fill(canvas_);
 }
+
+// ---- 文字 ----
 
 // グリフの被覆率の補正(docs/adr/0020)。sRGB の値をそのまま線形に混ぜると、文字が細く見える(明るい文字では特に)。
 // 被覆率 c を c^(1/k) に持ち上げて補う。k は文字色の明るさで、暗い文字 TEXT_BOOST_DARK から明るい文字 TEXT_BOOST_LIGHT まで変える。
@@ -371,14 +547,19 @@ void RasterCanvas::draw_text(const TextLayout& layout, const Point& pos, const C
     {
         return;
     }
+    if (!axis_aligned() || !state_.clip_is_rect)
+    {
+        draw_text_outlines(layout, pos, color);
+        return;
+    }
     const PixelRect& clip = state_.clip;
     std::uint8_t table[256];
     text_coverage_table(color, table);
     for (std::size_t li = 0; li < d->lines.size(); ++li)
     {
         const LineData& line = d->lines[li];
-        const float ox = std::floor(px(pos.x) + line.x + 0.5f);
-        const float baseline = std::floor(py(pos.y) + line.y + d->ascent + 0.5f);
+        const float ox = std::floor(px(pos.x, pos.y) + line.x + 0.5f);
+        const float baseline = std::floor(py(pos.x, pos.y) + line.y + d->ascent + 0.5f);
         if (baseline - d->ascent >= clip.y1 || baseline + d->descent < clip.y0)
         {
             continue;  // クリップの外の行は描かない
@@ -406,6 +587,50 @@ void RasterCanvas::draw_text(const TextLayout& layout, const Point& pos, const C
             }
         }
     }
+}
+
+void RasterCanvas::draw_text_outlines(const TextLayout& layout, const Point& pos, const Color& color)
+{
+    // レイアウトはピクセル(レイアウトの倍率)で持っているので、dp に戻してから今の変換で写す。
+    const TextLayoutData* d = layout.data();
+    const float ls = d->scale > 0 ? d->scale : 1;
+    Path all;
+    for (std::size_t li = 0; li < d->lines.size(); ++li)
+    {
+        const LineData& line = d->lines[li];
+        for (std::size_t r = 0; r < line.runs.size(); ++r)
+        {
+            const GlyphRun& run = line.runs[r];
+            for (std::size_t i = 0; i < run.glyphs.size(); ++i)
+            {
+                const Path& outline = run.font->outline(run.glyphs[i].id);
+                const float ox = pos.x + (line.x + run.glyphs[i].x) / ls;
+                const float oy = pos.y + (line.y + d->ascent + run.glyphs[i].y) / ls;
+                const std::vector<Path::Element>& els = outline.elements();
+                for (std::size_t k = 0; k < els.size(); ++k)
+                {
+                    const float* p = els[k].pts;
+                    switch (els[k].op)
+                    {
+                    case Path::Op::MOVE_TO:
+                        all.move_to(ox + p[0] / ls, oy + p[1] / ls);
+                        break;
+                    case Path::Op::LINE_TO:
+                        all.line_to(ox + p[0] / ls, oy + p[1] / ls);
+                        break;
+                    case Path::Op::CUBIC_TO:
+                        all.cubic_to(ox + p[0] / ls, oy + p[1] / ls, ox + p[2] / ls, oy + p[3] / ls, ox + p[4] / ls,
+                                     oy + p[5] / ls);
+                        break;
+                    case Path::Op::CLOSE:
+                        all.close();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    fill_path(all, color);
 }
 
 }  // namespace detail

@@ -305,6 +305,74 @@ int main(int argc, char** argv)
     split->sizes = std::vector<float>{180, 300};
     tabs->add_tab(split, "木");
 
+    // 自由な描画(docs/adr/0032)。on_paint の中で Canvas に描く(Canvas は描画の呼び出しの間だけ有効)。
+    gui::Widget* drawing = new gui::Widget();
+    drawing->on_paint = [](gui::Object* sender, gui::Canvas& c)
+    {
+        const gui::Rect r = static_cast<gui::Widget*>(sender)->local_rect;
+        const gui::Color ink = gui::Theme::light() == gui::Application::instance()->theme.get()
+                                   ? gui::Color::rgb(0x111827)
+                                   : gui::Color::rgb(0xf3f4f6);
+        // 円グラフ(円弧のパス)。
+        static const float SHARES[] = {0.42f, 0.27f, 0.18f, 0.13f};
+        static const std::uint32_t COLORS[] = {0x2563eb, 0x059669, 0xf59e0b, 0xdc2626};
+        const gui::Point center(55, 60);
+        float angle = -1.5707963f;
+        for (int i = 0; i < 4; ++i)
+        {
+            const float sweep = SHARES[i] * 6.2831853f;
+            gui::Path slice;
+            slice.move_to(center.x, center.y);
+            slice.add_arc(center, 45, 45, angle, sweep, false);
+            slice.close();
+            c.fill_path(slice, gui::Color::rgb(COLORS[i]));
+            angle += sweep;
+        }
+        // 破線と線の端・角の形。
+        gui::StrokeStyle dashed(2, gui::LineCap::ROUND, gui::LineJoin::ROUND);
+        dashed.dashes = std::vector<float>{8, 5};
+        std::vector<gui::Point> zigzag;
+        for (int i = 0; i < 6; ++i)
+        {
+            zigzag.push_back(gui::Point(120 + i * 22.0f, i % 2 ? 40.0f : 15.0f));
+        }
+        gui::Path line;
+        line.add_polyline(zigzag);
+        c.stroke_path(line, dashed, ink);
+        c.draw_line(gui::Point(120, 60), gui::Point(230, 60), 6, gui::Color::rgb(0x2563eb), gui::LineCap::ROUND);
+        c.stroke_ellipse(gui::Rect(120, 75, 110, 40), gui::StrokeStyle(1.5f), ink);
+
+        // 回転と拡大(図形・グラデーション・文字のすべてに効く)。
+        c.save();
+        c.translate(305, 50);
+        c.rotate(-0.35f);
+        std::vector<gui::GradientStop> stops;
+        stops.push_back(gui::GradientStop(0, gui::Color::rgb(0x2563eb)));
+        stops.push_back(gui::GradientStop(1, gui::Color::rgb(0x059669)));
+        c.fill_round_rect(gui::Rect(-60, -25, 120, 50), 10, gui::Paint::linear(gui::Point(-60, 0), gui::Point(60, 0), stops));
+        c.draw_text("回転した文字", gui::Point(-48, -10), gui::Color::rgb(0xffffff));
+        c.restore();
+        c.save();
+        c.translate(250, 100);
+        c.scale_by(1.8f, 1.8f);
+        c.draw_text("拡大 Ag", gui::Point(0, 0), ink);
+        c.restore();
+
+        // パスでクリップ(円の中だけに縞を描く)。
+        c.save();
+        gui::Path circle;
+        circle.add_ellipse(gui::Point(425, 60), 42, 42);
+        c.clip_path(circle);
+        for (int i = 0; i < 12; ++i)
+        {
+            c.fill_rect(gui::Rect(380 + i * 8.0f, 15, 4, 90), gui::Color::rgb(COLORS[i % 4]));
+        }
+        c.draw_text("クリップ", gui::Point(398, 52), ink);
+        c.restore();
+        (void)r;
+    };
+    tabs->add_tab(drawing, "描画");
+
     tabs->add_tab(new gui::Widget(), "無効なタブ")->enabled = false;
     tabs->minimum_size = gui::Size(0, 240);
     column->add(tabs, 1);
@@ -486,7 +554,7 @@ int main(int argc, char** argv)
     theme_menu->add_item("ダーク(&D)", [=](gui::Object*) { scheme->current_index = 2; });
     view_menu->add_separator();
     view_menu->add_item("次のタブ", [=](gui::Object*)
-                        { tabs->current_index = (tabs->current_index + 1) % 4; })->shortcut = "F6";
+                        { tabs->current_index = (tabs->current_index + 1) % 5; })->shortcut = "F6";
     gui::Menu* help_menu = bar->add_menu("ヘルプ(&H)");
     help_menu->add_item("バージョン情報(&A)", [&window](gui::Object*)
     {

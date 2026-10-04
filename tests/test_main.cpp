@@ -2931,6 +2931,75 @@ TEST(splitter_vertical_and_nested)
     CHECK(s.size() == 3 && near(s[0], 96) && near(s[1], 96) && near(s[2], 96));
 }
 
+TEST(canvas_transforms_clip_and_dashes)
+{
+    gui::Window window("t", 200, 120);
+    gui::Widget* w = new gui::Widget(&window);
+    w->bounds = gui::Rect(0, 0, 200, 120);
+    const gui::Color red = gui::Color::rgb(0xff0000), blue = gui::Color::rgb(0x0000ff), green = gui::Color::rgb(0x00ff00);
+    gui::Rect seen_bounds;
+    w->on_paint = [&](gui::Object*, gui::Canvas& c)
+    {
+        // 回転: 横長の矩形を 90 度回すと縦長になる。
+        c.save();
+        c.translate(100, 60);
+        c.rotate(1.5707963f);
+        c.fill_rect(gui::Rect(-40, -5, 80, 10), red);
+        seen_bounds = c.clip_bounds();
+        c.restore();
+        // パスでクリップ: 円の外は塗らない。
+        c.save();
+        gui::Path circle;
+        circle.add_ellipse(gui::Point(40, 40), 20, 20);
+        c.clip_path(circle);
+        c.fill_rect(gui::Rect(0, 0, 80, 80), blue);
+        c.draw_text("A", gui::Point(34, 30), red);  // クリップの中の文字は輪郭で描く
+        c.restore();
+        // 破線。
+        gui::StrokeStyle dashed(4);
+        dashed.dashes = std::vector<float>{10, 10};
+        c.draw_line(gui::Point(120, 100), gui::Point(200, 100), dashed, green);
+        // 拡大。
+        c.save();
+        c.translate(150, 10);
+        c.scale_by(2, 2);
+        c.fill_rect(gui::Rect(0, 0, 10, 10), red);
+        c.restore();
+    };
+    window.visible = true;
+    window.impl()->render(false);
+    const int stride = window.impl()->pixel_width;
+    const std::uint32_t* px = &window.impl()->buffer[0];
+    const auto at = [&](int x, int y) { return px[y * stride + x]; };
+    CHECK(at(100, 30) == packed(red) && at(100, 90) == packed(red));  // 縦に伸びた
+    CHECK(at(70, 60) != packed(red) && at(130, 60) != packed(red));
+    CHECK(seen_bounds.width > 0 && seen_bounds.height > 0);           // 回転した座標系でのクリップの範囲
+    CHECK(at(40, 25) == packed(blue) && at(22, 22) != packed(blue));  // 円の中だけ
+    CHECK(at(75, 75) != packed(blue));
+    CHECK(at(125, 100) == packed(green) && at(135, 100) != packed(green) && at(145, 100) == packed(green));
+    CHECK(at(165, 25) == packed(red) && at(172, 32) != packed(red));  // 10dp を 2 倍した 20dp の正方形
+    if (const char* dir = std::getenv("GUI_TEST_SHOTS"))
+    {
+        window.save_png(std::string(dir) + "/canvas.png");
+    }
+}
+
+TEST(path_arc_and_quad)
+{
+    gui::Path p;
+    p.add_arc(gui::Point(0, 0), 10, 10, 0, 3.1415926f);  // 右から時計回りに半周(下を通って左へ)
+    const std::vector<gui::Path::Element>& els = p.elements();
+    CHECK(els.size() == 3 && els[0].op == gui::Path::Op::MOVE_TO);  // move と 90 度ずつの 2 つのベジェ
+    CHECK(near(els[0].pts[0], 10) && near(els[0].pts[1], 0));
+    CHECK(near(els[1].pts[4], 0) && near(els[1].pts[5], 10));      // 90 度で真下
+    CHECK(near(els[2].pts[4], -10) && near(els[2].pts[5], 0));
+    gui::Path q;
+    q.move_to(0, 0);
+    q.quad_to(10, 10, 20, 0);
+    CHECK(q.elements().size() == 2 && q.elements()[1].op == gui::Path::Op::CUBIC_TO);
+    CHECK(near(q.elements()[1].pts[0], 20.0f / 3) && near(q.elements()[1].pts[4], 20));
+}
+
 }  // namespace
 
 int main(int argc, char** argv)

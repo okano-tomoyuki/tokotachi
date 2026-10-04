@@ -190,6 +190,89 @@ const GlyphBitmap& FontInstance::glyph(std::uint32_t glyph_id, int subpixel)
     return glyphs_.insert(std::make_pair(key, g)).first->second;
 }
 
+namespace
+{
+
+// FreeType の輪郭(26.6 の固定小数点、y は上が正)を Path(ピクセル、y は下が正)に写す。
+struct OutlineSink
+{
+    Path* path;
+    float x, y;  // 今の点(2 次ベジェを 3 次に直すため)
+};
+
+int outline_move(const FT_Vector* to, void* user)
+{
+    OutlineSink* s = static_cast<OutlineSink*>(user);
+    if (!s->path->empty())
+    {
+        s->path->close();
+    }
+    s->x = to->x / 64.0f;
+    s->y = -to->y / 64.0f;
+    s->path->move_to(s->x, s->y);
+    return 0;
+}
+
+int outline_line(const FT_Vector* to, void* user)
+{
+    OutlineSink* s = static_cast<OutlineSink*>(user);
+    s->x = to->x / 64.0f;
+    s->y = -to->y / 64.0f;
+    s->path->line_to(s->x, s->y);
+    return 0;
+}
+
+int outline_conic(const FT_Vector* control, const FT_Vector* to, void* user)
+{
+    OutlineSink* s = static_cast<OutlineSink*>(user);
+    const float cx = control->x / 64.0f, cy = -control->y / 64.0f;
+    const float x = to->x / 64.0f, y = -to->y / 64.0f;
+    s->path->cubic_to(s->x + 2.0f / 3 * (cx - s->x), s->y + 2.0f / 3 * (cy - s->y), x + 2.0f / 3 * (cx - x),
+                      y + 2.0f / 3 * (cy - y), x, y);
+    s->x = x;
+    s->y = y;
+    return 0;
+}
+
+int outline_cubic(const FT_Vector* c1, const FT_Vector* c2, const FT_Vector* to, void* user)
+{
+    OutlineSink* s = static_cast<OutlineSink*>(user);
+    s->x = to->x / 64.0f;
+    s->y = -to->y / 64.0f;
+    s->path->cubic_to(c1->x / 64.0f, -c1->y / 64.0f, c2->x / 64.0f, -c2->y / 64.0f, s->x, s->y);
+    return 0;
+}
+
+}  // namespace
+
+const Path& FontInstance::outline(std::uint32_t glyph_id)
+{
+    std::map<std::uint32_t, Path>::iterator it = outlines_.find(glyph_id);
+    if (it != outlines_.end())
+    {
+        return it->second;
+    }
+    Path path;
+    if (FT_Load_Glyph(face_, glyph_id, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP) == 0 &&
+        face_->glyph->format == FT_GLYPH_FORMAT_OUTLINE)
+    {
+        FT_Outline_Funcs funcs;
+        funcs.move_to = &outline_move;
+        funcs.line_to = &outline_line;
+        funcs.conic_to = &outline_conic;
+        funcs.cubic_to = &outline_cubic;
+        funcs.shift = 0;
+        funcs.delta = 0;
+        OutlineSink sink = {&path, 0, 0};
+        FT_Outline_Decompose(&face_->glyph->outline, &funcs, &sink);
+        if (!path.empty())
+        {
+            path.close();
+        }
+    }
+    return outlines_.insert(std::make_pair(glyph_id, path)).first->second;
+}
+
 FontCache& FontCache::instance()
 {
     static FontCache cache;

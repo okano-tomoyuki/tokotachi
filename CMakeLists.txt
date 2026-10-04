@@ -35,6 +35,7 @@ add_library(gui STATIC
     src/core/timer.cpp
     src/core/widget.cpp
     src/core/window.cpp
+    src/gfx/canvas.cpp
     src/gfx/image.cpp
     src/gfx/path.cpp
     src/layout/box_layout.cpp

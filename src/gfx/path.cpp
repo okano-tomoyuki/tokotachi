@@ -1,6 +1,7 @@
 #include <gui/canvas.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 namespace gui
 {
@@ -29,6 +30,26 @@ Path::Element element(Path::Op op, float a = 0, float b = 0, float c = 0, float 
 void Path::move_to(float x, float y) { elements_.push_back(element(Op::MOVE_TO, x, y)); }
 
 void Path::line_to(float x, float y) { elements_.push_back(element(Op::LINE_TO, x, y)); }
+
+void Path::quad_to(float x1, float y1, float x2, float y2)
+{
+    // 今の点(無ければ制御点)から、3 次ベジェの制御点を求める。
+    float x0 = x1, y0 = y1;
+    for (std::size_t i = elements_.size(); i-- > 0;)
+    {
+        const Element& e = elements_[i];
+        if (e.op == Op::CLOSE)
+        {
+            continue;  // 閉じた図形の始点は追わない(次は move_to から始めるのが普通)
+        }
+        const int last = e.op == Op::CUBIC_TO ? 4 : 0;
+        x0 = e.pts[last];
+        y0 = e.pts[last + 1];
+        break;
+    }
+    cubic_to(x0 + 2.0f / 3 * (x1 - x0), y0 + 2.0f / 3 * (y1 - y0), x2 + 2.0f / 3 * (x1 - x2), y2 + 2.0f / 3 * (y1 - y2),
+             x2, y2);
+}
 
 void Path::cubic_to(float x1, float y1, float x2, float y2, float x3, float y3)
 {
@@ -77,6 +98,52 @@ void Path::add_ellipse(const Point& c, float rx, float ry)
     cubic_to(c.x - rx, c.y - ky, c.x - kx, c.y - ry, c.x, c.y - ry);
     cubic_to(c.x + kx, c.y - ry, c.x + rx, c.y - ky, c.x + rx, c.y);
     close();
+}
+
+void Path::add_arc(const Point& c, float rx, float ry, float start, float sweep, bool new_figure)
+{
+    // 90 度以下に分け、それぞれを 3 次ベジェで近似する。
+    const float quarter = 1.5707963f;
+    const int segments = std::max(1, static_cast<int>(std::ceil(std::fabs(sweep) / quarter - 1e-4f)));
+    const float step = sweep / static_cast<float>(segments);
+    const float k = 4.0f / 3.0f * std::tan(step / 4);
+    float a0 = start;
+    const float x0 = c.x + rx * std::cos(a0), y0 = c.y + ry * std::sin(a0);
+    if (new_figure || elements_.empty())
+    {
+        move_to(x0, y0);
+    }
+    else
+    {
+        line_to(x0, y0);
+    }
+    for (int i = 0; i < segments; ++i)
+    {
+        const float a1 = a0 + step;
+        const float c0 = std::cos(a0), s0 = std::sin(a0), c1 = std::cos(a1), s1 = std::sin(a1);
+        cubic_to(c.x + rx * (c0 - k * s0), c.y + ry * (s0 + k * c0), c.x + rx * (c1 + k * s1), c.y + ry * (s1 - k * c1),
+                 c.x + rx * c1, c.y + ry * s1);
+        a0 = a1;
+    }
+}
+
+void Path::add_polyline(const std::vector<Point>& points, bool close_figure)
+{
+    for (std::size_t i = 0; i < points.size(); ++i)
+    {
+        if (i == 0)
+        {
+            move_to(points[i].x, points[i].y);
+        }
+        else
+        {
+            line_to(points[i].x, points[i].y);
+        }
+    }
+    if (close_figure && !points.empty())
+    {
+        close();
+    }
 }
 
 Paint Paint::linear(const Point& from, const Point& to, const std::vector<GradientStop>& stops)

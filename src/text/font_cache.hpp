@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include <gui/canvas.hpp>
+
 struct FT_LibraryRec_;
 struct FT_FaceRec_;
 struct hb_font_t;
@@ -48,6 +50,9 @@ public:
     float line_gap() const { return line_gap_; }  // ピクセル。行の送りから ascent + descent を除いた空き
     // グリフのビットマップ。subpixel(0〜SUBPIXEL_STEPS-1)は横のずれ(1/SUBPIXEL_STEPS ピクセル単位。docs/adr/0020)。
     const GlyphBitmap& glyph(std::uint32_t glyph_id, int subpixel = 0);
+    // グリフの輪郭(ピクセル。ペンの位置が原点で、y は下が正。ヒンティングなし)。拡大・回転して描くときに使う。
+    // 輪郭の無いグリフ(カラーの絵文字のビットマップなど)は空。
+    const Path& outline(std::uint32_t glyph_id);
 
     static const int SUBPIXEL_STEPS = 4;
 
@@ -56,6 +61,7 @@ private:
     hb_font_t* hb_;
     float ascent_, descent_, line_gap_;
     std::map<std::uint64_t, GlyphBitmap> glyphs_;  // キーはグリフの番号 * SUBPIXEL_STEPS + 横のずれ
+    std::map<std::uint32_t, Path> outlines_;
 };
 
 // プロセスで 1 つ。フォントのファイルは最初に使うときに探す。
