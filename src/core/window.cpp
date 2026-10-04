@@ -641,6 +641,14 @@ void WindowImpl::update_cursor()
     }
 }
 
+void WindowImpl::cursor_changed(Widget* w)
+{
+    if (w == (grab ? grab : hover))
+    {
+        update_cursor();
+    }
+}
+
 void WindowImpl::set_focus(Widget* w)
 {
     if (w == focus)

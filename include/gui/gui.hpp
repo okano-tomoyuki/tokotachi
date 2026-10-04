@@ -41,6 +41,7 @@
 #include "shortcut.hpp"
 #include "slider.hpp"
 #include "spin_box.hpp"
+#include "splitter.hpp"
 #include "status_bar.hpp"
 #include "tab_widget.hpp"
 #include "task.hpp"

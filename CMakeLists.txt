@@ -64,6 +64,7 @@ add_library(gui STATIC
     src/widgets/scroll_bar.cpp
     src/widgets/slider.cpp
     src/widgets/spin_box.cpp
+    src/widgets/splitter.cpp
     src/widgets/status_bar.cpp
     src/widgets/tab_widget.cpp
     src/widgets/tree_view.cpp

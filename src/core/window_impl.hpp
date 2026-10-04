@@ -90,6 +90,9 @@ struct WindowImpl
     bool ime_dirty;
     SDL_Cursor* cursors[7];
 
+    // w の cursor が変わった(w がポインタの下・捕捉中なら、OS のカーソルを変える)。
+    void cursor_changed(Widget* w);
+
 private:
     void ensure_target();
     void layout_tree(Widget* w);

@@ -274,7 +274,36 @@ int main(int argc, char** argv)
     gui::TreeView* tree_view = new gui::TreeView();
     tree_view->model = tree;
     tree_view->expand(tree->index_of(documents));
-    tabs->add_tab(tree_view, "木");
+
+    // 分割ウィンドウ(docs/adr/0031)。左に木、右に選んだ項目の中身。境目をドラッグして幅を変え、端まで寄せるとたためる。
+    // 左は stretch 0(ウィンドウの幅が変わっても幅を保つ)、右は 1(増えた・減った幅を受け持つ)。
+    gui::ListModel* contents = new gui::ListModel(&window);
+    gui::ListView* contents_view = new gui::ListView();
+    contents_view->add_column("名前", 160);
+    contents_view->add_column("種類", 80);
+    contents_view->model = contents;
+    tree_view->on_selection_change = [=](gui::Object*)
+    {
+        contents->clear();
+        const gui::TreeItem* chosen = tree->item_at(tree_view->current);
+        if (!chosen)
+        {
+            return;
+        }
+        const std::vector<gui::TreeItem*> children = chosen->children;
+        for (std::size_t i = 0; i < children.size(); ++i)
+        {
+            const bool folder = !children[i]->children.get().empty();
+            gui::Item* item = contents->add_item(children[i]->text);
+            item->icon = children[i]->icon;
+            item->column_texts = std::vector<std::string>(1, folder ? "フォルダー" : "ファイル");
+        }
+    };
+    gui::Splitter* split = new gui::Splitter();
+    split->add_widget(tree_view, 0);
+    split->add_widget(contents_view, 1);
+    split->sizes = std::vector<float>{180, 300};
+    tabs->add_tab(split, "木");
 
     tabs->add_tab(new gui::Widget(), "無効なタブ")->enabled = false;
     tabs->minimum_size = gui::Size(0, 240);

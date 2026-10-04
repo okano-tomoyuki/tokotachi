@@ -2848,6 +2848,89 @@ TEST(status_bar_message_and_widgets)
     CHECK(window.status_bar == nullptr);
 }
 
+TEST(splitter_sizes_stretch_and_drag)
+{
+    gui::Window window("t", 600, 200);
+    gui::Splitter* split = new gui::Splitter(&window);
+    split->bounds = gui::Rect(0, 0, 400, 200);
+    gui::Widget* left = new gui::Widget();
+    gui::Widget* right = new gui::Widget();
+    left->minimum_size = gui::Size(50, 0);
+    right->minimum_size = gui::Size(50, 0);
+    gui::SplitterPane* left_pane = split->add_widget(left);
+    gui::SplitterPane* right_pane = split->add_widget(right);
+    CHECK(left->parent == split && split->panes.get().size() == 2 && left_pane->widget == left);
+    window.visible = true;
+    window.apply_layout();
+    // 望む大きさ(50)から始め、余りを stretch(1 と 1)で配る。境目は 6dp。
+    std::vector<float> s = split->sizes;
+    CHECK(near(s[0], 197) && near(s[1], 197) && near(right->x, 203));
+
+    // 左の stretch を 0 にすると、大きくしても左は幅を保つ。
+    left_pane->stretch = 0;
+    split->bounds = gui::Rect(0, 0, 500, 200);
+    window.apply_layout();
+    s = split->sizes;
+    CHECK(near(s[0], 197) && near(s[1], 297));
+
+    // 境目をドラッグする。最小より小さくはならず、最小の半分より小さくするとたたむ。
+    int changes = 0;
+    split->on_change = [&](gui::Object*) { ++changes; };
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, gui::Point(200, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, gui::Point(103, 100));
+    window.apply_layout();
+    CHECK(near(split->sizes.get()[0], 100) && near(split->sizes.get()[1], 394) && changes == 1);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, gui::Point(33, 100));
+    CHECK(near(split->sizes.get()[0], 50));  // 最小(30 は最小の半分より大きい)
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, gui::Point(13, 100));
+    window.apply_layout();
+    CHECK(near(split->sizes.get()[0], 0) && left_pane->collapsed && !left->visible);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, gui::Point(13, 100));
+    // たたんだ区画は、境目(左端)をドラッグして戻す。
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, gui::Point(3, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, gui::Point(153, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, gui::Point(153, 100));
+    window.apply_layout();
+    CHECK(near(split->sizes.get()[0], 150) && !left_pane->collapsed && left->visible);
+    // たためない区画はたたまない。
+    right_pane->collapsible = false;
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, gui::Point(153, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, gui::Point(498, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, gui::Point(498, 100));
+    CHECK(near(split->sizes.get()[1], 50));
+
+    // sizes の代入(合計が合わない分は stretch で合わせる)。
+    split->sizes = std::vector<float>{120, 100};
+    window.apply_layout();
+    CHECK(near(split->sizes.get()[0], 120) && near(split->sizes.get()[1], 374));
+    // 区画の部品を破棄すると、その区画は消える。
+    delete left;
+    window.apply_layout();
+    CHECK(split->panes.get().size() == 1 && near(right->x, 0) && near(right->width, 500));
+    split->on_change = gui::NotifyHandler();
+}
+
+TEST(splitter_vertical_and_nested)
+{
+    gui::Window window("t", 300, 400);
+    gui::Splitter* outer = new gui::Splitter(&window, gui::Orientation::VERTICAL);
+    outer->bounds = gui::Rect(0, 0, 300, 400);
+    gui::Widget* top = new gui::Widget();
+    gui::Splitter* inner = new gui::Splitter();
+    inner->add_widget(new gui::Widget());
+    inner->add_widget(new gui::Widget());
+    inner->add_widget(new gui::Widget());
+    outer->add_widget(top);
+    outer->add_widget(inner);
+    outer->sizes = std::vector<float>{100, 294};
+    window.visible = true;
+    window.apply_layout();
+    CHECK(near(top->height, 100) && near(inner->y, 106) && near(inner->height, 294) && near(inner->width, 300));
+    // 3 つの区画は同じ stretch なので、同じ幅(境目 2 つ)。
+    const std::vector<float> s = inner->sizes;
+    CHECK(s.size() == 3 && near(s[0], 96) && near(s[1], 96) && near(s[2], 96));
+}
+
 }  // namespace
 
 int main(int argc, char** argv)

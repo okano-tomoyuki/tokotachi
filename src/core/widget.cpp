@@ -71,6 +71,20 @@ Widget::Widget(Widget* parent_widget)
     }
 }
 
+void Widget::set_cursor(const MouseCursor& v)
+{
+    if (v == cursor_)
+    {
+        return;
+    }
+    cursor_ = v;
+    // ポインタの下(またはドラッグ中)のウィジェットなら、すぐに OS のカーソルを変える。
+    if (Window* w = get_window())
+    {
+        w->impl()->cursor_changed(this);
+    }
+}
+
 void Widget::add_action(Action* action)
 {
     if (!action || std::find(actions_.begin(), actions_.end(), action) != actions_.end())

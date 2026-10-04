@@ -221,7 +221,7 @@ private:
     bool get_focused() const;
     void set_focused(const bool& v);
     MouseCursor get_cursor() const { return cursor_; }
-    void set_cursor(const MouseCursor& v) { cursor_ = v; }
+    void set_cursor(const MouseCursor& v);
     bool get_accepts_text_input() const { return accepts_text_input_; }
     void set_accepts_text_input(const bool& v);
     float get_display_scale() const;
