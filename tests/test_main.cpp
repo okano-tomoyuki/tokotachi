@@ -3102,6 +3102,77 @@ TEST(paint_box_cached)
     CHECK(calls == 5);
 }
 
+// 文字と図形を Bitmap に描き、画素の並びを返す(どのスレッドからでも呼べる)。
+std::vector<std::uint32_t> render_text_bitmap(float size, int round)
+{
+    gui::Bitmap b(160, 60);
+    gui::Canvas& c = b.canvas();
+    c.fill_rect(gui::Rect(0, 0, 160, 60), gui::Color::rgb(0xffffff));
+    const std::string text = "スレッド " + std::to_string(round) + " Ag漢字";
+    c.draw_text(gui::TextLayout(text, gui::Font(size), 1), gui::Point(4, 4), gui::Color::rgb(0x111827));
+    c.save();
+    c.translate(80, 40);
+    c.rotate(0.3f);
+    c.draw_text("回転", gui::Point(0, 0), gui::Color::rgb(0x2563eb));  // 輪郭で描く
+    c.restore();
+    return std::vector<std::uint32_t>(b.pixels(), b.pixels() + 160 * 60);
+}
+
+TEST(text_rendering_on_worker_threads)
+{
+    // 各スレッドで、別々の大きさ(フォントの実体を同時に開く)の文字を何度も描く。
+    const int THREADS = 4, ROUNDS = 20;
+    std::vector<std::vector<std::uint32_t> > results(THREADS);
+    std::vector<std::thread> workers;
+    for (int t = 0; t < THREADS; ++t)
+    {
+        workers.push_back(std::thread(
+            [&results, t]()
+            {
+                for (int r = 0; r < ROUNDS; ++r)
+                {
+                    results[t] = render_text_bitmap(11.0f + t * 3 + (r % 5), r);
+                }
+            }));
+    }
+    for (std::size_t i = 0; i < workers.size(); ++i)
+    {
+        workers[i].join();
+    }
+    // メインスレッドで同じものを描くと、同じ画素になる。
+    bool same = true;
+    for (int t = 0; t < THREADS; ++t)
+    {
+        same = same && results[t] == render_text_bitmap(11.0f + t * 3 + ((ROUNDS - 1) % 5), ROUNDS - 1);
+    }
+    CHECK(same);
+    int ink = 0;
+    for (std::size_t i = 0; i < results[0].size(); ++i)
+    {
+        ink += results[0][i] != 0xffffffffu ? 1 : 0;
+    }
+    CHECK(ink > 100);
+}
+
+TEST(task_renders_image_in_background)
+{
+    gui::Window window("t", 100, 100);
+    gui::Task<gui::Image>* task = new gui::Task<gui::Image>(&window);
+    bool done = false;
+    task->on_finish = [&](gui::Object*) { done = true; };
+    task->start(
+        [](gui::TaskContext&) -> gui::Image
+        {
+            gui::Bitmap b(80, 40);
+            b.canvas().fill_rect(gui::Rect(0, 0, 80, 40), gui::Color::rgb(0x059669));
+            b.canvas().draw_text("裏", gui::Point(4, 4), gui::Color::rgb(0xffffff));
+            return b.to_image();
+        });
+    CHECK(run_until([&]() { return done; }));
+    const gui::Image image = task->result;
+    CHECK(image.width() == 80 && image.pixel(70, 30) == gui::Color::rgb(0x059669));
+}
+
 }  // namespace
 
 int main(int argc, char** argv)

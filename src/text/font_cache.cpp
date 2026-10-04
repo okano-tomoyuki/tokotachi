@@ -151,10 +151,21 @@ FontInstance::~FontInstance()
     }
 }
 
-bool FontInstance::has_char(std::uint32_t cp) const { return hb_ && FT_Get_Char_Index(face_, cp) != 0; }
+std::recursive_mutex& font_mutex()
+{
+    static std::recursive_mutex m;
+    return m;
+}
+
+bool FontInstance::has_char(std::uint32_t cp) const
+{
+    std::lock_guard<std::recursive_mutex> lock(font_mutex());
+    return hb_ && FT_Get_Char_Index(face_, cp) != 0;
+}
 
 const GlyphBitmap& FontInstance::glyph(std::uint32_t glyph_id, int subpixel)
 {
+    std::lock_guard<std::recursive_mutex> lock(font_mutex());
     const std::uint64_t key = static_cast<std::uint64_t>(glyph_id) * SUBPIXEL_STEPS + static_cast<std::uint64_t>(subpixel);
     std::map<std::uint64_t, GlyphBitmap>::iterator it = glyphs_.find(key);
     if (it != glyphs_.end())
@@ -247,6 +258,7 @@ int outline_cubic(const FT_Vector* c1, const FT_Vector* c2, const FT_Vector* to,
 
 const Path& FontInstance::outline(std::uint32_t glyph_id)
 {
+    std::lock_guard<std::recursive_mutex> lock(font_mutex());
     std::map<std::uint32_t, Path>::iterator it = outlines_.find(glyph_id);
     if (it != outlines_.end())
     {
@@ -317,6 +329,7 @@ FontCache::~FontCache()
 
 FontInstance* FontCache::get(std::size_t face, int pixel_size)
 {
+    std::lock_guard<std::recursive_mutex> lock(font_mutex());
     if (!lib_ || face >= sources_.size())
     {
         return nullptr;

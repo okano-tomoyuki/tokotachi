@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -326,7 +327,39 @@ int main(int argc, char** argv)
         }
     }
     const gui::Image hue_image = hues.to_image();
-    drawing->on_paint = [hue_image](gui::Object* sender, gui::Canvas& c)
+    // 重い描画は別のスレッドで Bitmap に描き、Image にして返す(Task。docs/adr/0034)。文字も別のスレッドで描ける。
+    // 描き終えたら覚えている絵を捨てて(refresh)、貼り直す。
+    std::shared_ptr<gui::Image> fractal = std::make_shared<gui::Image>();
+    gui::Task<gui::Image>* fractal_task = new gui::Task<gui::Image>(&window);
+    fractal_task->on_finish = [=](gui::Object*)
+    {
+        *fractal = fractal_task->result;
+        drawing->refresh();
+    };
+    fractal_task->start([](gui::TaskContext& ctx) -> gui::Image
+    {
+        gui::Bitmap b(240, 100);
+        for (int y = 0; y < b.height() && !ctx.cancel_requested(); ++y)
+        {
+            for (int x = 0; x < b.width(); ++x)
+            {
+                const double cr = -2.2 + x * 3.0 / b.width(), ci = -1.1 + y * 2.2 / b.height();
+                double zr = 0, zi = 0;
+                int n = 0;
+                for (; n < 200 && zr * zr + zi * zi < 4; ++n)
+                {
+                    const double t = zr * zr - zi * zi + cr;
+                    zi = 2 * zr * zi + ci;
+                    zr = t;
+                }
+                const std::uint8_t v = static_cast<std::uint8_t>(n >= 200 ? 0 : 255 - n * 255 / 200);
+                b.set_pixel(x, y, gui::Color(static_cast<std::uint8_t>(v / 3), static_cast<std::uint8_t>(v / 2), v));
+            }
+        }
+        b.canvas().draw_text("別のスレッドで描いた", gui::Point(6, 6), gui::Color::rgb(0xffffff));
+        return b.to_image();
+    });
+    drawing->on_paint = [hue_image, fractal](gui::Object* sender, gui::Canvas& c)
     {
         const gui::Rect r = static_cast<gui::Widget*>(sender)->local_rect;
         const gui::Color ink = gui::Theme::light() == gui::Application::instance()->theme.get()
@@ -409,12 +442,20 @@ int main(int argc, char** argv)
         }
         c.draw_image(hue_image, gui::Rect(330, 150, 120, 24));
         c.draw_text("Bitmap の画素", gui::Point(330, 180), ink);
+        if (!fractal->is_null())
+        {
+            c.draw_image(*fractal, gui::Rect(20, 255, 240, 100));
+        }
+        else
+        {
+            c.draw_text("裏で描いています...", gui::Point(20, 255), ink);
+        }
         (void)r;
     };
     tabs->add_tab(drawing, "描画");
 
     tabs->add_tab(new gui::Widget(), "無効なタブ")->enabled = false;
-    tabs->minimum_size = gui::Size(0, 300);
+    tabs->minimum_size = gui::Size(0, 400);
     column->add(tabs, 1);
     column->add(disabled, 0, gui::Align::START);  // 横に広げない
 

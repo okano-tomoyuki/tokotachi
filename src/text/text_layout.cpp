@@ -532,8 +532,10 @@ float caret_x(const detail::LineData& l, std::size_t offset)
 TextLayout::TextLayout() {}
 
 TextLayout::TextLayout(const std::string& text, const Font& font, float scale, float wrap_width, Align alignment)
-    : d_(build(text, font, scale, wrap_width, alignment))
 {
+    // 文字を並べる間は、フォントの処理を 1 つのスレッドに限る(docs/adr/0034)。
+    std::lock_guard<std::recursive_mutex> lock(detail::font_mutex());
+    d_ = build(text, font, scale, wrap_width, alignment);
 }
 
 const std::string& TextLayout::text() const

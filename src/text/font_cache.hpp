@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <map>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -18,6 +19,11 @@ namespace gui
 {
 namespace detail
 {
+
+// フォントの処理(フォントの実体を開く・グリフを作る・文字を並べる)を守るロック(docs/adr/0034)。
+// FreeType の Face と HarfBuzz の文字の並べ方は、同時に複数のスレッドから使えないため。作ったグリフ(GlyphBitmap・Path)は
+// 消さないので、受け取った参照はロックの外で読んでよい。
+std::recursive_mutex& font_mutex();
 
 struct FaceSource
 {
