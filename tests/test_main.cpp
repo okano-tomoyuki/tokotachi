@@ -2728,6 +2728,126 @@ TEST(task_destroyed_while_running)
     CHECK(saw_cancel && !called);
 }
 
+TEST(tool_bar_buttons_and_shortcuts)
+{
+    gui::Window window("t", 500, 300);
+    gui::BoxLayout* box = new gui::BoxLayout(&window);
+    box->margins = gui::Margins(0);
+    gui::LineEdit* edit = new gui::LineEdit(&window);
+    box->add(edit);
+    gui::MenuBar* bar = new gui::MenuBar();
+    bar->add_menu("ファイル(&F)")->add_item("開く");
+    gui::ToolBar* tools = new gui::ToolBar();
+    std::string done;
+    gui::Action* save = new gui::Action(&window, "保存(&S)...");
+    save->shortcut = "Ctrl+S";
+    save->on_trigger = [&](gui::Object*) { done += "save "; };
+    tools->add_action(save);
+    gui::Action* bold = tools->add_item("太字");
+    bold->checkable = true;
+    tools->add_separator();
+    gui::StatusBar* status = new gui::StatusBar();
+    window.menu_bar = bar;
+    window.tool_bar = tools;
+    window.status_bar = status;
+    window.visible = true;
+    window.apply_layout();
+
+    // 上からメニューバー・ツールバー・レイアウト、下端にステータスバー。
+    CHECK(near(tools->y, bar->height) && near(edit->y, bar->height.get() + tools->height.get()));
+    CHECK(near(status->y.get() + status->height.get(), window.height) && status->height > 0);
+    // ボタンはツールバーの子。押すと Action を実行する。ツールチップは文字(メニュー向けの表記を省く)とショートカット。
+    std::vector<gui::Widget*> buttons;
+    const std::vector<gui::Widget*> children = tools->children;
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        if (children[i]->visible)
+        {
+            buttons.push_back(children[i]);
+        }
+    }
+    CHECK(buttons.size() == 2 && buttons[0]->tooltip.get() == "保存 (Ctrl+S)");
+    const gui::Point at = buttons[0]->map_to_window(gui::Point(5, 5));
+    dispatch_click(window, at);
+    CHECK(done == "save ");
+    dispatch_click(window, buttons[1]->map_to_window(gui::Point(5, 5)));
+    CHECK(bold->checked);
+    // ツールバーの Action のショートカットはウィンドウ全体で効く(入力欄にフォーカスがあっても)。
+    edit->focused = true;
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LCTRL);
+    CHECK(done == "save save ");
+    // Action を無効にするとボタンも無効。破棄するとボタンも消える。
+    save->enabled = false;
+    CHECK(!buttons[0]->enabled);
+    dispatch_click(window, at);
+    CHECK(done == "save save ");
+    delete save;
+    CHECK(tools->actions.get().size() == 1);
+    window.apply_layout();
+    CHECK(tools->preferred_size.get().width > 0);
+}
+
+TEST(tool_bar_overflow_menu)
+{
+    gui::Window window("t", 200, 200);
+    gui::ToolBar* tools = new gui::ToolBar();
+    std::string done;
+    for (int i = 0; i < 8; ++i)
+    {
+        tools->add_item("項目" + std::to_string(i), [&, i](gui::Object*) { done = std::to_string(i); });
+    }
+    window.tool_bar = tools;
+    window.visible = true;
+    window.apply_layout();
+    // 収まらない項目は隠れ、右端の » が出る。
+    int shown = 0;
+    gui::Widget* chevron = nullptr;
+    const std::vector<gui::Widget*> children = tools->children;
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        if (children[i]->visible)
+        {
+            ++shown;
+            if (!chevron || children[i]->x > chevron->x)
+            {
+                chevron = children[i];
+            }
+        }
+    }
+    CHECK(shown > 1 && shown < 9 && chevron->tooltip.get() == "その他の項目");
+    CHECK(chevron->x.get() + chevron->width.get() <= 200);
+    // » のメニューから、隠れた項目を選べる。
+    dispatch_click(window, chevron->map_to_window(gui::Point(5, 5)));
+    dispatch_key(window, SDLK_UP);  // 最後の項目
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(done == "7");
+}
+
+TEST(status_bar_message_and_widgets)
+{
+    gui::Window window("t", 400, 200);
+    gui::StatusBar* status = new gui::StatusBar();
+    status->text = "準備完了";
+    gui::Label* position = new gui::Label(nullptr, "行 1");
+    status->add_widget(position);
+    window.status_bar = status;
+    window.visible = true;
+    window.apply_layout();
+    CHECK(position->parent == status && near(position->x.get() + position->width.get(), 400 - 10));
+    status->show_message("保存した", 50);
+    CHECK(status->message.get() == "保存した");
+    CHECK(run_until([&]() { return status->message.get().empty(); }));  // 時間が経つと消える
+    status->show_message("ずっと");
+    run_until([]() { return false; }, 100);
+    CHECK(status->message.get() == "ずっと");
+    status->clear_message();
+    CHECK(status->message.get().empty() && status->text.get() == "準備完了");
+    delete position;  // 部品を破棄しても大丈夫
+    window.apply_layout();
+    window.status_bar = nullptr;
+    CHECK(window.status_bar == nullptr);
+}
+
 }  // namespace
 
 int main(int argc, char** argv)

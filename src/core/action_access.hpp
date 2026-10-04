@@ -36,6 +36,8 @@ struct ActionAccess
 
     static const std::string& text(const Action* a) { return a->text_; }
     static const Shortcut& shortcut(const Action* a) { return a->shortcut_; }
+    static const Image& icon(const Action* a) { return a->icon_; }
+    static const std::string& tooltip(const Action* a) { return a->tooltip_; }
     static bool enabled(const Action* a) { return a->enabled_; }
     static bool checkable(const Action* a) { return a->checkable_; }
     static bool checked(const Action* a) { return a->checked_; }

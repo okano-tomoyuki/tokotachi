@@ -163,6 +163,11 @@ protected:
     virtual void arrange_children();
     // 子が外れた(破棄された・別の親へ移った)。子を覚えているウィジェット(TabWidget 等)が忘れるために使う。
     virtual void child_removed(Widget* child);
+    // add_action で Action が加わった・remove_action(Action の破棄を含む)で外れた・Action の表示(文字・画像・有効など)が
+    // 変わった。Action をボタンとして見せるウィジェット(ToolBar 等)が使う。
+    virtual void action_added(Action* action);
+    virtual void action_removed(Action* action);
+    virtual void action_changed(Action* action);
     // 自分の配置だけをやり直す印を付ける(子の配置が変わるが、自分の望む大きさは変わらないとき)。
     void mark_layout_dirty();
 

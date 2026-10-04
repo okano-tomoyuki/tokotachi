@@ -80,6 +80,7 @@ void Widget::add_action(Action* action)
     actions_.push_back(action);
     detail::ActionAccess::attach_widget(action, this);
     notify_changed(actions);
+    action_added(action);
 }
 
 void Widget::remove_action(Action* action)
@@ -92,6 +93,7 @@ void Widget::remove_action(Action* action)
     actions_.erase(it);
     detail::ActionAccess::detach_widget(action, this);
     notify_changed(actions);
+    action_removed(action);
 }
 
 Widget::~Widget()
@@ -643,6 +645,12 @@ void Widget::scale_changed() {}
 void Widget::theme_changed() {}
 
 void Widget::child_removed(Widget*) {}
+
+void Widget::action_added(Action*) {}
+
+void Widget::action_removed(Action*) {}
+
+void Widget::action_changed(Action*) {}
 
 Rect Widget::input_method_rect() const { return get_local_rect(); }
 

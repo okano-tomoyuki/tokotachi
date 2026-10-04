@@ -9,6 +9,8 @@
 #include <gui/canvas.hpp>
 #include <gui/label.hpp>
 #include <gui/menu_bar.hpp>
+#include <gui/status_bar.hpp>
+#include <gui/tool_bar.hpp>
 #include <gui/popup.hpp>
 
 #include "../layout/layout_access.hpp"
@@ -879,6 +881,19 @@ bool WindowImpl::trigger_shortcut(const KeyEvent& ev)
             }
         }
     }
+    // ツールバーの Action はウィンドウ全体で効く。
+    if (ToolBar* tools = q->tool_bar)
+    {
+        const std::vector<Action*> list = WidgetAccess::actions_of(tools);
+        for (std::size_t i = 0; i < list.size(); ++i)
+        {
+            if (ActionAccess::enabled(list[i]) && ActionAccess::shortcut(list[i]).matches(ev))
+            {
+                list[i]->trigger();
+                return true;
+            }
+        }
+    }
     if (MenuBar* bar = q->menu_bar)
     {
         return MenuBarAccess::trigger_shortcut(bar, ev);
@@ -987,10 +1002,14 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
       GUI_PROPERTY_GETTER(Window, ThemeColor, background),
       GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
       GUI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
+      GUI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
+      GUI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
       GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
       background_(ColorRole::WINDOW),
-      menu_bar_(nullptr)
+      menu_bar_(nullptr),
+      tool_bar_(nullptr),
+      status_bar_(nullptr)
 {
     Application* app = Application::instance();
     if (!app)
@@ -1052,10 +1071,14 @@ Window::Window(Object* owner_object)
       GUI_PROPERTY_GETTER(Window, ThemeColor, background),
       GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
       GUI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
+      GUI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
+      GUI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
       GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
       background_(ColorRole::POPUP),
-      menu_bar_(nullptr)
+      menu_bar_(nullptr),
+      tool_bar_(nullptr),
+      status_bar_(nullptr)
 {
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
@@ -1092,33 +1115,64 @@ bool Window::save_png(const std::string& path)
     return ok;
 }
 
-void Window::set_menu_bar(MenuBar* const& v)
+namespace
 {
-    if (v == menu_bar_)
+
+// 上端・下端の専用の場所の部品を差し替える。前のものは破棄する。
+template <typename T>
+void replace_bar(Window* self, T*& slot, T* v)
+{
+    if (v == slot)
     {
         return;
     }
-    MenuBar* old = menu_bar_;
-    menu_bar_ = v;
+    T* old = slot;
+    slot = v;
     if (v)
     {
-        v->parent = this;
-        if (v->parent.get() != this)
+        v->parent = self;
+        if (v->parent.get() != self)
         {
-            menu_bar_ = nullptr;  // 子にできなかった
+            slot = nullptr;  // 子にできなかった
         }
     }
-    delete old;  // child_removed で menu_bar_ を変えないよう、付け替えた後に破棄する
-    mark_layout_dirty();
-    request_layout();
+    delete old;  // child_removed で slot を変えないよう、付け替えた後に破棄する
+    detail::WidgetAccess::mark_layout_dirty(self);
+    self->request_layout();
 }
+
+}  // namespace
+
+void Window::set_menu_bar(MenuBar* const& v) { replace_bar(this, menu_bar_, v); }
+
+void Window::set_tool_bar(ToolBar* const& v) { replace_bar(this, tool_bar_, v); }
+
+void Window::set_status_bar(StatusBar* const& v) { replace_bar(this, status_bar_, v); }
 
 void Window::child_removed(Widget* child)
 {
+    bool removed = true;
     if (child == menu_bar_)
     {
         menu_bar_ = nullptr;
         notify_changed(menu_bar);
+    }
+    else if (child == tool_bar_)
+    {
+        tool_bar_ = nullptr;
+        notify_changed(tool_bar);
+    }
+    else if (child == status_bar_)
+    {
+        status_bar_ = nullptr;
+        notify_changed(status_bar);
+    }
+    else
+    {
+        removed = false;
+    }
+    if (removed)
+    {
         mark_layout_dirty();
         request_layout();
     }
@@ -1126,13 +1180,23 @@ void Window::child_removed(Widget* child)
 
 void Window::arrange_children()
 {
-    // メニューバーを上端に置き、レイアウトはその下に配置する。
+    // 上端にメニューバー・ツールバー、下端にステータスバーを置き、レイアウトはその間に配置する。
     Rect area = local_rect;
-    if (menu_bar_)
+    Widget* const top[] = {menu_bar_, tool_bar_};
+    for (int i = 0; i < 2; ++i)
     {
-        const float h = menu_bar_->preferred_size.get().height;
-        menu_bar_->bounds = Rect(0, 0, area.width, h);
-        area = area.adjusted(0, h, 0, 0);
+        if (top[i])
+        {
+            const float h = top[i]->preferred_size.get().height;
+            top[i]->bounds = Rect(0, area.y, area.width, h);
+            area = area.adjusted(0, h, 0, 0);
+        }
+    }
+    if (status_bar_)
+    {
+        const float h = status_bar_->preferred_size.get().height;
+        status_bar_->bounds = Rect(0, area.bottom() - h, area.width, h);
+        area = area.adjusted(0, 0, 0, h);
     }
     if (Layout* l = layout)
     {
@@ -1143,10 +1207,14 @@ void Window::arrange_children()
 Size Window::compute_preferred_size() const
 {
     Size s = Widget::compute_preferred_size();
-    if (menu_bar_)
+    Widget* const bars[] = {menu_bar_, tool_bar_, status_bar_};
+    for (int i = 0; i < 3; ++i)
     {
-        const Size b = menu_bar_->preferred_size;
-        s = Size(std::max(s.width, b.width), s.height + b.height);
+        if (bars[i])
+        {
+            const Size b = bars[i]->preferred_size;
+            s = Size(std::max(s.width, bars[i] == menu_bar_ ? b.width : 0.0f), s.height + b.height);
+        }
     }
     return s;
 }
@@ -1154,9 +1222,14 @@ Size Window::compute_preferred_size() const
 Size Window::compute_minimum_size() const
 {
     Size s = Widget::compute_minimum_size();
-    if (menu_bar_)
+    Widget* const bars[] = {menu_bar_, tool_bar_, status_bar_};
+    for (int i = 0; i < 3; ++i)
     {
-        s.height += menu_bar_->minimum_hint.get().height;
+        if (bars[i])
+        {
+            const Size b = bars[i]->minimum_hint;
+            s = Size(std::max(s.width, b.width), s.height + b.height);
+        }
     }
     return s;
 }

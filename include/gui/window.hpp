@@ -12,6 +12,8 @@ namespace gui
 {
 
 class MenuBar;
+class StatusBar;
+class ToolBar;
 
 namespace detail
 {
@@ -32,6 +34,9 @@ public:
     ReadOnlyProperty<Widget*> focused_widget;
     // 上端のメニューバー(docs/adr/0027)。代入するとウィンドウの子になり、レイアウトの領域はその下になる。前のものは破棄する。
     Property<MenuBar*> menu_bar;
+    // メニューバーの下のツールバー・下端のステータスバー(docs/adr/0030)。menu_bar と同じく、代入すると子になり、前のものは破棄する。
+    Property<ToolBar*> tool_bar;
+    Property<StatusBar*> status_bar;
 
     // 閉じる操作がされた(ウィンドウの閉じるボタンなど)。can_close を false にすると閉じない。
     Property<CloseHandler> on_close;
@@ -61,11 +66,17 @@ private:
     Widget* get_focused_widget() const;
     MenuBar* get_menu_bar() const { return menu_bar_; }
     void set_menu_bar(MenuBar* const& v);
+    ToolBar* get_tool_bar() const { return tool_bar_; }
+    void set_tool_bar(ToolBar* const& v);
+    StatusBar* get_status_bar() const { return status_bar_; }
+    void set_status_bar(StatusBar* const& v);
 
     detail::WindowImpl* d_;
     ThemeColor background_;
     CloseHandler on_close_;
     MenuBar* menu_bar_;
+    ToolBar* tool_bar_;
+    StatusBar* status_bar_;
 };
 
 }  // namespace gui

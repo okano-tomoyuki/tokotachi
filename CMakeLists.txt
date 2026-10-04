@@ -64,10 +64,12 @@ add_library(gui STATIC
     src/widgets/scroll_bar.cpp
     src/widgets/slider.cpp
     src/widgets/spin_box.cpp
+    src/widgets/status_bar.cpp
     src/widgets/tab_widget.cpp
     src/widgets/tree_view.cpp
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
+    src/widgets/tool_bar.cpp
     src/widgets/item_view.cpp
     src/widgets/label.cpp
     src/widgets/line_edit.cpp)

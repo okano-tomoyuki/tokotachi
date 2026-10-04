@@ -51,6 +51,9 @@ int main(int argc, char** argv)
 {
     gui::Application app(argc, argv);
     gui::Window window("hello - gui", 560, 620);
+    // 下端のステータスバー(docs/adr/0030)。操作の結果は show_message で一時的に出す。
+    gui::StatusBar* status = new gui::StatusBar();
+    status->text = "準備完了";
 
     // 配置はレイアウトに任せる(docs/adr/0017)。ウィンドウは縦に並べ、横に並べる行は入れ物のウィジェットを介して入れ子にする。
     // 行の中のウィジェットは行を親にして作る(別の親で作っても、add が行の子に付け替える。docs/adr/0018)。
@@ -191,7 +194,9 @@ int main(int argc, char** argv)
     counter->on_finish = [=](gui::Object*)
     {
         count_button->text = "裏で数える";
-        count->text = counter->cancelled ? "数えるのを取り消した" : "数え終えた: " + std::to_string(counter->result.get());
+        status->show_message(counter->cancelled ? "数えるのを取り消した"
+                                                : "数え終えた: " + std::to_string(counter->result.get()),
+                             4000);
     };
     count_button->on_click = [=](gui::Object*)
     {
@@ -335,7 +340,8 @@ int main(int argc, char** argv)
     // メニューバーとショートカット(docs/adr/0027)。メニューバーのメニューの Action のキーは、ウィンドウ全体で効く。
     gui::MenuBar* bar = new gui::MenuBar();
     gui::Menu* file_menu = bar->add_menu("ファイル(&F)");
-    file_menu->add_item("新規(&N)", [=](gui::Object*) { memo->text = ""; })->shortcut = "Ctrl+N";
+    gui::Action* new_action = file_menu->add_item("新規(&N)", [=](gui::Object*) { memo->text = ""; });
+    new_action->shortcut = "Ctrl+N";
 
     // OS のファイル選択(docs/adr/0028)。結果は on_finish で受け取る。メモの内容を読み書きする。
     std::vector<gui::FileFilter> text_filters;
@@ -367,9 +373,10 @@ int main(int argc, char** argv)
         content << in.rdbuf();
         memo->text = content.str();
         tabs->current_index = 0;
-        count->text = "開いた: " + paths[0];
+        status->show_message("開いた: " + paths[0], 4000);
     };
-    file_menu->add_item("開く(&O)...", [=](gui::Object*) { opener->open(); })->shortcut = "Ctrl+O";
+    gui::Action* open_action = file_menu->add_item("開く(&O)...", [=](gui::Object*) { opener->open(); });
+    open_action->shortcut = "Ctrl+O";
     gui::FileDialog* saver = new gui::FileDialog(&window, gui::FileDialogMode::SAVE);
     saver->filters = text_filters;
     saver->location = "メモ.txt";
@@ -387,9 +394,10 @@ int main(int argc, char** argv)
         }
         std::ofstream out(paths[0].c_str(), std::ios::binary);
         out << memo->text.get();
-        count->text = out ? "保存した: " + paths[0] : "保存できなかった: " + paths[0];
+        status->show_message(out ? "保存した: " + paths[0] : "保存できなかった: " + paths[0], 4000);
     };
-    file_menu->add_item("名前を付けて保存(&S)...", [=](gui::Object*) { saver->open(); })->shortcut = "Ctrl+S";
+    gui::Action* save_action = file_menu->add_item("名前を付けて保存(&S)...", [=](gui::Object*) { saver->open(); });
+    save_action->shortcut = "Ctrl+S";
     file_menu->add_separator();
 
     // 自分で中身を作るダイアログ(docs/adr/0028)。ボタンは OS の慣習の順に並び、Enter で OK、Esc でキャンセル。
@@ -464,6 +472,48 @@ int main(int argc, char** argv)
                                  gui::MessageType::WARNING);
     });
     window.menu_bar = bar;
+
+    // ツールバー(docs/adr/0030)。メニューと同じ Action を並べる(無効にすれば両方が無効になる)。
+    // 画像のある Action は画像だけを出し、文字はツールチップに出す。画像が無ければ文字を出す。
+    gui::ToolBar* tools = new gui::ToolBar();
+    new_action->icon = file_icon;
+    open_action->icon = folder_icon;
+    tools->add_action(new_action);
+    tools->add_action(open_action);
+    tools->add_action(save_action);
+    tools->add_separator();
+    tools->add_action(large_action);  // チェックできる Action は押し込んだ見た目になる
+    tools->add_item("挨拶を青に", [=](gui::Object*) { color->current_index = 1; })->tooltip = "挨拶の色を青にする";
+    tools->add_separator();
+    gui::ComboBox* style_choice = new gui::ComboBox();
+    std::vector<std::string> styles;
+    styles.push_back("画像だけ");
+    styles.push_back("画像の右に文字");
+    styles.push_back("画像の下に文字");
+    style_choice->items = styles;
+    style_choice->current_index = 0;
+    style_choice->tooltip = "ツールバーのボタンの見た目";
+    style_choice->on_change = [=](gui::Object*)
+    {
+        static const gui::ToolButtonStyle STYLES[] = {gui::ToolButtonStyle::ICON_ONLY,
+                                                      gui::ToolButtonStyle::TEXT_BESIDE_ICON,
+                                                      gui::ToolButtonStyle::TEXT_UNDER_ICON};
+        tools->button_style = STYLES[style_choice->current_index >= 0 ? style_choice->current_index.get() : 0];
+    };
+    tools->add_widget(style_choice);  // 任意の部品も置ける(幅が足りなければ隠れる)
+    window.tool_bar = tools;
+
+    // ステータスバーの右には部品を並べられる。裏で数える進み具合を出す。
+    gui::ProgressBar* status_progress = new gui::ProgressBar();
+    status_progress->minimum_size = gui::Size(120, 0);
+    status->add_widget(status_progress);
+    level->on_change = [=](gui::Object*)
+    {
+        level_bar->value = level->value.get();
+        status_progress->value = level->value.get();
+    };
+    status_progress->value = level->value.get();
+    window.status_bar = status;
 
     // ウィジェットに加えた Action のキーは、フォーカスがその中にあるときだけ効く。一覧の Delete で選んだ項目を除く。
     gui::Action* remove_files = new gui::Action(&window, "削除(&D)");

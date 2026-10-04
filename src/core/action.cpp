@@ -5,6 +5,7 @@
 
 #include "../widgets/menu_access.hpp"
 #include "action_access.hpp"
+#include "widget_access.hpp"
 #include "property_impl.hpp"
 
 namespace gui
@@ -14,6 +15,8 @@ Action::Action(Object* owner_object, const std::string& initial_text)
     : Object(owner_object),
       GUI_PROPERTY_MEMBER(Action, std::string, text),
       GUI_PROPERTY_MEMBER(Action, Shortcut, shortcut),
+      GUI_PROPERTY_MEMBER(Action, Image, icon),
+      GUI_PROPERTY_MEMBER(Action, std::string, tooltip),
       GUI_PROPERTY_MEMBER(Action, bool, enabled),
       GUI_PROPERTY_MEMBER(Action, bool, checkable),
       GUI_PROPERTY_MEMBER(Action, bool, checked),
@@ -46,6 +49,11 @@ void Action::changed()
     {
         detail::MenuAccess::action_changed(menus_[i]);
     }
+    const std::vector<Widget*> widgets = widgets_;
+    for (std::size_t i = 0; i < widgets.size(); ++i)
+    {
+        detail::WidgetAccess::action_changed(widgets[i], this);
+    }
 }
 
 void Action::set_text(const std::string& v)
@@ -57,6 +65,18 @@ void Action::set_text(const std::string& v)
 void Action::set_shortcut(const Shortcut& v)
 {
     shortcut_ = v;
+    changed();
+}
+
+void Action::set_icon(const Image& v)
+{
+    icon_ = v;
+    changed();
+}
+
+void Action::set_tooltip(const std::string& v)
+{
+    tooltip_ = v;
     changed();
 }
 

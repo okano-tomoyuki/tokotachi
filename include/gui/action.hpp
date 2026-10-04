@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "event.hpp"
+#include "image.hpp"
 #include "property.hpp"
 #include "shortcut.hpp"
 
@@ -42,6 +43,10 @@ public:
 
     Property<std::string> text;
     Property<Shortcut> shortcut;
+    // ツールバーのボタンに出す画像(メニューには出さない)。
+    Property<Image> icon;
+    // ツールバーのボタンのツールチップ(空なら、text とショートカットから作る)。
+    Property<std::string> tooltip;
     // false なら、メニューでもキーでも実行しない。
     Property<bool> enabled;
     // checkable なら、実行するたびに checked を反転する(メニューではチェックの印を出す)。
@@ -59,6 +64,8 @@ private:
 
     void set_text(const std::string& v);
     void set_shortcut(const Shortcut& v);
+    void set_icon(const Image& v);
+    void set_tooltip(const std::string& v);
     void set_enabled(const bool& v);
     void set_checkable(const bool& v);
     void set_checked(const bool& v);
@@ -66,6 +73,8 @@ private:
 
     std::string text_;
     Shortcut shortcut_;
+    Image icon_;
+    std::string tooltip_;
     bool enabled_;
     bool checkable_;
     bool checked_;
