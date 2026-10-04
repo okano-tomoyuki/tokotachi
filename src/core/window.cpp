@@ -8,9 +8,12 @@
 #include <gui/box_layout.hpp>
 #include <gui/canvas.hpp>
 #include <gui/label.hpp>
+#include <gui/menu_bar.hpp>
 #include <gui/popup.hpp>
 
 #include "../layout/layout_access.hpp"
+#include "../widgets/menu_access.hpp"
+#include "action_access.hpp"
 #include "application_impl.hpp"
 #include "property_impl.hpp"
 #include "widget_access.hpp"
@@ -94,6 +97,18 @@ Key to_key(SDL_Keycode k)
         return Key::PAGE_UP;
     case SDLK_PAGEDOWN:
         return Key::PAGE_DOWN;
+    case SDLK_LSHIFT:
+    case SDLK_RSHIFT:
+        return Key::SHIFT;
+    case SDLK_LCTRL:
+    case SDLK_RCTRL:
+        return Key::CONTROL;
+    case SDLK_LALT:
+    case SDLK_RALT:
+        return Key::ALT;
+    case SDLK_LGUI:
+    case SDLK_RGUI:
+        return Key::META;
     default:
         return Key::UNKNOWN;
     }
@@ -775,6 +790,15 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
     hide_tooltip();
     const Modifiers mods = to_modifiers(e.mod);
     const Key k = to_key(e.key);
+    // メニューバーのキーボードの操作(Alt・F10・Alt+ニーモニック)を先に(docs/adr/0027)。
+    if (MenuBar* bar = q->menu_bar)
+    {
+        const KeyEvent ev(k, mods, e.repeat, static_cast<std::uint32_t>(e.key));
+        if (MenuBarAccess::handle_key(bar, ev, e.down))
+        {
+            return;
+        }
+    }
     if (e.down && k == Key::TAB && !(mods & (MODIFIER_CONTROL | MODIFIER_ALT)))
     {
         focus_next(!(mods & MODIFIER_SHIFT));
@@ -793,9 +817,36 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
         }
         if (ev.accepted)
         {
-            break;
+            return;
         }
     }
+    if (e.down)
+    {
+        const KeyEvent ev(k, mods, e.repeat, static_cast<std::uint32_t>(e.key));
+        trigger_shortcut(ev);
+    }
+}
+
+bool WindowImpl::trigger_shortcut(const KeyEvent& ev)
+{
+    // フォーカスのあるウィジェットから親へ、それぞれに加えた Action を探し、最後にメニューバーのメニューを探す。
+    for (Widget* w = focus ? focus : q; w; w = WidgetAccess::parent_of(w))
+    {
+        const std::vector<Action*> list = WidgetAccess::actions_of(w);
+        for (std::size_t i = 0; i < list.size(); ++i)
+        {
+            if (ActionAccess::enabled(list[i]) && ActionAccess::shortcut(list[i]).matches(ev))
+            {
+                list[i]->trigger();
+                return true;
+            }
+        }
+    }
+    if (MenuBar* bar = q->menu_bar)
+    {
+        return MenuBarAccess::trigger_shortcut(bar, ev);
+    }
+    return false;
 }
 
 void WindowImpl::handle(const SDL_Event& e)
@@ -822,6 +873,12 @@ void WindowImpl::handle(const SDL_Event& e)
         }
         break;
     }
+    case SDL_EVENT_WINDOW_FOCUS_LOST:
+        if (MenuBar* bar = q->menu_bar)
+        {
+            MenuBarAccess::cancel(bar);
+        }
+        break;
     case SDL_EVENT_WINDOW_MOUSE_LEAVE:
         if (!grab)
         {
@@ -833,6 +890,10 @@ void WindowImpl::handle(const SDL_Event& e)
         mouse_move(to_dp(e.motion.x, e.motion.y));
         break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        if (MenuBar* bar = q->menu_bar)
+        {
+            MenuBarAccess::cancel(bar);
+        }
         mouse_down(to_dp(e.button.x, e.button.y), to_button(e.button.button), e.button.clicks);
         break;
     case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -888,9 +949,11 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
     : GUI_PROPERTY_GETTER(Window, std::string, title),
       GUI_PROPERTY_GETTER(Window, ThemeColor, background),
       GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
+      GUI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
       GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
-      background_(ColorRole::WINDOW)
+      background_(ColorRole::WINDOW),
+      menu_bar_(nullptr)
 {
     Application* app = Application::instance();
     if (!app)
@@ -951,9 +1014,11 @@ Window::Window(Object* owner_object)
     : GUI_PROPERTY_GETTER(Window, std::string, title),
       GUI_PROPERTY_GETTER(Window, ThemeColor, background),
       GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
+      GUI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
       GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
-      background_(ColorRole::POPUP)
+      background_(ColorRole::POPUP),
+      menu_bar_(nullptr)
 {
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
@@ -988,6 +1053,75 @@ bool Window::save_png(const std::string& path)
     }
     SDL_DestroySurface(s);
     return ok;
+}
+
+void Window::set_menu_bar(MenuBar* const& v)
+{
+    if (v == menu_bar_)
+    {
+        return;
+    }
+    MenuBar* old = menu_bar_;
+    menu_bar_ = v;
+    if (v)
+    {
+        v->parent = this;
+        if (v->parent.get() != this)
+        {
+            menu_bar_ = nullptr;  // 子にできなかった
+        }
+    }
+    delete old;  // child_removed で menu_bar_ を変えないよう、付け替えた後に破棄する
+    mark_layout_dirty();
+    request_layout();
+}
+
+void Window::child_removed(Widget* child)
+{
+    if (child == menu_bar_)
+    {
+        menu_bar_ = nullptr;
+        notify_changed(menu_bar);
+        mark_layout_dirty();
+        request_layout();
+    }
+}
+
+void Window::arrange_children()
+{
+    // メニューバーを上端に置き、レイアウトはその下に配置する。
+    Rect area = local_rect;
+    if (menu_bar_)
+    {
+        const float h = menu_bar_->preferred_size.get().height;
+        menu_bar_->bounds = Rect(0, 0, area.width, h);
+        area = area.adjusted(0, h, 0, 0);
+    }
+    if (Layout* l = layout)
+    {
+        detail::LayoutAccess::arrange(l, area);
+    }
+}
+
+Size Window::compute_preferred_size() const
+{
+    Size s = Widget::compute_preferred_size();
+    if (menu_bar_)
+    {
+        const Size b = menu_bar_->preferred_size;
+        s = Size(std::max(s.width, b.width), s.height + b.height);
+    }
+    return s;
+}
+
+Size Window::compute_minimum_size() const
+{
+    Size s = Widget::compute_minimum_size();
+    if (menu_bar_)
+    {
+        s.height += menu_bar_->minimum_hint.get().height;
+    }
+    return s;
 }
 
 void Window::paint(Canvas& canvas)

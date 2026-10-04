@@ -278,13 +278,14 @@ int main(int argc, char** argv)
     disabled->tooltip = "無効なウィジェットにもツールチップは出る";
 
     // メモの右クリックのメニュー(docs/adr/0022)。メニューはウィンドウが所有する。
+    // 右クリックのメニューのショートカットは表示だけ(キーは TextEdit 自身が扱う)。
     gui::Menu* memo_menu = new gui::Menu(&window);
-    memo_menu->add_item("切り取り", [=](gui::Object*) { memo->cut(); })->shortcut_text = "Ctrl+X";
-    memo_menu->add_item("コピー", [=](gui::Object*) { memo->copy(); })->shortcut_text = "Ctrl+C";
-    memo_menu->add_item("貼り付け", [=](gui::Object*) { memo->paste(); })->shortcut_text = "Ctrl+V";
+    memo_menu->add_item("切り取り(&T)", [=](gui::Object*) { memo->cut(); })->shortcut = "Ctrl+X";
+    memo_menu->add_item("コピー(&C)", [=](gui::Object*) { memo->copy(); })->shortcut = "Ctrl+C";
+    memo_menu->add_item("貼り付け(&P)", [=](gui::Object*) { memo->paste(); })->shortcut = "Ctrl+V";
     memo_menu->add_separator();
-    memo_menu->add_item("すべて選択", [=](gui::Object*) { memo->select_all(); })->shortcut_text = "Ctrl+A";
-    gui::Menu* insert_menu = memo_menu->add_submenu("挿入");
+    memo_menu->add_item("すべて選択(&A)", [=](gui::Object*) { memo->select_all(); })->shortcut = "Ctrl+A";
+    gui::Menu* insert_menu = memo_menu->add_submenu("挿入(&I)");
     insert_menu->add_item("挨拶", [=](gui::Object*) { memo->insert(greeting->text.get()); });
     insert_menu->add_item("クリック回数", [=](gui::Object*) { memo->insert(count->text.get()); });
     memo->on_mouse_down = [=](gui::Object*, gui::MouseEvent& e)
@@ -292,6 +293,50 @@ int main(int argc, char** argv)
         if (e.button == gui::MouseButton::RIGHT)
         {
             memo_menu->popup(memo, e.pos);
+        }
+    };
+
+    // メニューバーとショートカット(docs/adr/0027)。メニューバーのメニューの Action のキーは、ウィンドウ全体で効く。
+    gui::MenuBar* bar = new gui::MenuBar();
+    gui::Menu* file_menu = bar->add_menu("ファイル(&F)");
+    file_menu->add_item("新規(&N)", [=](gui::Object*) { memo->text = ""; })->shortcut = "Ctrl+N";
+    file_menu->add_item("保存(&S)", [=](gui::Object*) { count->text = "保存しました(デモ)"; })->shortcut = "Ctrl+S";
+    file_menu->add_separator();
+    file_menu->add_item("終了(&X)", [&](gui::Object*) { window.close(); })->shortcut = "Ctrl+Q";
+    gui::Menu* view_menu = bar->add_menu("表示(&V)");
+    gui::Action* large_action = view_menu->add_item("大きい文字(&L)");
+    large_action->checkable = true;
+    large_action->shortcut = "Ctrl+L";
+    gui::bind(large_action->checked, large->value);  // チェックボックスと同じ変数に結ぶ
+    gui::Menu* theme_menu = view_menu->add_submenu("テーマ(&T)");
+    theme_menu->add_item("OS に従う(&S)", [=](gui::Object*) { scheme->current_index = 0; });
+    theme_menu->add_item("ライト(&L)", [=](gui::Object*) { scheme->current_index = 1; });
+    theme_menu->add_item("ダーク(&D)", [=](gui::Object*) { scheme->current_index = 2; });
+    view_menu->add_separator();
+    view_menu->add_item("次のタブ", [=](gui::Object*)
+                        { tabs->current_index = (tabs->current_index + 1) % 4; })->shortcut = "F6";
+    window.menu_bar = bar;
+
+    // ウィジェットに加えた Action のキーは、フォーカスがその中にあるときだけ効く。一覧の Delete で選んだ項目を除く。
+    gui::Action* remove_files = new gui::Action(&window, "削除(&D)");
+    remove_files->shortcut = "Delete";
+    remove_files->on_trigger = [=](gui::Object*)
+    {
+        const std::vector<gui::ModelIndex> chosen = file_list->selection;
+        for (std::size_t i = chosen.size(); i-- > 0;)
+        {
+            files->remove_item(files->item_at(chosen[i]));
+        }
+        list_status->text = std::to_string(chosen.size()) + " 個を削除した";
+    };
+    file_list->add_action(remove_files);
+    gui::Menu* list_menu = new gui::Menu(&window);
+    list_menu->add_action(remove_files);
+    file_list->on_mouse_down = [=](gui::Object*, gui::MouseEvent& e)
+    {
+        if (e.button == gui::MouseButton::RIGHT)
+        {
+            list_menu->popup(file_list, e.pos);
         }
     };
 

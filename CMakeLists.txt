@@ -23,10 +23,12 @@ find_package(SheenBidi REQUIRED CONFIG PATHS "${GUI_DEPS_PREFIX}" NO_DEFAULT_PAT
 option(GUI_STATIC_RUNTIME "Link the MinGW runtime (libgcc, libstdc++, winpthread) statically into executables" ON)
 
 add_library(gui STATIC
+    src/core/action.cpp
     src/core/application.cpp
     src/core/binding.cpp
     src/core/object.cpp
     src/core/popup.cpp
+    src/core/shortcut.cpp
     src/core/clipboard.cpp
     src/core/theme.cpp
     src/core/timer.cpp
@@ -49,6 +51,7 @@ add_library(gui STATIC
     src/widgets/check_box.cpp
     src/widgets/combo_box.cpp
     src/widgets/menu.cpp
+    src/widgets/menu_bar.cpp
     src/widgets/popup_list.cpp
     src/widgets/progress_bar.cpp
     src/widgets/radio_button.cpp

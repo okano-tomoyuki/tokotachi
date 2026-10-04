@@ -11,6 +11,8 @@
 namespace gui
 {
 
+class MenuBar;
+
 namespace detail
 {
 struct WindowImpl;
@@ -28,6 +30,8 @@ public:
     Property<ThemeColor> background;
     // フォーカスのあるウィジェット(無ければ nullptr)。
     ReadOnlyProperty<Widget*> focused_widget;
+    // 上端のメニューバー(docs/adr/0027)。代入するとウィンドウの子になり、レイアウトの領域はその下になる。前のものは破棄する。
+    Property<MenuBar*> menu_bar;
 
     // 閉じる操作がされた(ウィンドウの閉じるボタンなど)。can_close を false にすると閉じない。
     Property<CloseHandler> on_close;
@@ -44,6 +48,10 @@ protected:
     explicit Window(Object* owner_object);
 
     void paint(Canvas& canvas) override;
+    void arrange_children() override;
+    void child_removed(Widget* child) override;
+    Size compute_preferred_size() const override;
+    Size compute_minimum_size() const override;
 
 private:
     std::string get_title() const;
@@ -51,10 +59,13 @@ private:
     ThemeColor get_background() const { return background_; }
     void set_background(const ThemeColor& v);
     Widget* get_focused_widget() const;
+    MenuBar* get_menu_bar() const { return menu_bar_; }
+    void set_menu_bar(MenuBar* const& v);
 
     detail::WindowImpl* d_;
     ThemeColor background_;
     CloseHandler on_close_;
+    MenuBar* menu_bar_;
 };
 
 }  // namespace gui

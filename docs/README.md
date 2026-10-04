@@ -42,6 +42,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0024](adr/0024-value-widgets.md) | 値の部品(Slider・SpinBox・ProgressBar)は double で値を持ち、操作できる部品は RangeBase を基底にする | 承認 |
 | [0025](adr/0025-tab-widget.md) | TabWidget はタブを Tab オブジェクトで表し、ページを子として持ち、見出しがはみ出したら横にスクロールする | 承認 |
 | [0026](adr/0026-item-model-and-views.md) | 一覧・木はモデルとビューに分け、手軽に使える項目のモデルも用意する | 承認 |
+| [0027](adr/0027-actions-shortcuts-and-menu-bar.md) | 操作は Action で表し、メニューの項目とショートカットが同じ Action を指す。メニューバーはウィンドウの専用の場所に置く | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

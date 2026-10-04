@@ -1480,12 +1480,12 @@ TEST(menu_keyboard_and_submenu)
     gui::Menu* menu = new gui::Menu(&window);
     std::string chosen;
     menu->add_item("切り取り", [&](gui::Object*) { chosen = "cut"; });
-    gui::MenuItem* copy = menu->add_item("コピー", [&](gui::Object* sender) {
-        chosen = static_cast<gui::MenuItem*>(sender)->text;
+    gui::Action* copy = menu->add_item("コピー", [&](gui::Object* sender) {
+        chosen = static_cast<gui::Action*>(sender)->text;
     });
-    copy->shortcut_text = "Ctrl+C";
+    copy->shortcut = "Ctrl+C";
     menu->add_separator();
-    gui::MenuItem* disabled = menu->add_item("無効", [&](gui::Object*) { chosen = "disabled"; });
+    gui::Action* disabled = menu->add_item("無効", [&](gui::Object*) { chosen = "disabled"; });
     disabled->enabled = false;
     gui::Menu* sort = menu->add_submenu("並べ替え");
     sort->add_item("名前順", [&](gui::Object*) { chosen = "name"; });
@@ -2225,6 +2225,165 @@ TEST(item_view_queries_only_visible_rows)
     CHECK(view->index_at(row_point(0)).row() > 999980);  // 最後までスクロールした
     delete model;
     CHECK(view->model == nullptr);
+}
+
+TEST(shortcut_parse_and_match)
+{
+    const gui::Shortcut save("Ctrl+S");
+    CHECK(save.key == gui::Key::S && save.modifiers == gui::MODIFIER_CONTROL);
+    CHECK(gui::Shortcut("ctrl+shift+z").to_string() == "Ctrl+Shift+Z");
+    CHECK(gui::Shortcut("F5").key == gui::Key::F5 && gui::Shortcut("Delete").key == gui::Key::DEL);
+    CHECK(gui::Shortcut("Alt+PageDown").to_string() == "Alt+PageDown");
+    CHECK(gui::Shortcut("Ctrl+").is_empty() && gui::Shortcut("Hyper+A").is_empty() && gui::Shortcut("F13").is_empty());
+    CHECK(gui::Shortcut().to_string().empty());
+    gui::KeyEvent e(gui::Key::S, gui::MODIFIER_CONTROL, false, 0);
+    CHECK(save.matches(e));
+    e.modifiers = gui::MODIFIER_CONTROL | gui::MODIFIER_SHIFT;
+    CHECK(!save.matches(e));  // 修飾キーは過不足なく
+}
+
+TEST(action_trigger_and_menu_entries)
+{
+    gui::Window window("t", 300, 200);
+    gui::Action* action = new gui::Action(&window, "太字(&B)");
+    int triggers = 0;
+    action->on_trigger = [&](gui::Object* sender)
+    {
+        CHECK(sender == action);
+        ++triggers;
+    };
+    action->checkable = true;
+    action->trigger();
+    CHECK(triggers == 1 && action->checked);
+    action->enabled = false;
+    action->trigger();
+    CHECK(triggers == 1 && action->checked);
+
+    // 1 つの Action を複数のメニューに入れられる。Action を破棄すると項目も消える。
+    gui::Menu* a = new gui::Menu(&window);
+    gui::Menu* b = new gui::Menu(&window);
+    a->add_action(action);
+    b->add_action(action);
+    gui::Action* owned = a->add_item("所有");
+    CHECK(a->actions.get().size() == 2 && b->actions.get().size() == 1);
+    delete action;
+    CHECK(a->actions.get().size() == 1 && b->actions.get().empty());
+    a->remove_action(owned);  // メニューが作った Action は破棄される
+    CHECK(a->actions.get().empty());
+}
+
+TEST(menu_bar_layout_and_shortcuts)
+{
+    gui::Window window("t", 400, 300);
+    gui::BoxLayout* box = new gui::BoxLayout(&window);
+    box->margins = gui::Margins(0);
+    gui::LineEdit* edit = new gui::LineEdit(&window);
+    gui::ListView* list = new gui::ListView(&window);
+    box->add(edit);
+    box->add(list, 1);
+    gui::MenuBar* bar = new gui::MenuBar();
+    gui::Menu* file = bar->add_menu("ファイル(&F)");
+    gui::Menu* edit_menu = bar->add_menu("編集(&E)");
+    std::string done;
+    file->add_item("保存(&S)", [&](gui::Object*) { done += "save "; })->shortcut = "Ctrl+S";
+    gui::Menu* recent = file->add_submenu("最近(&R)");
+    recent->add_item("一つ目(&1)", [&](gui::Object*) { done += "recent "; })->shortcut = "Ctrl+1";
+    gui::Action* select_all = edit_menu->add_item("すべて選択(&A)", [&](gui::Object*) { done += "all "; });
+    select_all->shortcut = "Ctrl+A";
+    window.menu_bar = bar;
+    window.visible = true;
+    window.apply_layout();
+
+    // メニューバーは上端に、レイアウトはその下に置く。
+    CHECK(bar->parent == &window && bar->y == 0 && near(bar->width, 400));
+    CHECK(near(edit->y, bar->height) && window.minimum_hint.get().height > bar->height);
+
+    // メニューバーのメニューのショートカットは、ウィンドウ全体で効く(サブメニューも)。
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LCTRL);
+    dispatch_key(window, SDLK_1, true, SDL_KMOD_LCTRL);
+    CHECK(done == "save recent ");
+    // フォーカスのあるウィジェットが受け取ったキーは、ショートカットより優先する(入力欄の Ctrl+A)。
+    edit->focused = true;
+    dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+    CHECK(done == "save recent ");
+    // ウィジェットに加えた Action は、フォーカスがその中にあるときだけ効き、ウィンドウのものより優先する。
+    gui::Action* local_save = new gui::Action(&window);
+    local_save->shortcut = "Ctrl+S";
+    local_save->on_trigger = [&](gui::Object*) { done += "local "; };
+    list->add_action(local_save);
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LCTRL);  // 入力欄にフォーカス: ウィンドウのもの
+    list->focused = true;
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LCTRL);
+    CHECK(done == "save recent save local ");
+    // 無効な Action は実行しない(次の候補へ進む)。
+    local_save->enabled = false;
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LCTRL);
+    CHECK(done == "save recent save local save ");
+    delete local_save;
+    CHECK(list->actions.get().empty());
+
+    // メニューバーを破棄すると、レイアウトの領域は上端からになる。
+    delete bar;
+    CHECK(window.menu_bar == nullptr);
+    window.apply_layout();
+    CHECK(near(edit->y, 0));
+}
+
+TEST(menu_bar_keyboard)
+{
+    gui::Window window("t", 400, 300);
+    gui::MenuBar* bar = new gui::MenuBar();
+    gui::Menu* file = bar->add_menu("ファイル(&F)");
+    gui::Menu* edit = bar->add_menu("編集(&E)");
+    std::string done;
+    file->add_item("開く(&O)", [&](gui::Object*) { done += "open "; });
+    file->add_item("保存(&S)", [&](gui::Object*) { done += "save "; });
+    edit->add_item("元に戻す(&U)", [&](gui::Object*) { done += "undo "; });
+    window.menu_bar = bar;
+    window.visible = true;
+    window.apply_layout();
+
+    // Alt+ニーモニックで開き、項目のニーモニックで選ぶ。
+    dispatch_key(window, SDLK_F, true, SDL_KMOD_LALT);
+    CHECK(file->is_open());
+    dispatch_key(window, SDLK_S);
+    CHECK(done == "save " && !file->is_open());
+
+    // F10 でメニューバーへ移り、→ で次へ、↓ で開く。
+    dispatch_key(window, SDLK_F10);
+    dispatch_key(window, SDLK_RIGHT);
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(edit->is_open());
+    // 開いたメニューの ← は隣のメニューへ。Enter で最初の項目を選ぶ。
+    dispatch_key(window, SDLK_LEFT);
+    CHECK(file->is_open() && !edit->is_open());
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(done == "save open ");
+
+    // Esc はメニューバーへ戻り、もう一度 Esc でやめる。
+    dispatch_key(window, SDLK_E, true, SDL_KMOD_LALT);
+    CHECK(edit->is_open());
+    dispatch_key(window, SDLK_ESCAPE);
+    CHECK(!edit->is_open());
+    dispatch_key(window, SDLK_DOWN);  // まだメニューバーにいる
+    CHECK(edit->is_open());
+    dispatch_key(window, SDLK_ESCAPE);
+    dispatch_key(window, SDLK_ESCAPE);
+    dispatch_key(window, SDLK_DOWN);  // メニューバーから出た
+    CHECK(!edit->is_open() && !file->is_open());
+
+    // Alt を押して離すとメニューバーへ移る。
+    dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
+    dispatch_key(window, SDLK_LALT, false);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(file->is_open());
+    file->close();
+    // Alt を押したまま他のキーを押したときは移らない。
+    dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
+    dispatch_key(window, SDLK_X, true, SDL_KMOD_LALT);
+    dispatch_key(window, SDLK_LALT, false);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(!file->is_open());
 }
 
 }  // namespace

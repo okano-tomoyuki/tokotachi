@@ -21,6 +21,7 @@ namespace gui
 
 class Canvas;
 class Layout;
+class Action;
 class Window;
 
 namespace detail
@@ -97,6 +98,13 @@ public:
     ReadOnlyProperty<float> display_scale;
     // ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。
     Property<std::string> tooltip;
+
+    // --- ショートカット(docs/adr/0027) ---
+    // Action を加える。そのショートカットは、フォーカスがこのウィジェットの中にあるときに効く(ウィンドウに加えればウィンドウ全体)。
+    // 所有はしない(Action が破棄されると外れる)。
+    void add_action(Action* action);
+    void remove_action(Action* action);
+    ReadOnlyProperty<std::vector<Action*> > actions;
 
     // --- イベントのハンドラ ---
     // 自分の描画の後に呼ぶ(子の描画の前)。
@@ -213,6 +221,7 @@ private:
     void set_accepts_text_input(const bool& v);
     float get_display_scale() const;
     void set_tooltip(const std::string& v) { tooltip_ = v; }
+    std::vector<Action*> get_actions() const { return actions_; }
 
     Widget* parent_;
     std::vector<Widget*> children_;
@@ -228,6 +237,7 @@ private:
     FocusPolicy focus_policy_;
     MouseCursor cursor_;
     std::string tooltip_;
+    std::vector<Action*> actions_;
     PaintHandler on_paint_;
     NotifyHandler on_resize_;
     MouseHandler on_mouse_down_;

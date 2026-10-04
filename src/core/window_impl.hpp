@@ -97,6 +97,8 @@ private:
     void mouse_up(const Point& p, MouseButton button, int clicks);
     void mouse_move(const Point& p);
     void key(const SDL_KeyboardEvent& e);
+    // ショートカットが一致する Action を実行する。実行したら true。
+    bool trigger_shortcut(const KeyEvent& ev);
 };
 
 }  // namespace detail

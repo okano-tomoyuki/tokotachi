@@ -7,6 +7,7 @@
 #include <gui/window.hpp>
 
 #include "../layout/layout_access.hpp"
+#include "action_access.hpp"
 #include "property_impl.hpp"
 #include "widget_access.hpp"
 #include "window_impl.hpp"
@@ -40,6 +41,7 @@ Widget::Widget(Widget* parent_widget)
       GUI_PROPERTY_GETTER(Widget, bool, accepts_text_input),
       GUI_READONLY_PROPERTY(Widget, float, display_scale),
       GUI_PROPERTY_MEMBER(Widget, std::string, tooltip),
+      GUI_READONLY_PROPERTY(Widget, std::vector<Action*>, actions),
       GUI_HANDLER_PROPERTY(Widget, PaintHandler, on_paint),
       GUI_HANDLER_PROPERTY(Widget, NotifyHandler, on_resize),
       GUI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_down),
@@ -69,8 +71,36 @@ Widget::Widget(Widget* parent_widget)
     }
 }
 
+void Widget::add_action(Action* action)
+{
+    if (!action || std::find(actions_.begin(), actions_.end(), action) != actions_.end())
+    {
+        return;
+    }
+    actions_.push_back(action);
+    detail::ActionAccess::attach_widget(action, this);
+    notify_changed(actions);
+}
+
+void Widget::remove_action(Action* action)
+{
+    const std::vector<Action*>::iterator it = std::find(actions_.begin(), actions_.end(), action);
+    if (it == actions_.end())
+    {
+        return;
+    }
+    actions_.erase(it);
+    detail::ActionAccess::detach_widget(action, this);
+    notify_changed(actions);
+}
+
 Widget::~Widget()
 {
+    for (std::size_t i = 0; i < actions_.size(); ++i)
+    {
+        detail::ActionAccess::detach_widget(actions_[i], this);
+    }
+    actions_.clear();
     // 子(所有しているオブジェクト)は、自分がまだ Widget であるうちに破棄する(子は親の children_ を書き換える)。
     delete_owned();
     if (parent_ && parent_->layout_)

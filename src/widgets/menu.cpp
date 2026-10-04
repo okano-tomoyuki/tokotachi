@@ -4,11 +4,15 @@
 #include <cmath>
 
 #include <gui/canvas.hpp>
+#include <gui/menu_bar.hpp>
 #include <gui/popup.hpp>
 #include <gui/text_layout.hpp>
 #include <gui/widget.hpp>
 
+#include "../core/action_access.hpp"
 #include "../core/property_impl.hpp"
+#include "menu_access.hpp"
+#include "mnemonic.hpp"
 #include "theme.hpp"
 
 namespace gui
@@ -34,11 +38,39 @@ public:
     static const float PADDING;
     static const float GAP;
     static const float ARROW;
+    static const float CHECK;
     static const float SEPARATOR;
 
     float item_height() const { return std::ceil(TextLayout("", Font(), display_scale).height()) + 10; }
 
-    float height_of(std::size_t i) const { return menu->entries_[i] ? item_height() : SEPARATOR; }
+    bool is_separator(std::size_t i) const { return !menu->entries_[i].action && !menu->entries_[i].submenu; }
+
+    float height_of(std::size_t i) const { return is_separator(i) ? SEPARATOR : item_height(); }
+
+    // 項目の表示の文字(& を含む)。
+    std::string label_of(std::size_t i) const
+    {
+        const Menu::Entry& e = menu->entries_[i];
+        return e.submenu ? e.submenu->title_ : e.action ? ActionAccess::text(e.action) : std::string();
+    }
+
+    std::string shortcut_of(std::size_t i) const
+    {
+        const Menu::Entry& e = menu->entries_[i];
+        return e.action ? ActionAccess::shortcut(e.action).to_string() : std::string();
+    }
+
+    bool has_checks() const
+    {
+        for (std::size_t i = 0; i < menu->entries_.size(); ++i)
+        {
+            if (menu->entries_[i].action && ActionAccess::checkable(menu->entries_[i].action))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     Rect row_rect(std::size_t i) const
     {
@@ -71,8 +103,8 @@ public:
         {
             return false;
         }
-        MenuItem* item = menu->entries_[static_cast<std::size_t>(i)];
-        return item && item->enabled_;
+        const Menu::Entry& e = menu->entries_[static_cast<std::size_t>(i)];
+        return e.submenu || (e.action && ActionAccess::enabled(e.action));
     }
 
     void highlight(int i)
@@ -113,8 +145,7 @@ public:
     // 項目 i のサブメニューを開く(keyboard なら最初の項目を強調し、キーボードの操作をサブメニューへ移す)。
     void open_submenu(int i, bool keyboard)
     {
-        MenuItem* item = menu->entries_[static_cast<std::size_t>(i)];
-        Menu* sub = item ? item->submenu_ : nullptr;
+        Menu* sub = menu->entries_[static_cast<std::size_t>(i)].submenu;
         if (!sub || sub == open_child)
         {
             return;
@@ -135,15 +166,49 @@ public:
         {
             return;
         }
-        MenuItem* item = menu->entries_[static_cast<std::size_t>(i)];
-        if (item->submenu_)
+        const Menu::Entry& e = menu->entries_[static_cast<std::size_t>(i)];
+        if (e.submenu)
         {
             open_submenu(i, true);
         }
         else
         {
-            menu->activate(item);  // ハンドラの中でメニューが破棄されてもよいよう、何もせずに戻る
+            menu->activate(e.action);  // ハンドラの中でメニューが破棄されてもよいよう、何もせずに戻る
         }
+    }
+
+    // ニーモニックのキーの項目を選ぶ(同じキーの項目が複数あれば、順に強調するだけ)。使ったら true。
+    bool choose_mnemonic(Key key)
+    {
+        std::vector<int> matches;
+        for (std::size_t i = 0; i < menu->entries_.size(); ++i)
+        {
+            if (selectable(static_cast<int>(i)) && parse_mnemonic(label_of(i)).key == key)
+            {
+                matches.push_back(static_cast<int>(i));
+            }
+        }
+        if (matches.empty())
+        {
+            return false;
+        }
+        if (matches.size() == 1)
+        {
+            highlight(matches[0]);
+            choose(matches[0]);
+            return true;
+        }
+        int next = matches[0];
+        for (std::size_t k = 0; k < matches.size(); ++k)
+        {
+            if (matches[k] > highlighted)
+            {
+                next = matches[k];
+                break;
+            }
+        }
+        highlight(next);
+        return true;
     }
 
 protected:
@@ -155,16 +220,16 @@ protected:
         for (std::size_t i = 0; i < menu->entries_.size(); ++i)
         {
             h += height_of(i);
-            MenuItem* item = menu->entries_[i];
-            if (!item)
+            if (is_separator(i))
             {
                 continue;
             }
-            text_w = std::max(text_w, TextLayout(item->text_, Font(), scale).width());
-            shortcut_w = std::max(shortcut_w, TextLayout(item->shortcut_text_, Font(), scale).width());
-            has_submenu = has_submenu || item->submenu_;
+            text_w = std::max(text_w, TextLayout(parse_mnemonic(label_of(i)).text, Font(), scale).width());
+            shortcut_w = std::max(shortcut_w, TextLayout(shortcut_of(i), Font(), scale).width());
+            has_submenu = has_submenu || menu->entries_[i].submenu;
         }
-        const float w = PADDING * 2 + text_w + (shortcut_w > 0 ? GAP + shortcut_w : 0) + (has_submenu ? ARROW : 0);
+        const float w = PADDING * 2 + (has_checks() ? CHECK : 0) + text_w + (shortcut_w > 0 ? GAP + shortcut_w : 0) +
+                        (has_submenu ? ARROW : 0);
         return Size(std::ceil(std::max(w, 120.0f)), std::ceil(h));
     }
 
@@ -172,31 +237,51 @@ protected:
     {
         const float scale = display_scale;
         const float w = width;
+        const float text_x = PADDING + (has_checks() ? CHECK : 0);
+        const bool cues = menu->root()->cues_;
         for (std::size_t i = 0; i < menu->entries_.size(); ++i)
         {
             const Rect row = row_rect(i);
-            MenuItem* item = menu->entries_[i];
-            if (!item)
+            if (is_separator(i))
             {
                 canvas.fill_rect(Rect(PADDING / 2, row.y + row.height / 2, w - PADDING, 1), theme::border());
                 continue;
             }
-            const bool hot = static_cast<int>(i) == highlighted && item->enabled_;
+            const Menu::Entry& e = menu->entries_[i];
+            const bool enabled_now = selectable(static_cast<int>(i));
+            const bool hot = static_cast<int>(i) == highlighted && enabled_now;
             if (hot)
             {
                 canvas.fill_round_rect(row.adjusted(4, 0, 4, 0), 4, theme::selection());
             }
-            const Color fg = !item->enabled_ ? theme::text_disabled() : hot ? theme::on_selection() : theme::text();
-            const TextLayout text(item->text_, Font(), scale);
-            canvas.draw_text(text, Point(PADDING, row.y + (row.height - text.height()) / 2), fg);
-            if (!item->shortcut_text_.empty())
+            const Color fg = !enabled_now ? theme::text_disabled() : hot ? theme::on_selection() : theme::text();
+            if (e.action && ActionAccess::checkable(e.action) && ActionAccess::checked(e.action))
             {
-                const TextLayout sc(item->shortcut_text_, Font(), scale);
-                const float right = w - PADDING - (item->submenu_ ? ARROW : 0);
+                // チェックの印
+                const float cx = PADDING + CHECK / 2 - 2, cy = row.y + row.height / 2;
+                Path mark;
+                mark.move_to(cx - 5, cy);
+                mark.line_to(cx - 1.5f, cy + 3.5f);
+                mark.line_to(cx + 5, cy - 4);
+                canvas.stroke_path(mark, 1.8f, fg, LineCap::ROUND);
+            }
+            const Mnemonic m = parse_mnemonic(label_of(i));
+            const TextLayout text(m.text, Font(), scale);
+            const Point at(text_x, row.y + (row.height - text.height()) / 2);
+            canvas.draw_text(text, at, fg);
+            if (cues)
+            {
+                paint_mnemonic_underline(canvas, text, at, m.offset, fg);
+            }
+            const std::string sc_text = shortcut_of(i);
+            if (!sc_text.empty())
+            {
+                const TextLayout sc(sc_text, Font(), scale);
+                const float right = w - PADDING - (e.submenu ? ARROW : 0);
                 canvas.draw_text(sc, Point(right - sc.width(), row.y + (row.height - sc.height()) / 2),
                                  hot ? theme::on_selection() : theme::placeholder());
             }
-            if (item->submenu_)
+            if (e.submenu)
             {
                 // 右向きの矢印
                 const float cx = w - PADDING - ARROW / 2 + 4, cy = row.y + row.height / 2;
@@ -220,8 +305,7 @@ protected:
         }
         highlight(i);
         // サブメニューの項目に乗ったら開き、他の項目に乗ったら閉じる。
-        MenuItem* item = menu->entries_[static_cast<std::size_t>(i)];
-        if (item->submenu_)
+        if (menu->entries_[static_cast<std::size_t>(i)].submenu)
         {
             open_submenu(i, false);
         }
@@ -251,6 +335,7 @@ protected:
     {
         Widget::key_down(e);
         e.accepted = true;
+        Menu* root = menu->root();
         switch (e.key)
         {
         case Key::UP:
@@ -260,9 +345,13 @@ protected:
             step_highlight(1);
             break;
         case Key::RIGHT:
-            if (selectable(highlighted))
+            if (selectable(highlighted) && menu->entries_[static_cast<std::size_t>(highlighted)].submenu)
             {
                 open_submenu(highlighted, true);
+            }
+            else if (root->bar_)
+            {
+                root->bar_->open_adjacent(root, 1);  // メニューバーの次のメニューへ
             }
             break;
         case Key::LEFT:
@@ -270,16 +359,30 @@ protected:
             {
                 menu->close();  // サブメニューを閉じ、親のメニューへ戻る
             }
+            else if (menu->bar_)
+            {
+                menu->bar_->open_adjacent(menu, -1);
+            }
             break;
         case Key::RETURN:
         case Key::SPACE:
             choose(highlighted);
             break;
         case Key::ESCAPE:
-            menu->close();
+            if (!menu->parent_menu_ && menu->bar_)
+            {
+                menu->bar_->menu_escaped(menu);  // メニューバーへ戻る
+            }
+            else
+            {
+                menu->close();
+            }
             break;
         default:
-            e.accepted = false;
+            if (e.has_modifier(MODIFIER_CONTROL) || !choose_mnemonic(e.key))
+            {
+                e.accepted = false;
+            }
             break;
         }
     }
@@ -288,97 +391,160 @@ protected:
 const float MenuView::PADDING = 14;
 const float MenuView::GAP = 32;
 const float MenuView::ARROW = 16;
+const float MenuView::CHECK = 20;
 const float MenuView::SEPARATOR = 9;
+
+void MenuAccess::forget_action(Menu* m, Action* a)
+{
+    for (std::size_t i = 0; i < m->entries_.size(); ++i)
+    {
+        if (m->entries_[i].action == a)
+        {
+            m->entries_.erase(m->entries_.begin() + static_cast<std::ptrdiff_t>(i));
+            break;
+        }
+    }
+    ActionAccess::detach_menu(a, m);
+    m->notify_changed(m->actions);
+    m->changed();
+}
 
 }  // namespace detail
 
-// --- MenuItem ---
-
-MenuItem::MenuItem(Menu* owner_menu, const std::string& initial_text, Menu* sub)
-    : Object(owner_menu),
-      GUI_PROPERTY_MEMBER(MenuItem, std::string, text),
-      GUI_PROPERTY_MEMBER(MenuItem, std::string, shortcut_text),
-      GUI_PROPERTY_MEMBER(MenuItem, bool, enabled),
-      GUI_READONLY_PROPERTY(MenuItem, Menu*, submenu),
-      GUI_HANDLER_PROPERTY(MenuItem, NotifyHandler, on_click),
-      menu_(owner_menu),
-      text_(initial_text),
-      enabled_(true),
-      submenu_(sub)
+Menu::Menu(Object* owner, const std::string& initial_title)
+    : Object(owner),
+      GUI_PROPERTY_MEMBER(Menu, std::string, title),
+      GUI_READONLY_PROPERTY(Menu, std::vector<Action*>, actions),
+      title_(initial_title),
+      parent_menu_(nullptr),
+      bar_(nullptr),
+      popup_(nullptr),
+      view_(nullptr),
+      anchor_(nullptr),
+      cues_(false),
+      destroying_(false)
 {
 }
-
-void MenuItem::changed()
-{
-    if (menu_->view_)
-    {
-        menu_->view_->invalidate();
-        menu_->view_->request_layout();
-    }
-}
-
-void MenuItem::set_text(const std::string& v)
-{
-    text_ = v;
-    changed();
-}
-
-void MenuItem::set_shortcut_text(const std::string& v)
-{
-    shortcut_text_ = v;
-    changed();
-}
-
-void MenuItem::set_enabled(const bool& v)
-{
-    enabled_ = v;
-    changed();
-}
-
-// --- Menu ---
-
-Menu::Menu(Object* owner) : Object(owner), parent_menu_(nullptr), popup_(nullptr), view_(nullptr), anchor_(nullptr) {}
 
 Menu::~Menu()
 {
+    destroying_ = true;
+    // Action から自分を外す(このメニューが作った Action は、この後 Object として破棄される)。
+    for (std::size_t i = 0; i < entries_.size(); ++i)
+    {
+        if (entries_[i].action)
+        {
+            detail::ActionAccess::detach_menu(entries_[i].action, this);
+        }
+    }
     // サブメニューを先に破棄する(親のポップアップの OS のウィンドウを先に消すと、OS が子のポップアップも消すため)。
     for (std::size_t i = 0; i < entries_.size(); ++i)
     {
-        if (entries_[i] && entries_[i]->submenu_)
+        if (entries_[i].submenu)
         {
-            delete entries_[i]->submenu_;
-            entries_[i]->submenu_ = nullptr;
+            delete entries_[i].submenu;
+            entries_[i].submenu = nullptr;
         }
     }
     delete popup_;
 }
 
-MenuItem* Menu::add_item(const std::string& text, const NotifyHandler& on_click)
+void Menu::set_title(const std::string& v)
 {
-    MenuItem* item = new MenuItem(this, text, nullptr);
-    item->on_click = on_click;
-    entries_.push_back(item);
+    title_ = v;
+    if (parent_menu_)
+    {
+        parent_menu_->changed();
+    }
+    if (bar_)
+    {
+        bar_->request_layout();
+        bar_->invalidate();
+    }
+}
+
+std::vector<Action*> Menu::get_actions() const
+{
+    std::vector<Action*> out;
+    for (std::size_t i = 0; i < entries_.size(); ++i)
+    {
+        if (entries_[i].action)
+        {
+            out.push_back(entries_[i].action);
+        }
+    }
+    return out;
+}
+
+void Menu::changed()
+{
+    if (destroying_)
+    {
+        return;
+    }
     if (view_)
     {
+        view_->invalidate();
         view_->request_layout();
     }
-    return item;
+}
+
+Action* Menu::add_item(const std::string& text, const NotifyHandler& on_trigger)
+{
+    Action* action = new Action(this, text);
+    action->on_trigger = on_trigger;
+    const Entry e = {action, nullptr, true};
+    entries_.push_back(e);
+    detail::ActionAccess::attach_menu(action, this);
+    notify_changed(actions);
+    changed();
+    return action;
+}
+
+void Menu::add_action(Action* action)
+{
+    if (!action)
+    {
+        return;
+    }
+    const Entry e = {action, nullptr, false};
+    entries_.push_back(e);
+    detail::ActionAccess::attach_menu(action, this);
+    notify_changed(actions);
+    changed();
+}
+
+void Menu::remove_action(Action* action)
+{
+    for (std::size_t i = 0; i < entries_.size(); ++i)
+    {
+        if (entries_[i].action == action)
+        {
+            const bool owned = entries_[i].owned;
+            detail::MenuAccess::forget_action(this, action);
+            if (owned)
+            {
+                delete action;
+            }
+            return;
+        }
+    }
 }
 
 void Menu::add_separator()
 {
-    entries_.push_back(nullptr);
-    if (view_)
-    {
-        view_->request_layout();
-    }
+    const Entry e = {nullptr, nullptr, false};
+    entries_.push_back(e);
+    changed();
 }
 
 Menu* Menu::add_submenu(const std::string& text)
 {
-    Menu* sub = new Menu(this);
+    Menu* sub = new Menu(this, text);
     sub->parent_menu_ = this;
-    entries_.push_back(new MenuItem(this, text, sub));
+    const Entry e = {nullptr, sub, false};
+    entries_.push_back(e);
+    changed();
     return sub;
 }
 
@@ -414,6 +580,10 @@ void Menu::ensure_popup(Widget* anchor)
         {
             parent_menu_->view_->open_child = nullptr;
         }
+        if (bar_)
+        {
+            bar_->menu_closed(this);
+        }
     };
 }
 
@@ -424,11 +594,27 @@ void Menu::popup(Widget* anchor_widget, const Point& at)
         return;
     }
     ensure_popup(anchor_widget);
+    cues_ = false;
     view_->highlighted = -1;
     const Size size = view_->preferred_size;
     view_->bounds = Rect(Point(), size);
     popup_->open(Rect(at, Size()), size, PopupPlacement::AT);
     view_->focused = true;
+}
+
+void Menu::open_below(Widget* anchor, const Rect& r, bool keyboard)
+{
+    ensure_popup(anchor);
+    cues_ = keyboard;
+    view_->highlighted = -1;
+    const Size size = view_->preferred_size;
+    view_->bounds = Rect(Point(), size);
+    popup_->open(r, size, PopupPlacement::BELOW);
+    view_->focused = true;
+    if (keyboard)
+    {
+        view_->step_highlight(1);
+    }
 }
 
 void Menu::open_beside(detail::MenuView* parent_view, const Rect& row)
@@ -455,13 +641,17 @@ void Menu::close()
 
 bool Menu::is_open() const { return popup_ && popup_->visible; }
 
-void Menu::activate(MenuItem* item)
+void Menu::activate(Action* action)
 {
-    const NotifyHandler handler = item->on_click_;
-    root()->close();
-    if (handler)
+    Menu* r = root();
+    r->close();
+    if (r->bar_)
     {
-        handler(item);
+        r->bar_->menu_activated();
+    }
+    if (action)
+    {
+        action->trigger();  // ハンドラの中でメニューが破棄されてもよいよう、最後に呼ぶ
     }
 }
 

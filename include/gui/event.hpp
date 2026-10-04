@@ -38,7 +38,9 @@ enum class Key
     LEFT, RIGHT, UP, DOWN, HOME, END, PAGE_UP, PAGE_DOWN,
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
     DIGIT_0, DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4, DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9,
-    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12
+    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+    // 修飾キーそのもの(左右を区別しない)
+    SHIFT, CONTROL, ALT, META
 };
 
 // accepted が false のまま返ったイベントは親のウィジェットへ送られる(マウスのボタン・キー)。

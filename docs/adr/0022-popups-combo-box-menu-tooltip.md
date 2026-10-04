@@ -46,6 +46,7 @@ SDL3 のソースで確かめたこと:
 
 - `Menu` と `MenuItem` は Object の派生クラス(MenuItem の所有者は Menu、サブメニューの所有者は親の Menu)。
   `MenuItem` は `text`・`shortcut_text`(表示だけで、キーは割り当てない)・`enabled`・`submenu`(読み取り専用)・`on_click`。
+  (後に [ADR 0027](0027-actions-shortcuts-and-menu-bar.md) で、項目は Action で表すように変えた。)
 - `add_item`・`add_separator`・`add_submenu`、`popup(anchor_widget, at)`(右クリックの位置などに開く)・`close`。
 - ↑↓(区切りと無効な項目を飛ばす)・Enter で選ぶ・→ でサブメニューを開く・← でサブメニューを閉じる・Esc で閉じる。
   サブメニューの項目にポインタを乗せると開く。

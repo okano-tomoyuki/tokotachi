@@ -2,6 +2,7 @@
 #ifndef GUI_GUI_HPP
 #define GUI_GUI_HPP
 
+#include "action.hpp"
 #include "alignment.hpp"
 #include "application.hpp"
 #include "binding.hpp"
@@ -25,6 +26,7 @@
 #include "list_model.hpp"
 #include "list_view.hpp"
 #include "menu.hpp"
+#include "menu_bar.hpp"
 #include "place_layout.hpp"
 #include "popup.hpp"
 #include "progress_bar.hpp"
@@ -33,6 +35,7 @@
 #include "range_base.hpp"
 #include "scroll_area.hpp"
 #include "scroll_bar.hpp"
+#include "shortcut.hpp"
 #include "slider.hpp"
 #include "spin_box.hpp"
 #include "tab_widget.hpp"

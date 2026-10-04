@@ -1,9 +1,10 @@
-// メニュー(右クリックのメニューなど。docs/adr/0022)。
+// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
 //
 //   gui::Menu* menu = new gui::Menu(&window);                 // ウィンドウが所有する
-//   menu->add_item("コピー", [](gui::Object*) { ... })->shortcut_text = "Ctrl+C";
+//   menu->add_item("コピー(&C)", [](gui::Object*) { ... })->shortcut = "Ctrl+C";
+//   menu->add_action(save);                                   // 既にある Action を入れる
 //   menu->add_separator();
-//   gui::Menu* sort = menu->add_submenu("並べ替え");
+//   gui::Menu* sort = menu->add_submenu("並べ替え(&S)");
 //   sort->add_item("名前順");
 //   edit->on_mouse_down = [=](gui::Object*, gui::MouseEvent& e)
 //   {
@@ -11,7 +12,8 @@
 //   };
 //
 // ↑↓ で項目を動かし(区切りと無効な項目は飛ばす)、Enter で選び、→ でサブメニューを開き、← で閉じ、Esc で閉じる。
-// 項目を選ぶと、メニューをすべて閉じてから on_click を呼ぶ。メニューは、開くウィジェットのウィンドウより先に破棄すること
+// 項目のニーモニック(text の & の次の文字)のキーを押すと、その項目を選ぶ。
+// 項目を選ぶと、メニューをすべて閉じてから Action を実行する。メニューは、開くウィジェットのウィンドウより先に破棄すること
 // (ウィンドウに所有させればよい)。
 #ifndef GUI_MENU_HPP
 #define GUI_MENU_HPP
@@ -19,65 +21,42 @@
 #include <string>
 #include <vector>
 
-#include "event.hpp"
+#include "action.hpp"
 #include "geometry.hpp"
-#include "property.hpp"
 
 namespace gui
 {
 
-class Menu;
+class MenuBar;
 class Popup;
 class Widget;
 
 namespace detail
 {
 class MenuView;
+struct MenuAccess;
 }
-
-class MenuItem : public Object
-{
-public:
-    Property<std::string> text;
-    // 右に出す説明("Ctrl+C" など)。キーの割り当てはしない。
-    Property<std::string> shortcut_text;
-    Property<bool> enabled;
-    // サブメニュー(無ければ nullptr)。
-    ReadOnlyProperty<Menu*> submenu;
-
-    // 選ばれた(メニューをすべて閉じた後に呼ぶ)。
-    Property<NotifyHandler> on_click;
-
-private:
-    friend class Menu;
-    friend class detail::MenuView;
-
-    MenuItem(Menu* owner_menu, const std::string& text, Menu* submenu);
-
-    void set_text(const std::string& v);
-    void set_shortcut_text(const std::string& v);
-    void set_enabled(const bool& v);
-    Menu* get_submenu() const { return submenu_; }
-    void changed();
-
-    Menu* menu_;
-    std::string text_;
-    std::string shortcut_text_;
-    bool enabled_;
-    Menu* submenu_;
-    NotifyHandler on_click_;
-};
 
 class Menu : public Object
 {
 public:
-    explicit Menu(Object* owner = nullptr);
+    explicit Menu(Object* owner = nullptr, const std::string& title = std::string());
     ~Menu();
 
-    MenuItem* add_item(const std::string& text, const NotifyHandler& on_click = NotifyHandler());
+    // メニューバー・親のメニューの項目に出す名前(& でニーモニック)。
+    Property<std::string> title;
+
+    // text の Action を作って最後に加え、返す(このメニューが所有する)。
+    Action* add_item(const std::string& text, const NotifyHandler& on_trigger = NotifyHandler());
+    // 既にある Action を最後に加える(所有しない。1 つの Action を複数のメニューに入れてよい)。
+    void add_action(Action* action);
+    // Action の項目を除く(このメニューが作った Action なら破棄する)。
+    void remove_action(Action* action);
     void add_separator();
     // サブメニューを開く項目を加え、サブメニューを返す(このメニューが所有する)。
-    Menu* add_submenu(const std::string& text);
+    Menu* add_submenu(const std::string& title);
+    // 項目の Action(並んだ順。区切り・サブメニューを除く)。
+    ReadOnlyProperty<std::vector<Action*> > actions;
 
     // anchor_widget(ウィンドウに属するウィジェット)の座標系の点 at に開く。
     void popup(Widget* anchor_widget, const Point& at);
@@ -86,22 +65,40 @@ public:
     bool is_open() const;
 
 private:
-    friend class MenuItem;
+    friend class MenuBar;
     friend class detail::MenuView;
+    friend struct detail::MenuAccess;
 
-    // 項目(nullptr は区切り)。
-    std::vector<MenuItem*> entries_;
+    // 項目: action・submenu のどちらか(両方 nullptr なら区切り)。
+    struct Entry
+    {
+        Action* action;
+        Menu* submenu;
+        bool owned;  // action をこのメニューが作った
+    };
+
+    void set_title(const std::string& v);
+    std::vector<Action*> get_actions() const;
+    void changed();
+
+    std::string title_;
+    std::vector<Entry> entries_;
     Menu* parent_menu_;
+    MenuBar* bar_;  // メニューバーのメニューならそのバー
     Popup* popup_;
     detail::MenuView* view_;
     Widget* anchor_;  // popup_ を作ったときの基準のウィジェット
+    bool cues_;       // ニーモニックの下線を出す(キーボードで開いた)
+    bool destroying_;
 
     // popup_ と view_ を、anchor のウィンドウの上に作る(作ってあれば作り直さない)。
     void ensure_popup(Widget* anchor);
+    // anchor の座標系の矩形 r の下に開く(メニューバー)。keyboard なら最初の項目を強調する。
+    void open_below(Widget* anchor, const Rect& r, bool keyboard);
     // 親のメニューの項目の右に開く(サブメニュー)。
     void open_beside(detail::MenuView* parent_view, const Rect& row);
-    // 項目を選んだ: 一番上のメニューから閉じ、on_click を呼ぶ。
-    void activate(MenuItem* item);
+    // 項目を選んだ: 一番上のメニューから閉じ、Action を実行する。
+    void activate(Action* action);
     Menu* root();
 };
 
