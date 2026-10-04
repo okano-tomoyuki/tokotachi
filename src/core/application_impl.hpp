@@ -14,6 +14,7 @@ namespace gui
 {
 
 class Application;
+class Object;
 
 namespace detail
 {
@@ -42,7 +43,9 @@ struct ApplicationImpl
     {
     }
 
+    // イベントを 1 つ処理し、delete_later で頼まれたオブジェクトを破棄する。
     void dispatch(const SDL_Event& e);
+    void dispatch_event(const SDL_Event& e);
     // interval_ms ごとに fn をメインスレッドで呼ぶ(repeat が false なら 1 回だけ)。戻り値は stop_timer() に渡す番号。
     // 利用者には Timer として見せる(docs/adr/0014)。
     int start_timer(int interval_ms, const std::function<void()>& fn, bool repeat);
@@ -52,6 +55,12 @@ struct ApplicationImpl
     void quit_if_no_window();
     // 開いているメニューの種類のポップアップをすべて閉じる。
     void close_menus();
+    // 他のスレッドからも呼べる: fn を、メインスレッドのイベントの処理の中で呼ぶ。
+    static void post(const std::function<void()>& fn);
+    // delete_later で頼まれたオブジェクトを破棄する(イベントを 1 つ処理するごとに呼ぶ)。
+    void flush_doomed();
+    // w への入力を、開いているモーダルのダイアログが止めるか(docs/adr/0028)。止めるならそのダイアログ。
+    WindowImpl* modal_blocker(const WindowImpl* w) const;
     // color_scheme・OS の設定・light_theme・dark_theme から使うテーマを決め直す。変わっていれば、
     // プロパティ(dark・theme)の変更を知らせ、すべてのウィンドウを描き直し、on_theme_change を呼ぶ(docs/adr/0023)。
     void update_theme();
@@ -60,6 +69,10 @@ struct ApplicationImpl
     std::vector<WindowImpl*> windows;
     // 開いているメニューの種類のポップアップ(開いた順。docs/adr/0022)。
     std::vector<WindowImpl*> open_menus;
+    // 開いているモーダルのダイアログ(開いた順)。
+    std::vector<WindowImpl*> modal_dialogs;
+    // delete_later で頼まれたオブジェクト。
+    std::vector<Object*> doomed;
     std::map<int, Timer> timers;
     bool running;
     int exit_code;

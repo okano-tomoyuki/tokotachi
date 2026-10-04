@@ -15,12 +15,12 @@ class LineEdit : public TextInputBase
 public:
     explicit LineEdit(Widget* parent = nullptr, const std::string& text = std::string());
 
-    // Enter が押された。
+    // Enter が押された。ハンドラが無ければ、Enter は親へ送る(ダイアログでは決定のボタンを押す)。
     Property<NotifyHandler> on_submit;
 
 protected:
     Rect text_area() const override;
-    void submit() override;
+    bool submit() override;
     void paint(Canvas& canvas) override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;

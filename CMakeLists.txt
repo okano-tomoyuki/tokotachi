@@ -50,8 +50,11 @@ add_library(gui STATIC
     src/widgets/button_base.cpp
     src/widgets/check_box.cpp
     src/widgets/combo_box.cpp
+    src/widgets/dialog.cpp
+    src/widgets/file_dialog.cpp
     src/widgets/menu.cpp
     src/widgets/menu_bar.cpp
+    src/widgets/message_dialog.cpp
     src/widgets/popup_list.cpp
     src/widgets/progress_bar.cpp
     src/widgets/radio_button.cpp

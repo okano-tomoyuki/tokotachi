@@ -557,8 +557,8 @@ void TextInputBase::key_down(KeyEvent& e)
     }
     if (e.key == Key::RETURN && !multi_line_)
     {
-        e.accepted = true;
-        submit();  // ハンドラの中で破棄されてもよいよう、何もせずに戻る
+        // ハンドラの中で破棄されてもよいよう、submit の後は自分に触らない(e は呼び出し側のもの)。
+        e.accepted = submit();
         return;
     }
 

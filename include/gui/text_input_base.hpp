@@ -44,8 +44,9 @@ protected:
     virtual Rect text_area() const = 0;
     // 折り返しの幅(dp。0 なら折り返さない)。
     virtual float wrap_width() const { return 0; }
-    // Enter が押された(1 行のときだけ呼ぶ。複数行では改行を入れる)。
-    virtual void submit() {}
+    // Enter が押された(1 行のときだけ呼ぶ。複数行では改行を入れる)。受け取ったら true を返す。
+    // false なら Enter は親へ送る(ダイアログの決定のボタンなど)。
+    virtual bool submit() { return false; }
     // スクロールの量が変わった(TextEdit がスクロールバーを合わせる)。
     virtual void scroll_changed() {}
 

@@ -20,6 +20,7 @@ namespace
 
 Application* g_instance = nullptr;
 Uint32 g_timer_event = 0;
+Uint32 g_call_event = 0;  // ApplicationImpl::post
 
 // タイマーのスレッドで呼ばれる。イベントを積むだけにし、関数はメインスレッドで呼ぶ。
 // userdata には 番号 * 2 + 繰り返すか を入れる(マップをこのスレッドから読まないため)。
@@ -223,8 +224,60 @@ void trace_event(const SDL_Event& e, const WindowImpl* w, std::size_t open_menus
 
 }  // namespace
 
+void ApplicationImpl::post(const std::function<void()>& fn)
+{
+    SDL_Event ev;
+    SDL_zero(ev);
+    ev.type = g_call_event;
+    ev.user.data1 = new std::function<void()>(fn);
+    if (!SDL_PushEvent(&ev))
+    {
+        delete static_cast<std::function<void()>*>(ev.user.data1);
+    }
+}
+
+void ApplicationImpl::flush_doomed()
+{
+    while (!doomed.empty())
+    {
+        Object* o = doomed.back();
+        doomed.pop_back();
+        delete o;  // 破棄の中で delete_later が呼ばれてもよいよう、1 つずつ
+    }
+}
+
+WindowImpl* ApplicationImpl::modal_blocker(const WindowImpl* w) const
+{
+    // 後に開いたものから: w がダイアログの親(またはその祖先)なら止める。
+    for (std::size_t i = modal_dialogs.size(); i-- > 0;)
+    {
+        for (const WindowImpl* p = modal_dialogs[i]->modal_parent; p; p = p->modal_parent)
+        {
+            if (p == w)
+            {
+                return modal_dialogs[i];
+            }
+        }
+    }
+    return nullptr;
+}
+
 void ApplicationImpl::dispatch(const SDL_Event& e)
 {
+    dispatch_event(e);
+    flush_doomed();
+}
+
+void ApplicationImpl::dispatch_event(const SDL_Event& e)
+{
+    if (e.type == g_call_event)
+    {
+        std::function<void()>* fn = static_cast<std::function<void()>*>(e.user.data1);
+        const std::function<void()> copy = *fn;
+        delete fn;
+        copy();
+        return;
+    }
     if (e.type == g_timer_event)
     {
         std::map<int, Timer>::iterator it = timers.find(e.user.code);
@@ -259,6 +312,26 @@ void ApplicationImpl::dispatch(const SDL_Event& e)
     if (!w)
     {
         return;
+    }
+    // モーダルのダイアログが開いていれば、その親への入力は捨てる(押したらダイアログを前に出す)。
+    if (WindowImpl* blocker = modal_blocker(w))
+    {
+        switch (e.type)
+        {
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            SDL_RaiseWindow(blocker->window);
+            return;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_MOTION:
+        case SDL_EVENT_MOUSE_WHEEL:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_TEXT_INPUT:
+        case SDL_EVENT_TEXT_EDITING:
+            return;
+        default:
+            break;
+        }
     }
     if (!open_menus.empty())
     {
@@ -333,6 +406,7 @@ Application::Application(int, char**)
         std::exit(1);
     }
     g_timer_event = SDL_RegisterEvents(1);
+    g_call_event = SDL_RegisterEvents(1);
     SDL_AddEventWatch(&event_watch, d_);
     d_->system_dark = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK;
     d_->update_theme();

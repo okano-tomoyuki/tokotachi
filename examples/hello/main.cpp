@@ -6,6 +6,8 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -300,9 +302,108 @@ int main(int argc, char** argv)
     gui::MenuBar* bar = new gui::MenuBar();
     gui::Menu* file_menu = bar->add_menu("ファイル(&F)");
     file_menu->add_item("新規(&N)", [=](gui::Object*) { memo->text = ""; })->shortcut = "Ctrl+N";
-    file_menu->add_item("保存(&S)", [=](gui::Object*) { count->text = "保存しました(デモ)"; })->shortcut = "Ctrl+S";
+
+    // OS のファイル選択(docs/adr/0028)。結果は on_finish で受け取る。メモの内容を読み書きする。
+    std::vector<gui::FileFilter> text_filters;
+    text_filters.push_back(gui::FileFilter("テキスト", "txt;md"));
+    text_filters.push_back(gui::FileFilter("すべてのファイル", "*"));
+    gui::FileDialog* opener = new gui::FileDialog(&window, gui::FileDialogMode::OPEN);
+    opener->filters = text_filters;
+    // 失敗したとき(Linux で xdg-desktop-portal も zenity も無いときなど)は理由を見せる。
+    const auto report_failure = [&window](gui::FileDialog* d)
+    {
+        gui::MessageDialog::show(&window, "ファイルのダイアログ",
+                                 "ファイルのダイアログを開けなかった: " + d->error.get(),
+                                 std::vector<gui::DialogButton>(), gui::NotifyHandler(), gui::MessageType::WARNING);
+    };
+    opener->on_finish = [=](gui::Object*)
+    {
+        const std::vector<std::string> paths = opener->paths;
+        if (!opener->error.get().empty())
+        {
+            report_failure(opener);
+            return;
+        }
+        if (paths.empty())
+        {
+            return;  // 取り消した
+        }
+        std::ifstream in(paths[0].c_str(), std::ios::binary);
+        std::ostringstream content;
+        content << in.rdbuf();
+        memo->text = content.str();
+        tabs->current_index = 0;
+        count->text = "開いた: " + paths[0];
+    };
+    file_menu->add_item("開く(&O)...", [=](gui::Object*) { opener->open(); })->shortcut = "Ctrl+O";
+    gui::FileDialog* saver = new gui::FileDialog(&window, gui::FileDialogMode::SAVE);
+    saver->filters = text_filters;
+    saver->location = "メモ.txt";
+    saver->on_finish = [=](gui::Object*)
+    {
+        const std::vector<std::string> paths = saver->paths;
+        if (!saver->error.get().empty())
+        {
+            report_failure(saver);
+            return;
+        }
+        if (paths.empty())
+        {
+            return;
+        }
+        std::ofstream out(paths[0].c_str(), std::ios::binary);
+        out << memo->text.get();
+        count->text = out ? "保存した: " + paths[0] : "保存できなかった: " + paths[0];
+    };
+    file_menu->add_item("名前を付けて保存(&S)...", [=](gui::Object*) { saver->open(); })->shortcut = "Ctrl+S";
     file_menu->add_separator();
-    file_menu->add_item("終了(&X)", [&](gui::Object*) { window.close(); })->shortcut = "Ctrl+Q";
+
+    // 自分で中身を作るダイアログ(docs/adr/0028)。ボタンは OS の慣習の順に並び、Enter で OK、Esc でキャンセル。
+    file_menu->add_item("名前を入力(&R)...", [&window, name](gui::Object*)
+    {
+        gui::Dialog* dialog = new gui::Dialog(&window, "名前の入力");
+        gui::BoxLayout* box = new gui::BoxLayout(dialog);
+        box->margins = gui::Margins(20, 20, 20, 12);
+        box->spacing = 8;
+        box->add(new gui::Label(dialog, "挨拶に使う名前"));
+        gui::LineEdit* field = new gui::LineEdit(dialog, name->value);
+        box->add(field);
+        dialog->add_button(gui::DialogButton::OK);
+        dialog->add_button(gui::DialogButton::CANCEL);
+        dialog->on_finish = [=](gui::Object*)
+        {
+            if (dialog->result == gui::DialogButton::OK)
+            {
+                name->value = field->text.get();
+            }
+            dialog->delete_later();  // 自分のハンドラの中なので、後で破棄する
+        };
+        field->select_all();
+        field->focused = true;
+        dialog->open();
+    })->shortcut = "Ctrl+R";
+    file_menu->add_separator();
+
+    // 閉じる前に確かめる(メッセージのダイアログ)。ウィンドウの閉じるボタンと Ctrl+Q の両方で。
+    const auto confirm_quit = [&window]()
+    {
+        gui::MessageDialog::show(&window, "終了", "サンプルを終了しますか？",
+                                 std::vector<gui::DialogButton>{gui::DialogButton::YES, gui::DialogButton::NO},
+                                 [&window](gui::Object* sender)
+                                 {
+                                     if (static_cast<gui::Dialog*>(sender)->result == gui::DialogButton::YES)
+                                     {
+                                         window.close();
+                                     }
+                                 },
+                                 gui::MessageType::QUESTION);
+    };
+    window.on_close = [=](gui::Object*, bool& can_close)
+    {
+        can_close = false;
+        confirm_quit();
+    };
+    file_menu->add_item("終了(&X)", [=](gui::Object*) { confirm_quit(); })->shortcut = "Ctrl+Q";
     gui::Menu* view_menu = bar->add_menu("表示(&V)");
     gui::Action* large_action = view_menu->add_item("大きい文字(&L)");
     large_action->checkable = true;
@@ -315,6 +416,19 @@ int main(int argc, char** argv)
     view_menu->add_separator();
     view_menu->add_item("次のタブ", [=](gui::Object*)
                         { tabs->current_index = (tabs->current_index + 1) % 4; })->shortcut = "F6";
+    gui::Menu* help_menu = bar->add_menu("ヘルプ(&H)");
+    help_menu->add_item("バージョン情報(&A)", [&window](gui::Object*)
+    {
+        gui::MessageDialog::show(&window, "バージョン情報",
+                                 "gui ライブラリのサンプル。SDL3 と plutovg の上に、C++11 で書いている。");
+    });
+    help_menu->add_item("警告の例(&W)", [&window](gui::Object*)
+    {
+        gui::MessageDialog::show(&window, "警告", "これは警告のダイアログの例。長い文はダイアログの幅で折り返す。"
+                                 "ボタンが 1 つなら Enter でも Esc でも閉じられる。",
+                                 std::vector<gui::DialogButton>{gui::DialogButton::CLOSE}, gui::NotifyHandler(),
+                                 gui::MessageType::WARNING);
+    });
     window.menu_bar = bar;
 
     // ウィジェットに加えた Action のキーは、フォーカスがその中にあるときだけ効く。一覧の Delete で選んだ項目を除く。

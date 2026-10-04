@@ -37,6 +37,9 @@ struct WindowImpl
     bool create_popup(SDL_Window* parent, bool tooltip, int x, int y, int w, int h);
     // SDL3 のウィンドウ・レンダラ・テクスチャを破棄する(Wayland でポップアップを閉じるとき。次に開くとき作り直す)。
     void destroy_native();
+    // 隠れているトップレベルのウィンドウを、size(dp)の大きさで作り直す(題名・状態は引き継ぐ)。
+    // WSLg(Wayland)では、作ってから見せる前に大きさを変えると、最初の表示が崩れるため(docs/adr/0028)。
+    bool recreate_toplevel(const Size& size);
     // ツールチップを出す・消す(docs/adr/0022)。
     void schedule_tooltip();
     void hide_tooltip();
@@ -61,6 +64,8 @@ struct WindowImpl
 
     Window* q;
     SDL_Window* window;
+    // モーダルのダイアログとして開いているときの親(docs/adr/0028)。
+    WindowImpl* modal_parent;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     std::vector<std::uint32_t> buffer;

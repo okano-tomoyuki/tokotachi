@@ -21,10 +21,15 @@ Rect LineEdit::text_area() const
     return r.adjusted(theme::field_padding(), 0, theme::field_padding(), 0);
 }
 
-void LineEdit::submit()
+bool LineEdit::submit()
 {
+    if (!on_submit_)
+    {
+        return false;
+    }
     Object* self = this;
     detail::fire(on_submit_, self);
+    return true;
 }
 
 Size LineEdit::compute_preferred_size() const { return Size(160, std::ceil(text_layout().height()) + 16); }

@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <limits>
 #include <string>
@@ -2384,6 +2386,136 @@ TEST(menu_bar_keyboard)
     dispatch_key(window, SDLK_LALT, false);
     dispatch_key(window, SDLK_RETURN);
     CHECK(!file->is_open());
+}
+
+TEST(delete_later_and_post)
+{
+    gui::Window window("t", 100, 100);
+    gui::Widget* w = new gui::Widget(&window);
+    int calls = 0;
+    w->on_resize = [&](gui::Object* sender)
+    {
+        ++calls;
+        sender->delete_later();
+        sender->delete_later();  // 2 度頼んでも 1 度だけ破棄する
+    };
+    w->bounds = gui::Rect(0, 0, 10, 10);
+    CHECK(calls == 1 && window.children.get().size() == 1);  // まだ残っている
+    // post した関数は、イベントの処理の中で呼ばれる。その処理の後に、頼まれたオブジェクトを破棄する。
+    bool posted = false;
+    gui::detail::ApplicationImpl::post([&]() { posted = true; });
+    // SDL3 は 1 回りの終わりの印をキューに入れるので、前に残った印で止まらないよう 2 回り読む。
+    SDL_Event e;
+    for (int round = 0; round < 2 && !posted; ++round)
+    {
+        while (SDL_PollEvent(&e))
+        {
+            gui::Application::instance()->impl()->dispatch(e);
+        }
+    }
+    CHECK(posted);
+    CHECK(window.children.get().empty());
+    // 頼んだ後に破棄されたら、何もしない。
+    gui::Widget* x = new gui::Widget(&window);
+    x->delete_later();
+    delete x;
+    gui::Application::instance()->impl()->flush_doomed();
+    CHECK(gui::Application::instance()->impl()->doomed.empty());
+}
+
+bool accept_button_first()
+{
+#ifdef _WIN32
+    return true;
+#else
+    const char* desktop = std::getenv("XDG_CURRENT_DESKTOP");
+    return desktop && std::strstr(desktop, "KDE") != nullptr;
+#endif
+}
+
+TEST(dialog_modal_buttons_and_keys)
+{
+    gui::Window window("t", 400, 300);
+    gui::Button* behind = new gui::Button(&window, "後ろ");
+    behind->bounds = gui::Rect(10, 10, 100, 30);
+    int behind_clicks = 0;
+    behind->on_click = [&](gui::Object*) { ++behind_clicks; };
+    window.visible = true;
+
+    gui::Dialog* dialog = new gui::Dialog(&window, "名前");
+    gui::BoxLayout* box = new gui::BoxLayout(dialog);
+    gui::LineEdit* field = new gui::LineEdit(dialog);
+    box->add(field);
+    gui::Button* ok = dialog->add_button(gui::DialogButton::OK);
+    gui::Button* cancel = dialog->add_button(gui::DialogButton::CANCEL);
+    CHECK(ok->style == gui::ButtonStyle::PRIMARY && cancel->style == gui::ButtonStyle::SECONDARY);
+    std::vector<gui::DialogButton> results;
+    dialog->on_finish = [&](gui::Object* sender)
+    {
+        CHECK(sender == dialog);
+        results.push_back(dialog->result);
+    };
+    dialog->open();
+    CHECK(dialog->visible && dialog->owner == &window);
+    CHECK(dialog->width >= 320 && dialog->result == gui::DialogButton::NONE);
+    // ボタンは下端に、OS の慣習の順に並ぶ。中身はその上。
+    CHECK((ok->x < cancel->x) == accept_button_first());
+    CHECK(near(ok->y, cancel->y) && field->y.get() + field->height.get() <= ok->y);
+
+    // 開いている間は、親への入力を捨てる。
+    dispatch_click(window, gui::Point(50, 25));
+    dispatch_key(window, SDLK_SPACE);
+    CHECK(behind_clicks == 0);
+
+    // 入力欄で Enter: 入力欄は受け取らず(on_submit が無い)、決定のボタンで閉じる。
+    field->focused = true;
+    dispatch_key(*dialog, SDLK_RETURN);
+    CHECK(results.size() == 1 && results[0] == gui::DialogButton::OK && !dialog->visible);
+    CHECK(dialog->result == gui::DialogButton::OK);
+    dispatch_click(window, gui::Point(50, 25));
+    CHECK(behind_clicks == 1);  // 閉じたら親へ届く
+
+    // Esc・close は取り消しのボタンの結果。
+    dialog->open();
+    dispatch_key(*dialog, SDLK_ESCAPE);
+    dialog->open();
+    dialog->close();
+    CHECK(results.size() == 3 && results[1] == gui::DialogButton::CANCEL && results[2] == gui::DialogButton::CANCEL);
+    // ボタンを押す。
+    dialog->open();
+    dispatch_click(*dialog, gui::Point(ok->x + 10, ok->y + 10));
+    CHECK(results.size() == 4 && results[3] == gui::DialogButton::OK);
+    dialog->on_finish = gui::NotifyHandler();
+}
+
+TEST(message_dialog_show_finishes_and_deletes)
+{
+    gui::Window window("t", 400, 300);
+    window.visible = true;
+    const std::size_t windows_before = gui::Application::instance()->impl()->windows.size();
+    gui::DialogButton answer = gui::DialogButton::NONE;
+    gui::MessageDialog* d = gui::MessageDialog::show(
+        &window, "確認", "保存しますか？ 長い文はダイアログの幅で折り返す。長い文はダイアログの幅で折り返す。",
+        std::vector<gui::DialogButton>{gui::DialogButton::SAVE, gui::DialogButton::DISCARD, gui::DialogButton::CANCEL},
+        [&](gui::Object* sender) { answer = static_cast<gui::Dialog*>(sender)->result; }, gui::MessageType::QUESTION);
+    CHECK(d->visible && d->text.get().find("保存") == 0 && d->type == gui::MessageType::QUESTION);
+    CHECK(d->width <= 560 && gui::Application::instance()->impl()->windows.size() == windows_before + 1);
+    if (const char* dir = std::getenv("GUI_TEST_SHOTS"))
+    {
+        d->save_png(std::string(dir) + "/message_dialog.png");
+    }
+    dispatch_key(*d, SDLK_ESCAPE);  // ダイアログは dispatch の終わりに破棄される
+    CHECK(answer == gui::DialogButton::CANCEL);
+    CHECK(gui::Application::instance()->impl()->windows.size() == windows_before);
+
+    // OK だけのお知らせは、Esc でも閉じる。
+    answer = gui::DialogButton::NONE;
+    gui::MessageDialog* info = gui::MessageDialog::show(&window, "お知らせ", "終わった",
+                                                        std::vector<gui::DialogButton>(),
+                                                        [&](gui::Object* sender)
+                                                        { answer = static_cast<gui::Dialog*>(sender)->result; });
+    dispatch_key(*info, SDLK_ESCAPE);
+    CHECK(answer == gui::DialogButton::OK);
 }
 
 }  // namespace

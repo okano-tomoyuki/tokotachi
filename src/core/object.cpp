@@ -2,6 +2,9 @@
 
 #include <algorithm>
 
+#include <gui/application.hpp>
+
+#include "application_impl.hpp"
 #include "binding_registry.hpp"
 
 namespace gui
@@ -17,6 +20,14 @@ Object::Object(Object* owner_object) : owner(this, &Object::get_owner), owner_(o
 
 Object::~Object()
 {
+    if (Application* app = Application::instance())
+    {
+        std::vector<Object*>& doomed = app->impl()->doomed;
+        if (!doomed.empty())
+        {
+            doomed.erase(std::remove(doomed.begin(), doomed.end(), this), doomed.end());
+        }
+    }
     delete_owned();
     if (owner_)
     {
@@ -24,6 +35,21 @@ Object::~Object()
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
     }
     detail::remove_bindings_of(this);
+}
+
+void Object::delete_later()
+{
+    Application* app = Application::instance();
+    if (!app)
+    {
+        delete this;
+        return;
+    }
+    std::vector<Object*>& doomed = app->impl()->doomed;
+    if (std::find(doomed.begin(), doomed.end(), this) == doomed.end())
+    {
+        doomed.push_back(this);
+    }
 }
 
 void Object::change_owner(Object* new_owner)

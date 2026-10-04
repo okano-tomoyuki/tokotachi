@@ -161,7 +161,7 @@ void collect_focusable(Widget* w, std::vector<Widget*>& out)
 }  // namespace
 
 WindowImpl::WindowImpl(Window* q_)
-    : q(q_), window(nullptr), renderer(nullptr), texture(nullptr), pixel_width(0), pixel_height(0), scale(1),
+    : q(q_), window(nullptr), modal_parent(nullptr), renderer(nullptr), texture(nullptr), pixel_width(0), pixel_height(0), scale(1),
       density(1), shown(false), popup(false), popup_parent(nullptr), tooltip_timer(nullptr), tooltip(nullptr), layout_pending(true),
       hover(nullptr), grab(nullptr), focus(nullptr), text_input_active(false),
       ime_dirty(false)
@@ -179,6 +179,18 @@ WindowImpl::WindowImpl(Window* q_)
 
 WindowImpl::~WindowImpl()
 {
+    if (Application* app = Application::instance())
+    {
+        std::vector<WindowImpl*>& modals = app->impl()->modal_dialogs;
+        modals.erase(std::remove(modals.begin(), modals.end(), this), modals.end());
+        for (std::size_t i = 0; i < modals.size(); ++i)
+        {
+            if (modals[i]->modal_parent == this)
+            {
+                modals[i]->modal_parent = nullptr;
+            }
+        }
+    }
     delete tooltip_timer;
     if (text_input_active)
     {
@@ -416,6 +428,31 @@ void WindowImpl::destroy_native()
     }
     pixel_width = pixel_height = 0;
     dirty.x0 = dirty.y0 = dirty.x1 = dirty.y1 = 0;
+}
+
+bool WindowImpl::recreate_toplevel(const Size& size)
+{
+    if (shown || popup)
+    {
+        return false;
+    }
+    const std::string title_text = window ? SDL_GetWindowTitle(window) : "";
+    const float k = scale / density;
+    destroy_native();
+    window = SDL_CreateWindow(title_text.c_str(), std::max(1, static_cast<int>(std::floor(size.width * k + 0.5f))),
+                              std::max(1, static_cast<int>(std::floor(size.height * k + 0.5f))),
+                              SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
+    if (!window)
+    {
+        std::fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
+        return false;
+    }
+    renderer = SDL_CreateRenderer(window, nullptr);
+    update_scale();
+    sync_size();
+    minimum_size = Size();  // 最小の大きさは次の配置で設定し直す
+    layout_pending = true;
+    return true;
 }
 
 bool WindowImpl::create_popup(SDL_Window* parent, bool is_tooltip, int x, int y, int w, int h)
