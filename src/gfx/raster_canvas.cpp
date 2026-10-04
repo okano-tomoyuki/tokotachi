@@ -61,7 +61,8 @@ void extend(float x, float y, float& x0, float& y0, float& x1, float& y1)
 
 }  // namespace
 
-RasterCanvas::RasterCanvas() : surface_(nullptr), canvas_(nullptr), buffer_(nullptr), width_(0), height_(0), scale_(1)
+RasterCanvas::RasterCanvas()
+    : surface_(nullptr), canvas_(nullptr), buffer_(nullptr), width_(0), height_(0), origin_x_(0), origin_y_(0), scale_(1)
 {
     state_.a = state_.d = 1;
     state_.b = state_.c = state_.e = state_.f = 0;
@@ -71,6 +72,10 @@ RasterCanvas::RasterCanvas() : surface_(nullptr), canvas_(nullptr), buffer_(null
 
 RasterCanvas::~RasterCanvas()
 {
+    while (!layers_.empty())
+    {
+        end_layer();
+    }
     if (canvas_)
     {
         plutovg_canvas_destroy(canvas_);
@@ -122,6 +127,10 @@ void RasterCanvas::begin(const PixelRect& clip)
 
 void RasterCanvas::end()
 {
+    while (!layers_.empty())
+    {
+        end_layer();
+    }
     while (!stack_.empty())
     {
         restore();
@@ -137,13 +146,85 @@ void RasterCanvas::save()
 
 void RasterCanvas::restore()
 {
-    if (stack_.empty())
+    if (stack_.empty() || (!layers_.empty() && stack_.size() <= layers_.back()->depth))
     {
-        return;
+        return;  // レイヤーの中では、begin_layer より前の状態へは戻らない(end_layer で戻す)
     }
     state_ = stack_.back();
     stack_.pop_back();
     plutovg_canvas_restore(canvas_);
+}
+
+void RasterCanvas::begin_layer(float opacity)
+{
+    save();
+    Layer* layer = new Layer();
+    const PixelRect area = state_.clip;
+    layer->x = area.x0;
+    layer->y = area.y0;
+    layer->width = std::max(1, area.x1 - area.x0);
+    layer->height = std::max(1, area.y1 - area.y0);
+    layer->opacity = std::max(0.0f, std::min(opacity, 1.0f));
+    layer->depth = stack_.size();
+    layer->pixels.assign(static_cast<std::size_t>(layer->width) * static_cast<std::size_t>(layer->height), 0);
+    layer->surface = plutovg_surface_create_for_data(reinterpret_cast<unsigned char*>(&layer->pixels[0]), layer->width,
+                                                     layer->height, layer->width * 4);
+    layer->canvas = plutovg_canvas_create(layer->surface);
+    plutovg_canvas_translate(layer->canvas, static_cast<float>(-layer->x), static_cast<float>(-layer->y));
+    layer->parent_surface = surface_;
+    layer->parent_canvas = canvas_;
+    layer->parent_buffer = buffer_;
+    layer->parent_width = width_;
+    layer->parent_height = height_;
+    layer->parent_x = origin_x_;
+    layer->parent_y = origin_y_;
+    layers_.push_back(layer);
+    surface_ = layer->surface;
+    canvas_ = layer->canvas;
+    buffer_ = &layer->pixels[0];
+    width_ = layer->width;
+    height_ = layer->height;
+    origin_x_ = layer->x;
+    origin_y_ = layer->y;
+    // 一時的な画像の外には描けないので、クリップは矩形のまま(元の描き先のパスのクリップは、重ねるときに効く)。
+    state_.clip_is_rect = true;
+    plutovg_canvas_save(canvas_);
+    apply_clip();
+}
+
+void RasterCanvas::end_layer()
+{
+    if (layers_.empty())
+    {
+        return;
+    }
+    Layer* layer = layers_.back();
+    while (stack_.size() > layer->depth)
+    {
+        restore();
+    }
+    plutovg_canvas_restore(canvas_);
+    layers_.pop_back();
+    surface_ = layer->parent_surface;
+    canvas_ = layer->parent_canvas;
+    buffer_ = layer->parent_buffer;
+    width_ = layer->parent_width;
+    height_ = layer->parent_height;
+    origin_x_ = layer->parent_x;
+    origin_y_ = layer->parent_y;
+    // 一時的な画像を、元の描き先の同じ位置に opacity で重ねる(元の描き先のクリップが効く)。
+    if (layer->opacity > 0)
+    {
+        plutovg_matrix_t m;
+        plutovg_matrix_init_translate(&m, static_cast<float>(layer->x), static_cast<float>(layer->y));
+        plutovg_canvas_set_texture(canvas_, layer->surface, PLUTOVG_TEXTURE_TYPE_PLAIN, layer->opacity, &m);
+        plutovg_canvas_fill_rect(canvas_, static_cast<float>(layer->x), static_cast<float>(layer->y),
+                                 static_cast<float>(layer->width), static_cast<float>(layer->height));
+    }
+    plutovg_canvas_destroy(layer->canvas);
+    plutovg_surface_destroy(layer->surface);
+    delete layer;
+    restore();  // begin_layer の save
 }
 
 void RasterCanvas::translate(float dx, float dy)
@@ -517,7 +598,8 @@ void RasterCanvas::blend_glyph(const GlyphBitmap& g, int gx, int gy, const Color
     const int x_begin = std::max(clip.x0, gx), x_end = std::min(clip.x1, gx + g.width);
     for (int y = y_begin; y < y_end; ++y)
     {
-        std::uint32_t* row = buffer_ + static_cast<std::size_t>(y) * static_cast<std::size_t>(width_);
+        // 今の描き先の中の位置(レイヤーなら、その左上を引く)。
+        std::uint32_t* row = buffer_ + static_cast<std::size_t>(y - origin_y_) * static_cast<std::size_t>(width_);
         const std::uint8_t* cov = &g.coverage[static_cast<std::size_t>(y - gy) * static_cast<std::size_t>(g.width)];
         for (int x = x_begin; x < x_end; ++x)
         {
@@ -527,7 +609,8 @@ void RasterCanvas::blend_glyph(const GlyphBitmap& g, int gx, int gy, const Color
                 continue;
             }
             // アルファ乗算済みの source-over(ガンマ補正なし。docs/adr/0007)
-            const std::uint32_t d32 = row[x];
+            std::uint32_t& dst = row[x - origin_x_];
+            const std::uint32_t d32 = dst;
             const std::uint32_t ia = 255 - a;
             const std::uint32_t da = (d32 >> 24) & 0xff, dr = (d32 >> 16) & 0xff, dg = (d32 >> 8) & 0xff,
                                 db = d32 & 0xff;
@@ -535,7 +618,7 @@ void RasterCanvas::blend_glyph(const GlyphBitmap& g, int gx, int gy, const Color
             const std::uint32_t orr = (sr * a + dr * ia + 127) / 255;
             const std::uint32_t og = (sg * a + dg * ia + 127) / 255;
             const std::uint32_t ob = (sb * a + db * ia + 127) / 255;
-            row[x] = (oa << 24) | (orr << 16) | (og << 8) | ob;
+            dst = (oa << 24) | (orr << 16) | (og << 8) | ob;
         }
     }
 }

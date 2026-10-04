@@ -35,6 +35,7 @@ add_library(gui STATIC
     src/core/timer.cpp
     src/core/widget.cpp
     src/core/window.cpp
+    src/gfx/bitmap.cpp
     src/gfx/canvas.cpp
     src/gfx/image.cpp
     src/gfx/path.cpp
@@ -57,6 +58,7 @@ add_library(gui STATIC
     src/widgets/menu.cpp
     src/widgets/menu_bar.cpp
     src/widgets/message_dialog.cpp
+    src/widgets/paint_box.cpp
     src/widgets/popup_list.cpp
     src/widgets/progress_bar.cpp
     src/widgets/radio_button.cpp

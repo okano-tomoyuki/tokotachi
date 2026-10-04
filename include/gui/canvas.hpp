@@ -154,6 +154,10 @@ public:
     virtual void clip_path(const Path& path) = 0;
     // 現在のクリップを囲む矩形(dp、今の座標系)。
     virtual Rect clip_bounds() const = 0;
+    // グループの透過: begin_layer から end_layer までに描いたものを、一時的な画像に描いてから opacity(0〜1)で重ねる
+    // (重なった部分も濃くならない)。対で呼ぶ(入れ子にできる)。begin_layer は save も兼ね、end_layer で変換とクリップも戻る。
+    virtual void begin_layer(float opacity) = 0;
+    virtual void end_layer() = 0;
 
     // ---- 基本の描画 ----
     virtual void fill_rect(const Rect& r, const Color& color) = 0;

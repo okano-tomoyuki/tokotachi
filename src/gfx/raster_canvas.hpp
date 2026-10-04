@@ -55,6 +55,8 @@ public:
     void clip_rect(const Rect& r) override;
     void clip_path(const Path& path) override;
     Rect clip_bounds() const override;
+    void begin_layer(float opacity) override;
+    void end_layer() override;
     void fill_rect(const Rect& r, const Color& color) override;
     void fill_round_rect(const Rect& r, float radius, const Paint& paint) override;
     void stroke_round_rect(const Rect& r, float radius, float width, const Color& color) override;
@@ -92,13 +94,32 @@ private:
     // グリフのビットマップを (gx, gy)(ピクセル)に、現在のクリップの中で合成する。table は被覆率の補正の表。
     void blend_glyph(const GlyphBitmap& g, int gx, int gy, const Color& color, const std::uint8_t* table);
 
+    // begin_layer の一時的な描き先と、切り替える前の描き先。
+    struct Layer
+    {
+        std::vector<std::uint32_t> pixels;
+        plutovg_surface* surface;
+        plutovg_canvas* canvas;
+        int x, y, width, height;  // 描き先の全体の座標での位置と大きさ(ピクセル)
+        float opacity;
+        std::size_t depth;  // begin_layer の時点の stack_ の深さ
+        plutovg_surface* parent_surface;
+        plutovg_canvas* parent_canvas;
+        std::uint32_t* parent_buffer;
+        int parent_width, parent_height, parent_x, parent_y;
+    };
+
     plutovg_surface* surface_;
     plutovg_canvas* canvas_;
-    std::uint32_t* buffer_;
+    std::uint32_t* buffer_;  // 今の描き先(レイヤーならその一時的な画像)
     int width_, height_;
+    // 今の描き先の、全体の座標での左上(ピクセル)。座標はいつも全体の座標で計算し、plutovg にはこの分の移動を行列で、
+    // 自前のグリフの合成ではこの分を引いて渡す。
+    int origin_x_, origin_y_;
     float scale_;
     State state_;
     std::vector<State> stack_;
+    std::vector<Layer*> layers_;
 };
 
 }  // namespace detail

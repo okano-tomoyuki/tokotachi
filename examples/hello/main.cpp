@@ -306,8 +306,27 @@ int main(int argc, char** argv)
     tabs->add_tab(split, "木");
 
     // 自由な描画(docs/adr/0032)。on_paint の中で Canvas に描く(Canvas は描画の呼び出しの間だけ有効)。
-    gui::Widget* drawing = new gui::Widget();
-    drawing->on_paint = [](gui::Object* sender, gui::Canvas& c)
+    // PaintBox(docs/adr/0033)は VCL の TPaintBox に当たる。cached にすると描いた結果を覚え、大きさ・テーマが変わるか
+    // refresh を呼ぶまで on_paint を呼ばない(重い描画向け)。
+    gui::PaintBox* drawing = new gui::PaintBox();
+    drawing->cached = true;
+    // Bitmap は書き換えられる画像。画素を直接書いて作り、Image にして貼る(ここでは色相の帯)。
+    gui::Bitmap hues(120, 24);
+    for (int x = 0; x < hues.width(); ++x)
+    {
+        const float h = x * 6.0f / hues.width();
+        const int i = static_cast<int>(h);
+        const float f = h - i;
+        const std::uint8_t up = static_cast<std::uint8_t>(255 * f), down = static_cast<std::uint8_t>(255 * (1 - f));
+        const gui::Color colors[] = {gui::Color(255, up, 0), gui::Color(down, 255, 0), gui::Color(0, 255, up),
+                                     gui::Color(0, down, 255), gui::Color(up, 0, 255), gui::Color(255, 0, down)};
+        for (int y = 0; y < hues.height(); ++y)
+        {
+            hues.set_pixel(x, y, colors[i % 6].with_alpha(static_cast<std::uint8_t>(255 - y * 8)));
+        }
+    }
+    const gui::Image hue_image = hues.to_image();
+    drawing->on_paint = [hue_image](gui::Object* sender, gui::Canvas& c)
     {
         const gui::Rect r = static_cast<gui::Widget*>(sender)->local_rect;
         const gui::Color ink = gui::Theme::light() == gui::Application::instance()->theme.get()
@@ -369,12 +388,33 @@ int main(int argc, char** argv)
         }
         c.draw_text("クリップ", gui::Point(398, 52), ink);
         c.restore();
+
+        // 透過: 図形ごとの半透明(重なりが濃い)と、グループの透過(begin_layer。重なりも同じ濃さ)。
+        for (int k = 0; k < 2; ++k)
+        {
+            const float x0 = 20 + k * 150.0f;
+            if (k == 1)
+            {
+                c.begin_layer(0.5f);
+            }
+            const std::uint8_t alpha = k == 0 ? 128 : 255;
+            c.fill_ellipse(gui::Rect(x0, 130, 60, 60), gui::Color::rgb(0x2563eb, alpha));
+            c.fill_ellipse(gui::Rect(x0 + 35, 130, 60, 60), gui::Color::rgb(0xdc2626, alpha));
+            c.fill_ellipse(gui::Rect(x0 + 17, 160, 60, 60), gui::Color::rgb(0x059669, alpha));
+            if (k == 1)
+            {
+                c.end_layer();
+            }
+            c.draw_text(k == 0 ? "図形ごとの半透明" : "グループの透過", gui::Point(x0, 225), ink);
+        }
+        c.draw_image(hue_image, gui::Rect(330, 150, 120, 24));
+        c.draw_text("Bitmap の画素", gui::Point(330, 180), ink);
         (void)r;
     };
     tabs->add_tab(drawing, "描画");
 
     tabs->add_tab(new gui::Widget(), "無効なタブ")->enabled = false;
-    tabs->minimum_size = gui::Size(0, 240);
+    tabs->minimum_size = gui::Size(0, 300);
     column->add(tabs, 1);
     column->add(disabled, 0, gui::Align::START);  // 横に広げない
 

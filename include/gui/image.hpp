@@ -47,6 +47,8 @@ public:
     const detail::ImageData* data() const { return d_.get(); }
 
 private:
+    friend class Bitmap;
+
     explicit Image(const std::shared_ptr<detail::ImageData>& d) : d_(d) {}
 
     std::shared_ptr<detail::ImageData> d_;

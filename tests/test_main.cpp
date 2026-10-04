@@ -3000,6 +3000,108 @@ TEST(path_arc_and_quad)
     CHECK(near(q.elements()[1].pts[0], 20.0f / 3) && near(q.elements()[1].pts[4], 20));
 }
 
+TEST(canvas_layer_group_opacity)
+{
+    gui::Window window("t", 200, 100);
+    gui::Widget* w = new gui::Widget(&window);
+    w->bounds = gui::Rect(0, 0, 200, 100);
+    const gui::Color red = gui::Color::rgb(0xff0000);
+    w->on_paint = [&](gui::Object*, gui::Canvas& c)
+    {
+        c.fill_rect(gui::Rect(0, 0, 200, 100), gui::Color::rgb(0xffffff));
+        // 図形ごとに半透明: 重なった所は濃くなる。
+        c.fill_rect(gui::Rect(10, 10, 40, 40), red.with_alpha(128));
+        c.fill_rect(gui::Rect(30, 10, 40, 40), red.with_alpha(128));
+        // グループの透過: 重なった所も同じ濃さ。
+        c.begin_layer(0.5f);
+        c.fill_rect(gui::Rect(110, 10, 40, 40), red);
+        c.fill_rect(gui::Rect(130, 10, 40, 40), red);
+        c.end_layer();
+        // クリップした範囲のレイヤー(一時的な画像の左上が原点でない)の中の文字。
+        c.save();
+        c.clip_rect(gui::Rect(100, 60, 100, 40));
+        c.begin_layer(1.0f);
+        c.draw_text("ABC", gui::Point(110, 65), gui::Color::rgb(0x000000));
+        c.end_layer();
+        c.restore();
+    };
+    window.visible = true;
+    window.impl()->render(false);
+    const int stride = window.impl()->pixel_width;
+    const std::uint32_t* px = &window.impl()->buffer[0];
+    const auto at = [&](int x, int y) { return px[y * stride + x]; };
+    CHECK(at(20, 20) != at(40, 20));    // 図形ごと: 重なりが濃い
+    CHECK(at(120, 20) == at(140, 20));  // グループ: 同じ濃さ
+    CHECK(at(140, 20) != 0xffffffffu && at(140, 20) != packed(red));
+    int ink = 0;
+    for (int y = 60; y < 100; ++y)
+    {
+        for (int x = 100; x < 200; ++x)
+        {
+            ink += (at(x, y) & 0xff) < 0x80 ? 1 : 0;
+        }
+    }
+    CHECK(ink > 20);  // 文字がレイヤーの中の正しい位置に描かれ、重ねられた
+    if (const char* dir = std::getenv("GUI_TEST_SHOTS"))
+    {
+        window.save_png(std::string(dir) + "/layer.png");
+    }
+}
+
+TEST(bitmap_canvas_pixels_and_image)
+{
+    gui::Bitmap b(20, 10, 2);  // 倍率 2: 10 × 5 dp
+    CHECK(!b.is_null() && b.width() == 20 && near(b.size().width, 10) && b.pixel(0, 0).a == 0);
+    b.canvas().fill_rect(gui::Rect(0, 0, 5, 5), gui::Color::rgb(0x2563eb));  // 10 × 10 ピクセル
+    CHECK(b.pixel(9, 9) == gui::Color::rgb(0x2563eb) && b.pixel(10, 9).a == 0);
+    b.set_pixel(19, 0, gui::Color(255, 0, 0, 128));
+    CHECK(b.pixel(19, 0).a == 128 && b.pixel(19, 0).r >= 254);
+    CHECK(b.pixels()[0] == 0xff2563ebu);  // アルファ乗算済みの ARGB
+    const gui::Image image = b.to_image();
+    b.clear(gui::Color::rgb(0x00ff00));
+    CHECK(image.pixel(0, 0) == gui::Color::rgb(0x2563eb));  // 後で変えても、写した画像は変わらない
+    CHECK(b.pixel(0, 0) == gui::Color::rgb(0x00ff00));
+    const gui::Bitmap copy = gui::Bitmap::from_image(image);
+    CHECK(copy.width() == 20 && copy.pixel(5, 5) == gui::Color::rgb(0x2563eb));
+    gui::Bitmap moved(std::move(b));
+    CHECK(b.is_null() && moved.pixel(0, 0) == gui::Color::rgb(0x00ff00));
+    CHECK(gui::Bitmap(0, 5).is_null());
+    b.canvas().fill_rect(gui::Rect(0, 0, 1, 1), gui::Color());  // 空でも落ちない
+}
+
+TEST(paint_box_cached)
+{
+    gui::Window window("t", 120, 80);
+    gui::PaintBox* box = new gui::PaintBox(&window);
+    box->bounds = gui::Rect(0, 0, 100, 60);
+    int calls = 0;
+    box->on_paint = [&](gui::Object* sender, gui::Canvas& c)
+    {
+        CHECK(sender == box);
+        ++calls;
+        c.fill_rect(gui::Rect(0, 0, 50, 60), gui::Color::rgb(0x059669));
+    };
+    window.visible = true;
+    window.impl()->render(false);
+    box->invalidate();
+    window.impl()->render(false);
+    CHECK(calls == 2);  // 覚えないとき: 描き直すたびに呼ぶ
+    box->cached = true;
+    window.impl()->render(false);
+    box->invalidate();
+    window.impl()->render(false);
+    CHECK(calls == 3);  // 覚えるとき: 1 回だけ
+    const int stride = window.impl()->pixel_width;
+    CHECK(window.impl()->buffer[10 * stride + 10] == packed(gui::Color::rgb(0x059669)));  // 覚えた絵を貼る
+    CHECK(window.impl()->buffer[10 * stride + 70] != packed(gui::Color::rgb(0x059669)));
+    box->refresh();
+    window.impl()->render(false);
+    CHECK(calls == 4);
+    box->bounds = gui::Rect(0, 0, 110, 60);  // 大きさが変わると描き直す
+    window.impl()->render(false);
+    CHECK(calls == 5);
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
