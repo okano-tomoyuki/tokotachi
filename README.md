@@ -9,11 +9,21 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 
 | 場所 | 内容 |
 |---|---|
-| [include/gui/](include/gui/) | 公開のヘッダ(`#include <gui/gui.hpp>`) |
-| [src/](src/) | 実装。`core/`(ウィジェットのツリー、ウィンドウ、イベントループ)、`gfx/`(Canvas と plutovg)、`text/`(フォントとレイアウト)、`widgets/` |
+| [include/gui/](include/gui/) | 公開のヘッダ。役割ごとのディレクトリに分ける(下の表)。`#include <gui/gui.hpp>` ですべて、`<gui/widgets.hpp>` などでグループごとに読み込める |
+| [src/](src/) | 実装。公開のヘッダと同じディレクトリに分け、内部のヘッダもそこに置く |
 | [examples/](examples/) | サンプル |
 | [tests/](tests/) | テスト(SDL の offscreen のビデオドライバで、画面なしで動く) |
 | [spike/](spike/) | 技術検証のコード(ライブラリには引き継がない) |
+
+| グループ | 内容 |
+|---|---|
+| `core/` | Object・プロパティ・結びつけ・変数・イベント・Application・タイマー・スレッド(post・Task)・クリップボード・基本の値(Point・Rect・Color) |
+| `graphics/` | Canvas・Image・Bitmap・文字のレイアウト・テーマ |
+| `layout/` | BoxLayout・GridLayout・PlaceLayout・そろえ方 |
+| `widgets/` | Widget とボタン・入力欄・値の部品・スクロール・タブ・分割・PaintBox |
+| `windows/` | Window・ポップアップ・ダイアログ・メニューバー・ツールバー・ステータスバー |
+| `actions/` | Action・ショートカット・メニュー |
+| `views/` | 一覧と木のモデルとビュー |
 
 ```cpp
 #include <gui/gui.hpp>
@@ -25,7 +35,7 @@ int main(int argc, char** argv)
 
     gui::Button* button = new gui::Button(&window, "クリック");  // 親(window)が所有する
     button->bounds = gui::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
-    button->on_click = [&](gui::Widget* sender)                   // イベントは単一のハンドラ
+    button->on_click = [&](gui::Object* sender)                   // イベントは単一のハンドラ
     {
         window.close();
     };

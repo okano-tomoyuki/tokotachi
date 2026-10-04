@@ -2,7 +2,7 @@
 #ifndef GUI_SRC_LAYOUT_LAYOUT_ACCESS_HPP
 #define GUI_SRC_LAYOUT_LAYOUT_ACCESS_HPP
 
-#include <gui/layout.hpp>
+#include <gui/layout/layout.hpp>
 
 namespace gui
 {

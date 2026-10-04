@@ -2,7 +2,7 @@
 #ifndef GUI_SRC_CORE_BINDING_REGISTRY_HPP
 #define GUI_SRC_CORE_BINDING_REGISTRY_HPP
 
-#include <gui/binding.hpp>
+#include <gui/core/binding.hpp>
 
 namespace gui
 {

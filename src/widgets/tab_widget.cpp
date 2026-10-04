@@ -1,10 +1,10 @@
-#include <gui/tab_widget.hpp>
+#include <gui/widgets/tab_widget.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/canvas.hpp>
-#include <gui/window.hpp>
+#include <gui/graphics/canvas.hpp>
+#include <gui/windows/window.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"

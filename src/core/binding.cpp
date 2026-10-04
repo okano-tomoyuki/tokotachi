@@ -1,4 +1,4 @@
-#include <gui/binding.hpp>
+#include <gui/core/binding.hpp>
 
 #include <algorithm>
 #include <set>

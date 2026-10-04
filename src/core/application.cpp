@@ -1,4 +1,4 @@
-#include <gui/application.hpp>
+#include <gui/core/application.hpp>
 
 #include <SDL3/SDL.h>
 
@@ -11,11 +11,11 @@
 #include <functional>
 #include <mutex>
 
-#include <gui/thread.hpp>
+#include <gui/core/thread.hpp>
 
 #include "application_impl.hpp"
 #include "property_impl.hpp"
-#include "window_impl.hpp"
+#include "../windows/window_impl.hpp"
 
 namespace gui
 {

@@ -1,11 +1,11 @@
-#include <gui/combo_box.hpp>
+#include <gui/widgets/combo_box.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/box_layout.hpp>
-#include <gui/canvas.hpp>
-#include <gui/scroll_area.hpp>
+#include <gui/layout/box_layout.hpp>
+#include <gui/graphics/canvas.hpp>
+#include <gui/widgets/scroll_area.hpp>
 
 #include "../core/property_impl.hpp"
 #include "popup_list.hpp"

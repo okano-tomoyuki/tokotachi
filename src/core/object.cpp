@@ -1,8 +1,8 @@
-#include <gui/property.hpp>
+#include <gui/core/property.hpp>
 
 #include <algorithm>
 
-#include <gui/application.hpp>
+#include <gui/core/application.hpp>
 
 #include "application_impl.hpp"
 #include "binding_registry.hpp"

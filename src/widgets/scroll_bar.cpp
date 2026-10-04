@@ -1,8 +1,8 @@
-#include <gui/scroll_bar.hpp>
+#include <gui/widgets/scroll_bar.hpp>
 
 #include <algorithm>
 
-#include <gui/canvas.hpp>
+#include <gui/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"

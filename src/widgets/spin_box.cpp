@@ -1,4 +1,4 @@
-#include <gui/spin_box.hpp>
+#include <gui/widgets/spin_box.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -6,8 +6,8 @@
 #include <cstdlib>
 #include <string>
 
-#include <gui/canvas.hpp>
-#include <gui/line_edit.hpp>
+#include <gui/graphics/canvas.hpp>
+#include <gui/widgets/line_edit.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"

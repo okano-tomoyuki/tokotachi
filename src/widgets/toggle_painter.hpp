@@ -5,9 +5,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include <gui/canvas.hpp>
-#include <gui/text_layout.hpp>
-#include <gui/widget.hpp>
+#include <gui/graphics/canvas.hpp>
+#include <gui/graphics/text_layout.hpp>
+#include <gui/widgets/widget.hpp>
 
 #include "theme.hpp"
 

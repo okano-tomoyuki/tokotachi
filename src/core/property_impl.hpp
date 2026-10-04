@@ -15,7 +15,7 @@
 #ifndef GUI_SRC_CORE_PROPERTY_IMPL_HPP
 #define GUI_SRC_CORE_PROPERTY_IMPL_HPP
 
-#include <gui/property.hpp>
+#include <gui/core/property.hpp>
 
 namespace gui
 {

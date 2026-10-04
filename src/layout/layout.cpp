@@ -1,13 +1,13 @@
-#include <gui/layout.hpp>
+#include <gui/layout/layout.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 
-#include <gui/widget.hpp>
+#include <gui/widgets/widget.hpp>
 
 #include "../core/property_impl.hpp"
-#include "../core/widget_access.hpp"
+#include "../widgets/widget_access.hpp"
 
 namespace gui
 {

@@ -1,10 +1,10 @@
-#include <gui/progress_bar.hpp>
+#include <gui/widgets/progress_bar.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <string>
 
-#include <gui/canvas.hpp>
+#include <gui/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"

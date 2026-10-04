@@ -1,6 +1,6 @@
-#include <gui/radio_button.hpp>
+#include <gui/widgets/radio_button.hpp>
 
-#include <gui/canvas.hpp>
+#include <gui/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"

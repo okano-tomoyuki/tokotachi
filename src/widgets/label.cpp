@@ -1,9 +1,9 @@
-#include <gui/label.hpp>
+#include <gui/widgets/label.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/canvas.hpp>
+#include <gui/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"

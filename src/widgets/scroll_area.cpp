@@ -1,4 +1,4 @@
-#include <gui/scroll_area.hpp>
+#include <gui/widgets/scroll_area.hpp>
 
 #include <algorithm>
 

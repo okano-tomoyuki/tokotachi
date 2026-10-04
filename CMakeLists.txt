@@ -23,41 +23,41 @@ find_package(SheenBidi REQUIRED CONFIG PATHS "${GUI_DEPS_PREFIX}" NO_DEFAULT_PAT
 option(GUI_STATIC_RUNTIME "Link the MinGW runtime (libgcc, libstdc++, winpthread) statically into executables" ON)
 
 add_library(gui STATIC
-    src/core/action.cpp
+    src/actions/action.cpp
     src/core/application.cpp
     src/core/binding.cpp
     src/core/object.cpp
-    src/core/popup.cpp
-    src/core/shortcut.cpp
+    src/windows/popup.cpp
+    src/actions/shortcut.cpp
     src/core/task.cpp
     src/core/clipboard.cpp
-    src/core/theme.cpp
+    src/graphics/theme.cpp
     src/core/timer.cpp
-    src/core/widget.cpp
-    src/core/window.cpp
-    src/gfx/bitmap.cpp
-    src/gfx/canvas.cpp
-    src/gfx/image.cpp
-    src/gfx/path.cpp
+    src/widgets/widget.cpp
+    src/windows/window.cpp
+    src/graphics/bitmap.cpp
+    src/graphics/canvas.cpp
+    src/graphics/image.cpp
+    src/graphics/path.cpp
     src/layout/box_layout.cpp
     src/layout/grid_layout.cpp
     src/layout/layout.cpp
     src/layout/place_layout.cpp
-    src/models/item_model.cpp
-    src/models/list_model.cpp
-    src/models/tree_model.cpp
-    src/gfx/raster_canvas.cpp
-    src/text/font_cache.cpp
-    src/text/text_layout.cpp
+    src/views/item_model.cpp
+    src/views/list_model.cpp
+    src/views/tree_model.cpp
+    src/graphics/raster_canvas.cpp
+    src/graphics/font_cache.cpp
+    src/graphics/text_layout.cpp
     src/widgets/button.cpp
     src/widgets/button_base.cpp
     src/widgets/check_box.cpp
     src/widgets/combo_box.cpp
-    src/widgets/dialog.cpp
-    src/widgets/file_dialog.cpp
-    src/widgets/menu.cpp
-    src/widgets/menu_bar.cpp
-    src/widgets/message_dialog.cpp
+    src/windows/dialog.cpp
+    src/windows/file_dialog.cpp
+    src/actions/menu.cpp
+    src/windows/menu_bar.cpp
+    src/windows/message_dialog.cpp
     src/widgets/paint_box.cpp
     src/widgets/popup_list.cpp
     src/widgets/progress_bar.cpp
@@ -68,13 +68,13 @@ add_library(gui STATIC
     src/widgets/slider.cpp
     src/widgets/spin_box.cpp
     src/widgets/splitter.cpp
-    src/widgets/status_bar.cpp
+    src/windows/status_bar.cpp
     src/widgets/tab_widget.cpp
-    src/widgets/tree_view.cpp
+    src/views/tree_view.cpp
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
-    src/widgets/tool_bar.cpp
-    src/widgets/item_view.cpp
+    src/windows/tool_bar.cpp
+    src/views/item_view.cpp
     src/widgets/label.cpp
     src/widgets/line_edit.cpp)
 add_library(gui::gui ALIAS gui)
@@ -123,6 +123,20 @@ add_library(gui_header_check_cxx20 OBJECT tests/header_check.cpp)
 target_include_directories(gui_header_check_cxx20 PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)
 target_compile_options(gui_header_check_cxx20 PRIVATE -Wall -Wextra -pedantic)
 set_target_properties(gui_header_check_cxx20 PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+
+# 公開のヘッダが、それぞれ単独で(他のヘッダを先に読まなくても)コンパイルできることを確かめる(docs/adr/0035)。
+file(GLOB_RECURSE GUI_PUBLIC_HEADERS RELATIVE ${CMAKE_CURRENT_LIST_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include/gui/*.hpp)
+set(GUI_SELF_CONTAINED_SOURCES)
+foreach(_header ${GUI_PUBLIC_HEADERS})
+    string(MAKE_C_IDENTIFIER ${_header} _name)
+    set(_source ${CMAKE_CURRENT_BINARY_DIR}/header_check/${_name}.cpp)
+    file(GENERATE OUTPUT ${_source} CONTENT "#include <${_header}>\n")
+    list(APPEND GUI_SELF_CONTAINED_SOURCES ${_source})
+endforeach()
+add_library(gui_header_check_self_contained OBJECT ${GUI_SELF_CONTAINED_SOURCES})
+target_include_directories(gui_header_check_self_contained PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_compile_options(gui_header_check_self_contained PRIVATE -Wall -Wextra -pedantic)
+set_target_properties(gui_header_check_self_contained PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 # 技術検証(spike/)。ライブラリには引き継がない。
 add_subdirectory(spike/m1)

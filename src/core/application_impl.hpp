@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL.h>
 
-#include <gui/theme.hpp>
+#include <gui/graphics/theme.hpp>
 
 #include <functional>
 #include <map>

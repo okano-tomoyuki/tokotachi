@@ -1,8 +1,8 @@
-#include <gui/paint_box.hpp>
+#include <gui/widgets/paint_box.hpp>
 
 #include <cmath>
 
-#include <gui/canvas.hpp>
+#include <gui/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 

@@ -3,7 +3,7 @@
 
 #include "../src/core/binding_registry.hpp"
 #include "../src/core/application_impl.hpp"
-#include "../src/core/window_impl.hpp"
+#include "../src/windows/window_impl.hpp"
 
 #include <algorithm>
 #include <cmath>

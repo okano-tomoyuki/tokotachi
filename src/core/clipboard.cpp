@@ -1,4 +1,4 @@
-#include <gui/clipboard.hpp>
+#include <gui/core/clipboard.hpp>
 
 #include <SDL3/SDL.h>
 

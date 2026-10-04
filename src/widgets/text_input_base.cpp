@@ -1,14 +1,14 @@
-#include <gui/text_input_base.hpp>
+#include <gui/widgets/text_input_base.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include <gui/canvas.hpp>
-#include <gui/clipboard.hpp>
+#include <gui/graphics/canvas.hpp>
+#include <gui/core/clipboard.hpp>
 
 #include "../core/property_impl.hpp"
-#include "../text/utf8.hpp"
+#include "../graphics/utf8.hpp"
 #include "theme.hpp"
 
 namespace gui

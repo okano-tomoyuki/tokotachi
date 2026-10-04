@@ -1,4 +1,4 @@
-#include <gui/task.hpp>
+#include <gui/core/task.hpp>
 
 #include <atomic>
 #include <exception>
@@ -6,7 +6,7 @@
 #include <system_error>
 #include <thread>
 
-#include <gui/thread.hpp>
+#include <gui/core/thread.hpp>
 
 #include "property_impl.hpp"
 

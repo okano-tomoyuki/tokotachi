@@ -1,8 +1,8 @@
-#include <gui/box_layout.hpp>
+#include <gui/layout/box_layout.hpp>
 
 #include <algorithm>
 
-#include <gui/widget.hpp>
+#include <gui/widgets/widget.hpp>
 
 #include "../core/property_impl.hpp"
 #include "distribute.hpp"

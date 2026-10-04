@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include <gui/text_layout.hpp>
-#include <gui/widget.hpp>
+#include <gui/graphics/text_layout.hpp>
+#include <gui/widgets/widget.hpp>
 
 namespace gui
 {

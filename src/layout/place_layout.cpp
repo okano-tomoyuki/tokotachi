@@ -1,8 +1,8 @@
-#include <gui/place_layout.hpp>
+#include <gui/layout/place_layout.hpp>
 
 #include <algorithm>
 
-#include <gui/widget.hpp>
+#include <gui/widgets/widget.hpp>
 
 namespace gui
 {

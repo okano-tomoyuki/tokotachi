@@ -3,7 +3,7 @@
 #ifndef GUI_SRC_WIDGETS_THEME_HPP
 #define GUI_SRC_WIDGETS_THEME_HPP
 
-#include <gui/theme.hpp>
+#include <gui/graphics/theme.hpp>
 
 namespace gui
 {

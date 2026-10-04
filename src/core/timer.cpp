@@ -1,6 +1,6 @@
-#include <gui/timer.hpp>
+#include <gui/core/timer.hpp>
 
-#include <gui/application.hpp>
+#include <gui/core/application.hpp>
 
 #include "application_impl.hpp"
 #include "property_impl.hpp"
