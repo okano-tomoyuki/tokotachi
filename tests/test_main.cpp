@@ -1364,13 +1364,14 @@ TEST(wheel_goes_to_widget_under_pointer_then_parents)
 }
 
 // SDL のイベントを、Application のイベントの振り分け(ポップアップの扱いを含む)に直接渡す。
-void dispatch_key(gui::Window& window, SDL_Keycode key, bool down = true)
+void dispatch_key(gui::Window& window, SDL_Keycode key, bool down = true, SDL_Keymod mod = SDL_KMOD_NONE)
 {
     SDL_Event e;
     SDL_zero(e);
     e.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
     e.key.windowID = SDL_GetWindowID(window.impl()->window);
     e.key.key = key;
+    e.key.mod = mod;
     e.key.down = down;
     gui::Application::instance()->impl()->dispatch(e);
 }
@@ -1777,6 +1778,132 @@ TEST(theme_switch_notifies_and_repaints)
     delete dark;
     app->light_theme = gui::Theme::light();
     app->color_scheme = gui::ColorScheme::SYSTEM;
+}
+
+TEST(tab_widget_add_insert_remove)
+{
+    gui::Window window("t", 300, 200);
+    gui::TabWidget* tabs = new gui::TabWidget(&window);
+    CHECK(tabs->current_index == -1 && tabs->current_tab == nullptr);
+    int changes = 0;
+    tabs->on_change = [&](gui::Object* sender)
+    {
+        CHECK(sender == tabs);
+        ++changes;
+    };
+
+    gui::Widget* a = new gui::Widget();
+    gui::Widget* b = new gui::Widget();
+    gui::Widget* c = new gui::Widget();
+    gui::Tab* ta = tabs->add_tab(a, "A");
+    CHECK(ta && ta->page == a && ta->title.get() == "A" && a->parent == tabs);
+    CHECK(tabs->current_index == 0 && tabs->current_tab == ta && a->visible && changes == 1);
+    gui::Tab* tb = tabs->add_tab(b, "B");
+    CHECK(tabs->current_index == 0 && !b->visible && changes == 1);  // 2 つ目以降は選ばない
+    CHECK(tabs->add_tab(b, "B2") == tb && tabs->tabs.get().size() == 2);  // 同じページは加えない
+    gui::Tab* tc = tabs->insert_tab(0, c, "C");
+    CHECK(tabs->tabs.get().size() == 3 && tabs->tabs.get()[0] == tc);
+    CHECK(tabs->current_tab == ta && tabs->current_index == 1 && changes == 2);  // 選んでいるタブは同じで、番号がずれる
+
+    tabs->current_index = 2;
+    CHECK(tabs->current_tab == tb && b->visible && !a->visible && !c->visible && changes == 3);
+    tabs->current_index = 5;  // 範囲の外は無視する
+    tabs->current_index = -1;
+    CHECK(tabs->current_index == 2 && changes == 3);
+
+    // 外したページは親が無くなり、見える状態で返る。選んでいたタブなら隣を選ぶ。
+    CHECK(tabs->remove_tab(tb) == b);
+    CHECK(b->parent == nullptr && b->visible && tabs->tabs.get().size() == 2);
+    CHECK(tabs->current_tab == ta && a->visible && changes == 4);
+    delete b;
+
+    // ページを破棄する・別の親へ移すと、そのタブも消える。
+    delete a;
+    CHECK(tabs->tabs.get().size() == 1 && tabs->current_tab == tc && c->visible && changes == 5);
+    c->parent = &window;
+    CHECK(tabs->tabs.get().empty() && tabs->current_index == -1 && tabs->current_tab == nullptr && changes == 6);
+    CHECK(c->visible);
+
+    // 別の TabWidget へ加えると、元のタブは消える。
+    gui::TabWidget* other = new gui::TabWidget(&window);
+    tabs->add_tab(c, "C");
+    other->add_tab(c, "C");
+    CHECK(tabs->tabs.get().empty() && other->tabs.get().size() == 1 && c->parent == other);
+    CHECK(tabs->insert_tab(0, tabs, "self") == nullptr);
+    tabs->on_change = gui::NotifyHandler();
+}
+
+TEST(tab_widget_keys_and_clicks)
+{
+    gui::Window window("t", 400, 200);
+    window.visible = true;
+    gui::TabWidget* tabs = new gui::TabWidget(&window);
+    tabs->bounds = gui::Rect(0, 0, 400, 200);
+    gui::LineEdit* edit = new gui::LineEdit();
+    tabs->add_tab(edit, "1");
+    gui::Tab* second = tabs->add_tab(new gui::Widget(), "2");
+    tabs->add_tab(new gui::Widget(), "3");
+    second->enabled = false;
+    window.apply_layout();
+    CHECK(edit->bounds.get().y >= 20 && edit->bounds.get().width == 400);  // 見出しの下に並べる
+
+    // 見出しは最小の幅(48dp)で左から並ぶ。押すとフォーカスが移る。
+    dispatch_click(window, gui::Point(120, 10));
+    CHECK(tabs->current_index == 2 && tabs->focused);
+    dispatch_click(window, gui::Point(72, 10));  // 無効なタブは選べない
+    CHECK(tabs->current_index == 2);
+
+    dispatch_key(window, SDLK_LEFT);  // 無効なタブを飛ばす
+    CHECK(tabs->current_index == 0);
+    dispatch_key(window, SDLK_LEFT);  // ←→ は巡回しない
+    CHECK(tabs->current_index == 0);
+    dispatch_key(window, SDLK_END);
+    CHECK(tabs->current_index == 2);
+    dispatch_key(window, SDLK_HOME);
+    CHECK(tabs->current_index == 0);
+
+    // Ctrl+Tab・Ctrl+Page Up/Down は巡回する。中の部品にフォーカスがあっても届く。
+    edit->focused = true;
+    dispatch_key(window, SDLK_TAB, true, SDL_KMOD_LCTRL);
+    CHECK(tabs->current_index == 2);
+    dispatch_key(window, SDLK_TAB, true, SDL_KMOD_LCTRL);
+    CHECK(tabs->current_index == 0);
+    dispatch_key(window, SDLK_TAB, true, SDL_Keymod(SDL_KMOD_LCTRL | SDL_KMOD_LSHIFT));
+    CHECK(tabs->current_index == 2);
+    dispatch_key(window, SDLK_PAGEUP, true, SDL_KMOD_LCTRL);
+    CHECK(tabs->current_index == 0);
+    dispatch_key(window, SDLK_PAGEDOWN, true, SDL_KMOD_LCTRL);
+    CHECK(tabs->current_index == 2);
+    // 隠したページの中にあったフォーカスは、TabWidget へ移る。
+    CHECK(!edit->focused && tabs->focused);
+
+    // 代入では無効なタブも選べる。
+    tabs->current_index = 1;
+    CHECK(tabs->current_tab == second);
+}
+
+TEST(tab_widget_scrolls_overflowing_titles)
+{
+    gui::Window window("t", 400, 200);
+    window.visible = true;
+    gui::TabWidget* tabs = new gui::TabWidget(&window);
+    tabs->bounds = gui::Rect(0, 0, 150, 120);
+    for (int i = 0; i < 6; ++i)
+    {
+        tabs->add_tab(new gui::Widget(), std::string(1, char('1' + i)));
+    }
+    window.apply_layout();
+    CHECK(tabs->minimum_hint.get().width >= 48 + 24 * 2);  // 見出し 1 つと ◀▶
+
+    // 見出しは 6 × 48 = 288dp、見せられる幅は 150 - 48 = 102dp。最後を選ぶと、右端が見えるまでスクロールする。
+    tabs->current_index = 5;
+    dispatch_click(window, gui::Point(50, 10));  // 50 + 186 = 236 → 5 つ目(192〜240)
+    CHECK(tabs->current_index == 4);
+    dispatch_click(window, gui::Point(114, 10));  // ◀ で 80dp 戻す
+    dispatch_click(window, gui::Point(10, 10));   // 10 + 106 = 116 → 3 つ目(96〜144)
+    CHECK(tabs->current_index == 2);
+    dispatch_click(window, gui::Point(138, 10));  // ▶ では選ぶタブは変わらない
+    CHECK(tabs->current_index == 2);
 }
 
 }  // namespace

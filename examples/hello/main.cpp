@@ -1,4 +1,4 @@
-// gui ライブラリのサンプル: Label・Button・LineEdit・CheckBox・RadioButton、変数による結びつけ、レイアウト。
+// gui ライブラリのサンプル: Label・Button・LineEdit・CheckBox・RadioButton・TabWidget など、変数による結びつけ、レイアウト。
 //   hello                     ウィンドウを開く
 //   hello --screenshot a.png  1 回描いて PNG に保存して終える(--dark を先に付けるとダークのテーマで描く)
 #include <gui/gui.hpp>
@@ -10,7 +10,7 @@
 int main(int argc, char** argv)
 {
     gui::Application app(argc, argv);
-    gui::Window window("hello - gui", 560, 520);
+    gui::Window window("hello - gui", 560, 620);
 
     // 配置はレイアウトに任せる(docs/adr/0017)。ウィンドウは縦に並べ、横に並べる行は入れ物のウィジェットを介して入れ子にする。
     // 行の中のウィジェットは行を親にして作る(別の親で作っても、add が行の子に付け替える。docs/adr/0018)。
@@ -109,31 +109,42 @@ int main(int argc, char** argv)
     column->add(color_row);
     column->add(greeting);
 
+    // タブ(docs/adr/0025)。ページごとにレイアウトを持たせ、TabWidget に加える。Ctrl+Tab で切り替えられる。
+    gui::TabWidget* tabs = new gui::TabWidget(&window);
+    gui::Widget* memo_page = new gui::Widget();
+    gui::BoxLayout* memo_box = new gui::BoxLayout(memo_page);
+    memo_box->margins = gui::Margins(0, 12, 0, 0);
+    memo_box->spacing = 8;
+    memo_box->add(new gui::Label(memo_page, "メモ(複数行。Enter で改行。右クリックでメニュー)"));
+    gui::TextEdit* memo =
+        new gui::TextEdit(memo_page, "TextEdit は複数行の入力欄。折り返し・縦のスクロール・IME に対応する。\n2 行目");
+    memo_box->add(memo, 1);
+    tabs->add_tab(memo_page, "メモ");
+
     // 値の部品(docs/adr/0024)。Slider・SpinBox・ProgressBar を同じ変数に結び、どれを動かしても揃う。
-    gui::Widget* level_row = new gui::Widget(&window);
-    gui::BoxLayout* level_box = new gui::BoxLayout(level_row, gui::Orientation::HORIZONTAL);
+    gui::Widget* level_page = new gui::Widget();
+    gui::BoxLayout* level_box = new gui::BoxLayout(level_page, gui::Orientation::HORIZONTAL);
+    level_box->margins = gui::Margins(0, 12, 0, 0);
     level_box->spacing = 12;
-    gui::Slider* level_slider = new gui::Slider(level_row);
-    gui::SpinBox* level_spin = new gui::SpinBox(level_row);
-    gui::ProgressBar* level_bar = new gui::ProgressBar(level_row);
+    gui::Slider* level_slider = new gui::Slider(level_page);
+    gui::SpinBox* level_spin = new gui::SpinBox(level_page);
+    gui::ProgressBar* level_bar = new gui::ProgressBar(level_page);
     level_bar->text_visible = true;
-    level_box->add(new gui::Label(level_row, "進み具合"), 0, gui::Align::CENTER);
-    level_box->add(level_slider, 1, gui::Align::CENTER);
-    level_box->add(level_spin, 0, gui::Align::CENTER);
-    level_box->add(level_bar, 1, gui::Align::CENTER);
+    level_box->add(new gui::Label(level_page, "進み具合"), 0, gui::Align::START);
+    level_box->add(level_slider, 1, gui::Align::START);
+    level_box->add(level_spin, 0, gui::Align::START);
+    level_box->add(level_bar, 1, gui::Align::START);
     gui::DoubleVariable* level = new gui::DoubleVariable(&window, 40);
     gui::bind(level_slider->value, level->value);
     gui::bind(level_spin->value, level->value);
     level->on_change = [=](gui::Object*) { level_bar->value = level->value.get(); };
     level_bar->value = level->value.get();
     level_slider->tooltip = "ドラッグ・矢印キーで動かす";
-    column->add(level_row);
-    column->add(new gui::Label(&window, "メモ(複数行。Enter で改行)"));
-    gui::TextEdit* memo =
-        new gui::TextEdit(&window, "TextEdit は複数行の入力欄。折り返し・縦のスクロール・IME に対応する。\n2 行目");
-    column->add(memo);
+    tabs->add_tab(level_page, "進み具合");
+    tabs->add_tab(new gui::Widget(), "無効なタブ")->enabled = false;
+    tabs->minimum_size = gui::Size(0, 200);
+    column->add(tabs, 1);
     column->add(disabled, 0, gui::Align::START);  // 横に広げない
-    column->add_stretch();
 
     // 画面の状態は変数に持ち、ウィジェットと結ぶ(docs/adr/0016)。
     gui::StringVariable* name = new gui::StringVariable(&window);

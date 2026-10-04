@@ -90,6 +90,7 @@ Widget::~Widget()
     {
         std::vector<Widget*>& siblings = parent_->children_;
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
+        parent_->child_removed(this);
     }
 }
 
@@ -127,6 +128,7 @@ void Widget::set_parent(Widget* const& p)
         }
         std::vector<Widget*>& siblings = parent_->children_;
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
+        parent_->child_removed(this);
     }
     // 移る前のウィンドウが持つ、自分と子孫への参照(フォーカス・ホバー・捕捉)を外す。
     if (old_window)
@@ -609,6 +611,8 @@ void Widget::focus_out()
 void Widget::scale_changed() {}
 
 void Widget::theme_changed() {}
+
+void Widget::child_removed(Widget*) {}
 
 Rect Widget::input_method_rect() const { return get_local_rect(); }
 

@@ -153,6 +153,8 @@ protected:
     // 子を配置する(配置のやり直しの印が付いているときに、描画の前に呼ばれる)。既定の実装はレイアウトに任せる。
     // 子の配置を自分で決めるウィジェット(ScrollArea 等)が上書きする(docs/adr/0021)。
     virtual void arrange_children();
+    // 子が外れた(破棄された・別の親へ移った)。子を覚えているウィジェット(TabWidget 等)が忘れるために使う。
+    virtual void child_removed(Widget* child);
     // 自分の配置だけをやり直す印を付ける(子の配置が変わるが、自分の望む大きさは変わらないとき)。
     void mark_layout_dirty();
 

@@ -53,6 +53,7 @@ add_library(gui STATIC
     src/widgets/scroll_bar.cpp
     src/widgets/slider.cpp
     src/widgets/spin_box.cpp
+    src/widgets/tab_widget.cpp
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
     src/widgets/label.cpp
