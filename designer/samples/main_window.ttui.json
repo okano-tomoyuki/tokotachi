@@ -1,0 +1,301 @@
+{
+  "format_version": 1,
+  "window": {
+    "name": "MainWindow",
+    "class": "Window",
+    "properties": {
+      "width": 720,
+      "height": 480,
+      "title": "ファイルの整理"
+    },
+    "events": { "on_close": "main_window_close" },
+    "menu_bar": {
+      "menus": [
+        {
+          "name": "file_menu",
+          "title": "ファイル(&F)",
+          "items": [
+            { "action": "open_action" },
+            {
+              "menu": {
+                "title": "最近使ったファイル(&R)",
+                "items": [{ "action": "clear_recent_action" }]
+              }
+            },
+            { "separator": true },
+            { "action": "quit_action" }
+          ]
+        },
+        {
+          "title": "表示(&V)",
+          "items": [{ "action": "details_action" }]
+        }
+      ]
+    },
+    "tool_bar": {
+      "properties": {
+        "button_style": "TEXT_BESIDE_ICON"
+      },
+      "items": [
+        { "action": "open_action" },
+        { "separator": true },
+        {
+          "widget": {
+            "name": "view_combo",
+            "class": "ComboBox",
+            "properties": {
+              "items": ["一覧", "詳細"],
+              "current_index": 0
+            }
+          }
+        }
+      ]
+    },
+    "status_bar": {
+      "properties": {
+        "text": "準備ができました"
+      },
+      "widgets": [
+        {
+          "name": "count_label",
+          "class": "Label",
+          "properties": {
+            "text": "0 件"
+          }
+        }
+      ]
+    },
+    "layout": {
+      "class": "BoxLayout",
+      "properties": {
+        "margins": 12
+      },
+      "items": [
+        {
+          "widget": {
+            "name": "search_row",
+            "class": "Widget",
+            "layout": {
+              "class": "BoxLayout",
+              "properties": {
+                "orientation": "HORIZONTAL"
+              },
+              "items": [
+                {
+                  "stretch": 1,
+                  "widget": {
+                    "name": "search_edit",
+                    "class": "LineEdit",
+                    "properties": {
+                      "placeholder_text": "検索する言葉"
+                    },
+                    "events": { "on_submit": "search" }
+                  }
+                },
+                {
+                  "widget": {
+                    "name": "search_button",
+                    "class": "Button",
+                    "properties": {
+                      "text": "検索"
+                    },
+                    "events": { "on_click": "search" }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "stretch": 1,
+          "widget": {
+            "name": "split",
+            "class": "Splitter",
+            "properties": {
+              "sizes": [180, 500]
+            },
+            "panes": [
+              {
+                "properties": {
+                  "stretch": 0,
+                  "collapsible": true
+                },
+                "widget": {
+                  "name": "folder_tree",
+                  "class": "TreeView"
+                }
+              },
+              {
+                "widget": {
+                  "name": "tabs",
+                  "class": "TabWidget",
+                  "events": { "on_change": "tabs_change" },
+                  "tabs": [
+                    {
+                      "properties": {
+                        "title": "ファイル"
+                      },
+                      "page": {
+                        "name": "file_list",
+                        "class": "ListView",
+                        "properties": {
+                          "sorting_enabled": true,
+                          "selection_mode": "MULTI"
+                        },
+                        "events": { "on_activate": "file_list_activate" }
+                      }
+                    },
+                    {
+                      "name": "detail_tab",
+                      "properties": {
+                        "title": "詳細",
+                        "enabled": false
+                      },
+                      "page": {
+                        "name": "detail_page",
+                        "class": "Widget",
+                        "layout": {
+                          "class": "GridLayout",
+                          "properties": {
+                            "margins": { "left": 8, "top": 8, "right": 8, "bottom": 8 }
+                          },
+                          "columns": {
+                            "1": { "stretch": 1 }
+                          },
+                          "items": [
+                            {
+                              "row": 0,
+                              "column": 0,
+                              "widget": {
+                                "name": "name_label",
+                                "class": "Label",
+                                "properties": {
+                                  "text": "名前"
+                                }
+                              }
+                            },
+                            {
+                              "row": 0,
+                              "column": 1,
+                              "widget": {
+                                "name": "name_edit",
+                                "class": "LineEdit"
+                              }
+                            },
+                            {
+                              "row": 1,
+                              "column": 0,
+                              "widget": {
+                                "name": "size_label",
+                                "class": "Label",
+                                "properties": {
+                                  "text": "大きさ",
+                                  "color": "TEXT_SECONDARY"
+                                }
+                              }
+                            },
+                            {
+                              "row": 1,
+                              "column": 1,
+                              "horizontal": "START",
+                              "widget": {
+                                "name": "size_spin",
+                                "class": "SpinBox",
+                                "properties": {
+                                  "maximum": 1000,
+                                  "value": 10
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "widget": {
+            "name": "button_row",
+            "class": "Widget",
+            "layout": {
+              "class": "BoxLayout",
+              "properties": {
+                "orientation": "HORIZONTAL"
+              },
+              "items": [
+                {
+                  "widget": {
+                    "name": "hidden_check",
+                    "class": "CheckBox",
+                    "properties": {
+                      "text": "隠しファイルも表示する"
+                    }
+                  }
+                },
+                { "stretch": 1 },
+                {
+                  "widget": {
+                    "name": "close_button",
+                    "class": "Button",
+                    "properties": {
+                      "text": "閉じる",
+                      "style": "SECONDARY"
+                    },
+                    "events": { "on_click": "close_button_click" },
+                    "actions": ["quit_action"]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "actions": [
+    {
+      "name": "open_action",
+      "properties": {
+        "text": "開く(&O)...",
+        "shortcut": "Ctrl+O"
+      },
+      "events": { "on_trigger": "open_action_trigger" }
+    },
+    {
+      "name": "clear_recent_action",
+      "properties": {
+        "text": "一覧を消す(&C)"
+      }
+    },
+    {
+      "name": "details_action",
+      "properties": {
+        "text": "詳細を表示(&D)",
+        "checkable": true,
+        "checked": true
+      }
+    },
+    {
+      "name": "quit_action",
+      "properties": {
+        "text": "終了(&X)",
+        "shortcut": "Ctrl+Q"
+      },
+      "events": { "on_trigger": "quit_action_trigger" }
+    }
+  ],
+  "objects": [
+    {
+      "name": "refresh_timer",
+      "class": "Timer",
+      "properties": {
+        "interval": 5000
+      },
+      "events": { "on_timer": "refresh" }
+    }
+  ]
+}

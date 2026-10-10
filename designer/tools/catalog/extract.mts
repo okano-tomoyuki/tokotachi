@@ -157,6 +157,8 @@ interface RawClass {
   doc: string;
   file: string;
   variables: RawMember[];
+  /** public のメンバ関数の名前(コンストラクタ・演算子を除く)。 */
+  functions: string[];
   constructors: string[];
 }
 
@@ -237,6 +239,13 @@ function readXml(xmlDir: string): RawXml {
             plainText(child(m, 'name')) === short.replace(/^.*::/, ''),
         )
         .map((m) => normalizeType(plainText(child(m, 'argsstring'))));
+      const functions = descendants(def, 'memberdef')
+        .filter((m) => m.getAttribute('kind') === 'function' && m.getAttribute('prot') === 'public')
+        .map((m) => plainText(child(m, 'name')))
+        .filter(
+          (n) =>
+            n !== short.replace(/^.*::/, '') && !n.startsWith('~') && !n.startsWith('operator'),
+        );
       raw.classes.set(short, {
         name: short,
         kind,
@@ -244,6 +253,7 @@ function readXml(xmlDir: string): RawXml {
         doc: docOf(def),
         file,
         variables: readMembers(def, raw),
+        functions,
         constructors,
       });
     }
@@ -508,9 +518,20 @@ class Builder {
     for (const name of [...this.usedHandlers].sort()) {
       handler_types[name] = this.buildHandlerType(name);
     }
+    // 生成するクラスのメンバの名前と衝突してはならない、ウィンドウの public のメンバ
+    const windowMembers = new Set<string>();
+    for (const [name, info] of Object.entries(this.overlay.classes)) {
+      if (info.kind === 'window') {
+        for (const c of this.chain(name)) {
+          c.variables.forEach((v) => windowMembers.add(v.name));
+          c.functions.forEach((f) => windowMembers.add(f));
+        }
+      }
+    }
     return {
       format_version: 1,
       tokotachi_version: readVersion(),
+      window_members: [...windowMembers].sort(),
       classes,
       values,
       enums,

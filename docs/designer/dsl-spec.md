@@ -1,9 +1,11 @@
 # 画面の定義ファイルの仕様(format_version 1)
 
-デザイナーが読み書きする、ウィンドウ 1 つ分の定義ファイルの仕様。**草案**。§10 の論点は、実装しながら決める。
+デザイナーが読み書きする、ウィンドウ 1 つ分の定義ファイルの仕様。§10 の未決の論点は、実装しながら決める。
 方針は [ADR 0039](../adr/0039-designer.md)。Bethany の DSL(Bethany の docs/designer/dsl-spec.md)を土台にし、配置の表し方を Tokotachi に合わせた。
 
-実装ができたら、構造は Zod のスキーマ、意味の検証は TypeScript の検証関数を正とし、本書と食い違う場合は本書を直す。
+構造は Zod のスキーマ([designer/packages/core/src/dsl/schema.ts](../../designer/packages/core/src/dsl/schema.ts))、意味の検証は
+[validate.ts](../../designer/packages/core/src/dsl/validate.ts) を正とし、本書と食い違う場合は本書を直す。
+見本は [designer/samples/](../../designer/samples/)(`main_window.ttui.json`・`settings_dialog.ttui.json`)。
 
 ## 1. 基本方針
 
@@ -122,6 +124,7 @@
 
 - `width`・`height` はウィンドウの中身(枠・タイトルバーを含まない)の大きさ。メニューバー・ツールバー・ステータスバーは、その中に含まれる。
 - `Dialog` の生成するクラスは、コンストラクタで親のウィンドウを受け取る(`Dialog(Window* parent, const std::string& title)`)。
+  Dialog は開くときに大きさを中身に合わせるので、大きさは `width`・`height` ではなく `minimum_size` で決める。
 
 ### 4.2 部品のノード
 
@@ -244,6 +247,8 @@
 - 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content` は対応するクラスだけ、`buttons` は Dialog だけ)
 - レイアウトの項目の制約(GridLayout のセルの重なり、BoxLayout の項目のキー)
 - 同じメンバ関数を書いたハンドラの型が一致すること
+- 生成したコードの一時的な変数の名前(codegen-design.md N3)とノードの `name` が重ならないこと
+- 名前の書き方(クラス名は PascalCase、メンバは snake_case)。合わなければ警告にとどめる
 
 診断は JSON 上の位置(パス)を持ち、拡張がファイル上の範囲に変えて問題パネルに出す。
 
@@ -251,7 +256,8 @@
 
 Bethany と同じ。
 
-- キーの順: ドキュメントは `$schema`・`format_version`・`window`・`actions`・`objects`。ノードは `name`・`class`・`properties`・`events`・
+- 実装は [serialize.ts](../../designer/packages/core/src/dsl/serialize.ts)。`*.ttui.json` は Prettier の対象から外している。
+- キーの順: ドキュメントは `$schema`・`format_version`・`window`・`actions`・`objects`。レイアウトは `name`・`class`・`properties`・`rows`・`columns`・`items`。ノードは `name`・`class`・`properties`・`events`・
   そのあとに子を表すキー(`menu_bar`・`tool_bar`・`status_bar`・`layout`・`children`・`tabs`・`panes`・`content`・`buttons`・`items` 等)。
   レイアウトの項目は `widget` を最後に置く(設定が先に読める)。`properties`・`events` の中はカタログの順。
 - `properties` とノードは 1 行に 1 つのキー。値が単純なもの(文字列・数値・真偽とその配列)だけのオブジェクト・配列は、

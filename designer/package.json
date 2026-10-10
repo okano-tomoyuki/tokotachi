@@ -7,6 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "build": "pnpm --filter @tokotachi-designer/cli run build",
     "typecheck": "pnpm -r run typecheck && tsc -p tools",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -15,10 +16,14 @@
     "test:watch": "vitest",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && pnpm test",
     "catalog:extract": "node tools/catalog/extract.mts",
-    "catalog:check": "node tools/catalog/extract.mts --check"
+    "catalog:check": "node tools/catalog/extract.mts --check",
+    "codegen:verify-cpp": "node tools/codegen/verify-cpp.mts",
+    "codegen:golden": "node tools/codegen/golden.mts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tokotachi-designer/codegen": "workspace:*",
+    "@tokotachi-designer/core": "workspace:*",
     "@types/node": "^24.13.6",
     "@xmldom/xmldom": "^0.9.12",
     "eslint": "^10.11.0",

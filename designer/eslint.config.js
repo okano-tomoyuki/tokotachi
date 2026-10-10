@@ -23,7 +23,12 @@ export default defineConfig(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.js', '*.ts', 'packages/*/vitest.config.ts'],
+          allowDefaultProject: [
+            '*.js',
+            '*.ts',
+            'packages/*/vitest.config.ts',
+            'packages/*/build.mjs',
+          ],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -34,8 +39,20 @@ export default defineConfig(
     rules: { 'no-restricted-imports': ['error', pureModuleRestrictions] },
   },
   {
-    files: ['tools/**', '*.js', '*.ts'],
+    files: ['tools/**', 'packages/cli/**', '*.js', '*.ts', 'packages/*/build.mjs'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // テストでは、見本の JSON を型を気にせず書き換えて異常系を作る
+    files: ['**/*.test.ts', '**/testing.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+    },
   },
   {
     // 設定ファイル(JS)は型情報を持たないため、型情報を使うルールを外す

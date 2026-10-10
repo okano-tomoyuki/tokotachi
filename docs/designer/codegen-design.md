@@ -1,4 +1,4 @@
-# コード生成の設計(草案)
+# コード生成の設計
 
 画面の定義ファイル([dsl-spec.md](dsl-spec.md))から、Tokotachi の C++ のコードを生成する方法。
 生成したコードと利用者のコードの共存には、Bethany と同じく、マーカーで囲んだ区間だけを置き換える方式を使う([ADR 0039](../adr/0039-designer.md))。
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 |---|---|---|
 | N1 | ハンドラのつなぎ方 | `[this](引数...) { メンバ関数(引数...); }` のラムダ。引数はカタログのハンドラの型から作る |
 | N2 | 名前空間 | 生成したコードは `tokotachi::` を省かずに書く(ヘッダにもソースにも `using namespace` を書かない。利用者の名前と衝突させないため) |
-| N3 | 名前の無いレイアウト・メニューバー等 | 一時的な変数にする。名前は `<親の名前>_layout`(ウィンドウは `window_layout`)、`window_menu_bar`・`window_tool_bar`。これらの名前はノードの `name` に使えない(dsl-spec.md §4 の衝突の検証に加える) |
+| N3 | 名前の無いレイアウト・メニューバー等 | 一時的な変数にする。名前は `<親の名前>_layout`(ウィンドウは `window_layout`)、`window_menu_bar`・`window_tool_bar`・`window_status_bar`、名前の無いメニューは `<親>_menu_<番号>`、プロパティを設定するタブ・区画は `<部品の名前>_tab_<番号>`・`_pane_<番号>`(番号は 1 から)。これらの名前はノードの `name` に使えない(検証でエラーにする)。実装は [tree.ts](../../designer/packages/core/src/dsl/tree.ts) の `temporaryNames` |
 | N4 | 値の書き出し | 文字列は UTF-8 のまま C++ の文字列リテラルに(`"`・`\`・制御文字はエスケープ)。`float` の小数は `0.5f`。列挙型は `tokotachi::Orientation::HORIZONTAL`。`Margins` は `tokotachi::Margins(12)` か 4 つの値、`Size` 等は値をそろえたコンストラクタ、`ThemeColor` の役割は `tokotachi::ColorRole::ACCENT`・色は `tokotachi::Color(0xFF, 0x80, 0x00)`、`Shortcut` は `tokotachi::Shortcut("Ctrl+S")`、配列は `std::vector<std::string>{...}`。`Placement` は一時的な変数にメンバを設定して `add` に渡す |
 | N5 | 既定値 | 定義ファイルに書いたプロパティだけを書き出す |
 | N6 | レイアウトの `add` の引数 | 既定値と同じ後ろの引数は省く(`add(w)`、`add(w, 1)`)。途中の引数を書くときは、その前の引数も書く |
@@ -257,16 +257,22 @@ int main(int argc, char** argv)
 
 ## 7. 確かめ方
 
-- **期待する出力との比較**: 定義ファイル → 生成したコードを、codegen のテストで期待するファイルと比べる。
+- **期待する出力との比較**: 定義ファイル → 生成したコードを、codegen のテストで期待するファイル(`packages/codegen/src/__golden__/`。
+  `pnpm codegen:golden` で作り直す)と比べる。区間の置き換え・利用者のコードの保存・手での変更の検出・雛形の追加・壊れたマーカー・
+  消えた名前の警告もテストする。
 - **ビルドと実行**: 見本の定義ファイル(`designer/samples/`)から生成した C++ を、本リポジトリの Tokotachi と一緒に CMake でビルドして実行し、次を確かめる。
   1. 表示した後の各部品の位置と大きさが、キャンバス(WebAssembly で同じ定義ファイルから組んだもの)と同じであること。
   2. ハンドラがつながっていること(ボタン・Action・Timer のハンドラが呼ばれる)。
   3. 参照(メニュー・ツールバーの Action)・値の型(Margins・Font・色・Shortcut 等)・配列が設定されていること。
 - 生成したコードは `-Wall -Wextra -pedantic -Werror`(使っていない引数を除く)でコンパイルする。
+- 実装は [designer/tools/codegen/verify-cpp.mts](../../designer/tools/codegen/verify-cpp.mts)(`pnpm codegen:verify-cpp`)。
+  ハンドラの雛形の中身を「呼ばれたことを記録する処理」に書き換えてビルドし、画面なし(offscreen)で開いて 34 の項目を確かめる。
+  2026-10-10 に Windows(MinGW)と Linux(WSL。生成したファイルを CMake で直接ビルド)で、すべて通った。
 
 ## 8. プロジェクトと設定
 
 定義ファイルは画面の設計だけを持ち、生成の設定はプロジェクトファイル(`*.ttproj.json`)に持つ。
+プロジェクトファイルを作るまでは、CLI(`ttd generate`)の引数で渡す(`--comment-locale`・`--namespace`・`--header-dir`・`--source-dir`)。
 プロジェクトファイルの仕様は、拡張を作る段階で Bethany の project-spec.md を土台に書く。持つ設定は次のとおり。
 
 | 設定 | 既定 |

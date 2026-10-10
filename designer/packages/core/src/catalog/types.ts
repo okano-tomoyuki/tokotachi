@@ -99,6 +99,8 @@ export interface Catalog {
   format_version: 1;
   /** カタログを取り出した Tokotachi の版。 */
   tokotachi_version: string;
+  /** Window・Dialog(と基底)の public のメンバの名前。生成するクラスのメンバ・ハンドラの名前に使えない。 */
+  window_members: string[];
   /** パレットの順。 */
   classes: Record<string, ClassInfo>;
   values: Record<string, ValueTypeInfo>;

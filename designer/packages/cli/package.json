@@ -1,0 +1,20 @@
+{
+  "name": "@tokotachi-designer/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ttd": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tokotachi-designer/codegen": "workspace:*",
+    "@tokotachi-designer/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
