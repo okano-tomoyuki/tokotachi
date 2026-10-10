@@ -122,6 +122,35 @@ textarea.invalid {
   text-align: center;
 }
 
+/* ---- クラスのアイコン(ClassIcon.tsx) ---- */
+
+.class-icon {
+  --tt-icon-accent: var(--vscode-charts-blue, #3794ff);
+
+  flex: none;
+  overflow: visible;
+}
+
+.class-icon .a {
+  stroke: var(--tt-icon-accent);
+}
+
+.class-icon .af {
+  fill: var(--tt-icon-accent);
+  stroke: none;
+}
+
+.class-icon .sf {
+  fill: currentColor;
+  fill-opacity: 0.15;
+  stroke: none;
+}
+
+/* 選んでいる行では、背景の色に埋もれないよう強調色も文字の色にする */
+.tree-row.selected .class-icon {
+  --tt-icon-accent: currentColor;
+}
+
 .tree-class {
   opacity: 0.6;
   font-size: 0.9em;
@@ -318,6 +347,9 @@ textarea.invalid {
 }
 
 .palette-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
   padding: 2px 6px 2px 14px;
   cursor: grab;
   user-select: none;

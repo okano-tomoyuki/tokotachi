@@ -8,6 +8,7 @@ import { beginDrag, clickAdd } from '../dragController.ts';
 import type { Drag } from '../dropTarget.ts';
 import { labelGhost } from '../ghost.ts';
 import { sendEdit } from '../store.ts';
+import { ClassIcon } from './ClassIcon.tsx';
 
 const CATEGORIES: readonly Category[] = ['input', 'display', 'view', 'container', 'drawing'];
 
@@ -30,7 +31,17 @@ function categoryLabel(c: Category | 'spacer' | 'non_visual'): string {
   }
 }
 
-function Item({ label, title, drag }: { label: string; title?: string; drag: Drag }) {
+function Item({
+  label,
+  icon,
+  title,
+  drag,
+}: {
+  label: string;
+  icon: string;
+  title?: string;
+  drag: Drag;
+}) {
   return (
     <div
       className="palette-item"
@@ -50,6 +61,7 @@ function Item({ label, title, drag }: { label: string; title?: string; drag: Dra
         );
       }}
     >
+      <ClassIcon name={icon} />
       {label}
     </div>
   );
@@ -76,7 +88,13 @@ export function Palette() {
               {classes
                 .filter(([, info]) => info.kind === 'widget' && info.category === c)
                 .map(([cls, info]) => (
-                  <Item key={cls} label={cls} title={info.doc} drag={{ kind: 'new', class: cls }} />
+                  <Item
+                    key={cls}
+                    label={cls}
+                    icon={cls}
+                    title={info.doc}
+                    drag={{ kind: 'new', class: cls }}
+                  />
                 ))}
             </div>
           ))}
@@ -84,11 +102,13 @@ export function Palette() {
             <div className="palette-category">{categoryLabel('spacer')}</div>
             <Item
               label={l10n.t('Stretch')}
+              icon="stretch"
               title={l10n.t('A stretch in a BoxLayout (add_stretch)')}
               drag={{ kind: 'spacer', spacer: { stretch: 1 } }}
             />
             <Item
               label={l10n.t('Spacing')}
+              icon="spacing"
               title={l10n.t('A fixed spacing in a BoxLayout (add_spacing)')}
               drag={{ kind: 'spacer', spacer: { spacing: 12 } }}
             />
@@ -106,6 +126,7 @@ export function Palette() {
                     sendEdit({ kind: 'addObject', class: cls });
                   }}
                 >
+                  <ClassIcon name={cls} />
                   {cls}
                 </div>
               ))}

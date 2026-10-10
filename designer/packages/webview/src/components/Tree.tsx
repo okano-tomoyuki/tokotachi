@@ -2,12 +2,20 @@
 import { l10n, type OutlineNode } from '@tokotachi-designer/core';
 import { useState } from 'react';
 import { useDesigner } from '../store.ts';
+import { ClassIcon, nodeIconKey } from './ClassIcon.tsx';
 
 /** 木の 1 行の表示(名前と、括弧の中にクラス)。 */
 function label(node: OutlineNode): string {
   switch (node.kind) {
     case 'group':
-      return node.label === 'actions' ? l10n.t('Actions') : l10n.t('Objects');
+      switch (node.label) {
+        case 'actions':
+          return l10n.t('Actions');
+        case 'variables':
+          return l10n.t('Variables');
+        default:
+          return l10n.t('Objects');
+      }
     case 'separator':
       return '———';
     case 'menu_item':
@@ -41,6 +49,7 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
         >
           {hasChildren ? (open ? '▾' : '▸') : ''}
         </span>
+        <ClassIcon name={nodeIconKey(node)} />
         <span className="tree-label">{label(node)}</span>
         {node.class !== undefined && <span className="tree-class">{node.class}</span>}
       </div>

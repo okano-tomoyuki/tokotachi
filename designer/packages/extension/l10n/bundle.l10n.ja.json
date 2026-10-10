@@ -155,6 +155,7 @@
   "Use letters, digits, _ and - (e.g. my_app)": "英字・数字・_・- を使います(例: my_app)",
   "Use lowercase letters, digits and _ (e.g. main_window)": "英小文字・数字・_ を使います(例: main_window)",
   "Variable": "Variable",
+  "Variables": "Variable",
   "Views": "一覧",
   "Where to create the project?": "どこにプロジェクトを作りますか？",
   "Windows not in a project": "プロジェクトに属さないウィンドウ",
