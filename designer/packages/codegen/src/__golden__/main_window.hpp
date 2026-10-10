@@ -20,6 +20,8 @@ public:
     tokotachi::Action* action_details;
     tokotachi::Action* action_quit;
     tokotachi::Timer* timer_refresh;
+    tokotachi::Variable<std::string>* file_name;
+    tokotachi::Variable<bool>* show_hidden;
     tokotachi::Menu* menu_file;
     tokotachi::ComboBox* combo_box_view;
     tokotachi::Label* label_count;
@@ -43,12 +45,13 @@ public:
     void action_open_trigger(tokotachi::Object* sender);
     void action_quit_trigger(tokotachi::Object* sender);
     void refresh(tokotachi::Object* sender);
+    void file_name_change(tokotachi::Object* sender);
     void main_window_close(tokotachi::Object* sender, bool& can_close);
     void search(tokotachi::Object* sender);
     void tab_widget_files_change(tokotachi::Object* sender);
     void list_view_files_activate(tokotachi::Object* sender);
     void button_close_click(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="de275751">
+    // <tokotachi-designer:end id="declarations" hash="9e3e2a52">
 
 private:
     void tokotachi_setup_ui();

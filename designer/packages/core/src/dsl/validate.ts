@@ -2,7 +2,7 @@
  * 定義ファイルの意味の検証(docs/designer/dsl-spec.md §7)。構造(形)は schema.ts で検証済みのものを受け取る。
  */
 import { findClass, findHandler, findProperty, isSubclassOf } from '../catalog/catalog.ts';
-import type { ClassKind } from '../catalog/types.ts';
+import type { ClassKind, PropertyInfo } from '../catalog/types.ts';
 import { describeIdentifierProblem, isValidIdentifier, memberNameProblem } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { Diagnostic, DiagnosticCode, JsonPath, Severity } from './diagnostics.ts';
@@ -15,6 +15,7 @@ import type {
   WidgetNode,
 } from './schema.ts';
 import { layouts, menus, namedNodes, temporaryNames, widgets, type NamedNode } from './tree.ts';
+import { bindingOf, isBindable, variableTypeOf } from './bindings.ts';
 import { checkMembers, checkValue, isEnumValue } from './values.ts';
 
 export function validateDocument(doc: TtuiDocument): Diagnostic[] {
@@ -58,6 +59,16 @@ class Validator {
         this.checkProperties(o.class, o.properties, path);
         this.checkEvents(o.class, o.events, path);
       }
+    });
+    this.doc.variables?.forEach((v, i) => {
+      const path = ['variables', i];
+      if (v.value !== undefined) {
+        const problem = checkValue(v.type, v.value);
+        if (problem) {
+          this.error('invalid-property-value', problem, [...path, 'value']);
+        }
+      }
+      this.checkEvents('Variable', v.events, path);
     });
     for (const e of widgets(this.doc)) {
       this.checkWidget(e.node, e.path, e.placement.kind === 'free');
@@ -192,6 +203,11 @@ class Validator {
         );
         continue;
       }
+      const variable = bindingOf(value);
+      if (variable !== undefined) {
+        this.checkBinding(variable, prop, p);
+        continue;
+      }
       const problem = checkValue(prop.type, value);
       if (problem) {
         this.error('invalid-property-value', problem, p);
@@ -200,6 +216,38 @@ class Validator {
       if (typeof prop.type === 'object' && 'ref' in prop.type && typeof value === 'string') {
         this.checkReference(value, prop.type.ref, p);
       }
+    }
+  }
+
+  /** Variable との結びつけ(dsl-spec.md §5.2)。 */
+  private checkBinding(variable: string, prop: PropertyInfo, path: JsonPath): void {
+    if (!isBindable(prop)) {
+      this.error(
+        'binding-not-allowed',
+        l10n.t(
+          'Only properties of type bool, int, float, double or string (other than the position and size) can be bound to a variable',
+        ),
+        path,
+      );
+      return;
+    }
+    const target = this.doc.variables?.find((v) => v.name === variable);
+    if (!target) {
+      this.error('unknown-reference', l10n.t('The variable "{0}" is not found', variable), path);
+      return;
+    }
+    const expected = variableTypeOf(prop.type);
+    if (target.type !== expected) {
+      this.error(
+        'reference-type-mismatch',
+        l10n.t(
+          'The variable "{0}" is of type {1}, but the property is of type {2}',
+          variable,
+          target.type,
+          expected ?? '',
+        ),
+        path,
+      );
     }
   }
 

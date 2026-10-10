@@ -25,6 +25,7 @@ export type DiagnosticCode =
   | 'unknown-reference'
   | 'reference-type-mismatch'
   | 'handler-signature-conflict'
+  | 'binding-not-allowed'
   // 構造上の制約
   | 'children-not-allowed'
   | 'layout-and-children'

@@ -3950,6 +3950,27 @@
         }
       },
       "handlers": {}
+    },
+    "Variable": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "template": true,
+      "doc": "値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。",
+      "properties": {},
+      "handlers": {
+        "on_set": {
+          "type": "NotifyHandler",
+          "declared_in": "Variable",
+          "doc": "value が設定された(同じ値の代入でも呼ぶ。docs/adr/0016)。"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "Variable",
+          "doc": "value が変わった(結びつけた相手から伝わったときも含む)。on_set の後に呼ぶ。"
+        }
+      }
     }
   },
   "values": {

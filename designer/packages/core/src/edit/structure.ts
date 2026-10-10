@@ -357,9 +357,10 @@ export function removeNodes(doc: TtuiDocument, paths: readonly JsonPath[]): void
         parentKey === 'panes' ||
         parentKey === 'menus' ||
         parentKey === 'actions' ||
-        parentKey === 'objects')
+        parentKey === 'objects' ||
+        parentKey === 'variables')
     ) {
-      // 空き・タブ・区画・メニュー・ツールバーの項目・Action・オブジェクト
+      // 空き・タブ・区画・メニュー・ツールバーの項目・Action・オブジェクト・Variable
       const list = valueAt(root, path.slice(0, -1));
       if (Array.isArray(list)) {
         (list as unknown[]).splice(key, 1);
@@ -372,7 +373,7 @@ export function removeNodes(doc: TtuiDocument, paths: readonly JsonPath[]): void
     }
     detach(root, path);
   }
-  for (const key of ['actions', 'objects'] as const) {
+  for (const key of ['actions', 'objects', 'variables'] as const) {
     const list = root[key];
     if (Array.isArray(list) && list.length === 0) {
       removeKey(root, key);

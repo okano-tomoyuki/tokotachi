@@ -217,12 +217,15 @@ int main(int argc, char** argv)
 
 ## 4. `tokotachi_setup_ui` の中の順序
 
-1. **Action と画面に出ないオブジェクト**(定義ファイルの順)。メニュー・ツールバー・部品から参照されるので先に作る。
+1. **Action と画面に出ないオブジェクトと Variable**(定義ファイルの順)。メニュー・ツールバー・部品から参照・結びつけされるので先に作る。
+   Variable は `new tokotachi::Variable<T>(this, 初期値)`(初期値を書かなければ `(this)`)。
 2. **ウィンドウ自身のプロパティとハンドラ。**
 3. **メニューバー・ツールバー・ステータスバー**(作って中身を入れてから、ウィンドウに設定する)。
 4. **中身の部品を木の順(親が先)に。** 部品ごとに次の順で書く。
    1. 作る(`new tokotachi::Button(親)`。親を渡して、作った時点から親が所有する)。
    2. プロパティ(カタログの順。宣言の順なので、範囲を持つ部品の `value` は `minimum`・`maximum` の後、ComboBox の `current_index` は `items` の後になる)。
+      Variable に結びつけたプロパティ(dsl-spec.md §5.2)は、同じ位置で `tokotachi::bind(部品->プロパティ, 変数->value);` にする
+      (結んだ時点で値が設定されるので、順序の意味は値の設定と同じ)。
       ただし、カタログで `after_children` の印が付いたもの(`TabWidget::current_index`・`Splitter::sizes`。タブ・区画が無いと効かない)は除き、5 の後に設定する。
    3. ハンドラをつなぐ。
    4. `actions`(`add_action`)。
@@ -245,6 +248,7 @@ int main(int argc, char** argv)
 | N6 | レイアウトの `add` の引数 | 既定値と同じ後ろの引数は省く(`add(w)`、`add(w, 1)`)。途中の引数を書くときは、その前の引数も書く |
 | N7 | 予約の名前 | 生成したコードが使うメンバ関数・区間には接頭辞 `tokotachi_` を付ける(`tokotachi_setup_ui`)。ノードの `name`・ハンドラの名前に `tokotachi_` で始まる名前は使えない |
 | N8 | 画像 | 定義ファイルが参照する画像のファイル(dsl-spec.md §5.1)の中身を、区間 `tokotachi_setup_ui` の先頭の無名の名前空間に `const unsigned char tokotachi_image_<パス>[]` として書き(同じファイルは 1 つ。1 行に 16 バイト)、`tokotachi::Image::load_from_data(配列, sizeof(配列))` で読む。区間の中なので、既存のファイルの形は変わらない。読めない画像があれば、何も書かずにエラーにする。実装は [cpp/images.ts](../../designer/packages/codegen/src/cpp/images.ts) |
+| N9 | Variable | メンバは `tokotachi::Variable<std::string>* file_name;`(`StringVariable` 等の typedef は float に無いので使わず、型の引数で書く)。ハンドラ(`on_set`・`on_change`)はほかのオブジェクトと同じくつなぐ |
 
 ## 6. Bethany から引き継ぐ決まり
 
@@ -268,8 +272,8 @@ int main(int argc, char** argv)
   3. 参照(メニュー・ツールバーの Action)・値の型(Margins・Font・色・Shortcut 等)・配列が設定されていること。
 - 生成したコードは `-Wall -Wextra -pedantic -Werror`(使っていない引数を除く)でコンパイルする。
 - 実装は [designer/tools/codegen/verify-cpp.mts](../../designer/tools/codegen/verify-cpp.mts)(`pnpm codegen:verify-cpp`)。
-  ハンドラの雛形の中身を「呼ばれたことを記録する処理」に書き換えてビルドし、画面なし(offscreen)で開いて 35 の項目を確かめる
-  (埋め込んだ画像の確認を 2026-10-10 に加えた)。
+  ハンドラの雛形の中身を「呼ばれたことを記録する処理」に書き換えてビルドし、画面なし(offscreen)で開いて 38 の項目を確かめる
+  (埋め込んだ画像・Variable との結びつけの確認を 2026-10-10 に加えた)。
   2026-10-10 に Windows(MinGW)と Linux(WSL。生成したファイルを CMake で直接ビルド)で、すべて通った。
 
 ## 8. プロジェクトと設定

@@ -10,7 +10,7 @@ import { findClass, getCatalog } from '../catalog/catalog.ts';
 import { memberNameProblem, isValidIdentifier, describeIdentifierProblem } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { JsonPath } from '../dsl/diagnostics.ts';
-import type { PropertyValue, TtuiDocument } from '../dsl/schema.ts';
+import type { PropertyValue, TtuiDocument, VariableType } from '../dsl/schema.ts';
 import { namedNodes } from '../dsl/tree.ts';
 import { validateDocument } from '../dsl/validate.ts';
 import type { WidgetNode } from '../dsl/schema.ts';
@@ -39,6 +39,13 @@ import {
   setMenuTitle,
   type Bar,
 } from './menus.ts';
+import {
+  addVariable,
+  removeBindings,
+  renameBindings,
+  setVariable,
+  variableValue,
+} from './variables.ts';
 
 export type EditCommand =
   /** プロパティを設定する。値が null なら書いたものを消す(既定値に戻す)。 */
@@ -107,6 +114,20 @@ export type EditCommand =
   | { readonly kind: 'setEntryAction'; readonly target: JsonPath; readonly action: string }
   /** メニューの見出しを変える。 */
   | { readonly kind: 'setMenuTitle'; readonly target: JsonPath; readonly title: string }
+  /** Variable を足す(名前は送る側が newName で決める。同じ batch の中で結びつけるため)。 */
+  | {
+      readonly kind: 'addVariable';
+      readonly name: string;
+      readonly type: VariableType;
+      readonly value?: PropertyValue;
+    }
+  /** Variable の型・初期値を変える(value が null なら初期値を消す)。 */
+  | {
+      readonly kind: 'setVariable';
+      readonly target: JsonPath;
+      readonly type?: VariableType;
+      readonly value?: PropertyValue;
+    }
   /** 同じ並びの中で前(-1)・後ろ(1)へ動かす。 */
   | { readonly kind: 'moveSibling'; readonly target: JsonPath; readonly delta: number }
   | { readonly kind: 'batch'; readonly commands: readonly EditCommand[] };
@@ -146,6 +167,9 @@ function classOf(path: JsonPath, node: Json): string {
   const parentKey = path[path.length - 2];
   if (path[0] === 'actions') {
     return 'Action';
+  }
+  if (path[0] === 'variables') {
+    return 'Variable';
   }
   if (last === 'menu_bar') {
     return 'MenuBar';
@@ -335,6 +359,9 @@ function rename(doc: TtuiDocument, path: JsonPath, name: string): void {
   node['name'] = name;
   if (typeof old === 'string') {
     renameReferences(root, old, name);
+    if (path[0] === 'variables') {
+      renameBindings(doc, old, name);
+    }
   }
 }
 
@@ -365,12 +392,27 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
           ? [String((valueAt(doc, t) as { name?: string } | undefined)?.name)]
           : [],
       );
+      // Variable を消すときは、結びつけたプロパティをその初期値にする
+      const variables = command.targets.flatMap((t) => {
+        const v =
+          t.length === 2 && t[0] === 'variables' ? doc.variables?.[Number(t[1])] : undefined;
+        return v ? [{ name: v.name, value: variableValue(v.type, v.value) }] : [];
+      });
       removeNodes(doc, command.targets);
       for (const name of actions) {
         removeActionReferences(doc, name);
       }
+      for (const v of variables) {
+        removeBindings(doc, v.name, v.value);
+      }
       return;
     }
+    case 'addVariable':
+      addVariable(doc, command.name, command.type, command.value);
+      return;
+    case 'setVariable':
+      setVariable(doc, command.target, { type: command.type, value: command.value });
+      return;
     case 'addBar':
       addBar(doc, command.bar);
       return;

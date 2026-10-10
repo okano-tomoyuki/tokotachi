@@ -352,6 +352,44 @@
         ],
         "additionalProperties": false
       }
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "bool",
+              "int",
+              "float",
+              "double",
+              "string"
+            ]
+          },
+          "value": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "events": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

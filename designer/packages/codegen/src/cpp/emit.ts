@@ -12,6 +12,7 @@ import {
   isImageType,
   namedNodes,
   normalizePath,
+  variableClass,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import { generatedComments } from '../comments.ts';
@@ -83,6 +84,13 @@ function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): stri
         const value = image === undefined ? cppValue(op.type, op.value) : imageExpression(image);
         return [`${access(op.target, op.property)} = ${value};`];
       }
+      case 'variable': {
+        const cls = `tokotachi::${variableClass(op.type)}`;
+        const value = op.value === undefined ? '' : `, ${cppValue(op.type, op.value)}`;
+        return [`${op.variable} = new ${cls}(this${value});`];
+      }
+      case 'bind':
+        return [`tokotachi::bind(${access(op.target, op.property)}, ${op.variable}->value);`];
       case 'connect':
         return [
           `${access(op.target, op.property)} = [this](${paramList(op.handlerType)}) { ${op.handler}(${argList(op.handlerType)}); };`,

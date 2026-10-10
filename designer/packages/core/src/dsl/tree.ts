@@ -9,6 +9,7 @@ import type {
   PaneNode,
   TabNode,
   TtuiDocument,
+  VariableType,
   WidgetNode,
 } from './schema.ts';
 
@@ -152,7 +153,8 @@ export type NamedKind =
   | 'status_bar'
   | 'menu'
   | 'action'
-  | 'object';
+  | 'object'
+  | 'variable';
 
 export interface NamedNode {
   readonly name: string;
@@ -177,6 +179,9 @@ export function namedNodes(doc: TtuiDocument): NamedNode[] {
   for (const [i, o] of (doc.objects ?? []).entries()) {
     add(o.name, 'object', o.class, ['objects', i]);
   }
+  for (const [i, v] of (doc.variables ?? []).entries()) {
+    add(v.name, 'variable', variableClass(v.type), ['variables', i]);
+  }
   const w = doc.window;
   add(w.menu_bar?.name, 'menu_bar', 'MenuBar', ['window', 'menu_bar']);
   for (const m of menus(doc)) {
@@ -200,6 +205,11 @@ export function namedNodes(doc: TtuiDocument): NamedNode[] {
     });
   }
   return out;
+}
+
+/** Variable の C++ のクラス(`Variable<std::string>`。Tokotachi の名前空間を除く)。 */
+export function variableClass(type: VariableType): string {
+  return `Variable<${type === 'string' ? 'std::string' : type}>`;
 }
 
 /** 名前の無いレイアウトの一時的な変数の名前(付く部品の名前 + `_layout`、ウィンドウは `window_layout`)。 */

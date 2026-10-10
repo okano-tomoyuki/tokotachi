@@ -103,8 +103,9 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
             ? undefined
             : flattenOutline(tree).find(
                 (n) =>
-                  ['widget', 'object', 'menu_item', 'tool_item', 'action'].includes(n.kind) &&
-                  n.label === pendingSelection,
+                  ['widget', 'object', 'menu_item', 'tool_item', 'action', 'variable'].includes(
+                    n.kind,
+                  ) && n.label === pendingSelection,
               );
         if (added) {
           pendingSelection = undefined;

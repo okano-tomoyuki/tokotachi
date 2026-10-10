@@ -83,6 +83,14 @@ public:
             {
                 run_place(op);
             }
+            else if (kind == "variable")
+            {
+                run_variable(op);
+            }
+            else if (kind == "bind")
+            {
+                run_bind(op);
+            }
             // connect(ハンドラ)と blank は描画に関係しない
         }
     }
@@ -138,6 +146,38 @@ private:
             return;
         }
         if (!ttc::set_property(object, classes_[target], property, op["value"]))
+        {
+            error("cannot set " + classes_[target] + "." + property);
+        }
+    }
+
+    /// Variable は作らず、値だけを覚える(キャンバスでは値が変わらないので、結びつけは値の設定と同じ)。
+    void run_variable(const ttc::Json& op)
+    {
+        if (op.has("value"))
+        {
+            variables_[op["variable"].as_string()] = op["value"];
+            return;
+        }
+        // 初期値を省くと T()
+        const std::string type = op["type"].as_string();
+        variables_[op["variable"].as_string()] =
+            type == "string" ? ttc::Json(std::string()) : type == "bool" ? ttc::Json(false) : ttc::Json(0.0);
+    }
+
+    /// tokotachi::bind(target->property, variable->value) は、結んだ時点でプロパティを Variable の値にする。
+    void run_bind(const ttc::Json& op)
+    {
+        const std::string target = target_of(op);
+        tokotachi::Object* object = var(target);
+        const std::string property = op["property"].as_string();
+        std::map<std::string, ttc::Json>::const_iterator it = variables_.find(op["variable"].as_string());
+        if (!object || it == variables_.end())
+        {
+            error("cannot bind " + target + "." + property);
+            return;
+        }
+        if (!ttc::set_property(object, classes_[target], property, it->second))
         {
             error("cannot set " + classes_[target] + "." + property);
         }
@@ -397,6 +437,8 @@ private:
     tokotachi::Window* window_;
     std::map<std::string, tokotachi::Object*> vars_;
     std::map<std::string, std::string> classes_;
+    /// Variable の名前 → 値。
+    std::map<std::string, ttc::Json> variables_;
     std::vector<std::string> errors_;
 };
 

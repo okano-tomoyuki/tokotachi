@@ -55,6 +55,11 @@ void MainWindow::tokotachi_setup_ui()
     timer_refresh->interval = 5000;
     timer_refresh->on_timer = [this](tokotachi::Object* sender) { refresh(sender); };
 
+    file_name = new tokotachi::Variable<std::string>(this, "メモ.txt");
+    file_name->on_change = [this](tokotachi::Object* sender) { file_name_change(sender); };
+
+    show_hidden = new tokotachi::Variable<bool>(this);
+
     width = 720;
     height = 480;
     title = "ファイルの整理";
@@ -132,6 +137,7 @@ void MainWindow::tokotachi_setup_ui()
     page_detail_layout->add(label_name, 0, 0);
 
     line_edit_name = new tokotachi::LineEdit(page_detail);
+    tokotachi::bind(line_edit_name->text, file_name->value);
     page_detail_layout->add(line_edit_name, 0, 1);
 
     label_size = new tokotachi::Label(page_detail);
@@ -158,6 +164,7 @@ void MainWindow::tokotachi_setup_ui()
 
     check_box_hidden = new tokotachi::CheckBox(row_buttons);
     check_box_hidden->text = "隠しファイルも表示する";
+    tokotachi::bind(check_box_hidden->checked, show_hidden->value);
     row_buttons_layout->add(check_box_hidden);
 
     row_buttons_layout->add_stretch();
@@ -171,7 +178,7 @@ void MainWindow::tokotachi_setup_ui()
 
     window_layout->add(row_buttons);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="c7f4cc12">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="186f9bdf">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)
@@ -183,6 +190,10 @@ void MainWindow::action_quit_trigger(tokotachi::Object* sender)
 }
 
 void MainWindow::refresh(tokotachi::Object* sender)
+{
+}
+
+void MainWindow::file_name_change(tokotachi::Object* sender)
 {
 }
 

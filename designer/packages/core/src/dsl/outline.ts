@@ -28,7 +28,8 @@ export type OutlineKind =
   | 'status_bar'
   | 'group'
   | 'action'
-  | 'object';
+  | 'object'
+  | 'variable';
 
 export interface OutlineNode {
   /** パスを `/` でつないだもの(木の中で一意)。 */
@@ -217,6 +218,19 @@ export function outline(doc: TtuiDocument): OutlineNode[] {
         {},
         doc.objects.map((o, i) =>
           node(['objects', i], 'object', o.name, { class: o.class, editable: true }),
+        ),
+      ),
+    );
+  }
+  if (doc.variables && doc.variables.length > 0) {
+    roots.push(
+      node(
+        ['variables'],
+        'group',
+        'variables',
+        {},
+        doc.variables.map((v, i) =>
+          node(['variables', i], 'variable', v.name, { class: 'Variable' }),
         ),
       ),
     );

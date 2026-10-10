@@ -255,6 +255,36 @@ textarea.invalid {
   width: 100%;
 }
 
+/* Variable との結びつけ: 値の欄の右に、結びつける Variable の選択肢 */
+.value-cell {
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.value-cell > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.grid select.bind-select {
+  flex: none;
+  width: auto;
+  max-width: 8em;
+}
+
+.bind-select:not(.bound) {
+  opacity: 0.6;
+}
+
+.bound-value {
+  padding: 2px 0;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .handler-field,
 .color-field,
 .image-field {

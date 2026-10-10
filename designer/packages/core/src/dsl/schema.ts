@@ -10,7 +10,10 @@ import * as z from 'zod';
 export const FORMAT_VERSION = 1;
 export const DOCUMENT_EXTENSION = '.ttui.json';
 
-/** プロパティの値(型に合うかは意味の検証で調べる)。 */
+/**
+ * プロパティの値(型に合うかは意味の検証で調べる)。
+ * `{ "bind": "Variable の名前" }` は、その Variable との結びつけ(dsl-spec.md §5.2)。
+ */
 export const PropertyValue = z.json();
 export type PropertyValue = z.infer<typeof PropertyValue>;
 
@@ -249,6 +252,22 @@ export const ActionNode = z.strictObject({
 });
 export type ActionNode = z.infer<typeof ActionNode>;
 
+/** Variable の値の型(C++ の `tokotachi::Variable<T>` の T)。 */
+export const VariableType = z.enum(['bool', 'int', 'float', 'double', 'string']);
+export type VariableType = z.infer<typeof VariableType>;
+
+/**
+ * Variable(値を 1 つ持つオブジェクト。docs/adr/0016)。プロパティに `{ "bind": "名前" }` と書いて結びつける。
+ * value は初期値(型に合うかは意味の検証で調べる。省略すると T())。
+ */
+export const VariableNode = z.strictObject({
+  name: z.string(),
+  type: VariableType,
+  value: PropertyValue.optional(),
+  events: Events.optional(),
+});
+export type VariableNode = z.infer<typeof VariableNode>;
+
 /** 画面に出ないオブジェクト(Timer 等)。 */
 export const ObjectNode = z.strictObject({
   name: z.string(),
@@ -264,5 +283,6 @@ export const TtuiDocument = z.strictObject({
   window: WindowNode,
   actions: z.array(ActionNode).optional(),
   objects: z.array(ObjectNode).optional(),
+  variables: z.array(VariableNode).optional(),
 });
 export type TtuiDocument = z.infer<typeof TtuiDocument>;

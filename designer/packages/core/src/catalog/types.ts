@@ -69,6 +69,8 @@ export interface ClassInfo {
   preferred_size?: { width: number; height: number };
   /** 専用の子のキー(`tabs`・`panes`・`content`)。 */
   child_keys?: string[];
+  /** テンプレート(`Variable<T>`)。型の引数は定義ファイルに書く(Variable は `variables` の `type`)。 */
+  template?: true;
   doc?: string;
   /** デザイン時に設定できるプロパティ(継承したものを含む。宣言の順)。 */
   properties: Record<string, PropertyInfo>;

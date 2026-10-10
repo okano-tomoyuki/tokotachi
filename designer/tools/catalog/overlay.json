@@ -34,7 +34,8 @@
     "ToolBar": { "kind": "part" },
     "StatusBar": { "kind": "part" },
     "Tab": { "kind": "part" },
-    "SplitterPane": { "kind": "part" }
+    "SplitterPane": { "kind": "part" },
+    "Variable": { "kind": "part" }
   },
   "$comment_excluded": "Widget の派生で、利用者が親を渡して作れるが、パレットに出さないもの。新しい部品を足したら classes か excluded に書く。",
   "excluded": {

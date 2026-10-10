@@ -30,6 +30,7 @@ export * from './dsl/tree.ts';
 export { validateDocument } from './dsl/validate.ts';
 export { checkValue, COLOR_PATTERN, isEnumValue, isShortcut } from './dsl/values.ts';
 export * from './dsl/outline.ts';
+export { bindingOf, isBindable, variableTypeOf } from './dsl/bindings.ts';
 export {
   IMAGE_EXTENSIONS,
   imageReferences,
@@ -45,6 +46,7 @@ export {
   type EditCommand,
 } from './edit/commands.ts';
 export { minimalTextEdit, type TextEdit } from './edit/textEdit.ts';
+export { variableValue } from './edit/variables.ts';
 export type * from './protocol.ts';
 export {
   newName,

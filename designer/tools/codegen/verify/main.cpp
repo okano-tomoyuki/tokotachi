@@ -106,6 +106,13 @@ int main(int argc, char** argv)
     check(called("main_window_close"), "window close handler");
     window.tab_widget_files->on_change.get()(window.tab_widget_files);
     check(called("tab_widget_files_change"), "tab handler");
+    // Variable との結びつけ(結んだ時点で Variable の値になり、その後も双方向に伝わる)
+    check(window.line_edit_name->text.get() == "メモ.txt" && !window.check_box_hidden->checked.get(),
+          "bound initial values");
+    window.line_edit_name->text = "a.txt";
+    check(window.file_name->value.get() == "a.txt" && called("file_name_change"), "binding to variable");
+    window.show_hidden->value = true;
+    check(window.check_box_hidden->checked.get(), "binding from variable");
 
     // ダイアログ(Dialog の継承・ボタン・PlaceLayout・自由な配置・ScrollArea の中身・値の型)
     SettingsDialog* dialog = new SettingsDialog(&window);

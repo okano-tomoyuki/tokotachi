@@ -98,6 +98,7 @@
 | `window` | ○ | ウィンドウのノード | §4.1 |
 | `actions` | | Action のノードの配列 | §4.6。メニュー・ツールバー・部品の右クリックから名前で参照する |
 | `objects` | | 画面に出ないオブジェクトのノードの配列 | §4.7(Timer 等) |
+| `variables` | | Variable のノードの配列 | §4.8。プロパティを結びつける(§5.2) |
 | `$schema` | | 文字列 | エディタ向け。内容には影響しない |
 
 ## 4. ノード
@@ -202,7 +203,27 @@
 | `properties` | | 名前 → 値 | §5 |
 | `events` | | 名前 → ハンドラ名 | §6 |
 
-所有者はウィンドウ。モデル(ListModel・TreeModel)と Variable は §10 Q3・Q5。
+所有者はウィンドウ。モデル(ListModel・TreeModel)は §10 Q5。
+
+### 4.8 Variable のノード(`variables`)
+
+値を 1 つ持つオブジェクト(`tokotachi::Variable<T>`。[ADR 0016](../adr/0016-property-binding.md))。プロパティを結びつけて(§5.2)、
+複数の部品で値を共有したり、ハンドラ(`on_change`)で値の変化を受け取ったりする。
+
+| キー | 必須 | 型 | 説明 |
+|---|---|---|---|
+| `name` | ○ | 識別子 | |
+| `type` | ○ | `"bool"`・`"int"`・`"float"`・`"double"`・`"string"` | 値の型(`Variable<T>` の T) |
+| `value` | | 型に合う値 | 初期値。省略すると `T()`(`""`・`0`・`false`) |
+| `events` | | 名前 → ハンドラ名 | `on_set`(設定されるたび)・`on_change`(変わったとき) |
+
+```json
+"variables": [
+  { "name": "file_name", "type": "string", "value": "メモ.txt", "events": { "on_change": "file_name_change" } }
+]
+```
+
+所有者はウィンドウ(`new tokotachi::Variable<std::string>(this, "メモ.txt")`)。
 
 ## 5. プロパティ
 
@@ -224,6 +245,7 @@
 | `std::vector<float>` | 数値の配列 | `[160, 360]` |
 | 部品・Action・メニューへのポインタ | 同じファイルのノードの `name` | `"action_open"` |
 | `Image` | 画像のファイルの、定義ファイルのあるフォルダからの相対パス(§5.1) | `"icons/open.png"` |
+| (結びつけ) | `{ "bind": "Variable の名前" }`(§5.2) | `{ "bind": "file_name" }` |
 
 - **位置と大きさは書かない**(レイアウトが決める)。自由な配置(§4.4)の子と、ウィンドウの `width`・`height` だけが例外。
 - 最小・最大の大きさ(`minimum_size`・`maximum_size`)は書ける(レイアウトの計算に使われる)。
@@ -236,6 +258,16 @@
 - 生成するコードには、**画像のファイルの中身を埋め込む**(codegen-design.md N8)。実行するときに画像のファイルは要らず、
   作業フォルダ・実行ファイルの場所に依らない。画像のファイルを変えたら、コードを生成し直す。
 - ファイルが無いと、コードを生成できない(拡張は問題パネルにエラーを出す)。キャンバスは、拡張が読んだ中身で描く(無ければ画像なしで描く)。
+
+### 5.2 Variable との結びつけ
+
+プロパティの値に `{ "bind": "Variable の名前" }` と書くと、値を設定する代わりに、その Variable(§4.8)に結びつける
+(生成するコードは `tokotachi::bind(line_edit_name->text, file_name->value);`)。結んだ時点でプロパティは Variable の値になり、
+その後はどちらを変えても、もう一方に伝わる。同じ Variable に複数のプロパティを結びつけられる。
+
+- 結びつけられるのは、型が `bool`・`int`・`float`・`double`・`string` のプロパティで、Variable の型と同じもの(`bind` は同じ型どうしだけ)。
+- 位置と大きさ(`x`・`y`・`width`・`height`)は結びつけられない(レイアウト・デザイナーのつまみで決めるため)。
+- Variable を消すと、結びつけていたプロパティには Variable の初期値を書く(見た目は変わらない)。名前を変えると、結びつけも書き換える。
 
 ## 6. ハンドラ
 
@@ -266,7 +298,7 @@
 Bethany と同じ。
 
 - 実装は [serialize.ts](../../designer/packages/core/src/dsl/serialize.ts)。`*.ttui.json` は Prettier の対象から外している。
-- キーの順: ドキュメントは `$schema`・`format_version`・`window`・`actions`・`objects`。レイアウトは `name`・`class`・`properties`・`rows`・`columns`・`items`。ノードは `name`・`class`・`properties`・`events`・
+- キーの順: ドキュメントは `$schema`・`format_version`・`window`・`actions`・`objects`・`variables`。Variable は `name`・`type`・`value`・`events`。レイアウトは `name`・`class`・`properties`・`rows`・`columns`・`items`。ノードは `name`・`class`・`properties`・`events`・
   そのあとに子を表すキー(`menu_bar`・`tool_bar`・`status_bar`・`layout`・`children`・`tabs`・`panes`・`content`・`buttons`・`items` 等)。
   レイアウトの項目は `widget` を最後に置く(設定が先に読める)。`properties`・`events` の中はカタログの順。
 - `properties` とノードは 1 行に 1 つのキー。値が単純なもの(文字列・数値・真偽とその配列)だけのオブジェクト・配列は、
@@ -284,7 +316,7 @@ Bethany と同じ。
 |---|---|---|
 | Q1 | ファイルの拡張子 | **決定(2026-10-10)**: `*.ttui.json`(Tokotachi の UI。`tk` は cpp_tk(Tcl/Tk のラッパー)と紛らわしいので `tt` にする。JSON であることが分かり、`jsonValidation` で関連付けられる)。プロジェクトファイルも同じく `*.ttproj.json` |
 | Q2 | 生成するファイルの名前 | 定義ファイルの名前から(`main_window.ttui.json` → `main_window.hpp`・`main_window.cpp`)。クラス名は `window.name` |
-| Q3 | Variable と結びつけ(`bind`) | Tokotachi の特徴なので扱いたい。`variables`(名前・型・初期値)をドキュメントに置き、プロパティに `{ "bind": "変数の名前" }` と書く案。MVP の後 |
+| Q3 | Variable と結びつけ(`bind`) | **決定(2026-10-10)**: 案のとおり、`variables`(名前・型・初期値・ハンドラ。§4.8)をドキュメントに置き、プロパティに `{ "bind": "変数の名前" }` と書く(§5.2)。部品どうしを直接結ぶこと(読み取り専用のプロパティからの一方向の結びつけ)は扱わない(Variable を介せば同じことができる) |
 | Q4 | 画像(Action・ボタンの `icon` 等) | **決定(2026-10-10)**: 定義ファイルからの相対パスを書き、生成するコードには中身を埋め込む(§5.1)。実行時に読むと、作業フォルダ・インストール先に依って見つからなくなるため。アイコンは小さいので、ソースが大きくなるのは許す |
 | Q5 | 一覧の列・モデル(ListView の `add_column`、ListModel・TreeModel の項目) | 列はコレクション(`columns`)として書く。モデルの中身はふつうコードで作るので、デザイナーでは扱わない案 |
 | Q6 | 再利用できる部品の組み合わせ(C++Builder のフレーム) | ルートを `Widget` にしたファイルを認め、別のファイルから部品として置く。MVP の後 |

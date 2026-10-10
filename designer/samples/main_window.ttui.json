@@ -179,7 +179,10 @@
                               "column": 1,
                               "widget": {
                                 "name": "line_edit_name",
-                                "class": "LineEdit"
+                                "class": "LineEdit",
+                                "properties": {
+                                  "text": { "bind": "file_name" }
+                                }
                               }
                             },
                             {
@@ -232,7 +235,8 @@
                     "name": "check_box_hidden",
                     "class": "CheckBox",
                     "properties": {
-                      "text": "隠しファイルも表示する"
+                      "text": "隠しファイルも表示する",
+                      "checked": { "bind": "show_hidden" }
                     }
                   }
                 },
@@ -297,6 +301,18 @@
         "interval": 5000
       },
       "events": { "on_timer": "refresh" }
+    }
+  ],
+  "variables": [
+    {
+      "name": "file_name",
+      "type": "string",
+      "value": "メモ.txt",
+      "events": { "on_change": "file_name_change" }
+    },
+    {
+      "name": "show_hidden",
+      "type": "bool"
     }
   ]
 }

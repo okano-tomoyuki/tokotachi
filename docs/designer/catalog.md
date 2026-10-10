@@ -49,6 +49,7 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 | 項目 | 内容 | 例 |
 |---|---|---|
 | `classes` | パレットに出す、利用者が置けるクラスの一覧(抽象的なクラス・内部で使うクラスは書かない)。無いクラス・余分なクラスがあれば取り出しの道具がエラーにする | `Button`・`LineEdit`・`TabWidget`。`ButtonBase`・`RangeBase`・`ItemView`・`Popup` は書かない |
+| `classes` のテンプレート | `Variable<T>` は `part` として書き、ハンドラ(`on_set`・`on_change`)だけをカタログに載せる。テンプレートであることは Doxygen の XML から取り出し(`template: true`)、キャンバスの対応表には載せない(型の引数は定義ファイルの `type`。dsl-spec.md §4.8) | `Variable` |
 | `classes` の `kind` / `category` | 種類(window・widget・layout・part・object)とパレットの分類。`classes` の順がパレットの順 | 入力(`Button`・`CheckBox`…)・表示(`Label`・`ProgressBar`)・一覧(`ListView`・`TreeView`)・入れ物(`Widget`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
 | `designable` / `not_designable` | デザイン時に設定できるか。まず型で決め(読み書きできて、値の型・列挙型・文字列・配列・参照のいずれか)、そのうえでクラスごとに除く・戻す | `parent`・`bounds`・`focused` は除く(位置と大きさは `geometry` の印で表す) |
 | `accepts_children` | `layout`・`children` を書けるか | `Widget`・`Window`・`Dialog` は可、`Button` は不可 |

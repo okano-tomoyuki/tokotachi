@@ -149,6 +149,18 @@ function opsFor(node: OutlineNode): Op[] {
       run: send({ kind: 'addAction', name }, name),
     });
   }
+  if (
+    node.kind === 'window' ||
+    node.kind === 'variable' ||
+    (node.kind === 'group' && node.label === 'variables')
+  ) {
+    const name = newName(doc, 'variable');
+    ops.push({
+      label: `+ ${l10n.t('Variable')}`,
+      title: l10n.t('Add a variable'),
+      run: send({ kind: 'addVariable', name, type: 'string' }, name),
+    });
+  }
   if (movable(node)) {
     ops.push({
       label: '↑',

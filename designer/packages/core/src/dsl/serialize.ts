@@ -24,6 +24,7 @@ import type {
   TabNode,
   ToolItem,
   TtuiDocument,
+  VariableNode,
   WidgetNode,
   WindowNode,
 } from './schema.ts';
@@ -41,10 +42,14 @@ export function serializeDocument(doc: TtuiDocument): string {
 type Transform = Readonly<Record<string, (value: unknown) => unknown>>;
 
 function ordered(doc: TtuiDocument): Json {
-  return pick(doc, ['$schema', 'format_version', 'window', 'actions', 'objects'], {
+  return pick(doc, ['$schema', 'format_version', 'window', 'actions', 'objects', 'variables'], {
     window: (w) => windowNode(w as WindowNode),
     actions: (list) => (list as ActionNode[]).map((a) => classLike(a, 'Action')),
     objects: (list) => (list as ObjectNode[]).map((o) => classLike(o, o.class)),
+    variables: (list) =>
+      (list as VariableNode[]).map((v) =>
+        pick(v, ['name', 'type', 'value', 'events'], members('Variable')),
+      ),
   });
 }
 
