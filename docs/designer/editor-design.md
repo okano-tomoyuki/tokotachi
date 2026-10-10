@@ -12,7 +12,7 @@ Bethany の拡張・Webview の骨組み(Bethany の docs/designer/editor-design
 |---|---|---|
 | 1. 編集の土台 | カスタムエディタ、キャンバスの表示と選択、構造の木、インスペクタ(名前・プロパティ・ハンドラ)、診断、コード生成のコマンドと保存したときの生成、ハンドラへの移動、新しいウィンドウ、JSON Schema | 実装済み |
 | 2. 配置の編集 | パレットからの追加、ドラッグで入れる位置を変える(Qt Designer と同じく、BoxLayout は項目の間、GridLayout はセル)、削除、レイアウトの項目の設定(伸びる割合・行と列など)、レイアウトの切り替え | 実装済み |
-| 3. 仕上げ | メニュー・ツールバー・Action の編集、ズーム、見本の名前の付け替え(種類を先頭に)、プロジェクトファイルとプロジェクトのビュー(新しいプロジェクトで CMakeLists.txt・main.cpp も作る。[project-spec.md](project-spec.md)) ← 済み。日本語の訳 ← これから | 一部 |
+| 3. 仕上げ | メニュー・ツールバー・Action の編集、ズーム、見本の名前の付け替え(種類を先頭に)、プロジェクトファイルとプロジェクトのビュー(新しいプロジェクトで CMakeLists.txt・main.cpp も作る。[project-spec.md](project-spec.md))、日本語の訳 | 実装済み |
 
 ## 2. パッケージ
 
@@ -154,7 +154,10 @@ Bethany と同じ。
 - **診断**: TextDocument が変わるたびに検証して問題パネルに出す。JSON 上のパスは core の `locate` でファイル上の範囲にする。
 - **JSON Schema**: Zod のスキーマから `schema/ttui.schema.json` を作ってコミットし(`check:schema` で食い違いを見つける)、`jsonValidation` に登録する。
 - **梱包**: vsce(`--no-dependencies`、まとめた成果物とキャンバスのモジュールだけ)。拡張の ID は `tokotachi-designer`、約 1.2 MB。
-- 表示の文字は今は英語(コマンド・設定の名前だけ日本語の訳がある)。日本語の訳は第 3 段階で用意する。
+- **l10n**: 元の文字は英語で、`l10n.t('...')`(拡張は `vscode.l10n.t`)で訳す。訳は `packages/extension/l10n/bundle.l10n.ja.json`、
+  コマンド・設定の名前は `package.nls.ja.json`。Webview には拡張が HTML に埋め込んで渡し、CLI も同じ訳を使う(Bethany と同じ。Bethany と同じ文字は同じ訳)。
+  `pnpm l10n:check`(`pnpm check` に含む)で、訳の漏れ・使われていない訳・`{0}` の食い違い・コードに日本語を直接書いていないことを調べる
+  (生成するコードのコメントの定型文など、意図したものは `l10n-ignore` を付ける)。
 
 ## 8. 開発
 

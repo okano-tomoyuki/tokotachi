@@ -41,7 +41,7 @@ node packages/cli/src/main.ts generate samples/main_window.ttui.json --comment-l
 (`pnpm catalog:check` が食い違いを見つける)。新しい部品のクラスを足したら、`tools/catalog/overlay.json` の `classes`
 (パレットに出す)か `excluded`(出さない)に書く。書き忘れると取り出しの道具がエラーにする。
 
-メッセージは今は英語だけ。日本語の訳は、拡張を作るときに `packages/extension/l10n/` に置く。
+画面・メッセージの日本語の訳は `packages/extension/l10n/bundle.l10n.ja.json`(CLI も使う)。文字を足したら訳も足す(`pnpm l10n:check` が漏れを見つける)。
 
 拡張を試すには、`designer/` を VS Code で開き、実行とデバッグの「Run Extension」(F5)で開発用のホストを起動する(見本の写し `.cache/playground` が開く)。
 

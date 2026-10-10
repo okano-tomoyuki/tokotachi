@@ -28,6 +28,7 @@ import {
 import {
   configureL10n,
   hasErrors,
+  isJapanese,
   isValidIdentifier,
   l10n,
   parseDocument,
@@ -37,6 +38,7 @@ import {
   type Diagnostic,
   type TtprojDocument,
 } from '@tokotachi-designer/core';
+import ja from '../../extension/l10n/bundle.l10n.ja.json' with { type: 'json' };
 
 const USAGE =
   'Usage: ttd generate <file.ttui.json | file.ttproj.json> [--force] [--check] [--locale <ja|en>] ' +
@@ -89,7 +91,12 @@ function projectContaining(
 
 /** ウィンドウのコードを生成して書く。 */
 function generateWindow(dslPath: string, options: CppOptions, flags: Flags): number {
-  const { document, diagnostics } = parseDocument(readFileSync(dslPath, 'utf8'));
+  const text = readIfExists(dslPath);
+  if (text === undefined) {
+    console.error(l10n.t('"{0}" is not found', dslPath));
+    return 1;
+  }
+  const { document, diagnostics } = parseDocument(text);
   report(dslPath, diagnostics);
   if (!document || hasErrors(diagnostics)) {
     return 1;
@@ -106,7 +113,12 @@ function generateWindow(dslPath: string, options: CppOptions, flags: Flags): num
 
 /** プロジェクトのすべてのウィンドウと、起動部分を生成して書く。 */
 function generateWholeProject(projectPath: string, flags: Flags): number {
-  const { project, diagnostics } = parseProject(readFileSync(projectPath, 'utf8'));
+  const text = readIfExists(projectPath);
+  if (text === undefined) {
+    console.error(l10n.t('"{0}" is not found', projectPath));
+    return 1;
+  }
+  const { project, diagnostics } = parseProject(text);
   report(projectPath, diagnostics);
   if (!project || hasErrors(diagnostics)) {
     return 1;
@@ -146,8 +158,9 @@ function main(argv: readonly string[]): number {
       'source-dir': { type: 'string' },
     },
   });
-  // 訳(packages/extension/l10n)は拡張と共有する。今は英語
-  configureL10n(detectLanguage(values.locale), undefined);
+  // 訳は拡張と共有する(packages/extension/l10n)
+  const language = detectLanguage(values.locale);
+  configureL10n(language, isJapanese(language) ? ja : undefined);
   const [command, file] = positionals;
   if (command !== 'generate' || !file) {
     console.error(USAGE);

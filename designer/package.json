@@ -14,7 +14,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && pnpm --filter tokotachi-designer check:schema && node tools/canvas/table.mts --check && pnpm test",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && pnpm --filter tokotachi-designer check:schema && node tools/canvas/table.mts --check && pnpm l10n:check && pnpm test",
     "catalog:extract": "node tools/catalog/extract.mts",
     "catalog:check": "node tools/catalog/extract.mts --check",
     "codegen:verify-cpp": "node tools/codegen/verify-cpp.mts",
@@ -24,7 +24,8 @@
     "canvas:verify": "node tools/canvas/verify.mts",
     "catalog:measure": "node tools/catalog/measure.mts",
     "package": "pnpm --filter tokotachi-designer run package",
-    "codegen:verify-project": "node tools/codegen/verify-project.mts"
+    "codegen:verify-project": "node tools/codegen/verify-project.mts",
+    "l10n:check": "node tools/l10n/check.mts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
