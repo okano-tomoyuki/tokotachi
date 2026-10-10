@@ -8,11 +8,13 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buildSetup } from '@tokotachi-designer/codegen';
+import { buildSetup, type Op } from '@tokotachi-designer/codegen';
 import type { TtuiDocument } from '@tokotachi-designer/core';
 import { systemFonts } from './fonts.ts';
+import { withPlaceholders } from './placeholders.ts';
 
 export { systemFonts } from './fonts.ts';
+export { PLACEHOLDER_SIZE, withPlaceholders } from './placeholders.ts';
 
 /** 部品の位置と大きさ(ウィンドウの座標。dp)。 */
 export interface WidgetRect {
@@ -98,11 +100,32 @@ export class Canvas {
   }
 
   /** 検証を通った定義ファイルを描く。 */
-  render(doc: TtuiDocument, options: { colorScheme?: ColorScheme } = {}): RenderResult {
+  /**
+   * 検証を通った定義ファイルを描く。
+   * @param options.placeholders 中身が空の入れ物に最小の大きさを与える(デザイナーで使う。placeholders.ts)
+   * @param options.tabs 表示するタブ(TabWidget の名前 → 位置。デザイナーで、選んだ部品が入っているタブを出す)
+   */
+  render(
+    doc: TtuiDocument,
+    options: {
+      colorScheme?: ColorScheme;
+      placeholders?: boolean;
+      tabs?: Readonly<Record<string, number>>;
+    } = {},
+  ): RenderResult {
+    const target = options.placeholders === true ? withPlaceholders(doc) : doc;
+    // タブは、すべての部品を組んだ後に選ぶ(タブが無いと効かない)
+    const show = Object.entries(options.tabs ?? {}).map(([name, index]): Op => ({
+      op: 'set',
+      target: name,
+      property: 'current_index',
+      type: 'int',
+      value: index,
+    }));
     const request = {
-      window_class: doc.window.class,
+      window_class: target.window.class,
       color_scheme: options.colorScheme ?? 'LIGHT',
-      ops: buildSetup(doc).ops,
+      ops: [...buildSetup(target).ops, ...show],
     };
     const text = this.module.ccall('ttc_render', 'string', ['string'], [JSON.stringify(request)]);
     const r = JSON.parse(String(text)) as {

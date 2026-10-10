@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from 'react';
 import { selectedNode, sendEdit, useDesigner } from '../store.ts';
 import { postMessage } from '../vscode.ts';
+import { LayoutSection } from './LayoutSection.tsx';
 import { PropertyField } from './PropertyField.tsx';
 
 interface NodeJson {
@@ -130,6 +131,13 @@ export function Inspector() {
   // ドキュメントが変わったら描き直す
   useDesigner((s) => s.version);
   const [tab, setTab] = useState<'properties' | 'events'>('properties');
+  if (node?.kind === 'spacer') {
+    return (
+      <div className="inspector">
+        <LayoutSection node={node} />
+      </div>
+    );
+  }
   if (!node?.editable || node.class === undefined) {
     return (
       <div className="inspector-empty">{l10n.t('Select a widget to edit its properties.')}</div>
@@ -150,6 +158,7 @@ export function Inspector() {
         <span className="inspector-class">{node.class}</span>
         {json.name !== undefined && <NameField node={node} name={json.name} />}
       </div>
+      <LayoutSection node={node} />
       <div className="tabs">
         <button
           className={tab === 'properties' ? 'active' : ''}

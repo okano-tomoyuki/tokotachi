@@ -12,8 +12,8 @@ Tokotachi 専用の GUI デザイナー(VS Code の拡張)。設計は [docs/des
 | `tools/codegen/`     | 見本から生成した C++ を Tokotachi でビルド・実行して確かめる(`verify-cpp.mts`)、テストの期待する出力を作り直す(`golden.mts`)                               | 実装済み                     |
 | `canvas/`            | キャンバスの描画の部分(C++。Emscripten で WebAssembly にする。操作の並びを実行して描く。[ADR 0040](../docs/adr/0040-designer-canvas-ops.md))               | 実装済み                     |
 | `packages/canvas`    | WebAssembly のキャンバスを Node.js から使う(OS のフォントを探して渡す)                                                                                     | 実装済み                     |
-| `packages/extension` | VS Code の拡張(カスタムエディタ・診断・コード生成・ハンドラへの移動・新しいウィンドウ・JSON Schema。[editor-design.md](../docs/designer/editor-design.md)) | 第 1 段階                    |
-| `packages/webview`   | デザイナーの画面(React。キャンバス・構造の木・インスペクタ)                                                                                                | 第 1 段階                    |
+| `packages/extension` | VS Code の拡張(カスタムエディタ・診断・コード生成・ハンドラへの移動・新しいウィンドウ・JSON Schema。[editor-design.md](../docs/designer/editor-design.md)) | 第 2 段階                    |
+| `packages/webview`   | デザイナーの画面(React。キャンバス・構造の木・インスペクタ)                                                                                                | 第 2 段階                    |
 | `tools/canvas/`      | 対応表の生成(`table.mts`)、WebAssembly へのビルド(`build.mts`)、ネイティブとの画素の比較(`verify.mts`)                                                     | 実装済み                     |
 
 ## 開発

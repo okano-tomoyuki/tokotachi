@@ -264,3 +264,58 @@ textarea.invalid {
 .handler-field input {
   flex: 1;
 }
+
+/* ---- パレットとドラッグ ---- */
+
+.section-head {
+  padding: 4px 6px;
+  font-weight: bold;
+  cursor: default;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.palette {
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.palette-category {
+  padding: 4px 6px 2px;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.palette-item {
+  padding: 2px 6px 2px 14px;
+  cursor: grab;
+  user-select: none;
+}
+
+.palette-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.drop-container {
+  position: absolute;
+  pointer-events: none;
+  outline: 1px dashed var(--vscode-focusBorder);
+}
+
+.drop-indicator {
+  position: absolute;
+  pointer-events: none;
+  background: var(--vscode-focusBorder);
+}
+
+.drop-indicator.box {
+  background: transparent;
+  outline: 2px solid var(--vscode-focusBorder);
+}
+
+.drop-indicator.invalid {
+  background: var(--vscode-errorForeground);
+}
+
+.drop-indicator.box.invalid {
+  background: transparent;
+  outline-color: var(--vscode-errorForeground);
+}

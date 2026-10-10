@@ -49,6 +49,8 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       scheduleRender();
     };
 
+    // キャンバスで表示するタブ(Webview の選択に合わせる。定義ファイルは変えない)
+    let tabs: Readonly<Record<string, number>> = {};
     // 描き直しは、変更が続いたときは最後の内容だけにする
     let renderTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleRender = (): void => {
@@ -71,6 +73,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
           parsed.document,
           document.version,
           colorScheme(),
+          tabs,
         );
         await post({ type: 'canvas', frame });
       } catch (e) {
@@ -101,6 +104,10 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           case 'generateCode':
             void generateWindowCode(document, { quiet: false });
+            break;
+          case 'view':
+            tabs = message.tabs;
+            scheduleRender();
             break;
           case 'openAsText':
             void vscode.commands.executeCommand('vscode.openWith', document.uri, 'default');

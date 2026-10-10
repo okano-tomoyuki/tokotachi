@@ -55,4 +55,9 @@ export type WebviewToExtensionMessage =
   /** ハンドラの定義へ移動する(コードを生成してから開く)。直前に送った edit の適用の後に処理する。 */
   | { readonly type: 'goToHandler'; readonly handler: string }
   /** テキストエディタで開く。 */
-  | { readonly type: 'openAsText' };
+  | { readonly type: 'openAsText' }
+  /**
+   * キャンバスの表示だけの設定(定義ファイルは変えない)。選んだ部品が入っているタブを表示する
+   * (TabWidget の名前 → タブの位置)。
+   */
+  | { readonly type: 'view'; readonly tabs: Readonly<Record<string, number>> };

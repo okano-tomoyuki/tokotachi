@@ -39,3 +39,11 @@ export {
 } from './edit/commands.ts';
 export { minimalTextEdit, type TextEdit } from './edit/textEdit.ts';
 export type * from './protocol.ts';
+export {
+  newName,
+  newWidget,
+  snakeCase,
+  valueAt,
+  type Positions,
+  type Slot,
+} from './edit/structure.ts';

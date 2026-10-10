@@ -12,6 +12,21 @@ import { l10n } from '../l10n.ts';
 import type { JsonPath } from '../dsl/diagnostics.ts';
 import type { PropertyValue, TtuiDocument } from '../dsl/schema.ts';
 import { namedNodes } from '../dsl/tree.ts';
+import { validateDocument } from '../dsl/validate.ts';
+import type { WidgetNode } from '../dsl/schema.ts';
+import {
+  addObject,
+  addSpacer,
+  addWidget,
+  CommandError,
+  moveWidget,
+  removeNodes,
+  setItem,
+  setLayout,
+  tidy,
+  type Positions,
+  type Slot,
+} from './structure.ts';
 
 export type EditCommand =
   /** プロパティを設定する。値が null なら書いたものを消す(既定値に戻す)。 */
@@ -30,6 +45,34 @@ export type EditCommand =
   /** ノードの名前を変える(ウィンドウなら生成するクラスの名前)。参照(Action の名前等)も書き換える。 */
   | { readonly kind: 'rename'; readonly target: JsonPath; readonly name: string }
   /** 複数のコマンドを 1 回の変更として適用する(どれかが失敗したら何も変えない)。 */
+  /** 部品を足す(パレットから)。 */
+  | { readonly kind: 'addWidget'; readonly slot: Slot; readonly widget: WidgetNode }
+  /** 画面に出ないオブジェクト(Timer 等)を足す。名前は空いているもの(timer_1)。 */
+  | { readonly kind: 'addObject'; readonly class: string }
+  /** 部品を別の場所へ移す(レイアウトの中の位置・別の入れ物)。 */
+  | { readonly kind: 'moveWidget'; readonly target: JsonPath; readonly slot: Slot }
+  /** ノード(部品・空き・タブ・区画・レイアウト・Action・オブジェクト)を消す。 */
+  | { readonly kind: 'remove'; readonly targets: readonly JsonPath[] }
+  /** BoxLayout に空き(伸びる空き・固定の空き)を足す。 */
+  | {
+      readonly kind: 'addSpacer';
+      readonly layout: JsonPath;
+      readonly index: number;
+      readonly spacer: { readonly stretch: number } | { readonly spacing: number };
+    }
+  /** レイアウトの項目の設定(伸びる割合・行と列・置き方など)を変える。null なら消す。 */
+  | {
+      readonly kind: 'setItem';
+      readonly target: JsonPath;
+      readonly values: Readonly<Record<string, PropertyValue>>;
+    }
+  /** 部品(ウィンドウ)のレイアウトを変える。null なら外して自由な配置にする(子の位置は positions)。 */
+  | {
+      readonly kind: 'setLayout';
+      readonly target: JsonPath;
+      readonly layout: string | null;
+      readonly positions?: Positions;
+    }
   | { readonly kind: 'batch'; readonly commands: readonly EditCommand[] };
 
 export type CommandResult =
@@ -37,8 +80,6 @@ export type CommandResult =
   | { readonly ok: false; readonly error: string };
 
 type Json = Record<string, unknown>;
-
-class CommandError extends Error {}
 
 function isObject(value: unknown): value is Json {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -272,6 +313,27 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
     case 'rename':
       rename(doc, command.target, command.name);
       return;
+    case 'addWidget':
+      addWidget(doc, command.slot, command.widget);
+      return;
+    case 'addObject':
+      addObject(doc, command.class);
+      return;
+    case 'moveWidget':
+      moveWidget(doc, command.target, command.slot);
+      return;
+    case 'remove':
+      removeNodes(doc, command.targets);
+      return;
+    case 'addSpacer':
+      addSpacer(doc, command.layout, command.index, command.spacer);
+      return;
+    case 'setItem':
+      setItem(doc, command.target, command.values);
+      return;
+    case 'setLayout':
+      setLayout(doc, command.target, command.layout, command.positions);
+      return;
     case 'batch':
       for (const c of command.commands) {
         apply(doc, c);
@@ -280,16 +342,36 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
   }
 }
 
-/** コマンドを適用した新しいドキュメント(元のドキュメントは変えない)。 */
+/** 検証のエラーの見分け(種類と位置)。 */
+function errorKeys(doc: TtuiDocument): Set<string> {
+  return new Set(
+    validateDocument(doc)
+      .filter((d) => d.severity === 'error')
+      .map((d) => `${d.code}:${d.path.join('.')}`),
+  );
+}
+
+/**
+ * コマンドを適用した新しいドキュメント(元のドキュメントは変えない)。
+ * 適用して新しい検証のエラーが出るなら(GridLayout のセルの重なり等)、失敗にする。
+ */
 export function applyCommand(doc: TtuiDocument, command: EditCommand): CommandResult {
   const copy = JSON.parse(JSON.stringify(doc)) as TtuiDocument;
   try {
     apply(copy, command);
+    tidy(copy);
   } catch (e) {
     if (e instanceof CommandError) {
       return { ok: false, error: e.message };
     }
     throw e;
+  }
+  const before = errorKeys(doc);
+  const added = validateDocument(copy).find(
+    (d) => d.severity === 'error' && !before.has(`${d.code}:${d.path.join('.')}`),
+  );
+  if (added) {
+    return { ok: false, error: added.message };
   }
   return { ok: true, document: copy };
 }

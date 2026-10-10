@@ -10,8 +10,11 @@ import {
   l10n,
   type CanvasRect,
   type OutlineNode,
+  valueAt,
 } from '@tokotachi-designer/core';
 import { useEffect, useMemo, useRef } from 'react';
+import { beginDrag } from '../dragController.ts';
+import { dropTarget } from '../dropTarget.ts';
 import { selectedNode, sendEdit, useDesigner } from '../store.ts';
 import { postMessage } from '../vscode.ts';
 
@@ -44,6 +47,8 @@ export function CanvasView() {
   const roots = useDesigner((s) => s.outline);
   const selected = useDesigner(selectedNode);
   const select = useDesigner((s) => s.select);
+  const drag = useDesigner((s) => s.drag);
+  const target = useDesigner((s) => s.target);
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -94,6 +99,7 @@ export function CanvasView() {
   };
 
   const selectionRect = rectOf(selected, roots, frame.rects);
+  const document = useDesigner.getState().document;
   return (
     <div className="canvas-scroll">
       <div className="window-frame" style={{ width }}>
@@ -101,6 +107,29 @@ export function CanvasView() {
         <div
           className="canvas-surface"
           style={{ width, height }}
+          onMouseDown={(e) => {
+            // 部品を押したまま動かしたら、移すドラッグにする
+            if (e.button !== 0) {
+              return;
+            }
+            const p = point(e);
+            const node = hit(p.x, p.y);
+            if (node?.kind === 'widget') {
+              beginDrag({ kind: 'move', path: node.path, id: node.id }, e);
+            }
+          }}
+          onMouseMove={(e) => {
+            if (!drag || !document) {
+              return;
+            }
+            const p = point(e);
+            useDesigner.setState({ target: dropTarget(document, roots, frame, p.x, p.y, drag) });
+          }}
+          onMouseLeave={() => {
+            if (drag) {
+              useDesigner.setState({ target: undefined });
+            }
+          }}
           onClick={(e) => {
             const p = point(e);
             select(hit(p.x, p.y)?.id ?? 'window');
@@ -116,24 +145,20 @@ export function CanvasView() {
               return;
             }
             // ハンドラが無ければ既定の名前で設定してから移動する
-            const doc = useDesigner.getState().document;
-            const target = node.path;
-            let current: unknown = doc;
-            for (const key of target) {
-              current = (current as Record<string | number, unknown> | undefined)?.[key];
-            }
-            const events = (current as { events?: Record<string, string> } | undefined)?.events;
+            const events = (
+              valueAt(document, node.path) as { events?: Record<string, string> } | undefined
+            )?.events;
             const handler =
               events?.[event] ??
               defaultHandlerName(node.kind === 'window' ? undefined : node.label, event);
             if (events?.[event] === undefined) {
-              sendEdit({ kind: 'setEvent', target, event, handler });
+              sendEdit({ kind: 'setEvent', target: node.path, event, handler });
             }
             postMessage({ type: 'goToHandler', handler });
           }}
         >
           <canvas ref={ref} style={{ width, height }} />
-          {selectionRect && (
+          {selectionRect && !drag && (
             <div
               className="selection"
               style={{
@@ -143,6 +168,28 @@ export function CanvasView() {
                 height: selectionRect.height,
               }}
             />
+          )}
+          {target && (
+            <>
+              <div
+                className="drop-container"
+                style={{
+                  left: target.container.x,
+                  top: target.container.y,
+                  width: target.container.width,
+                  height: target.container.height,
+                }}
+              />
+              <div
+                className={`drop-indicator ${target.indicator.shape}${target.slot ? '' : ' invalid'}`}
+                style={{
+                  left: target.indicator.x,
+                  top: target.indicator.y,
+                  width: target.indicator.width,
+                  height: target.indicator.height,
+                }}
+              />
+            </>
           )}
         </div>
       </div>

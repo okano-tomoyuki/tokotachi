@@ -1,12 +1,57 @@
-import { hasErrors, l10n } from '@tokotachi-designer/core';
+import { hasErrors, l10n, type OutlineNode } from '@tokotachi-designer/core';
 import { CanvasView } from './components/CanvasView.tsx';
 import { Inspector } from './components/Inspector.tsx';
 import { Problems } from './components/Problems.tsx';
 import { Tree } from './components/Tree.tsx';
-import { useDesigner } from './store.ts';
+import { useEffect } from 'react';
+import { Palette } from './components/Palette.tsx';
+import { selectedNode, sendEdit, useDesigner } from './store.ts';
 import { postMessage } from './vscode.ts';
 
+/** 消せるノード(ウィンドウ・メニューの項目などは除く)。 */
+function canRemove(node: OutlineNode | undefined): boolean {
+  return (
+    node !== undefined &&
+    [
+      'widget',
+      'spacer',
+      'tab',
+      'pane',
+      'action',
+      'object',
+      'menu_bar',
+      'tool_bar',
+      'status_bar',
+    ].includes(node.kind)
+  );
+}
+
+function removeSelected(): void {
+  const node = selectedNode(useDesigner.getState());
+  if (node && canRemove(node)) {
+    // タブ・区画は、中の部品ごと消す
+    sendEdit({ kind: 'remove', targets: [node.path] });
+  }
+}
+
 export function App() {
+  const selected = useDesigner(selectedNode);
+  useEffect(() => {
+    // Delete キーで消す(入力欄の中では消さない)
+    const key = (e: KeyboardEvent): void => {
+      const t = e.target as HTMLElement | null;
+      if (t && ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName)) {
+        return;
+      }
+      if (e.key === 'Delete') {
+        removeSelected();
+      }
+    };
+    window.addEventListener('keydown', key);
+    return () => {
+      window.removeEventListener('keydown', key);
+    };
+  }, []);
   const document = useDesigner((s) => s.document);
   const diagnostics = useDesigner((s) => s.diagnostics);
   const editError = useDesigner((s) => s.editError);
@@ -54,10 +99,18 @@ export function App() {
         >
           {l10n.t('Open as Text')}
         </button>
+        <button
+          title={l10n.t('Delete the selected item (Delete)')}
+          disabled={!canRemove(selected)}
+          onClick={removeSelected}
+        >
+          {l10n.t('Delete')}
+        </button>
         {editError !== undefined && <span className="edit-error">{editError}</span>}
       </div>
       <div className="panes">
         <div className="pane tree-pane">
+          <Palette />
           <Tree />
         </div>
         <div className="pane canvas-pane">

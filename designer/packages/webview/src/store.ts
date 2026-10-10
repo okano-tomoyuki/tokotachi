@@ -4,6 +4,7 @@
  */
 import {
   findOutlineNode,
+  flattenOutline,
   outline,
   parseDocument,
   type CanvasFrame,
@@ -14,6 +15,7 @@ import {
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import { create } from 'zustand';
+import type { Drag, DropTarget } from './dropTarget.ts';
 import { postMessage } from './vscode.ts';
 
 export interface DesignerState {
@@ -29,6 +31,9 @@ export interface DesignerState {
   readonly selection: string | undefined;
   /** 最後の編集の失敗(しばらく表示する)。 */
   readonly editError: string | undefined;
+  /** ドラッグしているもの(パレットの部品・空き、移す部品)と、入れる場所。 */
+  readonly drag: Drag | undefined;
+  readonly target: DropTarget | undefined;
   readonly select: (id: string | undefined) => void;
 }
 
@@ -42,14 +47,19 @@ export const useDesigner = create<DesignerState>()((set) => ({
   canvasError: undefined,
   selection: 'window',
   editError: undefined,
+  drag: undefined,
+  target: undefined,
   select: (id) => {
     set({ selection: id });
   },
 }));
 
 let nextRequestId = 1;
+/** 足した・移した部品の名前。ドキュメントが届いたら、その部品を選ぶ。 */
+let pendingSelection: string | undefined;
 
-export function sendEdit(command: EditCommand): void {
+export function sendEdit(command: EditCommand, select?: string): void {
+  pendingSelection = select;
   postMessage({ type: 'edit', requestId: nextRequestId++, command });
 }
 
@@ -68,9 +78,21 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
       const { document, diagnostics } = parseDocument(message.text);
       useDesigner.setState((s) => {
         const tree = document ? outline(document) : [];
-        // 選んでいたノードが無くなったら、ウィンドウを選ぶ
+        // 足した・移した部品を選ぶ。選んでいたノードが無くなったら、ウィンドウを選ぶ
+        const added =
+          pendingSelection === undefined
+            ? undefined
+            : flattenOutline(tree).find(
+                (n) => (n.kind === 'widget' || n.kind === 'object') && n.label === pendingSelection,
+              );
+        if (added) {
+          pendingSelection = undefined;
+        }
         const selection =
-          s.selection !== undefined && findOutlineNode(tree, s.selection) ? s.selection : 'window';
+          added?.id ??
+          (s.selection !== undefined && findOutlineNode(tree, s.selection)
+            ? s.selection
+            : 'window');
         return {
           version: message.version,
           fileName: message.fileName,

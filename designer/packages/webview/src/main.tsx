@@ -1,8 +1,8 @@
-import { configureL10n, type L10nBundle } from '@tokotachi-designer/core';
+import { configureL10n, valueAt, type L10nBundle } from '@tokotachi-designer/core';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
-import { handleMessage } from './store.ts';
+import { handleMessage, selectedNode, useDesigner } from './store.ts';
 import { onMessage, postMessage } from './vscode.ts';
 import './style.css';
 
@@ -18,6 +18,31 @@ configureL10n(
 );
 
 onMessage(handleMessage);
+
+// 選んだ部品が入っているタブを、キャンバスで表示する(定義ファイルは変えない)
+let lastTabs = '{}';
+useDesigner.subscribe((state, previous) => {
+  if (state.selection === previous.selection && state.document === previous.document) {
+    return;
+  }
+  const node = selectedNode(state);
+  const tabs: Record<string, number> = {};
+  const path = node?.path ?? [];
+  path.forEach((key, i) => {
+    const index = path[i + 1];
+    if (key === 'tabs' && typeof index === 'number') {
+      const owner = valueAt(state.document, path.slice(0, i)) as { name?: string } | undefined;
+      if (owner?.name !== undefined) {
+        tabs[owner.name] = index;
+      }
+    }
+  });
+  const text = JSON.stringify(tabs);
+  if (text !== lastTabs) {
+    lastTabs = text;
+    postMessage({ type: 'view', tabs });
+  }
+});
 createRoot(container).render(
   <StrictMode>
     <App />

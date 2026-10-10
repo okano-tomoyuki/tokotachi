@@ -20,9 +20,10 @@ export async function renderCanvas(
   doc: TtuiDocument,
   version: number,
   colorScheme: 'LIGHT' | 'DARK',
+  tabs: Readonly<Record<string, number>>,
 ): Promise<CanvasFrame> {
   const canvas = await load(context);
-  const r = canvas.render(doc, { colorScheme });
+  const r = canvas.render(doc, { colorScheme, placeholders: true, tabs });
   if (r.errors.length > 0) {
     console.warn(`Tokotachi Designer: ${r.errors.join(', ')}`);
   }
