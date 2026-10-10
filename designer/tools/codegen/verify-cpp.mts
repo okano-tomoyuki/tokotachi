@@ -50,10 +50,13 @@ function generate(file: string): void {
   if (!parsed.document || hasErrors(parsed.diagnostics)) {
     throw new Error(`見本の定義ファイル ${file} に誤りがある`);
   }
-  const generated = generateCpp(parsed.document, file, () => undefined, {
-    ...DEFAULT_CPP_OPTIONS,
-    commentLocale: 'ja',
-  });
+  const generated = generateCpp(
+    parsed.document,
+    file,
+    () => undefined,
+    { ...DEFAULT_CPP_OPTIONS, commentLocale: 'ja' },
+    (path) => readFileSync(join(designer, 'samples', path)),
+  );
   for (const f of generated.files) {
     if (!f.result.ok) {
       throw new Error(`${f.path}: ${f.result.error}`);

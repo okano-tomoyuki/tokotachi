@@ -58,7 +58,7 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 | `geometry` | 位置と大きさのプロパティ(ウィンドウと自由な配置の子だけに書ける) | `Widget` の `x`・`y`・`width`・`height` |
 | `after_children` | 子(タブ・区画)を入れた後でないと効かないプロパティ(生成するコードでは子の後に設定する。codegen-design.md §4) | `TabWidget::current_index`・`Splitter::sizes` |
 | `extra_enums`・`extra_values` | プロパティの型には出てこないが、定義ファイルで使う列挙型・値の型 | `Align`・`Anchor`・`DialogButton`・`ColorRole`・`Placement`・`Color` |
-| `special_values` | メンバではなく専用の書き方で表す値の型 | `ThemeColor`・`Shortcut` |
+| `special_values` | メンバではなく専用の書き方で表す値の型 | `ThemeColor`・`Shortcut`・`Image`(パスで書く。dsl-spec.md §5.1) |
 
 インスペクタの並びは宣言の順(カタログの順)のままにする。宣言の順で設定すれば正しく働くことを確かめたので(範囲の `minimum`・`maximum` が `value` の前、等)、並びを変える補足は今は持たない。
 

@@ -189,6 +189,9 @@ function NodeEditor({ node }: { node: OutlineNode }) {
                           properties: { [name]: v },
                         });
                       }}
+                      onPickImage={() => {
+                        postMessage({ type: 'pickImage', target: node.path, property: name });
+                      }}
                     />
                   </td>
                 </tr>

@@ -7,11 +7,18 @@
  *   ハンドラの雛形、tokotachi_namespace_end。
  * - 生成したコードは tokotachi:: を省かずに書き、using namespace を書かない(N2)。
  */
-import { getCatalog, namedNodes, type TtuiDocument } from '@tokotachi-designer/core';
+import {
+  getCatalog,
+  isImageType,
+  namedNodes,
+  normalizePath,
+  type TtuiDocument,
+} from '@tokotachi-designer/core';
 import { generatedComments } from '../comments.ts';
 import { buildSetup, type Arg, type Op } from '../model.ts';
 import type { CppTarget, CommentLocale } from '../names.ts';
 import type { GeneratedCode, HandlerStub, Region } from '../region.ts';
+import { imageDefinitions, imageExpression, type EmbeddedImage } from './images.ts';
 import { cppString, cppValue, enumValue, placementStatements } from './values.ts';
 
 const INDENT = '    ';
@@ -57,16 +64,25 @@ function assignee(variable: string, cls: string, declare: boolean): string {
   return declare ? `tokotachi::${cls}* ${variable}` : variable;
 }
 
-/** 操作の並びを tokotachi_setup_ui の中身の行にする(空行は '')。 */
-function printOps(ops: readonly Op[]): string[] {
+/**
+ * 操作の並びを tokotachi_setup_ui の中身の行にする(空行は '')。
+ * @param images 画像のパス(正規化したもの)→ 埋め込んだ配列の名前
+ */
+function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): string[] {
   return ops.flatMap((op): string[] => {
     switch (op.op) {
       case 'new':
         return [
           `${assignee(op.variable, op.class, op.declare)} = new tokotachi::${op.class}(${op.parent ?? ''});`,
         ];
-      case 'set':
-        return [`${access(op.target, op.property)} = ${cppValue(op.type, op.value)};`];
+      case 'set': {
+        const image =
+          isImageType(op.type) && typeof op.value === 'string'
+            ? images.get(normalizePath(op.value))
+            : undefined;
+        const value = image === undefined ? cppValue(op.type, op.value) : imageExpression(image);
+        return [`${access(op.target, op.property)} = ${value};`];
+      }
       case 'connect':
         return [
           `${access(op.target, op.property)} = [this](${paramList(op.handlerType)}) { ${op.handler}(${argList(op.handlerType)}); };`,
@@ -107,18 +123,20 @@ function namespaceEnd(namespace: readonly string[]): string {
 
 /**
  * @param sourceName 定義ファイルの名前(生成物の説明に使う)
+ * @param images 埋め込む画像(定義ファイルが参照するもの。cpp/images.ts の embedImages)
  */
 export function emitCpp(
   doc: TtuiDocument,
   sourceName: string,
   target: CppTarget,
   locale: CommentLocale,
+  images: readonly EmbeddedImage[] = [],
 ): CppFiles {
   const comments = generatedComments(locale);
   const { className, includeGuard, namespace } = target;
   const base = doc.window.class;
   const setup = buildSetup(doc);
-  const body = printOps(setup.ops);
+  const body = printOps(setup.ops, new Map(images.map((i) => [i.path, i.variable])));
   const members = namedNodes(doc);
 
   const declarations: Region = {
@@ -190,6 +208,7 @@ export function emitCpp(
     id: 'tokotachi_setup_ui',
     indent: 0,
     content: [
+      ...imageDefinitions(images, comments.images),
       `// ${comments.setupUi}`,
       `void ${className}::tokotachi_setup_ui()`,
       '{',

@@ -1,12 +1,15 @@
 /**
  * 定義ファイルの検証の結果を問題パネルに出す(Bethany と同じ)。JSON 上の位置は core の locate でファイル上の範囲にする。
  */
+import { existsSync } from 'node:fs';
 import {
   DOCUMENT_EXTENSION,
+  imageReferences,
   locate,
   parseDocument,
   parseProject,
   PROJECT_EXTENSION,
+  type Diagnostic,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 
@@ -18,7 +21,22 @@ export function registerDiagnostics(): vscode.Disposable {
       return;
     }
     const text = document.getText();
-    const { diagnostics } = isProject ? parseProject(text) : parseDocument(text);
+    const parsed = isProject ? undefined : parseDocument(text);
+    const diagnostics: Diagnostic[] = [...(parsed?.diagnostics ?? parseProject(text).diagnostics)];
+    // 画像のファイルがあるか(無ければコードを生成できない)
+    if (parsed?.document && document.uri.scheme === 'file') {
+      const directory = vscode.Uri.joinPath(document.uri, '..');
+      for (const ref of imageReferences(parsed.document)) {
+        if (!existsSync(vscode.Uri.joinPath(directory, ref.path).fsPath)) {
+          diagnostics.push({
+            severity: 'error',
+            code: 'missing-image',
+            message: vscode.l10n.t('The image file "{0}" is not found', ref.path),
+            path: ref.at,
+          });
+        }
+      }
+    }
     collection.set(
       document.uri,
       diagnostics.map((d) => {

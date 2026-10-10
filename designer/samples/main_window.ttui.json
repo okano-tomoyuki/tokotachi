@@ -261,7 +261,8 @@
       "name": "action_open",
       "properties": {
         "text": "開く(&O)...",
-        "shortcut": "Ctrl+O"
+        "shortcut": "Ctrl+O",
+        "icon": "icons/open.png"
       },
       "events": { "on_trigger": "action_open_trigger" }
     },

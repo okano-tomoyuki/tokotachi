@@ -4,7 +4,8 @@
 // 画面なし(SDL の offscreen)で描く。生成したコードも同じ並びから作るので、描いた画面は生成したコードが組む画面と同じになる。
 //
 //   ttc_configure(config)  拡張を動かしている環境(フォントのファイル・OS・デスクトップ)を JSON で渡す。最初の描画の前に 1 回呼ぶ
-//   ttc_render(request)    操作の並びを実行して描き、結果(大きさ・画素の場所・各変数の部品の位置)を JSON で返す
+//   ttc_render(request)    操作の並びを実行して描き、結果(大きさ・画素の場所・各変数の部品の位置)を JSON で返す。
+//                          画像のプロパティの値(パス)は、request の images(パス → base64 の中身)で画像にする
 //   ttc_defaults()         カタログの各クラスを作って、プロパティの既定値と望む大きさを JSON で返す(カタログの既定値の測定)
 #include <cstdint>
 #include <cstdlib>
@@ -399,6 +400,22 @@ private:
     std::vector<std::string> errors_;
 };
 
+/// 拡張が読んだ画像(パス → base64 の中身)を、プロパティに設定できるようにする。
+void set_images(const ttc::Json& images)
+{
+    std::map<std::string, tokotachi::Image> decoded;
+    for (std::size_t i = 0; i < images.members().size(); ++i)
+    {
+        const std::pair<std::string, ttc::Json>& m = images.members()[i];
+        std::vector<unsigned char> bytes;
+        if (m.second.is_string() && ttc::decode_base64(m.second.as_string(), bytes) && !bytes.empty())
+        {
+            decoded[m.first] = tokotachi::Image::load_from_data(&bytes[0], bytes.size());
+        }
+    }
+    ttc::set_images(decoded);
+}
+
 ttc::Json number(double v)
 {
     return ttc::Json(v);
@@ -458,6 +475,7 @@ EMSCRIPTEN_KEEPALIVE const char* ttc_render(const char* request_text)
     }
     g_app->color_scheme =
         request["color_scheme"].as_string() == "DARK" ? tokotachi::ColorScheme::DARK : tokotachi::ColorScheme::LIGHT;
+    set_images(request["images"]);
 
     const std::string window_class = request["window_class"].as_string();
     tokotachi::Dialog* dialog = nullptr;

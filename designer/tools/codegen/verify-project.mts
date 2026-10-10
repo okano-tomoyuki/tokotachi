@@ -4,7 +4,7 @@
 // ウィンドウ・起動部分・CMakeLists.txt を生成して、インストールした Tokotachi(find_package)でビルドする。
 // Tokotachi はリポジトリのビルド(既定は ../build。環境変数 TOKOTACHI_BUILD_DIR で変えられる)から、作業フォルダにインストールする。
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateCpp, generateProject, windowCppOptions } from '@tokotachi-designer/codegen';
@@ -42,8 +42,16 @@ const windows = (doc.windows ?? []).map((path) => {
   write(join(project, path), text);
   return { path, doc: TtuiDocument.parse(JSON.parse(text)) };
 });
+// 見本が参照する画像も写す(生成したコードには埋め込むので、ビルドには要らない)
+cpSync(join(designer, 'samples', 'icons'), join(project, 'ui', 'icons'), { recursive: true });
 for (const w of windows) {
-  const generated = generateCpp(w.doc, w.path, () => undefined, windowCppOptions(doc, w.path));
+  const generated = generateCpp(
+    w.doc,
+    w.path,
+    () => undefined,
+    windowCppOptions(doc, w.path),
+    (path) => readFileSync(join(designer, 'samples', path)),
+  );
   for (const f of generated.files) {
     if (!f.result.ok) {
       throw new Error(f.result.error);

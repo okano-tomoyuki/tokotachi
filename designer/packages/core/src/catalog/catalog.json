@@ -3428,6 +3428,13 @@
           "declared_in": "Action",
           "default": ""
         },
+        "icon": {
+          "type": {
+            "value": "Image"
+          },
+          "declared_in": "Action",
+          "doc": "ツールバーのボタンに出す画像(メニューには出さない)。"
+        },
         "tooltip": {
           "type": "string",
           "declared_in": "Action",
@@ -3958,6 +3965,9 @@
       "members": {
         "size": "float"
       }
+    },
+    "Image": {
+      "special": true
     },
     "Margins": {
       "members": {

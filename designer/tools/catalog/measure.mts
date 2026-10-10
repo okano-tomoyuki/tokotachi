@@ -26,7 +26,10 @@ for (const [cls, info] of Object.entries(catalog.classes)) {
     continue;
   }
   for (const [name, p] of Object.entries(info.properties)) {
-    if (name in m.properties) {
+    if (m.properties[name] === null) {
+      // 値で書けない既定値(画像の「無し」)は書かない
+      delete p.default;
+    } else if (name in m.properties) {
       p.default = m.properties[name];
       count++;
     } else {

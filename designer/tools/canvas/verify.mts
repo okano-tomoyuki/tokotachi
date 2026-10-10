@@ -6,7 +6,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Canvas } from '@tokotachi-designer/canvas';
-import { hasErrors, parseDocument } from '@tokotachi-designer/core';
+import {
+  hasErrors,
+  imageReferences,
+  normalizePath,
+  parseDocument,
+  type TtuiDocument,
+} from '@tokotachi-designer/core';
 import { decodePng, encodePng } from './png.mts';
 
 const designer = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -14,6 +20,16 @@ const native = join(designer, '.cache', 'verify-cpp');
 const work = join(designer, '.cache', 'canvas-verify');
 
 const SAMPLES = ['main_window', 'settings_dialog'];
+
+/** 見本が参照する画像を読む。 */
+function sampleImages(doc: TtuiDocument): Map<string, Uint8Array> {
+  return new Map(
+    imageReferences(doc).map((r) => {
+      const path = normalizePath(r.path);
+      return [path, readFileSync(join(designer, 'samples', path))];
+    }),
+  );
+}
 
 async function main(): Promise<void> {
   mkdirSync(work, { recursive: true });
@@ -28,13 +44,14 @@ async function main(): Promise<void> {
     if (!parsed.document || hasErrors(parsed.diagnostics)) {
       throw new Error(`${name}: 定義ファイルに誤りがある`);
     }
+    const images = sampleImages(parsed.document);
     t = performance.now();
-    const first = canvas.render(parsed.document);
+    const first = canvas.render(parsed.document, { images });
     const firstMs = performance.now() - t;
     t = performance.now();
     const N = 20;
     for (let i = 0; i < N; i++) {
-      canvas.render(parsed.document);
+      canvas.render(parsed.document, { images });
     }
     const eachMs = (performance.now() - t) / N;
     writeFileSync(join(work, `${name}.png`), encodePng(first));

@@ -57,6 +57,15 @@ export type WebviewToExtensionMessage =
   /** テキストエディタで開く。 */
   | { readonly type: 'openAsText' }
   /**
+   * 画像のファイルを選んでもらい、ノードのプロパティに定義ファイルからの相対パスを設定する
+   * (選ばなければ何もしない。設定は edit と同じく 1 回の変更)。
+   */
+  | {
+      readonly type: 'pickImage';
+      readonly target: readonly (string | number)[];
+      readonly property: string;
+    }
+  /**
    * キャンバスの表示だけの設定(定義ファイルは変えない)。選んだ部品が入っているタブを表示する
    * (TabWidget の名前 → タブの位置)。
    */

@@ -256,13 +256,16 @@ textarea.invalid {
 }
 
 .handler-field,
-.color-field {
+.color-field,
+.image-field {
   display: flex;
   gap: 4px;
 }
 
-.handler-field input {
+.handler-field input,
+.image-field input {
   flex: 1;
+  min-width: 0;
 }
 
 /* ---- パレットとドラッグ ---- */

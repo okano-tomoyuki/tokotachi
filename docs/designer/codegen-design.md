@@ -244,6 +244,7 @@ int main(int argc, char** argv)
 | N5 | 既定値 | 定義ファイルに書いたプロパティだけを書き出す |
 | N6 | レイアウトの `add` の引数 | 既定値と同じ後ろの引数は省く(`add(w)`、`add(w, 1)`)。途中の引数を書くときは、その前の引数も書く |
 | N7 | 予約の名前 | 生成したコードが使うメンバ関数・区間には接頭辞 `tokotachi_` を付ける(`tokotachi_setup_ui`)。ノードの `name`・ハンドラの名前に `tokotachi_` で始まる名前は使えない |
+| N8 | 画像 | 定義ファイルが参照する画像のファイル(dsl-spec.md §5.1)の中身を、区間 `tokotachi_setup_ui` の先頭の無名の名前空間に `const unsigned char tokotachi_image_<パス>[]` として書き(同じファイルは 1 つ。1 行に 16 バイト)、`tokotachi::Image::load_from_data(配列, sizeof(配列))` で読む。区間の中なので、既存のファイルの形は変わらない。読めない画像があれば、何も書かずにエラーにする。実装は [cpp/images.ts](../../designer/packages/codegen/src/cpp/images.ts) |
 
 ## 6. Bethany から引き継ぐ決まり
 
@@ -267,7 +268,8 @@ int main(int argc, char** argv)
   3. 参照(メニュー・ツールバーの Action)・値の型(Margins・Font・色・Shortcut 等)・配列が設定されていること。
 - 生成したコードは `-Wall -Wextra -pedantic -Werror`(使っていない引数を除く)でコンパイルする。
 - 実装は [designer/tools/codegen/verify-cpp.mts](../../designer/tools/codegen/verify-cpp.mts)(`pnpm codegen:verify-cpp`)。
-  ハンドラの雛形の中身を「呼ばれたことを記録する処理」に書き換えてビルドし、画面なし(offscreen)で開いて 34 の項目を確かめる。
+  ハンドラの雛形の中身を「呼ばれたことを記録する処理」に書き換えてビルドし、画面なし(offscreen)で開いて 35 の項目を確かめる
+  (埋め込んだ画像の確認を 2026-10-10 に加えた)。
   2026-10-10 に Windows(MinGW)と Linux(WSL。生成したファイルを CMake で直接ビルド)で、すべて通った。
 
 ## 8. プロジェクトと設定

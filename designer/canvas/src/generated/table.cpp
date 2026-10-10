@@ -5151,6 +5151,16 @@ bool set_Action(tokotachi::Action* o, const std::string& p, const Json& v)
         o->shortcut = t;
         return true;
     }
+    if (p == "icon")
+    {
+        tokotachi::Image t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->icon = t;
+        return true;
+    }
     if (p == "tooltip")
     {
         std::string t;
@@ -5204,6 +5214,11 @@ bool get_Action(tokotachi::Action* o, const std::string& p, Json& out)
     if (p == "shortcut")
     {
         out = to_json(o->shortcut.get());
+        return true;
+    }
+    if (p == "icon")
+    {
+        out = to_json(o->icon.get());
         return true;
     }
     if (p == "tooltip")
@@ -6343,7 +6358,7 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "Action")
     {
-        return std::vector<std::string>{"text", "shortcut", "tooltip", "enabled", "checkable", "checked"};
+        return std::vector<std::string>{"text", "shortcut", "icon", "tooltip", "enabled", "checkable", "checked"};
     }
     if (cls == "MenuBar")
     {

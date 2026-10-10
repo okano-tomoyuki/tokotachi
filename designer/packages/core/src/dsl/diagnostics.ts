@@ -35,7 +35,9 @@ export type DiagnosticCode =
   | 'tracks-not-allowed'
   | 'invalid-menu-item'
   | 'invalid-tool-item'
-  | 'invalid-dialog-button';
+  | 'invalid-dialog-button'
+  // ファイル(core では調べず、拡張が調べて出す)
+  | 'missing-image';
 
 export interface Diagnostic {
   readonly severity: Severity;

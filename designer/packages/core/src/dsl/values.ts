@@ -5,6 +5,7 @@
 import { getCatalog } from '../catalog/catalog.ts';
 import type { PrimitiveType, PropertyType } from '../catalog/types.ts';
 import { l10n } from '../l10n.ts';
+import { IMAGE_EXTENSIONS, isImagePath } from './images.ts';
 import type { PropertyValue } from './schema.ts';
 
 /** 型の表示(メッセージ用)。 */
@@ -125,6 +126,15 @@ export function checkValue(type: PropertyType, value: PropertyValue): string | n
       return null;
     }
     return l10n.t('Expected a shortcut such as "Ctrl+S" (modifiers: Ctrl, Shift, Alt, Meta)');
+  }
+  if (name === 'Image') {
+    if (typeof value === 'string' && isImagePath(value)) {
+      return null;
+    }
+    return l10n.t(
+      'Expected a relative path from this file to an image file ({0}), separated by "/"',
+      IMAGE_EXTENSIONS.join(', '),
+    );
   }
   // Margins は 4 辺に同じ値を数値 1 つで書ける
   if (name === 'Margins' && typeof value === 'number') {

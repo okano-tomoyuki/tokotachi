@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildSetup, type Op } from '@tokotachi-designer/codegen';
-import type { TtuiDocument } from '@tokotachi-designer/core';
+import { isImageType, normalizePath, type TtuiDocument } from '@tokotachi-designer/core';
 import { systemFonts } from './fonts.ts';
 import { withPlaceholders } from './placeholders.ts';
 
@@ -99,11 +99,11 @@ export class Canvas {
     return new Canvas(module);
   }
 
-  /** 検証を通った定義ファイルを描く。 */
   /**
    * 検証を通った定義ファイルを描く。
    * @param options.placeholders 中身が空の入れ物に最小の大きさを与える(デザイナーで使う。placeholders.ts)
    * @param options.tabs 表示するタブ(TabWidget の名前 → 位置。デザイナーで、選んだ部品が入っているタブを出す)
+   * @param options.images 定義ファイルが参照する画像の中身(正規化したパス → 中身)。無い画像は描かない
    */
   render(
     doc: TtuiDocument,
@@ -111,6 +111,7 @@ export class Canvas {
       colorScheme?: ColorScheme;
       placeholders?: boolean;
       tabs?: Readonly<Record<string, number>>;
+      images?: ReadonlyMap<string, Uint8Array>;
     } = {},
   ): RenderResult {
     const target = options.placeholders === true ? withPlaceholders(doc) : doc;
@@ -122,10 +123,21 @@ export class Canvas {
       type: 'int',
       value: index,
     }));
+    // 画像のプロパティの値は、正規化したパスにして、その中身と一緒に渡す
+    const ops = buildSetup(target).ops.map((op): Op =>
+      op.op === 'set' && isImageType(op.type) && typeof op.value === 'string'
+        ? { ...op, value: normalizePath(op.value) }
+        : op,
+    );
+    const images: Record<string, string> = {};
+    for (const [path, data] of options.images ?? []) {
+      images[path] = Buffer.from(data).toString('base64');
+    }
     const request = {
       window_class: target.window.class,
       color_scheme: options.colorScheme ?? 'LIGHT',
-      ops: [...buildSetup(target).ops, ...show],
+      images,
+      ops: [...ops, ...show],
     };
     const text = this.module.ccall('ttc_render', 'string', ['string'], [JSON.stringify(request)]);
     const r = JSON.parse(String(text)) as {

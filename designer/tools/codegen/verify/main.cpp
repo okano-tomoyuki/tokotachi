@@ -76,6 +76,8 @@ int main(int argc, char** argv)
               window.label_size->color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
           "theme color");
     check(window.action_open->shortcut.get() == tokotachi::Shortcut("Ctrl+O"), "shortcut");
+    check(window.action_open->icon.get().width() == 16 && window.action_open->icon.get().height() == 16,
+          "embedded image");
     check(window.action_details->checkable.get() && window.action_details->checked.get(), "action flags");
     check(window.timer_refresh->interval.get() == 5000, "timer");
     // 子を入れた後に設定するプロパティ(Splitter::sizes)。区画が無いと効かない

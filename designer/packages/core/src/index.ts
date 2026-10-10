@@ -31,6 +31,13 @@ export { validateDocument } from './dsl/validate.ts';
 export { checkValue, COLOR_PATTERN, isEnumValue, isShortcut } from './dsl/values.ts';
 export * from './dsl/outline.ts';
 export {
+  IMAGE_EXTENSIONS,
+  imageReferences,
+  isImagePath,
+  isImageType,
+  type ImageReference,
+} from './dsl/images.ts';
+export {
   applyCommand,
   defaultEventOf,
   defaultHandlerName,
