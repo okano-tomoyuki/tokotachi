@@ -1,13 +1,16 @@
-// 数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。
-//
-//   tokotachi::SpinBox* count = new tokotachi::SpinBox(panel);
-//   count->maximum = 10;
-//   count->decimals = 1;  // 小数 1 桁で表示・入力
-//   tokotachi::bind(count->value, amount->value);  // DoubleVariable と結ぶ
-//
-// 打ち込んだ数値は、Enter・フォーカスが外れたときに value にする(数値として読めなければ元に戻す)。
-// ↑↓(single_step)・Page Up/Down(page_step)で増減し、フォーカスがあるときはホイールでも増減する。
-// ボタンを押し続けると繰り返す。フォーカスは中の入力欄が受ける。
+/// @file
+/// 数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。
+///
+/// @code
+/// tokotachi::SpinBox* count = new tokotachi::SpinBox(panel);
+/// count->maximum = 10;
+/// count->decimals = 1;  // 小数 1 桁で表示・入力
+/// tokotachi::bind(count->value, amount->value);  // DoubleVariable と結ぶ
+/// @endcode
+///
+/// 打ち込んだ数値は、Enter・フォーカスが外れたときに value にする(数値として読めなければ元に戻す)。
+/// ↑↓(single_step)・Page Up/Down(page_step)で増減し、フォーカスがあるときはホイールでも増減する。
+/// ボタンを押し続けると繰り返す。フォーカスは中の入力欄が受ける。
 #ifndef TOKOTACHI_WIDGETS_SPIN_BOX_HPP
 #define TOKOTACHI_WIDGETS_SPIN_BOX_HPP
 
@@ -29,12 +32,12 @@ class SpinBox : public RangeBase
 public:
     explicit SpinBox(Widget* parent = nullptr);
 
-    // 小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。
+    /// 小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。
     Property<int> decimals;
-    // 入力欄に出している文字列(打ち込み中は、まだ value になっていないことがある)。
+    /// 入力欄に出している文字列(打ち込み中は、まだ value になっていないことがある)。
     ReadOnlyProperty<std::string> text;
 
-    // 打ち込み中の文字列を value にする(Enter・フォーカスが外れたときに自動で呼ぶ)。
+    /// 打ち込み中の文字列を value にする(Enter・フォーカスが外れたときに自動で呼ぶ)。
     void commit();
 
 protected:
@@ -56,16 +59,16 @@ private:
     std::string get_text() const;
 
     std::string format(double v) const;
-    // 上下のボタンの領域(自分の座標系)。
+    /// 上下のボタンの領域(自分の座標系)。
     Rect up_button() const;
     Rect down_button() const;
-    // ボタンを押し始めた・押し続けている(direction は 1 か -1)。
+    /// ボタンを押し始めた・押し続けている(direction は 1 か -1)。
     void press(int direction);
     void stop_repeat();
 
     detail::SpinEdit* edit_;
     int decimals_;
-    int pressed_;  // 押しているボタン(1 は上、-1 は下、0 は無し)
+    int pressed_;  ///< 押しているボタン(1 は上、-1 は下、0 は無し)
     Timer repeat_;
 };
 

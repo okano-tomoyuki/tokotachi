@@ -1,4 +1,5 @@
-// ウィンドウ(Window・ポップアップ・ダイアログ・メニューバー・ツールバー・ステータスバー)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// ウィンドウ(Window・ポップアップ・ダイアログ・メニューバー・ツールバー・ステータスバー)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_WINDOWS_HPP
 #define TOKOTACHI_WINDOWS_HPP
 

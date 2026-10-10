@@ -15,7 +15,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 |---|---|
 | [include/tokotachi/](include/tokotachi/) | 公開のヘッダ。役割ごとのディレクトリに分ける(下の表)。`#include <tokotachi/tokotachi.hpp>` ですべて、`<tokotachi/widgets.hpp>` などでグループごとに読み込める |
 | [src/](src/) | 実装。公開のヘッダと同じディレクトリに分け、内部のヘッダもそこに置く |
-| [examples/](examples/) | サンプル |
+| [examples/](examples/) | サンプル(`hello/` は全体、`gallery/` は部品ごと) |
 | [tests/](tests/) | テスト(SDL の offscreen のビデオドライバで、画面なしで動く) |
 | [spike/](spike/) | 技術検証のコード(ライブラリには引き継がない) |
 
@@ -141,6 +141,17 @@ target_link_libraries(app PRIVATE tokotachi::tokotachi)
 共有ライブラリの版を配るときは、exe と一緒に `libtokotachi.dll`(Windows。MinGW のランタイムの `libstdc++-6.dll`・
 `libgcc_s_seh-1.dll`・`libwinpthread-1.dll` も)・`libtokotachi.so.<版>`(Linux)を配る。静的ライブラリの版なら exe 1 つで配れる。
 `share/licenses/tokotachi/` の LICENSE と THIRD_PARTY_LICENSES.txt も一緒に配る。
+
+### リファレンス
+
+API リファレンス・使い方の手引き・サンプルの一覧([docs/guide/](docs/guide/))を Doxygen で作る(Doxygen が要る。Graphviz があれば図も描く):
+
+```bash
+cmake -S . -B build -G Ninja -DTOKOTACHI_BUILD_DOCS=ON
+cmake --build build --target docs        # build/docs/html/index.html
+```
+
+master に push すると、GitHub Actions が作って GitHub Pages(https://okano-tomoyuki.github.io/tokotachi/)に出す(`.github/workflows/docs.yml`)。
 
 ### Windows(MSYS2 mingw64)
 

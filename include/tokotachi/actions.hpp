@@ -1,4 +1,5 @@
-// 操作(Action・ショートカット・メニュー)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// 操作(Action・ショートカット・メニュー)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_ACTIONS_HPP
 #define TOKOTACHI_ACTIONS_HPP
 

@@ -1,11 +1,14 @@
-// ListModel・TreeModel の 1 つの項目(docs/adr/0026)。モデルが作り、所有する。
-//
-//   tokotachi::Item* item = list->add_item("報告書.txt");
-//   item->column_texts = std::vector<std::string>{"12 KB", "2026-10-04"};  // 2 列目以降
-//   item->icon = file_icon;
-//   item->checkable = true;
-//
-// 値を変えると、表示しているビューが描き直す。
+/// @file
+/// ListModel・TreeModel の 1 つの項目(docs/adr/0026)。モデルが作り、所有する。
+///
+/// @code
+/// tokotachi::Item* item = list->add_item("報告書.txt");
+/// item->column_texts = std::vector<std::string>{"12 KB", "2026-10-04"};  // 2 列目以降
+/// item->icon = file_icon;
+/// item->checkable = true;
+/// @endcode
+///
+/// 値を変えると、表示しているビューが描き直す。
 #ifndef TOKOTACHI_VIEWS_ITEM_HPP
 #define TOKOTACHI_VIEWS_ITEM_HPP
 
@@ -24,7 +27,7 @@ class TreeModel;
 
 namespace detail
 {
-// 項目を持つモデル(内部)。項目の値が変わったことを受け取る。
+/// 項目を持つモデル(内部)。項目の値が変わったことを受け取る。
 class ItemHost
 {
 public:
@@ -38,19 +41,19 @@ protected:
 class Item : public Object
 {
 public:
-    // 1 列目の文字。
+    /// 1 列目の文字。
     Property<std::string> text;
-    // 2 列目以降の文字。
+    /// 2 列目以降の文字。
     Property<std::vector<std::string> > column_texts;
-    // 1 列目の文字の前に描く画像。
+    /// 1 列目の文字の前に描く画像。
     Property<Image> icon;
-    // false の項目は薄く描き、選べない。
+    /// false の項目は薄く描き、選べない。
     Property<bool> enabled;
-    // チェックボックスを付けるか・付いているか(利用者が押すと checked が変わる)。
+    /// チェックボックスを付けるか・付いているか(利用者が押すと checked が変わる)。
     Property<bool> checkable;
     Property<bool> checked;
 
-    // column 列目の文字(列が無ければ空)。
+    /// column 列目の文字(列が無ければ空)。
     std::string column_text(int column) const;
 
 protected:
@@ -70,7 +73,7 @@ private:
     void changed();
 
     detail::ItemHost* host_;
-    int row_;  // 親の中での位置(モデルが保つ)
+    int row_;  ///< 親の中での位置(モデルが保つ)
     std::string text_;
     std::vector<std::string> column_texts_;
     Image icon_;

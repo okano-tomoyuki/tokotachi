@@ -1,10 +1,13 @@
-// 項目をオブジェクト(Item)で持つ一覧のモデル(docs/adr/0026)。
-//
-//   tokotachi::ListModel* list = new tokotachi::ListModel(&window);
-//   list->add_item("りんご");
-//   tokotachi::Item* item = list->add_item("みかん");
-//   item->checkable = true;
-//   view->model = list;
+/// @file
+/// 項目をオブジェクト(Item)で持つ一覧のモデル(docs/adr/0026)。
+///
+/// @code
+/// tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+/// list->add_item("りんご");
+/// tokotachi::Item* item = list->add_item("みかん");
+/// item->checkable = true;
+/// view->model = list;
+/// @endcode
 #ifndef TOKOTACHI_VIEWS_LIST_MODEL_HPP
 #define TOKOTACHI_VIEWS_LIST_MODEL_HPP
 
@@ -20,19 +23,19 @@ public:
     explicit ListModel(Object* owner = nullptr);
     ~ListModel();
 
-    // 最後に加える。
+    /// 最後に加える。
     Item* add_item(const std::string& text);
-    // index の位置に加える(範囲の外なら最後)。
+    /// index の位置に加える(範囲の外なら最後)。
     Item* insert_item(int index, const std::string& text);
-    // 項目を除いて破棄する。
+    /// 項目を除いて破棄する。
     void remove_item(Item* item);
-    // すべての項目を除いて破棄する。
+    /// すべての項目を除いて破棄する。
     void clear();
 
-    // 項目(並んだ順)。
+    /// 項目(並んだ順)。
     ReadOnlyProperty<std::vector<Item*> > items;
 
-    // 項目の位置(このモデルの項目でなければ無効な ModelIndex)・位置の項目。
+    /// 項目の位置(このモデルの項目でなければ無効な ModelIndex)・位置の項目。
     ModelIndex index_of(const Item* item) const;
     Item* item_at(const ModelIndex& index) const;
 
@@ -44,7 +47,7 @@ public:
     bool checkable(const ModelIndex& index) const override;
     bool checked(const ModelIndex& index) const override;
     void set_checked(const ModelIndex& index, bool checked) override;
-    // 文字のバイト列の順(UTF-8 なので、コードポイントの順)で、同じ値の項目の順は保つ。
+    /// 文字のバイト列の順(UTF-8 なので、コードポイントの順)で、同じ値の項目の順は保つ。
     void sort(int column, SortOrder order) override;
     ModelIndex locate(const ModelIndex& index) const override;
 

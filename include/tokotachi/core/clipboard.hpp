@@ -1,4 +1,5 @@
-// クリップボード(テキストのみ)。
+/// @file
+/// クリップボード(テキストのみ)。
 #ifndef TOKOTACHI_CORE_CLIPBOARD_HPP
 #define TOKOTACHI_CORE_CLIPBOARD_HPP
 

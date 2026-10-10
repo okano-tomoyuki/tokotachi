@@ -1,4 +1,5 @@
-// 一覧と木(モデル・ビュー)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// 一覧と木(モデル・ビュー)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_VIEWS_HPP
 #define TOKOTACHI_VIEWS_HPP
 

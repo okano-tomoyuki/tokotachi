@@ -268,6 +268,63 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     target_compile_options(hello PRIVATE -Wall -Wextra -pedantic)
     set_target_properties(hello PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
     tokotachi_copy_runtime(hello)
+
+    # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
+    set(TOKOTACHI_GALLERY buttons inputs views window dialog drawing)
+    foreach(_name ${TOKOTACHI_GALLERY})
+        add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
+        target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)
+        target_compile_options(gallery_${_name} PRIVATE -Wall -Wextra -pedantic)
+        set_target_properties(gallery_${_name} PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+        tokotachi_copy_runtime(gallery_${_name})
+    endforeach()
+endif()
+
+# ---- リファレンス(GitHub Pages。docs/adr/0038) ----
+option(TOKOTACHI_BUILD_DOCS "Add the 'docs' target that builds the reference with Doxygen" OFF)
+if(TOKOTACHI_BUILD_DOCS)
+    if(NOT TOKOTACHI_BUILD_EXAMPLES)
+        message(FATAL_ERROR "TOKOTACHI_BUILD_DOCS needs TOKOTACHI_BUILD_EXAMPLES (the gallery screenshots)")
+    endif()
+    find_package(Doxygen REQUIRED OPTIONAL_COMPONENTS dot)
+    # 見た目のテーマ(doxygen-awesome-css。MIT)。版と SHA256 を固定して取ってくる。
+    set(TOKOTACHI_DOCS_THEME "${CMAKE_CURRENT_BINARY_DIR}/docs-theme")
+    set(_theme_url "https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.5.0")
+    foreach(_pair "doxygen-awesome.css;ea37516ec7a7a7780719b9d9a285fe3268a8d5411523d8b93af98d77e67cd1a1"
+                  "doxygen-awesome-sidebar-only.css;909d17055552149555fc87c5e0cf171a41d09a9e358c389a51b25ddfafd462af")
+        list(GET _pair 0 _file)
+        list(GET _pair 1 _hash)
+        if(NOT EXISTS "${TOKOTACHI_DOCS_THEME}/${_file}")
+            file(DOWNLOAD "${_theme_url}/${_file}" "${TOKOTACHI_DOCS_THEME}/${_file}" EXPECTED_HASH SHA256=${_hash}
+                 TLS_VERIFY ON)
+        endif()
+    endforeach()
+    set(TOKOTACHI_DOCS_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/docs")
+    set(TOKOTACHI_DOCS_IMAGES "${CMAKE_CURRENT_BINARY_DIR}/docs-images")
+    if(DOXYGEN_DOT_FOUND)
+        set(TOKOTACHI_DOCS_HAVE_DOT YES)
+    else()
+        set(TOKOTACHI_DOCS_HAVE_DOT NO)
+    endif()
+    configure_file(docs/Doxyfile.in "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" @ONLY)
+    # サンプルを画面なしで動かして、画面の画像を撮る。
+    set(_shots)
+    foreach(_name ${TOKOTACHI_GALLERY})
+        set(_png "${TOKOTACHI_DOCS_IMAGES}/${_name}.png")
+        add_custom_command(OUTPUT "${_png}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${TOKOTACHI_DOCS_IMAGES}"
+            COMMAND ${CMAKE_COMMAND} -E env SDL_VIDEO_DRIVER=offscreen $<TARGET_FILE:gallery_${_name}> --screenshot "${_png}"
+            DEPENDS gallery_${_name}
+            COMMENT "Taking the screenshot of gallery_${_name}")
+        list(APPEND _shots "${_png}")
+    endforeach()
+    file(GLOB_RECURSE _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.md ${CMAKE_CURRENT_LIST_DIR}/include/tokotachi/*.hpp
+         ${CMAKE_CURRENT_LIST_DIR}/examples/gallery/*.cpp)
+    add_custom_target(docs
+        COMMAND Doxygen::doxygen "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+        DEPENDS ${_shots} ${_doc_inputs} "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
+        COMMENT "Building the reference into ${TOKOTACHI_DOCS_OUTPUT}/html")
 endif()
 
 # ---- テスト ----

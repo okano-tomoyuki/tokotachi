@@ -1,0 +1,67 @@
+# リファレンス(Doxygen)を作り、GitHub Pages に出す(docs/adr/0038)。
+# master に push したとき・手で実行したときに動く。サンプルの一覧の画像は、ここで実際にサンプルを動かして撮る。
+name: リファレンス
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 開発用のパッケージ・Graphviz・日本語のフォント
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libwayland-dev libxkbcommon-dev libdecor-0-dev libegl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libdrm-dev libgbm-dev libfontconfig-dev \
+            graphviz fonts-noto-cjk
+
+      # 手元と同じ版の Doxygen(Ubuntu の apt の版は古い)。版と SHA256 を固定する。
+      - name: Doxygen 1.18.0
+        run: |
+          curl -sSfL -o doxygen.tar.gz https://www.doxygen.nl/files/doxygen-1.18.0.linux.bin.tar.gz
+          echo "14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90  doxygen.tar.gz" | sha256sum -c -
+          tar xzf doxygen.tar.gz
+          echo "$PWD/doxygen-1.18.0/bin" >> "$GITHUB_PATH"
+
+      # 依存ライブラリのビルドは数分かかるので、deps/ が変わらない限り使い回す。
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/linux-x86_64
+            deps/download
+          key: deps-linux-x86_64-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - name: リファレンスを作る
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DTOKOTACHI_BUILD_DOCS=ON -DTOKOTACHI_BUILD_TESTS=OFF
+          cmake --build build --target docs
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/docs/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,4 +1,5 @@
-// 幾何の型と色。座標はすべて dp(docs/adr/0008)。値の型なので、プロパティではなく公開のメンバ変数で表す(docs/adr/0013)。
+/// @file
+/// 幾何の型と色。座標はすべて dp(docs/adr/0008)。値の型なので、プロパティではなく公開のメンバ変数で表す(docs/adr/0013)。
 #ifndef TOKOTACHI_CORE_GEOMETRY_HPP
 #define TOKOTACHI_CORE_GEOMETRY_HPP
 
@@ -78,7 +79,7 @@ struct Rect
 
     Rect translated(float dx, float dy) const { return Rect(x + dx, y + dy, width, height); }
 
-    // 各辺を内側へ動かす(負の値なら外側へ)。
+    /// 各辺を内側へ動かす(負の値なら外側へ)。
     Rect adjusted(float dl, float dt, float dr, float db) const
     {
         return Rect(x + dl, y + dt, width - dl - dr, height - dt - db);
@@ -95,7 +96,7 @@ struct Color
     Color() : r(0), g(0), b(0), a(255) {}
     Color(std::uint8_t r_, std::uint8_t g_, std::uint8_t b_, std::uint8_t a_ = 255) : r(r_), g(g_), b(b_), a(a_) {}
 
-    // 0xRRGGBB から作る。
+    /// 0xRRGGBB から作る。
     static Color rgb(std::uint32_t hex, std::uint8_t alpha = 255)
     {
         return Color(static_cast<std::uint8_t>(hex >> 16), static_cast<std::uint8_t>(hex >> 8),

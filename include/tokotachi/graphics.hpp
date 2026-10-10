@@ -1,4 +1,5 @@
-// 描画(Canvas・画像・Bitmap・文字のレイアウト・テーマ)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// 描画(Canvas・画像・Bitmap・文字のレイアウト・テーマ)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_GRAPHICS_HPP
 #define TOKOTACHI_GRAPHICS_HPP
 

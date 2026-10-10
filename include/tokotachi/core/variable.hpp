@@ -1,13 +1,16 @@
-// 値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。
-//
-//   tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(&window);
-//   tokotachi::bind(edit->text, name->value);
-//   tokotachi::bind(label->text, name->value);
-//   name->value = "初期値";                             // edit と label の両方に伝わる
-//   name->on_change = [](tokotachi::Object* sender) { ... };  // 値が変わったときに呼ぶ
-//   name->on_set = [](tokotachi::Object* sender) { ... };     // 値が設定されるたびに呼ぶ(同じ値の代入でも)
-//
-// 値の型は == で比べられること。
+/// @file
+/// 値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。
+///
+/// @code
+/// tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(&window);
+/// tokotachi::bind(edit->text, name->value);
+/// tokotachi::bind(label->text, name->value);
+/// name->value = "初期値";                             // edit と label の両方に伝わる
+/// name->on_change = [](tokotachi::Object* sender) { ... };  // 値が変わったときに呼ぶ
+/// name->on_set = [](tokotachi::Object* sender) { ... };     // 値が設定されるたびに呼ぶ(同じ値の代入でも)
+/// @endcode
+///
+/// 値の型は == で比べられること。
 #ifndef TOKOTACHI_CORE_VARIABLE_HPP
 #define TOKOTACHI_CORE_VARIABLE_HPP
 
@@ -31,9 +34,9 @@ public:
     }
 
     Property<T> value;
-    // value が設定された(同じ値の代入でも呼ぶ。docs/adr/0016)。
+    /// value が設定された(同じ値の代入でも呼ぶ。docs/adr/0016)。
     Property<NotifyHandler> on_set;
-    // value が変わった(結びつけた相手から伝わったときも含む)。on_set の後に呼ぶ。
+    /// value が変わった(結びつけた相手から伝わったときも含む)。on_set の後に呼ぶ。
     Property<NotifyHandler> on_change;
 
 private:
@@ -44,12 +47,12 @@ private:
         Variable* self = static_cast<Variable*>(o);
         const bool changed = !(self->value_ == v);
         self->value_ = v;
-        // 結びつけた相手へ伝えてから、ハンドラを呼ぶ(ハンドラの中で相手の値がそろっているように)。
+        /// 結びつけた相手へ伝えてから、ハンドラを呼ぶ(ハンドラの中で相手の値がそろっているように)。
         if (changed)
         {
             self->notify_changed(self->value);
         }
-        // ハンドラの中でこの変数が破棄されてもよいよう、両方を写してから呼び、呼んだ後は self に触らない。
+        /// ハンドラの中でこの変数が破棄されてもよいよう、両方を写してから呼び、呼んだ後は self に触らない。
         const NotifyHandler on_set_handler = self->on_set_;
         const NotifyHandler on_change_handler = changed ? self->on_change_ : NotifyHandler();
         if (on_set_handler)

@@ -1,4 +1,5 @@
-// 部品(Widget とボタン・入力欄・値の部品・スクロール・タブ・分割など)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// 部品(Widget とボタン・入力欄・値の部品・スクロール・タブ・分割など)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_WIDGETS_HPP
 #define TOKOTACHI_WIDGETS_HPP
 

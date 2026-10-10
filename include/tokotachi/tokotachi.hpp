@@ -1,4 +1,5 @@
-// まとめて読み込むためのヘッダ。
+/// @file
+/// まとめて読み込むためのヘッダ。
 #ifndef TOKOTACHI_TOKOTACHI_HPP
 #define TOKOTACHI_TOKOTACHI_HPP
 

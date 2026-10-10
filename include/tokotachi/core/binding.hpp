@@ -1,12 +1,15 @@
-// プロパティどうしの結びつけ(docs/adr/0016)。
-//
-//   tokotachi::bind(edit->text, name->value);   // 双方向。結んだ時点で第 1 引数を第 2 引数の値にする
-//   tokotachi::bind(label->text, name->value);  // name を介して edit と label がそろう
-//   tokotachi::bind(label->text, edit->selected_text);  // 読み取り専用のプロパティからは一方向
-//   tokotachi::unbind(label->text);             // label->text の結びつきをすべて外す
-//
-// 結べるのは同じ型(== で比べられる型)のプロパティだけ。値が変わったときだけ相手へ伝える。
-// どちらかのオブジェクトが破棄されると、その結びつきは自動で外れる。結びつきが循環していても止まる。
+/// @file
+/// プロパティどうしの結びつけ(docs/adr/0016)。
+///
+/// @code
+/// tokotachi::bind(edit->text, name->value);   // 双方向。結んだ時点で第 1 引数を第 2 引数の値にする
+/// tokotachi::bind(label->text, name->value);  // name を介して edit と label がそろう
+/// tokotachi::bind(label->text, edit->selected_text);  // 読み取り専用のプロパティからは一方向
+/// tokotachi::unbind(label->text);             // label->text の結びつきをすべて外す
+/// @endcode
+///
+/// 結べるのは同じ型(== で比べられる型)のプロパティだけ。値が変わったときだけ相手へ伝える。
+/// どちらかのオブジェクトが破棄されると、その結びつきは自動で外れる。結びつきが循環していても止まる。
 #ifndef TOKOTACHI_CORE_BINDING_HPP
 #define TOKOTACHI_CORE_BINDING_HPP
 
@@ -57,19 +60,19 @@ struct BindingEnd
     const void* property;
 };
 
-// 結びつき(内部)。どちらかの端が設定されたら、もう一方の端へ値を書き込む。
+/// 結びつき(内部)。どちらかの端が設定されたら、もう一方の端へ値を書き込む。
 class BindingBase
 {
 public:
     BindingBase(const BindingEnd& a_, const BindingEnd& b_) : a(a_), b(b_), active(false) {}
     virtual ~BindingBase() {}
 
-    // from_a なら a の値を b へ、そうでなければ b の値を a へ書き込む。書き込めない端・すでに同じ値の端へは何もしない
-    // (同じ値を書き込むと、LineEdit のキャレットが末尾へ動くなどの副作用があるため)。
+    /// from_a なら a の値を b へ、そうでなければ b の値を a へ書き込む。書き込めない端・すでに同じ値の端へは何もしない
+    /// (同じ値を書き込むと、LineEdit のキャレットが末尾へ動くなどの副作用があるため)。
     virtual void propagate(bool from_a) = 0;
 
     BindingEnd a, b;
-    bool active;  // 伝えている最中(循環を止める)
+    bool active;  ///< 伝えている最中(循環を止める)
 };
 
 template <typename T>
@@ -112,14 +115,14 @@ private:
     Setter set_b;
 };
 
-// 結びつきを登録し、第 1 の端を第 2 の端の値にそろえる。同じ組がすでにあれば何もしない(false)。
+/// 結びつきを登録し、第 1 の端を第 2 の端の値にそろえる。同じ組がすでにあれば何もしない(false)。
 bool add_binding(BindingBase* binding);
 void remove_bindings(Object* owner, const void* property);
 void remove_binding_pair(const void* a, const void* b);
 
 }  // namespace detail
 
-// target と source を双方向に結び、target を source の値にする。
+/// target と source を双方向に結び、target を source の値にする。
 template <typename T>
 void bind(Property<T>& target, Property<T>& source)
 {
@@ -130,8 +133,8 @@ void bind(Property<T>& target, Property<T>& source)
         new detail::TypedBinding<T>(a, A::getter(target), A::setter(target), b, A::getter(source), A::setter(source)));
 }
 
-// 読み取り専用の source から target へ一方向に結び、target を source の値にする。
-// source の値が変わったことは、source を持つオブジェクトが知らせる(知らせないプロパティもある)。
+/// 読み取り専用の source から target へ一方向に結び、target を source の値にする。
+/// source の値が変わったことは、source を持つオブジェクトが知らせる(知らせないプロパティもある)。
 template <typename T>
 void bind(Property<T>& target, ReadOnlyProperty<T>& source)
 {
@@ -142,14 +145,14 @@ void bind(Property<T>& target, ReadOnlyProperty<T>& source)
                                                     nullptr));
 }
 
-// a と b の結びつきを外す。
+/// a と b の結びつきを外す。
 template <typename T, typename U>
 void unbind(T& a, U& b)
 {
     detail::remove_binding_pair(&a, &b);
 }
 
-// property の結びつきをすべて外す。
+/// property の結びつきをすべて外す。
 template <typename T>
 void unbind(Property<T>& property)
 {

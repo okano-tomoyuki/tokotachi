@@ -1,4 +1,5 @@
-// 押しボタン。
+/// @file
+/// 押しボタン。
 #ifndef TOKOTACHI_WIDGETS_BUTTON_HPP
 #define TOKOTACHI_WIDGETS_BUTTON_HPP
 
@@ -7,10 +8,10 @@
 namespace tokotachi
 {
 
-// 見た目の種類。
+/// 見た目の種類。
 enum class ButtonStyle
 {
-    PRIMARY,   // 強調の色で塗る(主な操作)
+    PRIMARY,   ///< 強調の色で塗る(主な操作)
     SECONDARY  // 地の色に枠(その他の操作。ダイアログのキャンセルなど)
 };
 
@@ -19,7 +20,7 @@ class Button : public ButtonBase
 public:
     explicit Button(Widget* parent = nullptr, const std::string& text = std::string());
 
-    // 既定は PRIMARY。
+    /// 既定は PRIMARY。
     Property<ButtonStyle> style;
 
 protected:

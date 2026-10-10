@@ -1,4 +1,5 @@
-// レイアウト(BoxLayout・GridLayout・PlaceLayout)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// レイアウト(BoxLayout・GridLayout・PlaceLayout)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_LAYOUTS_HPP
 #define TOKOTACHI_LAYOUTS_HPP
 

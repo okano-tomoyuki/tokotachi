@@ -1,11 +1,14 @@
-// スライダー: つまみを動かして、範囲の中の値を選ぶ(docs/adr/0024)。縦のときは下が minimum。
-//
-//   tokotachi::Slider* volume = new tokotachi::Slider(panel);
-//   volume->maximum = 100;
-//   volume->on_change = [=](tokotachi::Object*) { ... volume->value ... };
-//
-// 溝を押すとその位置へ動き、そのままドラッグできる。矢印キー(single_step)・Page Up/Down(page_step)・Home/End で動かし、
-// フォーカスがあるときはホイールでも動かす(フォームをスクロールしているときに、うっかり値を変えないように)。
+/// @file
+/// スライダー: つまみを動かして、範囲の中の値を選ぶ(docs/adr/0024)。縦のときは下が minimum。
+///
+/// @code
+/// tokotachi::Slider* volume = new tokotachi::Slider(panel);
+/// volume->maximum = 100;
+/// volume->on_change = [=](tokotachi::Object*) { ... volume->value ... };
+/// @endcode
+///
+/// 溝を押すとその位置へ動き、そのままドラッグできる。矢印キー(single_step)・Page Up/Down(page_step)・Home/End で動かし、
+/// フォーカスがあるときはホイールでも動かす(フォームをスクロールしているときに、うっかり値を変えないように)。
 #ifndef TOKOTACHI_WIDGETS_SLIDER_HPP
 #define TOKOTACHI_WIDGETS_SLIDER_HPP
 
@@ -40,17 +43,17 @@ private:
     Orientation get_orientation() const { return orientation_; }
     void set_orientation(const Orientation& v);
 
-    // 並ぶ向きの、つまみの中心が動ける長さ(dp)。
+    /// 並ぶ向きの、つまみの中心が動ける長さ(dp)。
     float travel() const;
-    // つまみの中心(自分の座標系)。
+    /// つまみの中心(自分の座標系)。
     Point thumb_center() const;
-    // 並ぶ向きの位置 p に当たる値(single_step に合わせる)。
+    /// 並ぶ向きの位置 p に当たる値(single_step に合わせる)。
     double value_at(const Point& p) const;
 
     Orientation orientation_;
     bool hovered_;
     bool dragging_;
-    Point drag_offset_;  // つまみの中心から、押した位置まで
+    Point drag_offset_;  ///< つまみの中心から、押した位置まで
 };
 
 }  // namespace tokotachi

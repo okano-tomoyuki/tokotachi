@@ -1,9 +1,12 @@
-// 範囲の中の値を持ち、利用者が動かせるウィジェットの共通の基底(Slider・SpinBox。docs/adr/0024)。
-//
-//   slider->minimum = 0;
-//   slider->maximum = 100;
-//   slider->value = 25;
-//   tokotachi::bind(slider->value, volume->value);  // DoubleVariable と結ぶ
+/// @file
+/// 範囲の中の値を持ち、利用者が動かせるウィジェットの共通の基底(Slider・SpinBox。docs/adr/0024)。
+///
+/// @code
+/// slider->minimum = 0;
+/// slider->maximum = 100;
+/// slider->value = 25;
+/// tokotachi::bind(slider->value, volume->value);  // DoubleVariable と結ぶ
+/// @endcode
 #ifndef TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 #define TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 
@@ -15,29 +18,29 @@ namespace tokotachi
 class RangeBase : public Widget
 {
 public:
-    // 範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
+    /// 範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
     Property<double> minimum;
     Property<double> maximum;
-    // 値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。
+    /// 値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。
     Property<double> value;
-    // 矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。
+    /// 矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。
     Property<double> single_step;
-    // Page Up・Page Down で動く量(既定 10)。
+    /// Page Up・Page Down で動く量(既定 10)。
     Property<double> page_step;
 
-    // value が変わった(利用者の操作・代入のどちらでも)。
+    /// value が変わった(利用者の操作・代入のどちらでも)。
     Property<NotifyHandler> on_change;
 
 protected:
     explicit RangeBase(Widget* parent);
 
-    // 値を amount だけ動かし、single_step に合わせる(利用者の操作)。
+    /// 値を amount だけ動かし、single_step に合わせる(利用者の操作)。
     void step_by(double amount);
-    // v を single_step に合わせ、範囲に収めた値。
+    /// v を single_step に合わせ、範囲に収めた値。
     double snapped(double v) const;
-    // value の範囲の中の位置(0〜1。minimum == maximum なら 0)。
+    /// value の範囲の中の位置(0〜1。minimum == maximum なら 0)。
     double ratio() const;
-    // 範囲・値が変わった(既定の実装は描き直す)。変更を知らせる前に呼ぶ。
+    /// 範囲・値が変わった(既定の実装は描き直す)。変更を知らせる前に呼ぶ。
     virtual void range_changed();
 
 private:
@@ -52,7 +55,7 @@ private:
     double get_page_step() const { return page_step_; }
     void set_page_step(const double& v);
 
-    // 範囲に収めた値を value_ にする。変わったら range_changed を呼び、知らせ、on_change を呼ぶ。
+    /// 範囲に収めた値を value_ にする。変わったら range_changed を呼び、知らせ、on_change を呼ぶ。
     void apply_value(double v);
 
     double minimum_;

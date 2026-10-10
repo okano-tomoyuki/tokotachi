@@ -1,10 +1,13 @@
-// ウィンドウの下端のステータスバー(docs/adr/0030)。
-//
-//   tokotachi::StatusBar* status = new tokotachi::StatusBar();
-//   status->text = "準備完了";                      // 普段の文字(左)
-//   status->show_message("保存した", 3000);          // 3 秒だけ差し替える
-//   status->add_widget(new tokotachi::Label(0, "行 1, 列 1"));   // 右に並べる部品
-//   window.status_bar = status;
+/// @file
+/// ウィンドウの下端のステータスバー(docs/adr/0030)。
+///
+/// @code
+/// tokotachi::StatusBar* status = new tokotachi::StatusBar();
+/// status->text = "準備完了";                      // 普段の文字(左)
+/// status->show_message("保存した", 3000);          // 3 秒だけ差し替える
+/// status->add_widget(new tokotachi::Label(0, "行 1, 列 1"));   // 右に並べる部品
+/// window.status_bar = status;
+/// @endcode
 #ifndef TOKOTACHI_WINDOWS_STATUS_BAR_HPP
 #define TOKOTACHI_WINDOWS_STATUS_BAR_HPP
 
@@ -23,15 +26,15 @@ class StatusBar : public Widget
 public:
     explicit StatusBar(Widget* parent = nullptr);
 
-    // 普段に出す文字。
+    /// 普段に出す文字。
     Property<std::string> text;
-    // 今出している一時的な知らせ(無ければ空)。
+    /// 今出している一時的な知らせ(無ければ空)。
     ReadOnlyProperty<std::string> message;
 
-    // 知らせを出す。timeout_ms が正なら、その時間が経つと text に戻す(0 なら clear_message まで出す)。
+    /// 知らせを出す。timeout_ms が正なら、その時間が経つと text に戻す(0 なら clear_message まで出す)。
     void show_message(const std::string& message, int timeout_ms = 0);
     void clear_message();
-    // 右に部品を並べる(加えた順に左から。ステータスバーの子になる)。
+    /// 右に部品を並べる(加えた順に左から。ステータスバーの子になる)。
     void add_widget(Widget* widget);
 
 protected:

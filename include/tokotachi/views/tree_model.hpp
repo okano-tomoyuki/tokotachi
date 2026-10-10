@@ -1,9 +1,12 @@
-// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
-//
-//   tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
-//   tokotachi::TreeItem* docs = tree->add_item("文書");
-//   docs->add_child("報告書.txt");
-//   view->model = tree;
+/// @file
+/// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
+///
+/// @code
+/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+/// tokotachi::TreeItem* docs = tree->add_item("文書");
+/// docs->add_child("報告書.txt");
+/// view->model = tree;
+/// @endcode
 #ifndef TOKOTACHI_VIEWS_TREE_MODEL_HPP
 #define TOKOTACHI_VIEWS_TREE_MODEL_HPP
 
@@ -18,13 +21,13 @@ class TreeModel;
 class TreeItem : public Item
 {
 public:
-    // 親の項目(一番上なら nullptr)・子の項目(並んだ順)。
+    /// 親の項目(一番上なら nullptr)・子の項目(並んだ順)。
     ReadOnlyProperty<TreeItem*> parent_item;
     ReadOnlyProperty<std::vector<TreeItem*> > children;
 
-    // 最後の子として加える。
+    /// 最後の子として加える。
     TreeItem* add_child(const std::string& text);
-    // index の位置に子として加える(範囲の外なら最後)。
+    /// index の位置に子として加える(範囲の外なら最後)。
     TreeItem* insert_child(int index, const std::string& text);
 
 private:
@@ -47,14 +50,14 @@ public:
     explicit TreeModel(Object* owner = nullptr);
     ~TreeModel();
 
-    // 一番上に加える。
+    /// 一番上に加える。
     TreeItem* add_item(const std::string& text);
     TreeItem* insert_item(int index, const std::string& text);
-    // 項目を(子孫ごと)除いて破棄する。どの深さの項目でもよい。
+    /// 項目を(子孫ごと)除いて破棄する。どの深さの項目でもよい。
     void remove_item(TreeItem* item);
     void clear();
 
-    // 一番上の項目(並んだ順)。
+    /// 一番上の項目(並んだ順)。
     ReadOnlyProperty<std::vector<TreeItem*> > items;
 
     ModelIndex index_of(const TreeItem* item) const;
@@ -69,7 +72,7 @@ public:
     bool checkable(const ModelIndex& index) const override;
     bool checked(const ModelIndex& index) const override;
     void set_checked(const ModelIndex& index, bool checked) override;
-    // 同じ親の子どうしを並べ替える(すべての深さで)。
+    /// 同じ親の子どうしを並べ替える(すべての深さで)。
     void sort(int column, SortOrder order) override;
     ModelIndex locate(const ModelIndex& index) const override;
 

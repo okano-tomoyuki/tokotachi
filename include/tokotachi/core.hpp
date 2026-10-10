@@ -1,4 +1,5 @@
-// 土台(Object・プロパティ・結びつけ・イベント・Application・タイマー・スレッド・基本の値)をまとめて読み込む(docs/adr/0035)。
+/// @file
+/// 土台(Object・プロパティ・結びつけ・イベント・Application・タイマー・スレッド・基本の値)をまとめて読み込む(docs/adr/0035)。
 #ifndef TOKOTACHI_CORE_HPP
 #define TOKOTACHI_CORE_HPP
 

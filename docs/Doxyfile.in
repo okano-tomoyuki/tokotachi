@@ -1,0 +1,61 @@
+# Tokotachi のリファレンス(GitHub Pages)の Doxygen の設定(docs/adr/0038)。CMake の docs の target が値を埋めて使う:
+#   cmake -S . -B build -DTOKOTACHI_BUILD_DOCS=ON && cmake --build build --target docs
+# 書かない項目は Doxygen の既定の値。
+
+PROJECT_NAME           = "Tokotachi"
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ"
+OUTPUT_DIRECTORY       = @TOKOTACHI_DOCS_OUTPUT@
+OUTPUT_LANGUAGE        = Japanese
+CREATE_SUBDIRS         = NO
+
+# ---- 入力 ----
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/docs/guide @CMAKE_CURRENT_SOURCE_DIR@/include/tokotachi
+FILE_PATTERNS          = *.md *.hpp
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/guide/index.md
+STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@/include @CMAKE_CURRENT_SOURCE_DIR@/docs/guide
+STRIP_FROM_INC_PATH    = @CMAKE_CURRENT_SOURCE_DIR@/include
+EXAMPLE_PATH           = @CMAKE_CURRENT_SOURCE_DIR@/examples/gallery
+IMAGE_PATH             = @TOKOTACHI_DOCS_IMAGES@
+MARKDOWN_SUPPORT       = YES
+TOC_INCLUDE_HEADINGS   = 3
+
+# ---- 何を載せるか ----
+# 説明の無いメンバーも載せる。private と内部(detail)は載せない。
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXCLUDE_SYMBOLS        = tokotachi::detail tokotachi::detail::*
+HIDE_FRIEND_COMPOUNDS  = YES
+SORT_MEMBER_DOCS       = NO
+SHOW_USED_FILES        = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_INCOMPLETE_DOC = NO
+QUIET                  = YES
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+
+# ---- HTML ----
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+SEARCHENGINE           = YES
+HTML_COLORSTYLE        = LIGHT
+HTML_EXTRA_STYLESHEET  = @TOKOTACHI_DOCS_THEME@/doxygen-awesome.css @TOKOTACHI_DOCS_THEME@/doxygen-awesome-sidebar-only.css
+HTML_COPY_CLIPBOARD    = YES
+
+# ---- 図(Graphviz) ----
+HAVE_DOT               = @TOKOTACHI_DOCS_HAVE_DOT@
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = NO
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = NO
+INCLUDE_GRAPH          = NO
+INCLUDED_BY_GRAPH      = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+DIRECTORY_GRAPH        = NO

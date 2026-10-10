@@ -1,15 +1,18 @@
-// タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。
-//
-//   tokotachi::TabWidget* tabs = new tokotachi::TabWidget(&window);
-//   tokotachi::Tab* general = tabs->add_tab(general_page, "一般");
-//   tokotachi::Tab* detail = tabs->add_tab(detail_page, "詳細");
-//   detail->enabled = false;
-//   tabs->on_change = [=](tokotachi::Object*) { ... tabs->current_index ... };
-//
-// ページは TabWidget の子になり、選んでいるページだけを見せる。ページを破棄する・別の親へ移すと、そのタブも消える。
-// 見出しが幅に収まらないときは、右端の ◀▶ とホイールで横にスクロールする。
-// 見出しを押すと TabWidget にフォーカスが移り、←→ で選べる。中のどこにフォーカスがあっても、Ctrl+Tab・Ctrl+Shift+Tab・
-// Ctrl+Page Up/Down で選べる。
+/// @file
+/// タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。
+///
+/// @code
+/// tokotachi::TabWidget* tabs = new tokotachi::TabWidget(&window);
+/// tokotachi::Tab* general = tabs->add_tab(general_page, "一般");
+/// tokotachi::Tab* detail = tabs->add_tab(detail_page, "詳細");
+/// detail->enabled = false;
+/// tabs->on_change = [=](tokotachi::Object*) { ... tabs->current_index ... };
+/// @endcode
+///
+/// ページは TabWidget の子になり、選んでいるページだけを見せる。ページを破棄する・別の親へ移すと、そのタブも消える。
+/// 見出しが幅に収まらないときは、右端の ◀▶ とホイールで横にスクロールする。
+/// 見出しを押すと TabWidget にフォーカスが移り、←→ で選べる。中のどこにフォーカスがあっても、Ctrl+Tab・Ctrl+Shift+Tab・
+/// Ctrl+Page Up/Down で選べる。
 #ifndef TOKOTACHI_WIDGETS_TAB_WIDGET_HPP
 #define TOKOTACHI_WIDGETS_TAB_WIDGET_HPP
 
@@ -24,14 +27,14 @@ namespace tokotachi
 
 class TabWidget;
 
-// 1 つのタブ。TabWidget が作り、所有する。
+/// 1 つのタブ。TabWidget が作り、所有する。
 class Tab : public Object
 {
 public:
     Property<std::string> title;
-    // false のタブは、押しても・キーでも選べない(current_index への代入では選べる)。
+    /// false のタブは、押しても・キーでも選べない(current_index への代入では選べる)。
     Property<bool> enabled;
-    // このタブで見せるページ。
+    /// このタブで見せるページ。
     ReadOnlyProperty<Widget*> page;
 
 private:
@@ -57,21 +60,21 @@ public:
     explicit TabWidget(Widget* parent = nullptr);
     ~TabWidget();
 
-    // 最後に加える。page を TabWidget の子にする。最初のタブを加えると、それを選ぶ。
+    /// 最後に加える。page を TabWidget の子にする。最初のタブを加えると、それを選ぶ。
     Tab* add_tab(Widget* page, const std::string& title);
-    // index の位置に加える(範囲の外なら最後)。
+    /// index の位置に加える(範囲の外なら最後)。
     Tab* insert_tab(int index, Widget* page, const std::string& title);
-    // タブを除き、ページを返す(ページは親が無くなり、呼んだ側が持つ)。選んでいたタブなら隣を選ぶ。
+    /// タブを除き、ページを返す(ページは親が無くなり、呼んだ側が持つ)。選んでいたタブなら隣を選ぶ。
     Widget* remove_tab(Tab* tab);
 
-    // タブ(並んだ順)。
+    /// タブ(並んだ順)。
     ReadOnlyProperty<std::vector<Tab*> > tabs;
-    // 選んでいるタブの番号(タブが無ければ -1)。範囲の外の値は無視する。
+    /// 選んでいるタブの番号(タブが無ければ -1)。範囲の外の値は無視する。
     Property<int> current_index;
-    // 選んでいるタブ(無ければ nullptr)。
+    /// 選んでいるタブ(無ければ nullptr)。
     ReadOnlyProperty<Tab*> current_tab;
 
-    // current_index が変わった(利用者の操作・代入・タブの追加と削除のどれでも)。
+    /// current_index が変わった(利用者の操作・代入・タブの追加と削除のどれでも)。
     Property<NotifyHandler> on_change;
 
 protected:
@@ -97,33 +100,33 @@ private:
     void set_current_index(const int& v);
     Tab* get_current_tab() const { return current_ >= 0 ? tabs_[current_] : nullptr; }
 
-    // 番号 i のタブを除く(ページの親は変えない)。
+    /// 番号 i のタブを除く(ページの親は変えない)。
     void erase_tab(int i);
-    // 見出しが変わった・タブの有効が変わった。
+    /// 見出しが変わった・タブの有効が変わった。
     void tab_changed();
-    // 選ぶタブを変え、ページの表示を切り替え、知らせる。
+    /// 選ぶタブを変え、ページの表示を切り替え、知らせる。
     void select(int i);
-    // 有効なタブを from から step の向きに探す(見つからなければ -1)。
+    /// 有効なタブを from から step の向きに探す(見つからなければ -1)。
     int next_enabled(int from, int step) const;
 
-    // 見出しの並びの高さ・各見出しの幅(dp)。
+    /// 見出しの並びの高さ・各見出しの幅(dp)。
     float bar_height() const;
     float tab_width(const Tab* tab) const;
     const TextLayout& title_layout(const Tab* tab) const;
     float total_width() const;
-    // 見出しを並べられる幅(はみ出すときは ◀▶ の分を除く)。
+    /// 見出しを並べられる幅(はみ出すときは ◀▶ の分を除く)。
     float visible_width() const;
     bool overflowing() const;
     void scroll_to(float x);
     void ensure_visible(int i);
-    // 位置 p にある見出しの番号(無ければ -1)。◀▶ の上なら -2・-3。
+    /// 位置 p にある見出しの番号(無ければ -1)。◀▶ の上なら -2・-3。
     int hit(const Point& p) const;
 
     std::vector<Tab*> tabs_;
     int current_;
     NotifyHandler on_change_;
-    float scroll_;  // 見出しの並びの横のスクロール(dp)
-    int hover_;     // ポインタが乗っている見出し(-1 なら無し)
+    float scroll_;  ///< 見出しの並びの横のスクロール(dp)
+    int hover_;     ///< ポインタが乗っている見出し(-1 なら無し)
     bool destroying_;
 };
 

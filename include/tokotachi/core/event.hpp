@@ -1,4 +1,5 @@
-// イベントの値とハンドラの型(docs/adr/0013)。位置はそのウィジェットの左上を原点とする dp。
+/// @file
+/// イベントの値とハンドラの型(docs/adr/0013)。位置はそのウィジェットの左上を原点とする dp。
 #ifndef TOKOTACHI_CORE_EVENT_HPP
 #define TOKOTACHI_CORE_EVENT_HPP
 
@@ -22,15 +23,15 @@ enum class MouseButton
     RIGHT
 };
 
-// 修飾キー(ビットの組み合わせ)。
+/// 修飾キー(ビットの組み合わせ)。
 typedef unsigned Modifiers;
 const Modifiers MODIFIER_NONE = 0;
 const Modifiers MODIFIER_SHIFT = 1u << 0;
 const Modifiers MODIFIER_CONTROL = 1u << 1;
 const Modifiers MODIFIER_ALT = 1u << 2;
-const Modifiers MODIFIER_META = 1u << 3;  // Windows キー / Super
+const Modifiers MODIFIER_META = 1u << 3;  ///< Windows キー / Super
 
-// マクロとぶつかる名前は別名にする(DELETE は winnt.h のマクロ。docs/adr/0013)。
+/// マクロとぶつかる名前は別名にする(DELETE は winnt.h のマクロ。docs/adr/0013)。
 enum class Key
 {
     UNKNOWN,
@@ -39,17 +40,17 @@ enum class Key
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
     DIGIT_0, DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4, DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9,
     F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
-    // 修飾キーそのもの(左右を区別しない)
+    /// 修飾キーそのもの(左右を区別しない)
     SHIFT, CONTROL, ALT, META
 };
 
-// accepted が false のまま返ったイベントは親のウィジェットへ送られる(マウスのボタン・キー)。
+/// accepted が false のまま返ったイベントは親のウィジェットへ送られる(マウスのボタン・キー)。
 struct MouseEvent
 {
     Point pos;
-    MouseButton button;  // 押された・離されたボタン。移動のイベントでは NONE
+    MouseButton button;  ///< 押された・離されたボタン。移動のイベントでは NONE
     Modifiers modifiers;
-    int clicks;  // 連続して押した回数(ダブルクリックなら 2)
+    int clicks;  ///< 連続して押した回数(ダブルクリックなら 2)
     bool accepted;
 
     MouseEvent(const Point& pos_, MouseButton button_, Modifiers modifiers_, int clicks_)
@@ -65,7 +66,7 @@ struct KeyEvent
     Key key;
     Modifiers modifiers;
     bool repeat;
-    std::uint32_t native_key;  // SDL のキーコード(Key に無いキーを扱うため)
+    std::uint32_t native_key;  ///< SDL のキーコード(Key に無いキーを扱うため)
     bool accepted;
 
     KeyEvent(Key key_, Modifiers modifiers_, bool repeat_, std::uint32_t native_key_)
@@ -76,8 +77,8 @@ struct KeyEvent
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
-// マウスのホイール。delta は回した量(目盛りの数。滑らかに回るホイールでは小数)。y が正なら奥へ回した(上へスクロールする)、
-// x が正なら右へ。OS の「逆向きのスクロール」の設定は反映済み。
+/// マウスのホイール。delta は回した量(目盛りの数。滑らかに回るホイールでは小数)。y が正なら奥へ回した(上へスクロールする)、
+/// x が正なら右へ。OS の「逆向きのスクロール」の設定は反映済み。
 struct WheelEvent
 {
     Point pos;
@@ -93,7 +94,7 @@ struct WheelEvent
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
-// IME の確定やキーボードからの文字の入力。
+/// IME の確定やキーボードからの文字の入力。
 struct TextInputEvent
 {
     std::string text;
@@ -102,7 +103,7 @@ struct TextInputEvent
     explicit TextInputEvent(const std::string& text_) : text(text_), accepted(true) {}
 };
 
-// IME の変換中の文字列(docs/adr/0009)。start・length は変換対象の文節(コードポイントの単位。無ければ -1)。
+/// IME の変換中の文字列(docs/adr/0009)。start・length は変換対象の文節(コードポイントの単位。無ければ -1)。
 struct TextEditingEvent
 {
     std::string text;
@@ -116,14 +117,14 @@ struct TextEditingEvent
     }
 };
 
-// ハンドラの型。第 1 引数は常にイベントの発生元(Widget・Timer 等。docs/adr/0013)。
-// 発生元の機能を使うときは dynamic_cast で型を確かめる。
+/// ハンドラの型。第 1 引数は常にイベントの発生元(Widget・Timer 等。docs/adr/0013)。
+/// 発生元の機能を使うときは dynamic_cast で型を確かめる。
 typedef std::function<void(Object* sender)> NotifyHandler;
 typedef std::function<void(Object* sender, MouseEvent& e)> MouseHandler;
 typedef std::function<void(Object* sender, KeyEvent& e)> KeyHandler;
 typedef std::function<void(Object* sender, WheelEvent& e)> WheelHandler;
 typedef std::function<void(Object* sender, Canvas& canvas)> PaintHandler;
-// can_close を false にすると閉じない。
+/// can_close を false にすると閉じない。
 typedef std::function<void(Object* sender, bool& can_close)> CloseHandler;
 
 }  // namespace tokotachi

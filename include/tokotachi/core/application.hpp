@@ -1,4 +1,5 @@
-// アプリケーション: SDL3 の初期化とイベントループ(docs/adr/0010)。1 つのプロセスに 1 つだけ作る。
+/// @file
+/// アプリケーション: SDL3 の初期化とイベントループ(docs/adr/0010)。1 つのプロセスに 1 つだけ作る。
 #ifndef TOKOTACHI_CORE_APPLICATION_HPP
 #define TOKOTACHI_CORE_APPLICATION_HPP
 
@@ -22,21 +23,21 @@ public:
 
     static Application* instance();
 
-    // ライト・ダークの選び方(既定は SYSTEM。docs/adr/0023)。
+    /// ライト・ダークの選び方(既定は SYSTEM。docs/adr/0023)。
     Property<ColorScheme> color_scheme;
-    // ライト・ダークのときに使うテーマ(既定は Theme::light()・Theme::dark())。
+    /// ライト・ダークのときに使うテーマ(既定は Theme::light()・Theme::dark())。
     Property<Theme> light_theme;
     Property<Theme> dark_theme;
-    // 今ダークのテーマを使っているか。
+    /// 今ダークのテーマを使っているか。
     ReadOnlyProperty<bool> dark;
-    // 今使っているテーマ。
+    /// 今使っているテーマ。
     ReadOnlyProperty<Theme> theme;
 
-    // 使うテーマが変わった(color_scheme・OS の設定・light_theme・dark_theme の変更による)。
-    // 呼ばれる時点で、すべてのウィンドウの描き直しは依頼済み。
+    /// 使うテーマが変わった(color_scheme・OS の設定・light_theme・dark_theme の変更による)。
+    /// 呼ばれる時点で、すべてのウィンドウの描き直しは依頼済み。
     Property<NotifyHandler> on_theme_change;
 
-    // イベントループを回し、quit() で抜ける。戻り値は quit() に渡した値。
+    /// イベントループを回し、quit() で抜ける。戻り値は quit() に渡した値。
     int exec();
     void quit(int code = 0);
 
