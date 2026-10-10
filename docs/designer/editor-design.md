@@ -181,6 +181,7 @@ Bethany と同じ。
 - **画像**(dsl-spec.md §5.1): キャンバスを描くたびに、参照している画像のファイルを読んで渡す。画像のファイルが変わったら描き直す。
 - **JSON Schema**: Zod のスキーマから `schema/ttui.schema.json` を作ってコミットし(`check:schema` で食い違いを見つける)、`jsonValidation` に登録する。
 - **梱包**: vsce(`--no-dependencies`、まとめた成果物とキャンバスのモジュールだけ)。拡張の ID は `tokotachi-designer`、約 1.2 MB。
+  配る .vsix と Marketplace への公開は CI で行う([ci.md](ci.md))。
 - **l10n**: 元の文字は英語で、`l10n.t('...')`(拡張は `vscode.l10n.t`)で訳す。訳は `packages/extension/l10n/bundle.l10n.ja.json`、
   コマンド・設定の名前は `package.nls.ja.json`。Webview には拡張が HTML に埋め込んで渡し、CLI も同じ訳を使う(Bethany と同じ。Bethany と同じ文字は同じ訳)。
   `pnpm l10n:check`(`pnpm check` に含む)で、訳の漏れ・使われていない訳・`{0}` の食い違い・コードに日本語を直接書いていないことを調べる

@@ -57,4 +57,5 @@
 - コード生成を変えるときは、model.ts(操作の並び)を変え、C++ の書き出しとキャンバスの実行の両方に反映する。
   新しい呼び出し(`call` の method)を加えたら、キャンバスの `Runner::call` にも加える。
 - 公開のヘッダを変えたら、カタログの取り出し(`pnpm catalog:extract`)と、対応表の生成(`pnpm canvas:table`)を行う。
-- Linux の Node.js でのキャンバスの確認は、まだ行っていない(WSL に Node.js が無い。拡張の CI で行う)。
+- Linux の Node.js でのキャンバスの確認は、拡張の CI(`.github/workflows/designer.yml` の canvas。[ci.md](../designer/ci.md))で行う
+  (キャンバスを使うテスト・ネイティブとの画素の比較)。
