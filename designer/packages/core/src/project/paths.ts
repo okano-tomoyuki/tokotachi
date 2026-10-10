@@ -1,0 +1,58 @@
+/**
+ * プロジェクトファイルのウィンドウのパス(docs/designer/project-spec.md §3。Bethany から流用)の計算。区切りは `/` だけを扱う。
+ * core は Webview でも動くため、node:path を使わない。
+ */
+
+export const WINDOW_EXTENSION = '.ttui.json';
+export const PROJECT_EXTENSION = '.ttproj.json';
+
+/** `.`・`..`・連続した `/` を畳む。先頭の `..` は残す。絶対パス(`/` で始まる)なら `/` で始める */
+export function normalizePath(path: string): string {
+  const absolute = path.startsWith('/');
+  const parts: string[] = [];
+  for (const part of path.split('/')) {
+    if (part === '' || part === '.') continue;
+    if (part === '..' && parts.length > 0 && parts[parts.length - 1] !== '..') parts.pop();
+    else if (part !== '..' || !absolute) parts.push(part);
+  }
+  return (absolute ? '/' : '') + parts.join('/');
+}
+
+/** プロジェクトファイルに書けるウィンドウのパスか(相対パス・区切りは `/`・`.ttui.json` で終わる) */
+export function isValidWindowPath(path: string): boolean {
+  return (
+    path.endsWith(WINDOW_EXTENSION) &&
+    !path.startsWith('/') &&
+    !path.includes('\\') &&
+    !/^[A-Za-z]:/.test(path) &&
+    // `.ttui.json` だけ(ウィンドウの名前が空)は不可
+    (normalizePath(path).split('/').pop() ?? '').length > WINDOW_EXTENSION.length
+  );
+}
+
+/** 同じウィンドウを指すかを比べるための形 */
+export function sameWindowPath(a: string, b: string): boolean {
+  return normalizePath(a) === normalizePath(b);
+}
+
+/** 絶対パスのフォルダ。`/a/b/c.json` → `/a/b` */
+export function dirname(path: string): string {
+  const index = path.lastIndexOf('/');
+  return index <= 0 ? '/' : path.slice(0, index);
+}
+
+/** フォルダ(絶対パス)から相対パスをたどった先の絶対パス */
+export function resolvePath(dir: string, relative: string): string {
+  return normalizePath(`${dir}/${relative}`);
+}
+
+/** フォルダ(絶対パス)から target(絶対パス)への相対パス */
+export function relativePath(dir: string, target: string): string {
+  const from = normalizePath(dir).split('/').filter(Boolean);
+  const to = normalizePath(target).split('/').filter(Boolean);
+  let common = 0;
+  while (common < from.length && common < to.length && from[common] === to[common]) common++;
+  return [...from.slice(common).map(() => '..'), ...to.slice(common)].join('/');
+}
+
+/** path が base そのものか、その下にあるか(どちらも絶対パス) */

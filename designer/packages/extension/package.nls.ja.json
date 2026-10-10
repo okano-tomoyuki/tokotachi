@@ -10,5 +10,13 @@
   "config.namespace": "生成するクラスの名前空間(例: `app::ui`)。空なら使わない。",
   "config.headerDir": "生成するヘッダのフォルダ(定義ファイルからの相対パス)。空なら定義ファイルと同じフォルダ。",
   "config.sourceDir": "生成するソースのフォルダ(定義ファイルからの相対パス)。空なら定義ファイルと同じフォルダ。",
-  "config.colorScheme": "キャンバスの配色。`auto` は VS Code の配色テーマに合わせる。"
+  "config.colorScheme": "キャンバスの配色。`auto` は VS Code の配色テーマに合わせる。",
+  "viewContainer.title": "Tokotachi Designer",
+  "view.projects.name": "プロジェクト",
+  "view.projects.welcome": "プロジェクトを作って、ウィンドウを設計し、C++ のコードを生成します(main.cpp と CMakeLists.txt も生成します)。\n[新しいプロジェクト](command:tokotachiDesigner.newProject)",
+  "command.newProject.title": "新しいプロジェクト...",
+  "command.generateProject.title": "プロジェクトのコードを生成",
+  "command.setMainWindow.title": "メインのウィンドウに設定",
+  "command.addToProject.title": "プロジェクトに追加...",
+  "command.refreshProjects.title": "更新"
 }

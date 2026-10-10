@@ -9,6 +9,7 @@ import {
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { addToNearestProject } from './projectCommands.ts';
 
 /** snake_case から PascalCase(main_window → MainWindow)。 */
 function className(name: string): string {
@@ -87,5 +88,7 @@ export async function newWindow(folder?: vscode.Uri): Promise<void> {
     uri,
     new TextEncoder().encode(serializeDocument(newWindowDocument(name))),
   );
+  // 同じフォルダか上のフォルダにプロジェクトがあれば、そこに加える
+  await addToNearestProject(uri);
   await vscode.commands.executeCommand('vscode.openWith', uri, 'tokotachiDesigner.designer');
 }

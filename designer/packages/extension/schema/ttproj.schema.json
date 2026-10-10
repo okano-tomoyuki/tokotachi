@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "format_version": {
+      "type": "number",
+      "const": 1
+    },
+    "codegen": {
+      "type": "object",
+      "properties": {
+        "comment_locale": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ja"
+          ]
+        },
+        "generate_on_save": {
+          "type": "boolean"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "include_guard_prefix": {
+          "type": "string"
+        },
+        "header_dir": {
+          "type": "string"
+        },
+        "source_dir": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "main_window": {
+      "type": "string"
+    },
+    "windows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "format_version"
+  ],
+  "additionalProperties": false
+}

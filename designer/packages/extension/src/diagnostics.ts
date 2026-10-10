@@ -1,17 +1,24 @@
 /**
  * 定義ファイルの検証の結果を問題パネルに出す(Bethany と同じ)。JSON 上の位置は core の locate でファイル上の範囲にする。
  */
-import { DOCUMENT_EXTENSION, locate, parseDocument } from '@tokotachi-designer/core';
+import {
+  DOCUMENT_EXTENSION,
+  locate,
+  parseDocument,
+  parseProject,
+  PROJECT_EXTENSION,
+} from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 
 export function registerDiagnostics(): vscode.Disposable {
   const collection = vscode.languages.createDiagnosticCollection('tokotachiDesigner');
   const update = (document: vscode.TextDocument): void => {
-    if (!document.uri.path.endsWith(DOCUMENT_EXTENSION)) {
+    const isProject = document.uri.path.endsWith(PROJECT_EXTENSION);
+    if (!isProject && !document.uri.path.endsWith(DOCUMENT_EXTENSION)) {
       return;
     }
     const text = document.getText();
-    const { diagnostics } = parseDocument(text);
+    const { diagnostics } = isProject ? parseProject(text) : parseDocument(text);
     collection.set(
       document.uri,
       diagnostics.map((d) => {

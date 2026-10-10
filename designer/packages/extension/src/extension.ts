@@ -4,7 +4,9 @@
 import * as vscode from 'vscode';
 import { DesignerEditorProvider } from './designerEditorProvider.ts';
 import { registerDiagnostics } from './diagnostics.ts';
-import { generateWindowCode, registerGenerateOnSave } from './generateCode.ts';
+import { generateProjectCode, generateWindowCode, registerGenerateOnSave } from './generateCode.ts';
+import { addToProject, newProject, setMainWindow } from './projectCommands.ts';
+import { registerProjectsView } from './projectsView.ts';
 import { newWindow } from './newWindow.ts';
 
 /** コマンドの対象の定義ファイル(エクスプローラーの右クリック、無ければ開いているもの)。 */
@@ -20,7 +22,39 @@ async function targetDocument(uri?: vscode.Uri): Promise<vscode.TextDocument | u
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  const projects = registerProjectsView();
+  /** ビューの項目から呼ばれたときの対象の URI。 */
+  const uriOf = (arg: unknown): vscode.Uri | undefined =>
+    arg instanceof vscode.Uri
+      ? arg
+      : ((arg as { uri?: vscode.Uri; project?: { uri: vscode.Uri } } | undefined)?.uri ??
+        (arg as { project?: { uri: vscode.Uri } } | undefined)?.project?.uri);
   context.subscriptions.push(
+    projects.disposable,
+    vscode.commands.registerCommand('tokotachiDesigner.newProject', (folder?: vscode.Uri) =>
+      newProject(folder instanceof vscode.Uri ? folder : undefined),
+    ),
+    vscode.commands.registerCommand('tokotachiDesigner.generateProject', async (arg?: unknown) => {
+      const uri = uriOf(arg) ?? vscode.window.activeTextEditor?.document.uri;
+      if (uri?.path.endsWith('.ttproj.json')) {
+        await generateProjectCode(uri, { quiet: false }, true);
+      }
+    }),
+    vscode.commands.registerCommand('tokotachiDesigner.setMainWindow', async (arg?: unknown) => {
+      const uri = uriOf(arg);
+      if (uri) {
+        await setMainWindow(uri);
+      }
+    }),
+    vscode.commands.registerCommand('tokotachiDesigner.addToProject', async (arg?: unknown) => {
+      const uri = uriOf(arg);
+      if (uri) {
+        await addToProject(uri);
+      }
+    }),
+    vscode.commands.registerCommand('tokotachiDesigner.refreshProjects', () => {
+      projects.view.refresh();
+    }),
     DesignerEditorProvider.register(context),
     registerDiagnostics(),
     registerGenerateOnSave(),

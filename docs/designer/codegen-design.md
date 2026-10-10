@@ -273,8 +273,8 @@ int main(int argc, char** argv)
 ## 8. プロジェクトと設定
 
 定義ファイルは画面の設計だけを持ち、生成の設定はプロジェクトファイル(`*.ttproj.json`)に持つ。
-プロジェクトファイルを作るまでは、CLI(`ttd generate`)の引数で渡す(`--comment-locale`・`--namespace`・`--header-dir`・`--source-dir`)。
-プロジェクトファイルの仕様は、拡張を作る段階で Bethany の project-spec.md を土台に書く。持つ設定は次のとおり。
+どのプロジェクトにも属さないウィンドウは、拡張の設定か CLI(`ttd generate`)の引数で渡す(`--comment-locale`・`--namespace`・`--header-dir`・`--source-dir`)。
+仕様は [project-spec.md](project-spec.md)。持つ設定は次のとおり。
 
 | 設定 | 既定 |
 |---|---|

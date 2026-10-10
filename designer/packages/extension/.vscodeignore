@@ -3,6 +3,7 @@
 !dist/canvas/**
 !dist/webview/**
 !schema/**
+!images/**
 !l10n/**
 !package.json
 !package.nls.json

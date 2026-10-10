@@ -10,5 +10,13 @@
   "config.namespace": "Namespace of the generated classes (e.g. `app::ui`). Empty for none.",
   "config.headerDir": "Folder of the generated headers, relative to the window definition. Empty for the same folder.",
   "config.sourceDir": "Folder of the generated sources, relative to the window definition. Empty for the same folder.",
-  "config.colorScheme": "Color scheme of the canvas. `auto` follows the color theme of VS Code."
+  "config.colorScheme": "Color scheme of the canvas. `auto` follows the color theme of VS Code.",
+  "viewContainer.title": "Tokotachi Designer",
+  "view.projects.name": "Projects",
+  "view.projects.welcome": "Create a project to design windows and generate C++ code (main.cpp and CMakeLists.txt are generated too).\n[New Project](command:tokotachiDesigner.newProject)",
+  "command.newProject.title": "New Project...",
+  "command.generateProject.title": "Generate Project",
+  "command.setMainWindow.title": "Set as Main Window",
+  "command.addToProject.title": "Add to Project...",
+  "command.refreshProjects.title": "Refresh"
 }

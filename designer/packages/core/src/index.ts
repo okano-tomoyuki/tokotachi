@@ -47,3 +47,11 @@ export {
   type Positions,
   type Slot,
 } from './edit/structure.ts';
+export * from './project/paths.ts';
+export * from './project/schema.ts';
+export {
+  parseProject,
+  serializeProject,
+  validateProject,
+  type ProjectParseResult,
+} from './project/parse.ts';

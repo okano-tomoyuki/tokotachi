@@ -59,6 +59,36 @@
         "title": "%command.openAsText.title%",
         "category": "Tokotachi Designer",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "tokotachiDesigner.newProject",
+        "title": "%command.newProject.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "tokotachiDesigner.generateProject",
+        "title": "%command.generateProject.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "tokotachiDesigner.setMainWindow",
+        "title": "%command.setMainWindow.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(star-full)"
+      },
+      {
+        "command": "tokotachiDesigner.addToProject",
+        "title": "%command.addToProject.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tokotachiDesigner.refreshProjects",
+        "title": "%command.refreshProjects.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -76,6 +106,11 @@
       ],
       "explorer/context": [
         {
+          "command": "tokotachiDesigner.newProject",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@9"
+        },
+        {
           "command": "tokotachiDesigner.newWindow",
           "when": "explorerResourceIsFolder",
           "group": "navigation@9"
@@ -84,11 +119,70 @@
           "command": "tokotachiDesigner.generateCode",
           "when": "resourceFilename =~ /\\.ttui\\.json$/",
           "group": "navigation@9"
+        },
+        {
+          "command": "tokotachiDesigner.generateProject",
+          "when": "resourceFilename =~ /\\.ttproj\\.json$/",
+          "group": "navigation@9"
         }
       ],
       "file/newFile": [
         {
           "command": "tokotachiDesigner.newWindow"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "tokotachiDesigner.newProject",
+          "when": "view == tokotachiDesigner.projects",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tokotachiDesigner.newWindow",
+          "when": "view == tokotachiDesigner.projects",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tokotachiDesigner.refreshProjects",
+          "when": "view == tokotachiDesigner.projects",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tokotachiDesigner.generateProject",
+          "when": "view == tokotachiDesigner.projects && viewItem == project",
+          "group": "inline"
+        },
+        {
+          "command": "tokotachiDesigner.generateProject",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
+        },
+        {
+          "command": "tokotachiDesigner.setMainWindow",
+          "when": "view == tokotachiDesigner.projects && viewItem == window.project"
+        },
+        {
+          "command": "tokotachiDesigner.addToProject",
+          "when": "view == tokotachiDesigner.projects && viewItem == window.loose"
+        },
+        {
+          "command": "tokotachiDesigner.generateCode",
+          "when": "view == tokotachiDesigner.projects && viewItem =~ /^window/"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tokotachiDesigner.setMainWindow",
+          "when": "false"
+        },
+        {
+          "command": "tokotachiDesigner.addToProject",
+          "when": "false"
+        },
+        {
+          "command": "tokotachiDesigner.refreshProjects",
+          "when": "false"
         }
       ]
     },
@@ -96,6 +190,10 @@
       {
         "fileMatch": "*.ttui.json",
         "url": "./schema/ttui.schema.json"
+      },
+      {
+        "fileMatch": "*.ttproj.json",
+        "url": "./schema/ttproj.schema.json"
       }
     ],
     "configuration": {
@@ -141,7 +239,32 @@
           "markdownDescription": "%config.colorScheme%"
         }
       }
-    }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tokotachiDesigner",
+          "title": "%viewContainer.title%",
+          "icon": "images/activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "tokotachiDesigner": [
+        {
+          "id": "tokotachiDesigner.projects",
+          "name": "%view.projects.name%",
+          "icon": "images/activitybar.svg",
+          "contextualTitle": "%viewContainer.title%"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "tokotachiDesigner.projects",
+        "contents": "%view.projects.welcome%"
+      }
+    ]
   },
   "scripts": {
     "build": "node build.mjs",

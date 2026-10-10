@@ -1,15 +1,26 @@
 /**
  * コード生成(docs/designer/codegen-design.md・editor-design.md §6)。コマンド「コードを生成」・デザイナーの画面・保存したときに呼ばれる。
- * Bethany の generateCode を土台に、プロジェクトファイルを作るまでは拡張の設定で生成する。
+ * Bethany の generateCode を土台にする。ウィンドウがプロジェクトに属していればプロジェクトの codegen の設定で、
+ * 属していなければ拡張の設定(tokotachiDesigner.codegen.*)で生成する。プロジェクトファイルからは起動部分(main.cpp・CMakeLists.txt)を生成する。
  */
 import {
   generateCpp,
+  generateProject,
   resolveCppTarget,
+  windowCppOptions,
   type CppTarget,
   type GenerateResult,
+  type ProjectWindow,
 } from '@tokotachi-designer/codegen';
-import { DOCUMENT_EXTENSION, hasErrors, parseDocument } from '@tokotachi-designer/core';
+import {
+  DOCUMENT_EXTENSION,
+  hasErrors,
+  parseDocument,
+  parseProject,
+  PROJECT_EXTENSION,
+} from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { projectOf, readText, windowUri } from './projects.ts';
 import { cppOptions, generateOnSave } from './settings.ts';
 
 const output = { channel: undefined as vscode.OutputChannel | undefined };
@@ -34,12 +45,18 @@ export function registerGenerateOnSave(): vscode.Disposable {
   // 同じファイルの保存が続いたとき(自動保存など)に、生成が重ならないように順に行う
   const running = new Map<string, Promise<unknown>>();
   return vscode.workspace.onDidSaveTextDocument((document) => {
-    if (!document.uri.path.endsWith(DOCUMENT_EXTENSION) || !generateOnSave(document.uri)) {
+    const isProject = document.uri.path.endsWith(PROJECT_EXTENSION);
+    if (!isProject && !document.uri.path.endsWith(DOCUMENT_EXTENSION)) {
       return;
     }
     const key = document.uri.toString();
     const run = (running.get(key) ?? Promise.resolve())
-      .then(() => generateWindowCode(document, { quiet: true, onSave: true }))
+      .then(async (): Promise<unknown> => {
+        if (isProject) {
+          return generateProjectCode(document.uri, { quiet: true, onSave: true }, false);
+        }
+        return generateWindowCode(document, { quiet: true, onSave: true });
+      })
       .catch((error: unknown) => {
         void vscode.window.showErrorMessage(String(error));
       });
@@ -73,7 +90,17 @@ export async function generateWindowCode(
   const doc = parsed.document;
   const fileName = document.uri.path.split('/').pop() ?? `window${DOCUMENT_EXTENSION}`;
   const directory = vscode.Uri.joinPath(document.uri, '..');
-  const settings = cppOptions(document.uri);
+  // プロジェクトに属していれば、プロジェクトの設定で生成する
+  const owner = await projectOf(document.uri);
+  if (
+    options.onSave &&
+    (owner ? owner.project.doc.codegen?.generate_on_save === false : !generateOnSave(document.uri))
+  ) {
+    return undefined;
+  }
+  const settings = owner
+    ? windowCppOptions(owner.project.doc, owner.path)
+    : cppOptions(document.uri);
   const target = resolveCppTarget(doc, fileName, settings);
   // 出力先の既存の内容を先に読んでおく(生成は同期的に行う)
   const existing = new Map<string, string | undefined>();
@@ -85,6 +112,74 @@ export async function generateWindowCode(
     generateWindowCode(document, { quiet: true, overwrite: true }),
   );
   return written ? { directory, target } : undefined;
+}
+
+/**
+ * プロジェクトの起動部分(main.cpp・CMakeLists.txt)を生成する。all ならプロジェクトのすべてのウィンドウのコードも生成する。
+ * 生成できなかった・取りやめたときは false。
+ */
+export async function generateProjectCode(
+  uri: vscode.Uri,
+  options: GenerateOptions,
+  all: boolean,
+): Promise<boolean> {
+  const text = await readText(uri);
+  const parsed = text === undefined ? undefined : parseProject(text);
+  if (!parsed?.project || hasErrors(parsed.diagnostics)) {
+    if (!options.onSave) {
+      void vscode.window.showErrorMessage(
+        vscode.l10n.t(
+          'Cannot generate code because the project file has errors. See the Problems panel.',
+        ),
+      );
+    }
+    return false;
+  }
+  const project = parsed.project;
+  if (options.onSave && project.codegen?.generate_on_save === false) {
+    return false;
+  }
+  const windows: ProjectWindow[] = [];
+  const failed: string[] = [];
+  for (const path of project.windows ?? []) {
+    const wUri = windowUri(uri, path);
+    const wText = await readText(wUri);
+    const w = wText === undefined ? undefined : parseDocument(wText);
+    if (!w?.document || hasErrors(w.diagnostics)) {
+      failed.push(path);
+      continue;
+    }
+    windows.push({ path, doc: w.document });
+    if (all) {
+      const result = await generateWindowCode(await vscode.workspace.openTextDocument(wUri), {
+        quiet: true,
+      });
+      if (!result) {
+        failed.push(path);
+      }
+    }
+  }
+  if (failed.length > 0 && !options.onSave) {
+    void vscode.window.showWarningMessage(
+      vscode.l10n.t('These windows were not generated because of errors: {0}', failed.join(', ')),
+    );
+  }
+  const fileName = uri.path.split('/').pop() ?? `app${PROJECT_EXTENSION}`;
+  const directory = vscode.Uri.joinPath(uri, '..');
+  const existing = new Map<string, string | undefined>();
+  for (const path of ['main.cpp', 'CMakeLists.txt']) {
+    existing.set(path, await readText(vscode.Uri.joinPath(directory, path)));
+  }
+  const generated = generateProject(project, fileName, windows, (path) => existing.get(path));
+  if ('error' in generated) {
+    if (!options.onSave) {
+      void vscode.window.showErrorMessage(generated.error);
+    }
+    return false;
+  }
+  return writeGenerated(directory, generated, existing, options, () =>
+    generateProjectCode(uri, { quiet: true, overwrite: true }, false),
+  );
 }
 
 /**
@@ -198,19 +293,6 @@ async function writeGenerated(
     }
   }
   return true;
-}
-
-/** 開いている(保存していない変更を含む)内容、無ければファイルの内容。ファイルが無ければ undefined。 */
-async function readText(uri: vscode.Uri): Promise<string | undefined> {
-  const opened = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
-  if (opened) {
-    return opened.getText();
-  }
-  try {
-    return new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
-  } catch {
-    return undefined;
-  }
 }
 
 /** WorkspaceEdit で書く(開いているエディタにも反映され、Undo もできる)。書く前に保存していない変更が無かったファイルは保存する。 */

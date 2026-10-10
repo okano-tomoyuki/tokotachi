@@ -1,23 +1,29 @@
 /**
  * コード生成の CLI(docs/designer/codegen-design.md。Bethany の beth から流用)。
  *
- *   ttd generate <file.ttui.json> [--force] [--check] [--locale <ja|en>]
+ *   ttd generate <file.ttui.json | file.ttproj.json> [--force] [--check] [--locale <ja|en>]
  *                [--comment-locale <ja|en>] [--namespace <a::b>] [--header-dir <dir>] [--source-dir <dir>]
  *
  * - 定義ファイルから C++ のヘッダとソースを生成する。既存のファイルはマーカーの区間だけを置き換える。
+ *   ウィンドウがプロジェクトに属していれば(定義ファイルのフォルダから上へたどってプロジェクトファイルを探す)、プロジェクトの設定で生成する。
+ *   属していなければ、引数の設定で生成する。
+ * - プロジェクトファイルなら、そのすべてのウィンドウと、起動部分(main.cpp・CMakeLists.txt)を生成する(project-spec.md §5)。
  * - 手で変えた区間があれば書かずに失敗する(--force で上書き)。
  * - --check は書かず、生成結果が既存のファイルと同じか(最新か)だけを調べる(CI 向け)。
- * - 生成の設定は、プロジェクトファイル(*.ttproj.json)を作るまでは引数で渡す(codegen-design.md §8)。
  * - メッセージの言語は --locale、無ければ環境変数(LC_ALL・LC_MESSAGES・LANG)、無ければ OS の設定で決まる。
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, resolve } from 'node:path';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   DEFAULT_CPP_OPTIONS,
   generateCpp,
+  generateProject,
+  windowCppOptions,
   type CommentLocale,
   type CppOptions,
+  type GenerateResult,
+  type ProjectWindow,
 } from '@tokotachi-designer/codegen';
 import {
   configureL10n,
@@ -25,12 +31,21 @@ import {
   isValidIdentifier,
   l10n,
   parseDocument,
+  parseProject,
+  PROJECT_EXTENSION,
+  sameWindowPath,
   type Diagnostic,
+  type TtprojDocument,
 } from '@tokotachi-designer/core';
 
 const USAGE =
-  'Usage: ttd generate <file.ttui.json> [--force] [--check] [--locale <ja|en>] ' +
+  'Usage: ttd generate <file.ttui.json | file.ttproj.json> [--force] [--check] [--locale <ja|en>] ' +
   '[--comment-locale <ja|en>] [--namespace <a::b>] [--header-dir <dir>] [--source-dir <dir>]';
+
+interface Flags {
+  readonly force: boolean;
+  readonly check: boolean;
+}
 
 /** メッセージの言語(--locale、環境変数、OS の設定の順)。 */
 function detectLanguage(option: string | undefined): string {
@@ -40,6 +55,81 @@ function detectLanguage(option: string | undefined): string {
     (env['LC_ALL'] || env['LC_MESSAGES'] || env['LANG'] || undefined) ??
     Intl.DateTimeFormat().resolvedOptions().locale
   );
+}
+
+/** プロジェクトのフォルダからの相対パス(区切りは /)。 */
+function posixRelative(from: string, to: string): string {
+  return relative(from, to).split('\\').join('/');
+}
+
+/** 定義ファイルのフォルダから上へたどり、そのウィンドウを含むプロジェクトファイルを探す。 */
+function projectContaining(
+  dslPath: string,
+): { doc: TtprojDocument; path: string; windowPath: string } | undefined {
+  for (let dir = dirname(dslPath); ; dir = dirname(dir)) {
+    let names: string[] = [];
+    try {
+      names = readdirSync(dir).filter((n) => n.endsWith(PROJECT_EXTENSION));
+    } catch {
+      // 読めないフォルダは飛ばす
+    }
+    for (const name of names) {
+      const text = readIfExists(resolve(dir, name));
+      const doc = text === undefined ? undefined : parseProject(text).project;
+      const windowPath = posixRelative(dir, dslPath);
+      if (doc && (doc.windows ?? []).some((w) => sameWindowPath(w, windowPath))) {
+        return { doc, path: resolve(dir, name), windowPath };
+      }
+    }
+    if (dirname(dir) === dir) {
+      return undefined;
+    }
+  }
+}
+
+/** ウィンドウのコードを生成して書く。 */
+function generateWindow(dslPath: string, options: CppOptions, flags: Flags): number {
+  const { document, diagnostics } = parseDocument(readFileSync(dslPath, 'utf8'));
+  report(dslPath, diagnostics);
+  if (!document || hasErrors(diagnostics)) {
+    return 1;
+  }
+  const outDir = dirname(dslPath);
+  const generated = generateCpp(
+    document,
+    basename(dslPath),
+    (path) => readIfExists(resolve(outDir, path)),
+    options,
+  );
+  return write(generated, outDir, flags);
+}
+
+/** プロジェクトのすべてのウィンドウと、起動部分を生成して書く。 */
+function generateWholeProject(projectPath: string, flags: Flags): number {
+  const { project, diagnostics } = parseProject(readFileSync(projectPath, 'utf8'));
+  report(projectPath, diagnostics);
+  if (!project || hasErrors(diagnostics)) {
+    return 1;
+  }
+  const dir = dirname(projectPath);
+  let status = 0;
+  const windows: ProjectWindow[] = [];
+  for (const path of project.windows ?? []) {
+    const dslPath = resolve(dir, path);
+    status = Math.max(status, generateWindow(dslPath, windowCppOptions(project, path), flags));
+    const parsed = parseDocument(readIfExists(dslPath) ?? '');
+    if (parsed.document) {
+      windows.push({ path, doc: parsed.document });
+    }
+  }
+  const startup = generateProject(project, basename(projectPath), windows, (path) =>
+    readIfExists(resolve(dir, path)),
+  );
+  if ('error' in startup) {
+    console.error(`${projectPath}: ${startup.error}`);
+    return 1;
+  }
+  return Math.max(status, write(startup, dir, flags));
 }
 
 function main(argv: readonly string[]): number {
@@ -56,13 +146,23 @@ function main(argv: readonly string[]): number {
       'source-dir': { type: 'string' },
     },
   });
-  // 訳(packages/extension/l10n)は拡張を作るときに用意する。それまでは英語
+  // 訳(packages/extension/l10n)は拡張と共有する。今は英語
   configureL10n(detectLanguage(values.locale), undefined);
   const [command, file] = positionals;
   if (command !== 'generate' || !file) {
     console.error(USAGE);
     return 1;
   }
+  const flags: Flags = { force: values.force === true, check: values.check === true };
+  const path = resolve(file);
+  if (path.endsWith(PROJECT_EXTENSION)) {
+    return generateWholeProject(path, flags);
+  }
+  const owner = projectContaining(path);
+  if (owner) {
+    return generateWindow(path, windowCppOptions(owner.doc, owner.windowPath), flags);
+  }
+  // プロジェクトに属さなければ、引数の設定で生成する
   const commentLocale = values['comment-locale'] ?? 'en';
   if (commentLocale !== 'en' && commentLocale !== 'ja') {
     console.error(USAGE);
@@ -73,48 +173,38 @@ function main(argv: readonly string[]): number {
     console.error(l10n.t('Invalid namespace: {0}', values.namespace ?? ''));
     return 1;
   }
-  const options: CppOptions = {
-    ...DEFAULT_CPP_OPTIONS,
-    namespace,
-    headerDir: values['header-dir'],
-    sourceDir: values['source-dir'],
-    commentLocale: commentLocale satisfies CommentLocale,
-  };
-
-  const dslPath = resolve(file);
-  const outPath = (path: string): string => resolve(dirname(dslPath), path);
-  const { document, diagnostics } = parseDocument(readFileSync(dslPath, 'utf8'));
-  report(file, diagnostics);
-  if (!document || hasErrors(diagnostics)) {
-    return 1;
-  }
-  const generated = generateCpp(
-    document,
-    basename(dslPath),
-    (path) => readIfExists(outPath(path)),
-    options,
+  return generateWindow(
+    path,
+    {
+      ...DEFAULT_CPP_OPTIONS,
+      namespace,
+      headerDir: values['header-dir'],
+      sourceDir: values['source-dir'],
+      commentLocale: commentLocale satisfies CommentLocale,
+    },
+    flags,
   );
+}
+
+/** 生成した結果を書く(--check なら比べるだけ)。 */
+function write(generated: GenerateResult, outDir: string, flags: Flags): number {
   for (const warning of generated.warnings) {
     console.error(`warning: ${warning}`);
   }
-  let status = 0;
   for (const { path, result } of generated.files) {
     if (!result.ok) {
       console.error(`${path}: ${result.error}`);
-      status = 1;
+      return 1;
     }
   }
-  if (status !== 0) {
-    return status;
-  }
-
+  const outPath = (path: string): string => resolve(outDir, path);
   const files = generated.files.flatMap(({ path, result }) =>
     result.ok ? [{ path, result }] : [],
   );
   const existing = new Map(files.map((f) => [f.path, readIfExists(outPath(f.path))]));
   const changed = files.filter((f) => existing.get(f.path) !== f.result.text);
 
-  if (values.check) {
+  if (flags.check) {
     for (const f of changed) {
       console.error(l10n.t('{0}: not up to date (run ttd generate)', f.path));
     }
@@ -122,7 +212,7 @@ function main(argv: readonly string[]): number {
   }
 
   const modified = files.filter((f) => f.result.modifiedRegions.length > 0);
-  if (modified.length > 0 && !values.force) {
+  if (modified.length > 0 && !flags.force) {
     for (const f of modified) {
       console.error(
         l10n.t(

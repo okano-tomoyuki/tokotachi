@@ -23,7 +23,8 @@
     "canvas:build": "node tools/canvas/build.mts",
     "canvas:verify": "node tools/canvas/verify.mts",
     "catalog:measure": "node tools/catalog/measure.mts",
-    "package": "pnpm --filter tokotachi-designer run package"
+    "package": "pnpm --filter tokotachi-designer run package",
+    "codegen:verify-project": "node tools/codegen/verify-project.mts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
