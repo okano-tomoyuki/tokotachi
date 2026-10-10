@@ -12,7 +12,7 @@ import {
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import type { Drag } from './dropTarget.ts';
-import { sendEdit, useDesigner } from './store.ts';
+import { sendEdit, useDesigner, type Ghost } from './store.ts';
 
 const THRESHOLD = 4;
 
@@ -24,6 +24,7 @@ export function beginDrag(
   drag: Drag,
   event: { clientX: number; clientY: number },
   onClick?: () => void,
+  ghost?: Ghost,
 ): void {
   const startX = event.clientX;
   const startY = event.clientY;
@@ -31,7 +32,10 @@ export function beginDrag(
   const move = (e: MouseEvent): void => {
     if (!active && Math.hypot(e.clientX - startX, e.clientY - startY) > THRESHOLD) {
       active = true;
-      useDesigner.setState({ drag, target: undefined });
+      useDesigner.setState({ drag, target: undefined, ghost });
+    }
+    if (active) {
+      useDesigner.setState({ pointer: { x: e.clientX, y: e.clientY } });
     }
   };
   const finish = (commit: boolean): void => {
@@ -41,7 +45,12 @@ export function beginDrag(
     if (active && commit) {
       drop();
     }
-    useDesigner.setState({ drag: undefined, target: undefined });
+    useDesigner.setState({
+      drag: undefined,
+      target: undefined,
+      ghost: undefined,
+      pointer: undefined,
+    });
     if (!active && commit) {
       onClick?.();
     }

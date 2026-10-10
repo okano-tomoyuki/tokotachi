@@ -6,6 +6,7 @@ import { getCatalog, l10n, type Category } from '@tokotachi-designer/core';
 import { useState } from 'react';
 import { beginDrag, clickAdd } from '../dragController.ts';
 import type { Drag } from '../dropTarget.ts';
+import { labelGhost } from '../ghost.ts';
 import { sendEdit } from '../store.ts';
 
 const CATEGORIES: readonly Category[] = ['input', 'display', 'view', 'container', 'drawing'];
@@ -39,9 +40,14 @@ function Item({ label, title, drag }: { label: string; title?: string; drag: Dra
           return;
         }
         e.preventDefault();
-        beginDrag(drag, e, () => {
-          clickAdd(drag);
-        });
+        beginDrag(
+          drag,
+          e,
+          () => {
+            clickAdd(drag);
+          },
+          labelGhost(label),
+        );
       }}
     >
       {label}

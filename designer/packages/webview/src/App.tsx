@@ -4,6 +4,7 @@ import { Inspector } from './components/Inspector.tsx';
 import { Problems } from './components/Problems.tsx';
 import { Tree } from './components/Tree.tsx';
 import { useEffect } from 'react';
+import { GhostView } from './components/GhostView.tsx';
 import { Palette } from './components/Palette.tsx';
 import { selectedNode, sendEdit, useDesigner } from './store.ts';
 import { postMessage } from './vscode.ts';
@@ -108,6 +109,7 @@ export function App() {
         </button>
         {editError !== undefined && <span className="edit-error">{editError}</span>}
       </div>
+      <GhostView />
       <div className="panes">
         <div className="pane tree-pane">
           <Palette />

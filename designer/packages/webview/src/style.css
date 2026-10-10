@@ -319,3 +319,52 @@ textarea.invalid {
   background: transparent;
   outline-color: var(--vscode-errorForeground);
 }
+
+.ghost {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.75;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ghost-label {
+  padding: 2px 8px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+.resize-handle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-focusBorder);
+}
+
+.resize-handle.n,
+.resize-handle.s {
+  cursor: ns-resize;
+}
+
+.resize-handle.e,
+.resize-handle.w {
+  cursor: ew-resize;
+}
+
+.resize-handle.ne,
+.resize-handle.sw {
+  cursor: nesw-resize;
+}
+
+.resize-handle.nw,
+.resize-handle.se {
+  cursor: nwse-resize;
+}
+
+.resize-preview {
+  position: absolute;
+  pointer-events: none;
+  outline: 1px dashed var(--vscode-focusBorder);
+  background: rgba(127, 127, 127, 0.15);
+}

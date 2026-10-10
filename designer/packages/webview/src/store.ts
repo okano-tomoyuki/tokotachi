@@ -18,6 +18,17 @@ import { create } from 'zustand';
 import type { Drag, DropTarget } from './dropTarget.ts';
 import { postMessage } from './vscode.ts';
 
+/** ドラッグ中の像。dx・dy はつかんだ点(像の左上から)。 */
+export interface Ghost {
+  /** 部品の画像(data URL)。無ければ label を出す。 */
+  readonly image?: string;
+  readonly label?: string;
+  readonly width: number;
+  readonly height: number;
+  readonly dx: number;
+  readonly dy: number;
+}
+
 export interface DesignerState {
   readonly version: number;
   readonly fileName: string;
@@ -34,6 +45,9 @@ export interface DesignerState {
   /** ドラッグしているもの(パレットの部品・空き、移す部品)と、入れる場所。 */
   readonly drag: Drag | undefined;
   readonly target: DropTarget | undefined;
+  /** ドラッグ中にカーソルについて動かす像(移す部品の画像か、パレットの部品の名前)と、カーソルの位置(画面の座標)。 */
+  readonly ghost: Ghost | undefined;
+  readonly pointer: { readonly x: number; readonly y: number } | undefined;
   readonly select: (id: string | undefined) => void;
 }
 
@@ -49,6 +63,8 @@ export const useDesigner = create<DesignerState>()((set) => ({
   editError: undefined,
   drag: undefined,
   target: undefined,
+  ghost: undefined,
+  pointer: undefined,
   select: (id) => {
     set({ selection: id });
   },

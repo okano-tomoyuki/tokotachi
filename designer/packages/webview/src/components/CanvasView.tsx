@@ -15,6 +15,8 @@ import {
 import { useEffect, useMemo, useRef } from 'react';
 import { beginDrag } from '../dragController.ts';
 import { dropTarget } from '../dropTarget.ts';
+import { widgetGhost } from '../ghost.ts';
+import { ResizeHandles } from './ResizeHandles.tsx';
 import { selectedNode, sendEdit, useDesigner } from '../store.ts';
 import { postMessage } from '../vscode.ts';
 
@@ -115,7 +117,9 @@ export function CanvasView() {
             const p = point(e);
             const node = hit(p.x, p.y);
             if (node?.kind === 'widget') {
-              beginDrag({ kind: 'move', path: node.path, id: node.id }, e);
+              const r = node.variable === undefined ? undefined : frame.rects[node.variable];
+              const ghost = r ? widgetGhost(frame, r, p.x - r.x, p.y - r.y) : undefined;
+              beginDrag({ kind: 'move', path: node.path, id: node.id }, e, undefined, ghost);
             }
           }}
           onMouseMove={(e) => {
@@ -168,6 +172,9 @@ export function CanvasView() {
                 height: selectionRect.height,
               }}
             />
+          )}
+          {selectionRect && !drag && selected && (
+            <ResizeHandles node={selected} rect={selectionRect} />
           )}
           {target && (
             <>
