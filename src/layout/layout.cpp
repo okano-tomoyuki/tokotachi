@@ -76,7 +76,7 @@ bool Layout::adopt(Widget* w)
     return true;
 }
 
-bool Layout::is_managed_visible(const Widget* w) { return detail::WidgetAccess::visible_flag(w); }
+bool Layout::is_managed_visible(const Widget* w) { return detail::WidgetAccess::displayed(w); }
 
 Size Layout::preferred_of(const Widget* w) { return is_managed_visible(w) ? w->preferred_size.get() : Size(); }
 

@@ -145,7 +145,7 @@ bool takes_click_focus(const Widget* w)
 
 void collect_focusable(Widget* w, std::vector<Widget*>& out)
 {
-    if (!WidgetAccess::visible_flag(w))
+    if (!WidgetAccess::displayed(w))
     {
         return;
     }
@@ -276,7 +276,7 @@ void WindowImpl::ensure_target()
 
 void WindowImpl::paint_tree(Widget* w)
 {
-    if (!WidgetAccess::visible_flag(w))
+    if (!WidgetAccess::displayed(w))
     {
         return;
     }
@@ -303,7 +303,7 @@ void WindowImpl::layout_tree(Widget* w)
 {
     // 隠れている子は、表示されたときに配置する(印は残る)。ウィンドウ自身は表示の前でも配置する
     // (表示したときに配置が済んでいるように・save_png や apply_layout で結果を読めるように)。
-    if (w != q && !WidgetAccess::visible_flag(w))
+    if (w != q && !WidgetAccess::displayed(w))
     {
         return;
     }

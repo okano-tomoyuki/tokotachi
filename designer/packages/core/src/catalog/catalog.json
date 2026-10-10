@@ -124,6 +124,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": false
         },
         "enabled": {
@@ -281,6 +282,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": false
         },
         "enabled": {
@@ -443,6 +445,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -613,6 +616,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -785,6 +789,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -964,6 +969,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -1137,6 +1143,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -1311,6 +1318,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -1494,6 +1502,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -1677,6 +1686,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -1852,6 +1862,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2031,6 +2042,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2200,6 +2212,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2389,6 +2402,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2580,6 +2594,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2725,6 +2740,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2882,6 +2898,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -2921,7 +2938,7 @@
             "array": "float"
           },
           "declared_in": "Splitter",
-          "doc": "各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0)。代入すると、合計が合わない分は stretch の比率で合わせる。",
+          "doc": "各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0、部品を隠した区画は戻したときの大きさ)。代入すると、合計が合わない分は stretch の比率で合わせる。",
           "after_children": true,
           "default": []
         }
@@ -3048,6 +3065,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -3196,6 +3214,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -3529,6 +3548,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -3683,6 +3703,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {
@@ -3827,6 +3848,7 @@
         "visible": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
           "default": true
         },
         "enabled": {

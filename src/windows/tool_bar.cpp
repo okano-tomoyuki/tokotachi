@@ -11,6 +11,7 @@
 #include "../core/property_impl.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../widgets/theme.hpp"
+#include "../widgets/widget_access.hpp"
 
 namespace tokotachi
 {
@@ -23,6 +24,9 @@ const float ICON = 16;         // ボタンの画像の大きさ
 const float BUTTON_PADDING = 8;
 const float ICON_TEXT_GAP = 6;
 const float SEPARATOR = 9;     // 区切りの幅
+
+// 利用者が隠した部品(visible が false)。場所を取らない。
+bool user_hidden(const Widget* item) { return item && !item->visible.get(); }
 }  // namespace
 
 namespace detail
@@ -332,14 +336,55 @@ Widget* ToolBar::item_widget(const Entry& e) const { return e.button ? e.button 
 
 float ToolBar::separator_width() const { return SEPARATOR; }
 
+std::vector<bool> ToolBar::absent_entries() const
+{
+    const std::size_t n = entries_.size();
+    std::vector<bool> out(n, false);
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        out[i] = user_hidden(item_widget(entries_[i]));
+    }
+    // 区切りは、前と後ろの両方に並べる項目があるときだけ置く(続く区切りは 1 つにする)。
+    bool item_before = false;
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        if (out[i])
+        {
+            continue;
+        }
+        if (item_widget(entries_[i]))
+        {
+            item_before = true;
+            continue;
+        }
+        bool item_after = false;
+        for (std::size_t k = i + 1; k < n && !item_after; ++k)
+        {
+            if (!out[k] && !item_widget(entries_[k]))
+            {
+                break;  // 次の区切りまでに項目が無い
+            }
+            item_after = !out[k];
+        }
+        out[i] = !item_before || !item_after;
+        item_before = item_before && out[i];
+    }
+    return out;
+}
+
 // ---- 配置 ----
 
 Size ToolBar::compute_preferred_size() const
 {
     float w = BAR_PADDING * 2, h = 0;
+    const std::vector<bool> absent = absent_entries();
     for (std::size_t i = 0; i < entries_.size(); ++i)
     {
         const Widget* item = item_widget(entries_[i]);
+        if (absent[i])
+        {
+            continue;
+        }
         const Size s = item ? item->preferred_size.get() : Size(SEPARATOR, 0);
         w += s.width + SPACING;
         h = std::max(h, s.height);
@@ -359,10 +404,14 @@ void ToolBar::arrange_children()
     const Rect r = local_rect;
     const float inner_h = std::max(0.0f, r.height - BAR_PADDING * 2);
     float total = BAR_PADDING;
+    const std::vector<bool> absent = absent_entries();
     for (std::size_t i = 0; i < entries_.size(); ++i)
     {
         const Widget* item = item_widget(entries_[i]);
-        total += (item ? item->preferred_size.get().width : SEPARATOR) + SPACING;
+        if (!absent[i])
+        {
+            total += (item ? item->preferred_size.get().width : SEPARATOR) + SPACING;
+        }
     }
     const float overflow_w = overflow_button_->preferred_size.get().width;
     const bool overflow = total > r.width - BAR_PADDING;
@@ -376,12 +425,17 @@ void ToolBar::arrange_children()
     {
         Entry& e = entries_[i];
         Widget* item = item_widget(e);
+        if (absent[i])
+        {
+            e.hidden = !item;  // 区切りは描かない(部品は visible が false なので描かれない)
+            continue;
+        }
         const Size s = item ? item->preferred_size.get() : Size(SEPARATOR, 0);
         full = full || x + s.width > limit;
         e.hidden = full;
         if (item)
         {
-            item->visible = !full;
+            detail::WidgetAccess::set_hidden_by_parent(item, full);  // 利用者の visible は変えない
         }
         if (full)
         {

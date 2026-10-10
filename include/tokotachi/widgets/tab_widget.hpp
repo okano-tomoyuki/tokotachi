@@ -9,7 +9,8 @@
 /// tab_widget_settings->on_change = [=](tokotachi::Object*) { ... tab_widget_settings->current_index ... };
 /// @endcode
 ///
-/// ページは TabWidget の子になり、選んでいるページだけを見せる。ページを破棄する・別の親へ移すと、そのタブも消える。
+/// ページは TabWidget の子になり、選んでいるページだけを見せる(選んでいないページの visible は変えず、showing が false になる)。
+/// ページを破棄する・別の親へ移すと、そのタブも消える。
 /// 見出しが幅に収まらないときは、右端の ◀▶ とホイールで横にスクロールする。
 /// 見出しを押すと TabWidget にフォーカスが移り、←→ で選べる。中のどこにフォーカスがあっても、Ctrl+Tab・Ctrl+Shift+Tab・
 /// Ctrl+Page Up/Down で選べる。

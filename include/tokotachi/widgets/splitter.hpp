@@ -10,6 +10,8 @@
 ///
 /// 区画を破棄する・別の親へ移すと、その区画は消える。区画の最小の大きさ(minimum_hint)より小さくはドラッグできず、
 /// collapsible な区画は、最小の半分より小さくドラッグするとたたむ(大きさ 0。隠す)。たたんだ区画は境目をドラッグして戻す。
+/// 区画の部品を visible = false にすると、その区画は場所も境目も取らない(大きさは覚えていて、戻すと元の大きさで出る)。
+/// たたんだ区画の部品の visible は変えない(showing が false になる)。
 #ifndef TOKOTACHI_WIDGETS_SPLITTER_HPP
 #define TOKOTACHI_WIDGETS_SPLITTER_HPP
 
@@ -68,7 +70,7 @@ public:
     SplitterPane* insert_widget(int index, Widget* widget, int stretch = 1);
     ReadOnlyProperty<std::vector<SplitterPane*> > panes;
 
-    /// 各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0)。代入すると、合計が合わない分は stretch の比率で合わせる。
+    /// 各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0、部品を隠した区画は戻したときの大きさ)。代入すると、合計が合わない分は stretch の比率で合わせる。
     Property<std::vector<float> > sizes;
 
     /// 利用者が境目をドラッグして、大きさを変えた。
@@ -101,6 +103,8 @@ private:
     float along(const Size& s) const { return orientation_ == Orientation::HORIZONTAL ? s.width : s.height; }
     float along(const Point& p) const { return orientation_ == Orientation::HORIZONTAL ? p.x : p.y; }
     float minimum_of(const SplitterPane* pane) const;
+    /// 部品を隠していない区画(並べる・境目を出すもの)。境目の番号はこの並びの番号。
+    std::vector<SplitterPane*> shown_panes() const;
     /// 区画の大きさの合計を available に合わせる(初めてなら望む大きさから決める)。
     void fit(float available);
     /// 位置 p にある境目(i 番目の区画の後ろ。無ければ -1)。

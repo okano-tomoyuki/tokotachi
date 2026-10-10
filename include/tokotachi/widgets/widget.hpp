@@ -83,8 +83,10 @@ public:
     ReadOnlyProperty<Layout*> layout;
 
     // --- 状態 ---
+    /// 表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で
+    /// 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。
     Property<bool> visible;
-    /// 自分と祖先がすべて visible か。
+    /// 実際に表示されるか: 自分と祖先がすべて visible で、どれも親に隠されていない。
     ReadOnlyProperty<bool> showing;
     Property<bool> enabled;
     /// 自分と祖先がすべて enabled か。
@@ -212,8 +214,12 @@ private:
     bool get_visible() const { return visible_; }
     void set_visible(const bool& v);
     bool get_showing() const;
-    /// 自分とウィンドウまでの祖先がすべて visible か(ウィンドウ自身は問わない)。
+    /// 自分とウィンドウまでの祖先がすべて表示されるか(ウィンドウ自身は問わない)。
     bool shown_in_window() const;
+    /// visible で、親に隠されていない(描く・配置する・クリックを受ける)。
+    bool displayed() const { return visible_ && !hidden_by_parent_; }
+    /// 親(ToolBar・Splitter・TabWidget)が自分の都合で隠す・戻す(visible は変えない。detail::WidgetAccess から使う)。
+    void set_hidden_by_parent(bool hide);
     bool get_enabled() const { return enabled_; }
     void set_enabled(const bool& v);
     bool get_effectively_enabled() const;
@@ -237,6 +243,7 @@ private:
     Layout* layout_;
     bool layout_dirty_;
     bool visible_;
+    bool hidden_by_parent_;  ///< 親が自分の都合で隠している(visible_ とは別。displayed を見る)
     bool enabled_;
     bool accepts_text_input_;
     bool is_window_;

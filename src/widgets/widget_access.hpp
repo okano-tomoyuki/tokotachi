@@ -14,7 +14,10 @@ struct WidgetAccess
 {
     static const std::vector<Action*>& actions_of(const Widget* w) { return w->actions_; }
     static void action_changed(Widget* w, Action* a) { w->action_changed(a); }
-    static bool visible_flag(const Widget* w) { return w->visible_; }
+    // 表示されるか(visible で、親に隠されていない)。
+    static bool displayed(const Widget* w) { return w->displayed(); }
+    // ToolBar・Splitter・TabWidget が、利用者の visible を変えずに子を隠す・戻す。
+    static void set_hidden_by_parent(Widget* w, bool hide) { w->set_hidden_by_parent(hide); }
     static void set_visible_flag(Widget* w, bool v) { w->visible_ = v; }
     static bool is_window(const Widget* w) { return w->is_window_; }
     static void set_is_window(Widget* w, bool v) { w->is_window_ = v; }

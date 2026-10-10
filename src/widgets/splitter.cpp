@@ -7,6 +7,7 @@
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
+#include "widget_access.hpp"
 
 namespace tokotachi
 {
@@ -173,6 +174,19 @@ void Splitter::set_sizes(const std::vector<float>& v)
 
 float Splitter::minimum_of(const SplitterPane* pane) const { return along(pane->widget_->minimum_hint.get()); }
 
+std::vector<SplitterPane*> Splitter::shown_panes() const
+{
+    std::vector<SplitterPane*> out;
+    for (std::size_t i = 0; i < panes_.size(); ++i)
+    {
+        if (panes_[i]->widget_->visible.get())
+        {
+            out.push_back(panes_[i]);
+        }
+    }
+    return out;
+}
+
 /// ---- 大きさの配り方 ----
 
 namespace
@@ -183,7 +197,8 @@ float extent_of(float size, bool collapsed) { return collapsed ? 0.0f : std::max
 
 void Splitter::fit(float available)
 {
-    const int n = static_cast<int>(panes_.size());
+    const std::vector<SplitterPane*> shown = shown_panes();  // 部品を隠した区画には配らない
+    const int n = static_cast<int>(shown.size());
     if (n == 0)
     {
         return;
@@ -192,15 +207,15 @@ void Splitter::fit(float available)
     // まだ大きさの無い区画は、望む大きさから始める。
     for (int i = 0; i < n; ++i)
     {
-        if (panes_[i]->size_ < 0)
+        if (shown[i]->size_ < 0)
         {
-            panes_[i]->size_ = along(panes_[i]->widget_->preferred_size.get());
+            shown[i]->size_ = along(shown[i]->widget_->preferred_size.get());
         }
     }
     float delta = space;
     for (int i = 0; i < n; ++i)
     {
-        delta -= extent_of(panes_[i]->size_, panes_[i]->collapsed_);
+        delta -= extent_of(shown[i]->size_, shown[i]->collapsed_);
     }
     // 余り・不足を stretch の比率で配る(縮めるときは最小の大きさで止め、残りを他へ回す)。たたんだ区画には配らない。
     for (int round = 0; round < n + 1 && std::fabs(delta) > 0.01f; ++round)
@@ -209,7 +224,7 @@ void Splitter::fit(float available)
         int total = 0;
         for (int i = 0; i < n; ++i)
         {
-            SplitterPane* p = panes_[i];
+            SplitterPane* p = shown[i];
             if (p->collapsed_ || p->stretch_ == 0 || (delta < 0 && p->size_ <= minimum_of(p)))
             {
                 continue;
@@ -222,7 +237,7 @@ void Splitter::fit(float available)
             // 伸びる区画が無い: たたんでいない区画のうち、最後の(縮めるなら最小より大きい)ものが受け持つ。
             for (int i = n - 1; i >= 0; --i)
             {
-                SplitterPane* p = panes_[i];
+                SplitterPane* p = shown[i];
                 if (!p->collapsed_ && (delta > 0 || p->size_ > minimum_of(p)))
                 {
                     takers.push_back(p);
@@ -256,20 +271,20 @@ void Splitter::fit(float available)
         float total = 0;
         for (int i = 0; i < n; ++i)
         {
-            total += extent_of(panes_[i]->size_, panes_[i]->collapsed_);
+            total += extent_of(shown[i]->size_, shown[i]->collapsed_);
         }
         for (int i = 0; i < n && total > 0; ++i)
         {
-            if (!panes_[i]->collapsed_)
+            if (!shown[i]->collapsed_)
             {
-                panes_[i]->size_ = std::max(0.0f, panes_[i]->size_ + delta * panes_[i]->size_ / total);
+                shown[i]->size_ = std::max(0.0f, shown[i]->size_ + delta * shown[i]->size_ / total);
             }
         }
     }
     else if (delta > 0.01f)
     {
         // すべての区画をたたんでいる: 最後の区画を開いて受け持たせる。
-        SplitterPane* last = panes_[static_cast<std::size_t>(n - 1)];
+        SplitterPane* last = shown[static_cast<std::size_t>(n - 1)];
         if (last->collapsed_)
         {
             last->collapsed_ = false;
@@ -286,12 +301,17 @@ void Splitter::arrange_children()
     const Rect r = local_rect;
     const bool horizontal = orientation_ == Orientation::HORIZONTAL;
     fit(horizontal ? r.width : r.height);
-    float pos = 0;
-    for (std::size_t i = 0; i < panes_.size(); ++i)
+    const std::vector<SplitterPane*> shown = shown_panes();
+    if (drag_handle_ + 1 >= static_cast<int>(shown.size()) || hover_handle_ + 1 >= static_cast<int>(shown.size()))
     {
-        SplitterPane* p = panes_[i];
+        drag_handle_ = hover_handle_ = -1;  // 区画を隠して、境目が無くなった
+    }
+    float pos = 0;
+    for (std::size_t i = 0; i < shown.size(); ++i)
+    {
+        SplitterPane* p = shown[i];
         const float s = extent_of(p->size_, p->collapsed_);
-        p->widget_->visible = !p->collapsed_;  // たたんだ区画は隠す
+        detail::WidgetAccess::set_hidden_by_parent(p->widget_, p->collapsed_);  // たたんだ区画は隠す(visible は変えない)
         if (!p->collapsed_)
         {
             p->widget_->bounds = horizontal ? Rect(pos, 0, s, r.height) : Rect(0, pos, r.width, s);
@@ -307,33 +327,35 @@ void Splitter::arrange_children()
 
 Size Splitter::compute_preferred_size() const
 {
+    const std::vector<SplitterPane*> shown = shown_panes();
     float a = 0, cross = 0;
-    for (std::size_t i = 0; i < panes_.size(); ++i)
+    for (std::size_t i = 0; i < shown.size(); ++i)
     {
-        const Size s = panes_[i]->widget_->preferred_size;
-        if (!panes_[i]->collapsed_)
+        const Size s = shown[i]->widget_->preferred_size;
+        if (!shown[i]->collapsed_)
         {
             a += along(s);
         }
         cross = std::max(cross, orientation_ == Orientation::HORIZONTAL ? s.height : s.width);
     }
-    a += HANDLE * static_cast<float>(panes_.empty() ? 0 : panes_.size() - 1);
+    a += HANDLE * static_cast<float>(shown.empty() ? 0 : shown.size() - 1);
     return orientation_ == Orientation::HORIZONTAL ? Size(a, cross) : Size(cross, a);
 }
 
 Size Splitter::compute_minimum_size() const
 {
+    const std::vector<SplitterPane*> shown = shown_panes();
     float a = 0, cross = 0;
-    for (std::size_t i = 0; i < panes_.size(); ++i)
+    for (std::size_t i = 0; i < shown.size(); ++i)
     {
-        const Size s = panes_[i]->widget_->minimum_hint;
-        if (!panes_[i]->collapsed_)
+        const Size s = shown[i]->widget_->minimum_hint;
+        if (!shown[i]->collapsed_)
         {
             a += along(s);
         }
         cross = std::max(cross, orientation_ == Orientation::HORIZONTAL ? s.height : s.width);
     }
-    a += HANDLE * static_cast<float>(panes_.empty() ? 0 : panes_.size() - 1);
+    a += HANDLE * static_cast<float>(shown.empty() ? 0 : shown.size() - 1);
     return orientation_ == Orientation::HORIZONTAL ? Size(a, cross) : Size(cross, a);
 }
 
@@ -341,10 +363,11 @@ Size Splitter::compute_minimum_size() const
 
 float Splitter::handle_position(int i) const
 {
+    const std::vector<SplitterPane*> shown = shown_panes();
     float pos = 0;
-    for (int k = 0; k <= i; ++k)
+    for (int k = 0; k <= i && k < static_cast<int>(shown.size()); ++k)
     {
-        const SplitterPane* p = panes_[static_cast<std::size_t>(k)];
+        const SplitterPane* p = shown[static_cast<std::size_t>(k)];
         pos += extent_of(p->size_, p->collapsed_);
     }
     return pos + HANDLE * static_cast<float>(i);
@@ -353,7 +376,8 @@ float Splitter::handle_position(int i) const
 int Splitter::handle_at(const Point& p) const
 {
     const float a = along(p);
-    for (int i = 0; i + 1 < static_cast<int>(panes_.size()); ++i)
+    const int n = static_cast<int>(shown_panes().size());
+    for (int i = 0; i + 1 < n; ++i)
     {
         const float h = handle_position(i);
         if (a >= h - GRAB_MARGIN && a < h + HANDLE + GRAB_MARGIN)
@@ -366,8 +390,9 @@ int Splitter::handle_at(const Point& p) const
 
 void Splitter::drag_to(float position)
 {
-    SplitterPane* a = panes_[static_cast<std::size_t>(drag_handle_)];
-    SplitterPane* b = panes_[static_cast<std::size_t>(drag_handle_ + 1)];
+    const std::vector<SplitterPane*> shown = shown_panes();
+    SplitterPane* a = shown[static_cast<std::size_t>(drag_handle_)];
+    SplitterPane* b = shown[static_cast<std::size_t>(drag_handle_ + 1)];
     const float ea = extent_of(a->size_, a->collapsed_), eb = extent_of(b->size_, b->collapsed_);
     const float start = handle_position(drag_handle_) - ea;
     const float combined = ea + eb;
@@ -422,7 +447,8 @@ void Splitter::paint(Canvas& canvas)
 {
     const Rect r = local_rect;
     const bool horizontal = orientation_ == Orientation::HORIZONTAL;
-    for (int i = 0; i + 1 < static_cast<int>(panes_.size()); ++i)
+    const int n = static_cast<int>(shown_panes().size());
+    for (int i = 0; i + 1 < n; ++i)
     {
         const float h = handle_position(i);
         const Rect band = horizontal ? Rect(h, 0, HANDLE, r.height) : Rect(0, h, r.width, HANDLE);

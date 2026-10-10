@@ -8,6 +8,7 @@
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
+#include "widget_access.hpp"
 
 namespace tokotachi
 {
@@ -100,14 +101,13 @@ Tab* TabWidget::insert_tab(int index, Widget* page, const std::string& title)
             return tabs_[i];  // 既にこのページのタブがある
         }
     }
-    const bool was_visible = page->visible;
-    page->visible = false;
     page->parent = this;  // 別の TabWidget のページだったら、そちらのタブは消える
     if (page->parent.get() != this)
     {
-        page->visible = was_visible;
         return nullptr;  // 子にできなかった(ウィンドウ・祖先など)
     }
+    // 選ぶまで隠す(利用者の visible は変えない。docs/adr/0041)
+    detail::WidgetAccess::set_hidden_by_parent(page, true);
     const int n = static_cast<int>(tabs_.size());
     const int at = index >= 0 && index <= n ? index : n;
     Tab* tab = new Tab(this, page, title);
@@ -136,7 +136,7 @@ Widget* TabWidget::remove_tab(Tab* tab)
     Widget* page = tab->page_;
     erase_tab(static_cast<int>(it - tabs_.begin()));
     page->parent = nullptr;  // タブは消してあるので、child_removed では何もしない
-    page->visible = true;
+    detail::WidgetAccess::set_hidden_by_parent(page, false);
     return page;
 }
 
@@ -173,6 +173,7 @@ void TabWidget::child_removed(Widget* child)
         if (tabs_[i]->page_ == child)
         {
             erase_tab(static_cast<int>(i));
+            detail::WidgetAccess::set_hidden_by_parent(child, false);  // 別の親へ移った: もう隠さない
             return;
         }
     }
@@ -209,7 +210,7 @@ void TabWidget::select(int i)
     current_ = i;
     for (std::size_t k = 0; k < tabs_.size(); ++k)
     {
-        tabs_[k]->page_->visible = static_cast<int>(k) == i;
+        detail::WidgetAccess::set_hidden_by_parent(tabs_[k]->page_, static_cast<int>(k) != i);
     }
     if (i >= 0)
     {

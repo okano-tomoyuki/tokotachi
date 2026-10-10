@@ -59,6 +59,7 @@ Widget::Widget(Widget* parent_widget)
       layout_(nullptr),
       layout_dirty_(true),
       visible_(true),
+      hidden_by_parent_(false),
       enabled_(true),
       accepts_text_input_(false),
       is_window_(false),
@@ -127,7 +128,7 @@ Widget::~Widget()
     if (Window* w = get_window())
     {
         w->impl()->widget_destroyed(this);
-        if (parent_ && visible_)
+        if (parent_ && displayed())
         {
             parent_->invalidate(bounds_);
         }
@@ -168,7 +169,7 @@ void Widget::set_parent(Widget* const& p)
             detail::LayoutAccess::widget_removed(parent_->layout_, this);
         }
         parent_->request_layout();
-        if (visible_)
+        if (displayed())
         {
             parent_->invalidate(bounds_);
         }
@@ -259,7 +260,7 @@ void Widget::set_bounds(const Rect& r)
         return;
     }
     bounds_ = r;
-    if (parent_ && visible_)
+    if (parent_ && displayed())
     {
         parent_->invalidate(old.united(r));
     }
@@ -308,14 +309,14 @@ void Widget::set_visible(const bool& v)
         static_cast<Window*>(this)->impl()->set_shown(v);
         return;
     }
-    if (parent_)
+    if (parent_ && !hidden_by_parent_)
     {
         parent_->invalidate(bounds_);
     }
     visible_ = v;
     if (parent_)
     {
-        parent_->request_layout();  // 隠れた子は配置しない
+        parent_->request_layout();  // 隠れた子は配置しない(ToolBar・Splitter は場所を空けない)
     }
     // フォーカスのハンドラより先に、結びつけた相手へ伝える。
     notify_changed(visible);
@@ -333,12 +334,41 @@ void Widget::set_visible(const bool& v)
     }
 }
 
+void Widget::set_hidden_by_parent(bool hide)
+{
+    if (hide == hidden_by_parent_)
+    {
+        return;
+    }
+    const bool was = displayed();
+    hidden_by_parent_ = hide;
+    if (was == displayed())
+    {
+        return;  // 利用者が隠しているので、見え方は変わらない
+    }
+    if (parent_)
+    {
+        parent_->invalidate(bounds_);
+    }
+    if (Window* w = get_window())
+    {
+        if (hide)
+        {
+            w->impl()->widget_hidden(this);
+        }
+        else
+        {
+            w->impl()->update_text_input();
+        }
+    }
+}
+
 bool Widget::shown_in_window() const
 {
     // ウィンドウ自身が表示されているかは問わない(表示の前にフォーカスを決められるように)。
     for (const Widget* w = this; w && !w->is_window_; w = w->parent_)
     {
-        if (!w->visible_)
+        if (!w->displayed())
         {
             return false;
         }
@@ -350,7 +380,7 @@ bool Widget::get_showing() const
 {
     for (const Widget* w = this; w; w = w->parent_)
     {
-        if (!w->visible_)
+        if (!w->displayed())
         {
             return false;
         }
@@ -515,7 +545,7 @@ Widget* Widget::child_at(const Point& p) const
     for (std::size_t i = children_.size(); i-- > 0;)
     {
         Widget* c = children_[i];
-        if (!c->visible_ || !c->bounds_.contains(p))
+        if (!c->displayed() || !c->bounds_.contains(p))
         {
             continue;
         }

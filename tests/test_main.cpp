@@ -1806,6 +1806,7 @@ TEST(tab_widget_add_insert_remove)
 {
     tokotachi::Window window("t", 300, 200);
     tokotachi::TabWidget* tabs = new tokotachi::TabWidget(&window);
+    window.visible = true;
     CHECK(tabs->current_index == -1 && tabs->current_tab == nullptr);
     int changes = 0;
     tabs->on_change = [&](tokotachi::Object* sender)
@@ -1819,16 +1820,16 @@ TEST(tab_widget_add_insert_remove)
     tokotachi::Widget* c = new tokotachi::Widget();
     tokotachi::Tab* ta = tabs->add_tab(a, "A");
     CHECK(ta && ta->page == a && ta->title.get() == "A" && a->parent == tabs);
-    CHECK(tabs->current_index == 0 && tabs->current_tab == ta && a->visible && changes == 1);
+    CHECK(tabs->current_index == 0 && tabs->current_tab == ta && a->showing && changes == 1);
     tokotachi::Tab* tb = tabs->add_tab(b, "B");
-    CHECK(tabs->current_index == 0 && !b->visible && changes == 1);  // 2 つ目以降は選ばない
+    CHECK(tabs->current_index == 0 && !b->showing && b->visible && changes == 1);  // 2 つ目以降は選ばない(visible は変えない)
     CHECK(tabs->add_tab(b, "B2") == tb && tabs->tabs.get().size() == 2);  // 同じページは加えない
     tokotachi::Tab* tc = tabs->insert_tab(0, c, "C");
     CHECK(tabs->tabs.get().size() == 3 && tabs->tabs.get()[0] == tc);
     CHECK(tabs->current_tab == ta && tabs->current_index == 1 && changes == 2);  // 選んでいるタブは同じで、番号がずれる
 
     tabs->current_index = 2;
-    CHECK(tabs->current_tab == tb && b->visible && !a->visible && !c->visible && changes == 3);
+    CHECK(tabs->current_tab == tb && b->showing && !a->showing && !c->showing && changes == 3);
     tabs->current_index = 5;  // 範囲の外は無視する
     tabs->current_index = -1;
     CHECK(tabs->current_index == 2 && changes == 3);
@@ -1836,22 +1837,32 @@ TEST(tab_widget_add_insert_remove)
     // 外したページは親が無くなり、見える状態で返る。選んでいたタブなら隣を選ぶ。
     CHECK(tabs->remove_tab(tb) == b);
     CHECK(b->parent == nullptr && b->visible && tabs->tabs.get().size() == 2);
-    CHECK(tabs->current_tab == ta && a->visible && changes == 4);
+    CHECK(tabs->current_tab == ta && a->showing && changes == 4);
     delete b;
 
     // ページを破棄する・別の親へ移すと、そのタブも消える。
     delete a;
-    CHECK(tabs->tabs.get().size() == 1 && tabs->current_tab == tc && c->visible && changes == 5);
+    CHECK(tabs->tabs.get().size() == 1 && tabs->current_tab == tc && c->showing && changes == 5);
     c->parent = &window;
     CHECK(tabs->tabs.get().empty() && tabs->current_index == -1 && tabs->current_tab == nullptr && changes == 6);
-    CHECK(c->visible);
+    CHECK(c->showing);
 
     // 別の TabWidget へ加えると、元のタブは消える。
     tokotachi::TabWidget* other = new tokotachi::TabWidget(&window);
     tabs->add_tab(c, "C");
     other->add_tab(c, "C");
     CHECK(tabs->tabs.get().empty() && other->tabs.get().size() == 1 && c->parent == other);
+    CHECK(c->showing);
     CHECK(tabs->insert_tab(0, tabs, "self") == nullptr);
+
+    // 利用者が隠したページは、選んでも見せない(TabWidget は visible を変えない)。
+    tokotachi::Widget* d = new tokotachi::Widget();
+    d->visible = false;
+    other->add_tab(d, "D");
+    other->current_index = 1;
+    CHECK(other->current_index == 1 && !d->visible && !d->showing && !c->showing);
+    d->visible = true;
+    CHECK(d->showing);
     tabs->on_change = tokotachi::NotifyHandler();
 }
 
@@ -2775,7 +2786,7 @@ TEST(tool_bar_buttons_and_shortcuts)
     const std::vector<tokotachi::Widget*> children = tools->children;
     for (std::size_t i = 0; i < children.size(); ++i)
     {
-        if (children[i]->visible)
+        if (children[i]->showing)
         {
             buttons.push_back(children[i]);
         }
@@ -2819,7 +2830,7 @@ TEST(tool_bar_overflow_menu)
     const std::vector<tokotachi::Widget*> children = tools->children;
     for (std::size_t i = 0; i < children.size(); ++i)
     {
-        if (children[i]->visible)
+        if (children[i]->showing)
         {
             ++shown;
             if (!chevron || children[i]->x > chevron->x)
@@ -2835,6 +2846,52 @@ TEST(tool_bar_overflow_menu)
     dispatch_key(window, SDLK_UP);  // 最後の項目
     dispatch_key(window, SDLK_RETURN);
     CHECK(done == "7");
+}
+
+TEST(tool_bar_keeps_user_visibility)
+{
+    // 幅に収まらずに隠すときは visible を変えない。利用者が隠した部品は場所を取らない(docs/adr/0041)。
+    tokotachi::Window window("t", 400, 200);
+    tokotachi::ToolBar* tools = new tokotachi::ToolBar();
+    tokotachi::LineEdit* edit = new tokotachi::LineEdit();
+    edit->minimum_size = tokotachi::Size(120, 0);
+    tools->add_widget(edit);
+    tools->add_separator();
+    tools->add_item("後ろ");
+    window.tool_bar = tools;
+    window.visible = true;
+    window.apply_layout();
+    tokotachi::Widget* after = nullptr;
+    const std::vector<tokotachi::Widget*> children = tools->children;
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        if (children[i] != edit && children[i]->showing && (!after || children[i]->x < after->x))
+        {
+            after = children[i];
+        }
+    }
+    CHECK(after && edit->showing && after->x > edit->x.get() + 100);
+    edit->visible = false;
+    window.apply_layout();
+    CHECK(!edit->showing && near(after->x, 4));  // 場所を空けない(先頭に来た区切りも置かない)
+    edit->visible = true;
+    window.apply_layout();
+    CHECK(edit->showing && after->x > edit->x.get() + 100);
+
+    // 狭くして収まらなくなっても、visible は true のまま(showing だけが false)。
+    window.width = 60;
+    window.apply_layout();
+    CHECK(edit->visible && !edit->showing);
+    window.width = 400;
+    window.apply_layout();
+    CHECK(edit->showing);
+    // 隠したまま狭くし、広げても隠れたまま。
+    edit->visible = false;
+    window.width = 60;
+    window.apply_layout();
+    window.width = 400;
+    window.apply_layout();
+    CHECK(!edit->visible && !edit->showing);
 }
 
 TEST(status_bar_message_and_widgets)
@@ -2898,14 +2955,14 @@ TEST(splitter_sizes_stretch_and_drag)
     CHECK(near(split->sizes.get()[0], 50));  // 最小(30 は最小の半分より大きい)
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(13, 100));
     window.apply_layout();
-    CHECK(near(split->sizes.get()[0], 0) && left_pane->collapsed && !left->visible);
+    CHECK(near(split->sizes.get()[0], 0) && left_pane->collapsed && !left->showing && left->visible);  // visible は変えない
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(13, 100));
     // たたんだ区画は、境目(左端)をドラッグして戻す。
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(3, 100));
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(153, 100));
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(153, 100));
     window.apply_layout();
-    CHECK(near(split->sizes.get()[0], 150) && !left_pane->collapsed && left->visible);
+    CHECK(near(split->sizes.get()[0], 150) && !left_pane->collapsed && left->showing);
     // たためない区画はたたまない。
     right_pane->collapsible = false;
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(153, 100));
@@ -2922,6 +2979,41 @@ TEST(splitter_sizes_stretch_and_drag)
     window.apply_layout();
     CHECK(split->panes.get().size() == 1 && near(right->x, 0) && near(right->width, 500));
     split->on_change = tokotachi::NotifyHandler();
+}
+
+TEST(splitter_hidden_pane_takes_no_space)
+{
+    // 区画の部品を visible = false にすると、場所も境目も取らない。戻すと元の大きさで出る(docs/adr/0041)。
+    tokotachi::Window window("t", 600, 200);
+    tokotachi::Splitter* split = new tokotachi::Splitter(&window);
+    split->bounds = tokotachi::Rect(0, 0, 406, 200);
+    tokotachi::Widget* a = new tokotachi::Widget();
+    tokotachi::Widget* b = new tokotachi::Widget();
+    tokotachi::Widget* c = new tokotachi::Widget();
+    split->add_widget(a, 0);
+    split->add_widget(b, 0);
+    split->add_widget(c, 1);
+    split->sizes = std::vector<float>{100, 100, 194};
+    window.visible = true;
+    window.apply_layout();
+    CHECK(near(b->x, 106) && near(c->x, 212) && near(c->width, 194));
+    const float preferred = split->preferred_size.get().width;
+
+    b->visible = false;
+    window.apply_layout();
+    CHECK(!b->showing && near(c->x, 106) && near(c->width, 300));
+    CHECK(split->preferred_size.get().width < preferred);
+    CHECK(near(split->sizes.get()[1], 100));  // 戻したときの大きさを覚えている
+    // 境目は a と c の間の 1 本だけ(b の境目をつかもうとしても、c の中)。
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(103, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(153, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(153, 100));
+    window.apply_layout();
+    CHECK(near(a->width, 150) && near(c->x, 156) && near(c->width, 250));
+
+    b->visible = true;
+    window.apply_layout();
+    CHECK(b->showing && near(b->x, 156) && near(b->width, 100) && near(c->x, 262) && near(c->width, 144));
 }
 
 TEST(splitter_vertical_and_nested)

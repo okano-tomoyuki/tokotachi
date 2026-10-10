@@ -12,6 +12,7 @@
 ///
 /// ボタンは Action の画像(無ければ文字)を出し、文字とショートカットはツールチップに出す(button_style で変えられる)。
 /// 幅に収まらない項目は隠し、右端の » のメニューから選べる(add_widget の部品は隠すだけ)。
+/// 幅に収まらずに隠すときは、部品の visible を変えない(showing が false になる)。add_widget の部品を visible = false にすると、場所を取らない。
 /// ウィンドウの tool_bar の Action のショートカットは、ウィンドウ全体で効く。
 #ifndef TOKOTACHI_WINDOWS_TOOL_BAR_HPP
 #define TOKOTACHI_WINDOWS_TOOL_BAR_HPP
@@ -77,6 +78,8 @@ private:
     ToolButtonStyle get_button_style() const { return button_style_; }
     void set_button_style(const ToolButtonStyle& v);
     Widget* item_widget(const Entry& e) const;
+    /// 並べない項目: 利用者が隠した部品と、それによって端に来た・続いた区切り。
+    std::vector<bool> absent_entries() const;
     float separator_width() const;
     void show_overflow();
 
