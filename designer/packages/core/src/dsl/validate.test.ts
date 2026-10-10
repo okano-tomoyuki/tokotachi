@@ -112,6 +112,26 @@ describe('validateDocument', () => {
     expect(codes(ok)).toEqual([]);
   });
 
+  it('画像は定義ファイルからの相対パス(区切りは /、画像の拡張子)', () => {
+    for (const path of ['icons/open.png', '../images/a.JPG', 'b.jpeg', 'c.bmp', 'd.gif']) {
+      const ok = sampleCopy();
+      ok.actions[0].properties.icon = path;
+      expect(codes(ok), path).toEqual([]);
+    }
+    for (const path of [
+      '/icons/open.png',
+      'C:/open.png',
+      'icons\\open.png',
+      'open.svg',
+      'icons/.png',
+      1,
+    ]) {
+      const doc = sampleCopy();
+      doc.actions[0].properties.icon = path;
+      expect(codes(doc), String(path)).toEqual(['invalid-property-value']);
+    }
+  });
+
   it('ハンドラ・参照', () => {
     const doc = sampleCopy();
     doc.actions[0].events.on_click = 'x';

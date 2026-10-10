@@ -360,4 +360,91 @@ Json to_json(const tokotachi::Shortcut& v)
     return Json(v.to_string());
 }
 
+// ---- 画像 ----
+
+namespace
+{
+
+std::map<std::string, tokotachi::Image>& image_store()
+{
+    static std::map<std::string, tokotachi::Image> images;
+    return images;
+}
+
+int base64_digit(char c)
+{
+    if (c >= 'A' && c <= 'Z')
+    {
+        return c - 'A';
+    }
+    if (c >= 'a' && c <= 'z')
+    {
+        return c - 'a' + 26;
+    }
+    if (c >= '0' && c <= '9')
+    {
+        return c - '0' + 52;
+    }
+    if (c == '+')
+    {
+        return 62;
+    }
+    if (c == '/')
+    {
+        return 63;
+    }
+    return -1;
+}
+
+}  // namespace
+
+bool from_json(const Json& j, tokotachi::Image& out)
+{
+    if (!j.is_string())
+    {
+        return false;
+    }
+    const std::map<std::string, tokotachi::Image>& images = image_store();
+    std::map<std::string, tokotachi::Image>::const_iterator it = images.find(j.as_string());
+    out = it == images.end() ? tokotachi::Image() : it->second;
+    return true;
+}
+
+Json to_json(const tokotachi::Image&)
+{
+    return Json();
+}
+
+void set_images(const std::map<std::string, tokotachi::Image>& images)
+{
+    image_store() = images;
+}
+
+bool decode_base64(const std::string& text, std::vector<unsigned char>& out)
+{
+    out.clear();
+    unsigned int bits = 0;
+    int count = 0;
+    for (std::size_t i = 0; i < text.size(); ++i)
+    {
+        if (text[i] == '=')
+        {
+            break;
+        }
+        const int d = base64_digit(text[i]);
+        if (d < 0)
+        {
+            return false;
+        }
+        bits = (bits << 6) | static_cast<unsigned int>(d);
+        count += 6;
+        if (count >= 8)
+        {
+            count -= 8;
+            out.push_back(static_cast<unsigned char>((bits >> count) & 0xFF));
+        }
+    }
+    return true;
+}
+
 }  // namespace ttc

@@ -4,7 +4,8 @@
 // 画面なし(SDL の offscreen)で描く。生成したコードも同じ並びから作るので、描いた画面は生成したコードが組む画面と同じになる。
 //
 //   ttc_configure(config)  拡張を動かしている環境(フォントのファイル・OS・デスクトップ)を JSON で渡す。最初の描画の前に 1 回呼ぶ
-//   ttc_render(request)    操作の並びを実行して描き、結果(大きさ・画素の場所・各変数の部品の位置)を JSON で返す
+//   ttc_render(request)    操作の並びを実行して描き、結果(大きさ・画素の場所・各変数の部品の位置)を JSON で返す。
+//                          画像のプロパティの値(パス)は、request の images(パス → base64 の中身)で画像にする
 //   ttc_defaults()         カタログの各クラスを作って、プロパティの既定値と望む大きさを JSON で返す(カタログの既定値の測定)
 #include <cstdint>
 #include <cstdlib>
@@ -82,6 +83,14 @@ public:
             {
                 run_place(op);
             }
+            else if (kind == "variable")
+            {
+                run_variable(op);
+            }
+            else if (kind == "bind")
+            {
+                run_bind(op);
+            }
             // connect(ハンドラ)と blank は描画に関係しない
         }
     }
@@ -137,6 +146,38 @@ private:
             return;
         }
         if (!ttc::set_property(object, classes_[target], property, op["value"]))
+        {
+            error("cannot set " + classes_[target] + "." + property);
+        }
+    }
+
+    /// Variable は作らず、値だけを覚える(キャンバスでは値が変わらないので、結びつけは値の設定と同じ)。
+    void run_variable(const ttc::Json& op)
+    {
+        if (op.has("value"))
+        {
+            variables_[op["variable"].as_string()] = op["value"];
+            return;
+        }
+        // 初期値を省くと T()
+        const std::string type = op["type"].as_string();
+        variables_[op["variable"].as_string()] =
+            type == "string" ? ttc::Json(std::string()) : type == "bool" ? ttc::Json(false) : ttc::Json(0.0);
+    }
+
+    /// tokotachi::bind(target->property, variable->value) は、結んだ時点でプロパティを Variable の値にする。
+    void run_bind(const ttc::Json& op)
+    {
+        const std::string target = target_of(op);
+        tokotachi::Object* object = var(target);
+        const std::string property = op["property"].as_string();
+        std::map<std::string, ttc::Json>::const_iterator it = variables_.find(op["variable"].as_string());
+        if (!object || it == variables_.end())
+        {
+            error("cannot bind " + target + "." + property);
+            return;
+        }
+        if (!ttc::set_property(object, classes_[target], property, it->second))
         {
             error("cannot set " + classes_[target] + "." + property);
         }
@@ -351,6 +392,13 @@ private:
                 return split->add_widget(arg_widget(args, 0), arg_int(args, 1, 1));
             }
         }
+        if (tokotachi::ItemView* view = dynamic_cast<tokotachi::ItemView*>(object))
+        {
+            if (method == "add_column")
+            {
+                return view->add_column(arg_string(args, 0), arg_float(args, 1, 120));
+            }
+        }
         if (tokotachi::TabWidget* tabs = dynamic_cast<tokotachi::TabWidget*>(object))
         {
             if (method == "add_tab")
@@ -396,8 +444,26 @@ private:
     tokotachi::Window* window_;
     std::map<std::string, tokotachi::Object*> vars_;
     std::map<std::string, std::string> classes_;
+    /// Variable の名前 → 値。
+    std::map<std::string, ttc::Json> variables_;
     std::vector<std::string> errors_;
 };
+
+/// 拡張が読んだ画像(パス → base64 の中身)を、プロパティに設定できるようにする。
+void set_images(const ttc::Json& images)
+{
+    std::map<std::string, tokotachi::Image> decoded;
+    for (std::size_t i = 0; i < images.members().size(); ++i)
+    {
+        const std::pair<std::string, ttc::Json>& m = images.members()[i];
+        std::vector<unsigned char> bytes;
+        if (m.second.is_string() && ttc::decode_base64(m.second.as_string(), bytes) && !bytes.empty())
+        {
+            decoded[m.first] = tokotachi::Image::load_from_data(&bytes[0], bytes.size());
+        }
+    }
+    ttc::set_images(decoded);
+}
 
 ttc::Json number(double v)
 {
@@ -458,6 +524,7 @@ EMSCRIPTEN_KEEPALIVE const char* ttc_render(const char* request_text)
     }
     g_app->color_scheme =
         request["color_scheme"].as_string() == "DARK" ? tokotachi::ColorScheme::DARK : tokotachi::ColorScheme::LIGHT;
+    set_images(request["images"]);
 
     const std::string window_class = request["window_class"].as_string();
     tokotachi::Dialog* dialog = nullptr;
@@ -536,16 +603,18 @@ EMSCRIPTEN_KEEPALIVE const char* ttc_defaults()
     tokotachi::MenuBar* bar = new tokotachi::MenuBar(host);
     tokotachi::TabWidget* tabs = new tokotachi::TabWidget(host);
     tokotachi::Splitter* split = new tokotachi::Splitter(host);
+    tokotachi::ListView* list = new tokotachi::ListView(host);
     std::map<std::string, tokotachi::Object*> extra;
     extra["Window"] = &window;
     extra["Dialog"] = dialog;
     extra["Menu"] = bar->add_menu(std::string());
     extra["Tab"] = tabs->add_tab(new tokotachi::Widget(tabs), std::string());
     extra["SplitterPane"] = split->add_widget(new tokotachi::Widget(split));
+    extra["Column"] = list->add_column(std::string());
 
-    const char* const CLASSES[] = {"Window", "Dialog", "Menu", "Tab", "SplitterPane"};
+    const char* const CLASSES[] = {"Window", "Dialog", "Menu", "Tab", "SplitterPane", "Column"};
     std::vector<std::string> classes = ttc::creatable_classes();
-    classes.insert(classes.end(), CLASSES, CLASSES + 5);
+    classes.insert(classes.end(), CLASSES, CLASSES + 6);
 
     ttc::Json result = ttc::Json::object();
     for (std::size_t i = 0; i < classes.size(); ++i)

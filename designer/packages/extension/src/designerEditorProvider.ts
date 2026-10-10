@@ -7,11 +7,17 @@ import type {
   ExtensionToWebviewMessage,
   WebviewToExtensionMessage,
 } from '@tokotachi-designer/core';
-import { hasErrors, parseDocument } from '@tokotachi-designer/core';
+import {
+  hasErrors,
+  IMAGE_EXTENSIONS,
+  isImagePath,
+  parseDocument,
+  relativePath,
+} from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 import { applyEditCommand } from './applyEditCommand.ts';
 import { renderCanvas } from './canvasService.ts';
-import { generateWindowCode } from './generateCode.ts';
+import { generateWindowCode, readImages } from './generateCode.ts';
 import { goToHandler } from './goToHandler.ts';
 import { colorScheme, SECTION } from './settings.ts';
 
@@ -68,12 +74,14 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
         return;
       }
       try {
+        const images = await readImages(vscode.Uri.joinPath(document.uri, '..'), parsed.document);
         const frame = await renderCanvas(
           this.context,
           parsed.document,
           document.version,
           colorScheme(),
           tabs,
+          images,
         );
         await post({ type: 'canvas', frame });
       } catch (e) {
@@ -93,7 +101,41 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       });
     };
 
+    // 画像を選んでもらい、定義ファイルからの相対パスを設定する
+    const pickImage = async (target: readonly (string | number)[], property: string) => {
+      const directory = vscode.Uri.joinPath(document.uri, '..');
+      const picked = await vscode.window.showOpenDialog({
+        defaultUri: directory,
+        canSelectMany: false,
+        filters: { [vscode.l10n.t('Images')]: [...IMAGE_EXTENSIONS] },
+      });
+      const file = picked?.[0];
+      if (!file) {
+        return;
+      }
+      const path =
+        file.scheme === directory.scheme && file.authority === directory.authority
+          ? relativePath(directory.path, file.path)
+          : '';
+      if (!isImagePath(path)) {
+        void vscode.window.showErrorMessage(
+          vscode.l10n.t('This file cannot be used as an image: {0}', file.fsPath),
+        );
+        return;
+      }
+      enqueueEdit(0, { kind: 'setProperties', target, properties: { [property]: path } });
+    };
+
+    // 画像のファイルが変わったら描き直す(参照しているかは問わない。上のフォルダの画像も参照できるので、ワークスペース全体を見る)
+    const imageWatcher = vscode.workspace.createFileSystemWatcher(
+      `**/*.{${IMAGE_EXTENSIONS.join(',')}}`,
+    );
+
     const subscriptions = [
+      imageWatcher,
+      imageWatcher.onDidChange(scheduleRender),
+      imageWatcher.onDidCreate(scheduleRender),
+      imageWatcher.onDidDelete(scheduleRender),
       panel.webview.onDidReceiveMessage((message: WebviewToExtensionMessage) => {
         switch (message.type) {
           case 'ready':
@@ -111,6 +153,9 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           case 'openAsText':
             void vscode.commands.executeCommand('vscode.openWith', document.uri, 'default');
+            break;
+          case 'pickImage':
+            void pickImage(message.target, message.property);
             break;
           case 'goToHandler': {
             // 直前の編集(ハンドラの名前の設定)が適用されてから生成する

@@ -76,6 +76,8 @@ int main(int argc, char** argv)
               window.label_size->color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
           "theme color");
     check(window.action_open->shortcut.get() == tokotachi::Shortcut("Ctrl+O"), "shortcut");
+    check(window.action_open->icon.get().width() == 16 && window.action_open->icon.get().height() == 16,
+          "embedded image");
     check(window.action_details->checkable.get() && window.action_details->checked.get(), "action flags");
     check(window.timer_refresh->interval.get() == 5000, "timer");
     // 子を入れた後に設定するプロパティ(Splitter::sizes)。区画が無いと効かない
@@ -83,6 +85,11 @@ int main(int argc, char** argv)
     check(window.splitter_main->panes.get()[0]->collapsible.get() && window.splitter_main->panes.get()[0]->stretch.get() == 0,
           "splitter pane properties");
     check(window.tab_widget_files->tabs.get().size() == 2 && !window.tab_detail->enabled.get(), "tabs");
+    check(window.list_view_files->columns.get().size() == 3 &&
+              window.list_view_files->columns.get()[0]->width.get() == 200 &&
+              window.list_view_files->columns.get()[1]->alignment.get() == tokotachi::Align::END &&
+              window.column_modified->title.get() == "更新日時",
+          "list columns");
     // メニュー・ツールバー・ステータスバー
     check(window.menu_bar.get() != nullptr && window.menu_bar.get()->menus.get().size() == 2, "menu bar");
     // actions は区切りとサブメニューを除く
@@ -104,6 +111,13 @@ int main(int argc, char** argv)
     check(called("main_window_close"), "window close handler");
     window.tab_widget_files->on_change.get()(window.tab_widget_files);
     check(called("tab_widget_files_change"), "tab handler");
+    // Variable との結びつけ(結んだ時点で Variable の値になり、その後も双方向に伝わる)
+    check(window.line_edit_name->text.get() == "メモ.txt" && !window.check_box_hidden->checked.get(),
+          "bound initial values");
+    window.line_edit_name->text = "a.txt";
+    check(window.file_name->value.get() == "a.txt" && called("file_name_change"), "binding to variable");
+    window.show_hidden->value = true;
+    check(window.check_box_hidden->checked.get(), "binding from variable");
 
     // ダイアログ(Dialog の継承・ボタン・PlaceLayout・自由な配置・ScrollArea の中身・値の型)
     SettingsDialog* dialog = new SettingsDialog(&window);

@@ -5,7 +5,12 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getCatalog, type PrimitiveType, type PropertyType } from '@tokotachi-designer/core';
+import {
+  getCatalog,
+  type ClassInfo,
+  type PrimitiveType,
+  type PropertyType,
+} from '@tokotachi-designer/core';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const output = resolve(here, '../../canvas/src/generated/table.cpp');
@@ -40,8 +45,14 @@ function quote(s: string): string {
   return JSON.stringify(s);
 }
 
+/** 対応表に載せるクラス(テンプレートの Variable は型ごとに違うので除き、runner が直接扱う)。 */
+function tableClasses(): [string, ClassInfo][] {
+  return Object.entries(getCatalog().classes).filter(([, info]) => info.template !== true);
+}
+
 function generate(): string {
   const catalog = getCatalog();
+  const classes = tableClasses();
   const out: string[] = [];
   const line = (s = ''): void => {
     out.push(s);
@@ -89,7 +100,7 @@ function generate(): string {
   line();
   line('namespace');
   line('{');
-  for (const [cls, info] of Object.entries(catalog.classes)) {
+  for (const [cls, info] of classes) {
     const props = Object.entries(info.properties).flatMap(([name, p]) => {
       const t = cppType(p.type);
       return t === undefined ? [] : [{ name, type: t }];
@@ -138,7 +149,7 @@ function generate(): string {
   line('}  // namespace');
 
   // 作れるクラス: 部品・画面に出ないオブジェクト・レイアウトと、ウィンドウに付けるもの
-  const creatable = Object.entries(catalog.classes).filter(
+  const creatable = classes.filter(
     ([cls, info]) =>
       info.kind === 'widget' ||
       info.kind === 'object' ||
@@ -168,7 +179,7 @@ function generate(): string {
     'bool set_property(tokotachi::Object* object, const std::string& cls, const std::string& property, const Json& value)',
   );
   line('{');
-  for (const cls of Object.keys(catalog.classes)) {
+  for (const [cls] of classes) {
     line(`    if (cls == ${quote(cls)})`);
     line('    {');
     line(`        return set_${cls}(static_cast<tokotachi::${cls}*>(object), property, value);`);
@@ -181,7 +192,7 @@ function generate(): string {
     'bool get_property(tokotachi::Object* object, const std::string& cls, const std::string& property, Json& out)',
   );
   line('{');
-  for (const cls of Object.keys(catalog.classes)) {
+  for (const [cls] of classes) {
     line(`    if (cls == ${quote(cls)})`);
     line('    {');
     line(`        return get_${cls}(static_cast<tokotachi::${cls}*>(object), property, out);`);
@@ -192,7 +203,7 @@ function generate(): string {
   line();
   line('std::vector<std::string> property_names(const std::string& cls)');
   line('{');
-  for (const [cls, info] of Object.entries(catalog.classes)) {
+  for (const [cls, info] of classes) {
     const names = Object.entries(info.properties)
       .filter(([, p]) => cppType(p.type) !== undefined)
       .map(([n]) => quote(n));

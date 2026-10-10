@@ -5,10 +5,20 @@ import goldenDialogHpp from './__golden__/settings_dialog.hpp?raw';
 import goldenCpp from './__golden__/main_window.cpp?raw';
 import goldenHpp from './__golden__/main_window.hpp?raw';
 import { cppString } from './cpp/values.ts';
-import { DEFAULT_CPP_OPTIONS, generateCpp, type GenerateResult } from './index.ts';
-import { MAIN_WINDOW, mainWindowCopy, SETTINGS_DIALOG } from './testing.ts';
+import { DEFAULT_CPP_OPTIONS, generateCpp, type CppOptions, type GenerateResult } from './index.ts';
+import { MAIN_WINDOW, mainWindowCopy, readSampleImage, SETTINGS_DIALOG } from './testing.ts';
 
 const lf = (text: string): string => text.replace(/\r\n/g, '\n');
+
+/** 見本の画像を読んで生成する。 */
+function gen(
+  doc: TtuiDocument,
+  dslFileName: string,
+  readExisting: (path: string) => string | undefined,
+  options: CppOptions = DEFAULT_CPP_OPTIONS,
+): GenerateResult {
+  return generateCpp(doc, dslFileName, readExisting, options, readSampleImage);
+}
 
 function text(result: GenerateResult, path: string): string {
   const f = result.files.find((x) => x.path === path);
@@ -25,17 +35,17 @@ function existing(files: Record<string, string>): (path: string) => string | und
 
 describe('generateCpp', () => {
   it('見本から期待するコードを生成する(tools/codegen/golden.mts で作り直す)', () => {
-    const r = generateCpp(MAIN_WINDOW, 'main_window.ttui.json', () => undefined);
+    const r = gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined);
     expect(text(r, 'main_window.hpp')).toBe(lf(goldenHpp));
     expect(text(r, 'main_window.cpp')).toBe(lf(goldenCpp));
-    const d = generateCpp(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
+    const d = gen(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
     expect(text(d, 'settings_dialog.hpp')).toBe(lf(goldenDialogHpp));
     expect(text(d, 'settings_dialog.cpp')).toBe(lf(goldenDialogCpp));
   });
 
   it('生成し直しても変わらない', () => {
     const files = { 'main_window.hpp': lf(goldenHpp), 'main_window.cpp': lf(goldenCpp) };
-    const r = generateCpp(MAIN_WINDOW, 'main_window.ttui.json', existing(files));
+    const r = gen(MAIN_WINDOW, 'main_window.ttui.json', existing(files));
     for (const f of r.files) {
       expect(f.result).toMatchObject({ ok: true, modifiedRegions: [], addedStubs: [] });
     }
@@ -56,7 +66,7 @@ describe('generateCpp', () => {
     const doc = mainWindowCopy();
     doc.window.layout.items[0].widget.layout.items[1].widget.properties.text = '探す';
     doc.actions[1].events = { on_trigger: 'clear_recent' };
-    const r = generateCpp(TtuiDocument.parse(doc), 'main_window.ttui.json', (path) =>
+    const r = gen(TtuiDocument.parse(doc), 'main_window.ttui.json', (path) =>
       path === 'main_window.cpp' ? cpp : lf(goldenHpp),
     );
     const out = text(r, 'main_window.cpp');
@@ -83,9 +93,9 @@ describe('generateCpp', () => {
     );
     const read = (cpp: string) => (path: string) =>
       path === 'main_window.cpp' ? cpp : lf(goldenHpp);
-    const r1 = generateCpp(MAIN_WINDOW, 'main_window.ttui.json', read(reformatted));
+    const r1 = gen(MAIN_WINDOW, 'main_window.ttui.json', read(reformatted));
     expect(r1.files[1]?.result).toMatchObject({ ok: true, modifiedRegions: [] });
-    const r2 = generateCpp(MAIN_WINDOW, 'main_window.ttui.json', read(edited));
+    const r2 = gen(MAIN_WINDOW, 'main_window.ttui.json', read(edited));
     expect(r2.files[1]?.result).toMatchObject({
       ok: true,
       modifiedRegions: ['tokotachi_setup_ui'],
@@ -97,7 +107,7 @@ describe('generateCpp', () => {
       /\/\/ <tokotachi-designer:end id="tokotachi_setup_ui" hash="[0-9a-f]+">\n/,
       '',
     );
-    const r = generateCpp(MAIN_WINDOW, 'main_window.ttui.json', (path) =>
+    const r = gen(MAIN_WINDOW, 'main_window.ttui.json', (path) =>
       path === 'main_window.cpp' ? broken : undefined,
     );
     expect(r.files[1]?.result.ok).toBe(false);
@@ -110,7 +120,7 @@ describe('generateCpp', () => {
     );
     const doc = mainWindowCopy();
     doc.window.layout.items[0].widget.layout.items[0].widget.name = 'query_edit';
-    const r = generateCpp(TtuiDocument.parse(doc), 'main_window.ttui.json', (path) =>
+    const r = gen(TtuiDocument.parse(doc), 'main_window.ttui.json', (path) =>
       path === 'main_window.cpp' ? cpp : lf(goldenHpp),
     );
     expect(r.warnings).toHaveLength(1);
@@ -118,7 +128,7 @@ describe('generateCpp', () => {
   });
 
   it('名前空間・フォルダ・インクルードガードの接頭辞・コメントの言語', () => {
-    const r = generateCpp(MAIN_WINDOW, 'ui/main_window.ttui.json', () => undefined, {
+    const r = gen(MAIN_WINDOW, 'ui/main_window.ttui.json', () => undefined, {
       ...DEFAULT_CPP_OPTIONS,
       namespace: ['app', 'ui'],
       includeGuardPrefix: 'MYAPP_',
@@ -135,8 +145,42 @@ describe('generateCpp', () => {
     expect(text(r, 'src/main_window.cpp')).toContain('#include "../include/main_window.hpp"\n');
   });
 
+  it('画像の中身を配列として埋め込み、load_from_data で読む', () => {
+    const cpp = text(
+      gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined),
+      'main_window.cpp',
+    );
+    expect(cpp).toContain(
+      '// icons/open.png\nconst unsigned char tokotachi_image_icons_open_png[] = {\n    0x89, 0x50, 0x4E, 0x47,',
+    );
+    expect(cpp).toContain(
+      '    action_open->icon = tokotachi::Image::load_from_data(tokotachi_image_icons_open_png, sizeof(tokotachi_image_icons_open_png));',
+    );
+    // 同じ画像は 1 つだけ埋め込む
+    const doc = mainWindowCopy();
+    doc.actions[3].properties.icon = './icons/../icons/open.png';
+    const twice = text(
+      gen(TtuiDocument.parse(doc), 'main_window.ttui.json', () => undefined),
+      'main_window.cpp',
+    );
+    expect(twice.match(/const unsigned char/g)).toHaveLength(1);
+    expect(twice).toContain(
+      '    action_quit->icon = tokotachi::Image::load_from_data(tokotachi_image_icons_open_png,',
+    );
+  });
+
+  it('読めない画像があれば何も生成しない', () => {
+    const doc = mainWindowCopy();
+    doc.actions[0].properties.icon = 'icons/missing.png';
+    const r = gen(TtuiDocument.parse(doc), 'main_window.ttui.json', () => undefined);
+    expect(r.files.map((f) => f.result.ok)).toEqual([false, false]);
+    expect(r.files[1]?.result).toMatchObject({
+      error: expect.stringContaining('icons/missing.png'),
+    });
+  });
+
   it('Dialog はコンストラクタで親のウィンドウを受け取り、ボタンを加える', () => {
-    const r = generateCpp(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
+    const r = gen(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
     expect(text(r, 'settings_dialog.hpp')).toContain(
       'class SettingsDialog : public tokotachi::Dialog\n{\npublic:\n    explicit SettingsDialog(tokotachi::Window* parent);',
     );

@@ -13,6 +13,7 @@ import { findClass, getCatalog } from '../catalog/catalog.ts';
 import type { ClassInfo } from '../catalog/types.ts';
 import type {
   ActionNode,
+  ColumnNode,
   LayoutItem,
   LayoutNode,
   MenuItem,
@@ -24,6 +25,7 @@ import type {
   TabNode,
   ToolItem,
   TtuiDocument,
+  VariableNode,
   WidgetNode,
   WindowNode,
 } from './schema.ts';
@@ -41,10 +43,14 @@ export function serializeDocument(doc: TtuiDocument): string {
 type Transform = Readonly<Record<string, (value: unknown) => unknown>>;
 
 function ordered(doc: TtuiDocument): Json {
-  return pick(doc, ['$schema', 'format_version', 'window', 'actions', 'objects'], {
+  return pick(doc, ['$schema', 'format_version', 'window', 'actions', 'objects', 'variables'], {
     window: (w) => windowNode(w as WindowNode),
     actions: (list) => (list as ActionNode[]).map((a) => classLike(a, 'Action')),
     objects: (list) => (list as ObjectNode[]).map((o) => classLike(o, o.class)),
+    variables: (list) =>
+      (list as VariableNode[]).map((v) =>
+        pick(v, ['name', 'type', 'value', 'events'], members('Variable')),
+      ),
   });
 }
 
@@ -80,6 +86,8 @@ const CHILD_TRANSFORMS: Transform = {
       }),
     ),
   content: (c) => widgetNode(c as WidgetNode),
+  columns: (list) =>
+    (list as ColumnNode[]).map((c) => pick(c, ['name', 'properties'], members('Column'))),
 };
 
 function windowNode(w: WindowNode): Json {
@@ -138,6 +146,7 @@ function widgetNode(node: WidgetNode): Json {
       'tabs',
       'panes',
       'content',
+      'columns',
     ],
     members(node.class, CHILD_TRANSFORMS),
   );

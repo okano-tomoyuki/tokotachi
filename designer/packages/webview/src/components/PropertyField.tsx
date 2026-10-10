@@ -20,6 +20,8 @@ interface Props {
   readonly value: PropertyValue | undefined;
   /** 確定した値(null なら消す)。 */
   readonly onCommit: (value: PropertyValue | null) => void;
+  /** 画像のファイルを選んでもらう(画像のプロパティだけ)。 */
+  readonly onPickImage?: (() => void) | undefined;
 }
 
 interface Codec {
@@ -206,6 +208,19 @@ export function PropertyField(props: Props) {
               onCommit(e.target.value.toUpperCase());
             }}
           />
+        )}
+      </div>
+    );
+  }
+  if (typeof t === 'object' && 'value' in t && t.value === 'Image') {
+    // 定義ファイルからの相対パス。「…」でファイルを選ぶ
+    return (
+      <div className="image-field">
+        <TextField {...props} multiline={false} />
+        {props.onPickImage && (
+          <button title={l10n.t('Choose an image file')} onClick={props.onPickImage}>
+            …
+          </button>
         )}
       </div>
     );

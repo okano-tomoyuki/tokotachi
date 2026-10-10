@@ -10,7 +10,10 @@ import * as z from 'zod';
 export const FORMAT_VERSION = 1;
 export const DOCUMENT_EXTENSION = '.ttui.json';
 
-/** プロパティの値(型に合うかは意味の検証で調べる)。 */
+/**
+ * プロパティの値(型に合うかは意味の検証で調べる)。
+ * `{ "bind": "Variable の名前" }` は、その Variable との結びつけ(dsl-spec.md §5.2)。
+ */
 export const PropertyValue = z.json();
 export type PropertyValue = z.infer<typeof PropertyValue>;
 
@@ -40,6 +43,8 @@ export interface WidgetNode {
   readonly panes?: readonly PaneNode[] | undefined;
   /** ScrollArea の中身。 */
   readonly content?: WidgetNode | undefined;
+  /** ListView・TreeView の列。 */
+  readonly columns?: readonly ColumnNode[] | undefined;
 }
 
 /** レイアウトの項目。どのキーを書けるかはレイアウトのクラスで決まる(意味の検証で調べる)。 */
@@ -83,6 +88,12 @@ export interface TabNode {
   readonly page: WidgetNode;
 }
 
+/** 一覧の列(ItemView::add_column)。properties は Column のプロパティ(title・width・alignment)。 */
+export interface ColumnNode {
+  readonly name?: string | undefined;
+  readonly properties?: Properties | undefined;
+}
+
 export interface PaneNode {
   readonly name?: string | undefined;
   readonly properties?: Properties | undefined;
@@ -109,6 +120,9 @@ export const WidgetNode: z.ZodType<WidgetNode> = z.strictObject({
   },
   get content() {
     return WidgetNode.optional();
+  },
+  get columns() {
+    return z.array(ColumnNode).optional();
   },
 });
 
@@ -148,6 +162,11 @@ export const TabNode: z.ZodType<TabNode> = z.strictObject({
   get page() {
     return WidgetNode;
   },
+});
+
+export const ColumnNode: z.ZodType<ColumnNode> = z.strictObject({
+  name: z.string().optional(),
+  properties: Properties.optional(),
 });
 
 export const PaneNode: z.ZodType<PaneNode> = z.strictObject({
@@ -249,6 +268,22 @@ export const ActionNode = z.strictObject({
 });
 export type ActionNode = z.infer<typeof ActionNode>;
 
+/** Variable の値の型(C++ の `tokotachi::Variable<T>` の T)。 */
+export const VariableType = z.enum(['bool', 'int', 'float', 'double', 'string']);
+export type VariableType = z.infer<typeof VariableType>;
+
+/**
+ * Variable(値を 1 つ持つオブジェクト。docs/adr/0016)。プロパティに `{ "bind": "名前" }` と書いて結びつける。
+ * value は初期値(型に合うかは意味の検証で調べる。省略すると T())。
+ */
+export const VariableNode = z.strictObject({
+  name: z.string(),
+  type: VariableType,
+  value: PropertyValue.optional(),
+  events: Events.optional(),
+});
+export type VariableNode = z.infer<typeof VariableNode>;
+
 /** 画面に出ないオブジェクト(Timer 等)。 */
 export const ObjectNode = z.strictObject({
   name: z.string(),
@@ -264,5 +299,6 @@ export const TtuiDocument = z.strictObject({
   window: WindowNode,
   actions: z.array(ActionNode).optional(),
   objects: z.array(ObjectNode).optional(),
+  variables: z.array(VariableNode).optional(),
 });
 export type TtuiDocument = z.infer<typeof TtuiDocument>;

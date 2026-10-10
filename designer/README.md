@@ -46,3 +46,6 @@ node packages/cli/src/main.ts generate samples/main_window.ttui.json --comment-l
 拡張を試すには、`designer/` を VS Code で開き、実行とデバッグの「Run Extension」(F5)で開発用のホストを起動する(見本の写し `.cache/playground` が開く)。
 
 ライブラリのビルド(リポジトリの直下の CMake)は、このフォルダに依存しない。
+
+CI(`.github/workflows/designer.yml`)は `pnpm check` に加えて、キャンバスを WebAssembly にして Linux の Node.js でテスト・画素の比較を行い、
+.vsix を作る。タグ `designer-v<版>` を push すると Marketplace に出す([docs/designer/ci.md](../docs/designer/ci.md))。

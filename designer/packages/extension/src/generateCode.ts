@@ -15,9 +15,12 @@ import {
 import {
   DOCUMENT_EXTENSION,
   hasErrors,
+  imageReferences,
+  normalizePath,
   parseDocument,
   parseProject,
   PROJECT_EXTENSION,
+  type TtuiDocument,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 import { projectOf, readText, windowUri } from './projects.ts';
@@ -107,11 +110,39 @@ export async function generateWindowCode(
   for (const path of [target.header, target.source]) {
     existing.set(path, await readText(vscode.Uri.joinPath(directory, path)));
   }
-  const generated = generateCpp(doc, fileName, (path) => existing.get(path), settings);
+  // 画像も先に読む(生成したコードに埋め込む)
+  const images = await readImages(directory, doc);
+  const generated = generateCpp(
+    doc,
+    fileName,
+    (path) => existing.get(path),
+    settings,
+    (path) => images.get(path),
+  );
   const written = await writeGenerated(directory, generated, existing, options, () =>
     generateWindowCode(document, { quiet: true, overwrite: true }),
   );
   return written ? { directory, target } : undefined;
+}
+
+/** 定義ファイルが参照する画像を読む(正規化したパス → 中身。読めないものは入れない)。 */
+export async function readImages(
+  directory: vscode.Uri,
+  doc: TtuiDocument,
+): Promise<Map<string, Uint8Array>> {
+  const images = new Map<string, Uint8Array>();
+  for (const ref of imageReferences(doc)) {
+    const path = normalizePath(ref.path);
+    if (images.has(path)) {
+      continue;
+    }
+    try {
+      images.set(path, await vscode.workspace.fs.readFile(vscode.Uri.joinPath(directory, path)));
+    } catch {
+      // 読めない画像はコード生成がエラーにする
+    }
+  }
+  return images;
 }
 
 /**

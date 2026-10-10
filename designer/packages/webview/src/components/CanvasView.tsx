@@ -36,6 +36,10 @@ function rectOf(
   if (node.kind === 'tab' || node.kind === 'pane') {
     return rectOf(node.children[0], roots, rects);
   }
+  if (node.kind === 'column') {
+    // 列は一覧の部品の枠を出す
+    return rectOf(findOutlineNode(roots, node.path.slice(0, -2).join('/')), roots, rects);
+  }
   if (node.kind === 'layout') {
     // 付いている部品(パスの親)。ウィンドウなら undefined(全体)
     const owner = findOutlineNode(roots, node.path.slice(0, -1).join('/'));

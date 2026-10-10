@@ -4,6 +4,7 @@
  * 同じ並びを使うので、キャンバスに描いた画面と、生成したコードが組む画面は同じになる(docs/adr/0039)。
  */
 import {
+  bindingOf,
   findClass,
   layoutVariable,
   MENU_BAR_VARIABLE,
@@ -14,6 +15,8 @@ import {
   tabVariable,
   TOOL_BAR_VARIABLE,
   type Events,
+  columnVariable,
+  type ColumnNode,
   type LayoutItem,
   type LayoutNode,
   type MenuNode,
@@ -24,6 +27,7 @@ import {
   type PropertyValue,
   type TabNode,
   type TtuiDocument,
+  type VariableType,
   type WidgetNode,
 } from '@tokotachi-designer/core';
 
@@ -61,6 +65,20 @@ export type Op =
       readonly property: string;
       readonly type: PropertyType;
       readonly value: PropertyValue;
+    }
+  /** `variable = new tokotachi::Variable<T>(this, value)`(value が無ければ初期値は T())。 */
+  | {
+      readonly op: 'variable';
+      readonly variable: string;
+      readonly type: VariableType;
+      readonly value?: PropertyValue | undefined;
+    }
+  /** `tokotachi::bind(target->property, variable->value)`(プロパティを Variable に結びつける)。 */
+  | {
+      readonly op: 'bind';
+      readonly target?: string | undefined;
+      readonly property: string;
+      readonly variable: string;
     }
   /** `target->property = [this](...) { handler(...); }`。 */
   | {
@@ -157,6 +175,11 @@ class SetupBuilder {
       this.events(o.name, o.class, o.events);
       this.blank();
     }
+    for (const v of doc.variables ?? []) {
+      this.add({ op: 'variable', variable: v.name, type: v.type, value: v.value });
+      this.events(v.name, 'Variable', v.events);
+      this.blank();
+    }
     this.properties(undefined, w.class, w.properties);
     this.events(undefined, w.class, w.events);
     for (const b of w.buttons ?? []) {
@@ -219,6 +242,11 @@ class SetupBuilder {
     for (const [name, prop] of Object.entries(info.properties)) {
       const value = props[name];
       if (value === undefined || skip.includes(name) || (prop.after_children === true) !== late) {
+        continue;
+      }
+      const variable = bindingOf(value);
+      if (variable !== undefined) {
+        this.add({ op: 'bind', target, property: name, variable });
         continue;
       }
       const op: Op = { op: 'set', target, property: name, type: prop.type, value };
@@ -339,6 +367,9 @@ class SetupBuilder {
     for (const a of node.actions ?? []) {
       this.call(name, 'add_action', [ref(a)]);
     }
+    node.columns?.forEach((c, i) => {
+      this.column(c, columnVariable(c, name, i), name);
+    });
     const hasChildren =
       node.layout !== undefined ||
       node.children !== undefined ||
@@ -384,7 +415,7 @@ class SetupBuilder {
         'add_tab',
         [ref(tab.page.name), str(typeof title === 'string' ? title : '')],
         tab.properties,
-        ['title'],
+        bindingOf(title) === undefined ? ['title'] : [],
       );
     });
     node.panes?.forEach((pane, i) => {
@@ -402,7 +433,7 @@ class SetupBuilder {
           [undefined, int(1)],
         ),
         pane.properties,
-        ['stretch'],
+        bindingOf(stretch) === undefined ? ['stretch'] : [],
       );
     });
     if (node.content) {
@@ -418,8 +449,35 @@ class SetupBuilder {
     }
   }
 
+  /** 列(`add_column(title, width)`。width は既定の 120 なら省く。alignment は結果に設定する)。 */
+  private column(column: ColumnNode, variable: string, view: string): void {
+    const title = column.properties?.['title'];
+    const width = column.properties?.['width'];
+    const passed = [
+      ...(bindingOf(title) === undefined ? ['title'] : []),
+      ...(typeof width === 'number' ? ['width'] : []),
+    ];
+    this.withPart(
+      'Column',
+      column.name,
+      variable,
+      view,
+      'add_column',
+      trimDefaults(
+        [
+          str(typeof title === 'string' ? title : ''),
+          float(typeof width === 'number' ? width : 120),
+        ],
+        [undefined, float(120)],
+      ),
+      column.properties,
+      passed,
+    );
+  }
+
   /**
    * add_tab・add_widget の結果(Tab・SplitterPane)に、引数で渡さないプロパティを設定する。
+   * passed は引数で渡したプロパティ(Variable に結びつけたものは引数で渡さず、結果に結びつける)。
    * 設定するものが無く名前も無ければ、結果を受け取らない。
    */
   private withPart(

@@ -2,12 +2,23 @@
  * インスペクタ(docs/designer/editor-design.md §5)。選んだノードの名前・プロパティ・ハンドラを編集する。
  */
 import {
+  bindingOf,
+  checkValue,
   defaultHandlerName,
   findClass,
   flattenOutline,
+  isBindable,
   l10n,
+  namedNodes,
+  newName,
+  variableTypeOf,
+  variableValue,
+  VariableType,
   type OutlineNode,
   type Properties,
+  type PropertyInfo,
+  type PropertyValue,
+  type VariableNode,
 } from '@tokotachi-designer/core';
 import { useEffect, useState } from 'react';
 import { selectedNode, sendEdit, useDesigner } from '../store.ts';
@@ -128,6 +139,158 @@ function HandlerField({
   );
 }
 
+/** 新しい Variable の名前(`<部品の名前>_<プロパティ>`。使われていれば番号を付ける)。 */
+function variableNameFor(node: OutlineNode, property: string): string {
+  const doc = useDesigner.getState().document;
+  if (!doc) {
+    return property;
+  }
+  const base = `${node.kind === 'window' ? 'window' : node.label}_${property}`;
+  return namedNodes(doc).some((n) => n.name === base) ? newName(doc, base) : base;
+}
+
+/**
+ * プロパティを Variable に結びつける選択肢(同じ型の Variable と「新しい Variable」。dsl-spec.md §5.2)。
+ * 外すと、プロパティは Variable の値になる(見た目は変わらない)。
+ */
+function BindSelect({
+  node,
+  name,
+  info,
+  value,
+}: {
+  node: OutlineNode;
+  name: string;
+  info: PropertyInfo;
+  value: PropertyValue | undefined;
+}) {
+  const doc = useDesigner((s) => s.document);
+  const type = variableTypeOf(info.type);
+  const bound = bindingOf(value);
+  const variables = (doc?.variables ?? []).filter((v) => v.type === type);
+  const NEW = '\u0000new';
+  const set = (v: PropertyValue | null): void => {
+    sendEdit({ kind: 'setProperties', target: node.path, properties: { [name]: v } });
+  };
+  const change = (selected: string): void => {
+    if (selected === '') {
+      const v = doc?.variables?.find((x) => x.name === bound);
+      set(v ? variableValue(v.type, v.value) : null);
+    } else if (selected === NEW && type !== undefined) {
+      // 今の値を新しい Variable の初期値にする
+      const variable = variableNameFor(node, name);
+      const initial =
+        value !== undefined && checkValue(info.type, value) === null ? value : undefined;
+      sendEdit({
+        kind: 'batch',
+        commands: [
+          { kind: 'addVariable', name: variable, type, value: initial },
+          { kind: 'setProperties', target: node.path, properties: { [name]: { bind: variable } } },
+        ],
+      });
+    } else {
+      set({ bind: selected });
+    }
+  };
+  return (
+    <select
+      className={bound === undefined ? 'bind-select' : 'bind-select bound'}
+      title={l10n.t('Bind to a variable')}
+      value={bound ?? ''}
+      onChange={(e) => {
+        change(e.target.value);
+      }}
+    >
+      <option value="">{bound === undefined ? '⛓' : l10n.t('(Unbind)')}</option>
+      {variables.map((v) => (
+        <option key={v.name} value={v.name}>
+          {v.name}
+        </option>
+      ))}
+      <option value={NEW}>{l10n.t('New variable')}</option>
+    </select>
+  );
+}
+
+/** 結びつけたプロパティの値(Variable の初期値)。 */
+function BoundValue({ variable }: { variable: string }) {
+  const doc = useDesigner((s) => s.document);
+  const v = doc?.variables?.find((x) => x.name === variable);
+  const text = v ? JSON.stringify(variableValue(v.type, v.value)) : '';
+  return (
+    <span className="bound-value" title={l10n.t('Bound to the variable {0}', variable)}>
+      {`${variable} = ${text}`}
+    </span>
+  );
+}
+
+/** Variable: 名前・型・初期値・ハンドラ。 */
+function VariableEditor({ node }: { node: OutlineNode }) {
+  const json = nodeJson(node.path) as VariableNode | undefined;
+  const info = findClass('Variable');
+  if (!json || !info) {
+    return null;
+  }
+  return (
+    <>
+      <div className="inspector-head">
+        <span className="inspector-class">{`Variable<${json.type}>`}</span>
+        <NameField node={node} name={json.name} />
+      </div>
+      <table className="grid">
+        <tbody>
+          <tr title={l10n.t('The type of the value (T of tokotachi::Variable<T>)')}>
+            <th className="set">type</th>
+            <td>
+              <select
+                value={json.type}
+                onChange={(e) => {
+                  sendEdit({
+                    kind: 'setVariable',
+                    target: node.path,
+                    type: e.target.value as VariableType,
+                  });
+                }}
+              >
+                {VariableType.options.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </td>
+          </tr>
+          <tr title={l10n.t('The initial value')}>
+            <th className={json.value === undefined ? '' : 'set'}>value</th>
+            <td>
+              <PropertyField
+                name="value"
+                info={{
+                  type: json.type,
+                  declared_in: 'Variable',
+                  default: variableValue(json.type, undefined),
+                }}
+                value={json.value}
+                onCommit={(v) => {
+                  sendEdit({ kind: 'setVariable', target: node.path, value: v });
+                }}
+              />
+            </td>
+          </tr>
+          {Object.entries(info.handlers).map(([event, h]) => (
+            <tr key={event} title={h.doc}>
+              <th className={json.events?.[event] === undefined ? '' : 'set'}>{event}</th>
+              <td>
+                <HandlerField node={node} event={event} handler={json.events?.[event]} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
 /** ノードの名前・レイアウトの欄・プロパティ・ハンドラ。 */
 function NodeEditor({ node }: { node: OutlineNode }) {
   const [tab, setTab] = useState<'properties' | 'events'>('properties');
@@ -174,22 +337,31 @@ function NodeEditor({ node }: { node: OutlineNode }) {
           <tbody>
             {props.map(([name, p]) => {
               const value = json.properties?.[name];
+              const bound = bindingOf(value);
               return (
                 <tr key={name} title={p.doc}>
                   <th className={value === undefined ? '' : 'set'}>{name}</th>
-                  <td>
-                    <PropertyField
-                      name={name}
-                      info={p}
-                      value={value}
-                      onCommit={(v) => {
-                        sendEdit({
-                          kind: 'setProperties',
-                          target: node.path,
-                          properties: { [name]: v },
-                        });
-                      }}
-                    />
+                  <td className="value-cell">
+                    {bound !== undefined ? (
+                      <BoundValue variable={bound} />
+                    ) : (
+                      <PropertyField
+                        name={name}
+                        info={p}
+                        value={value}
+                        onCommit={(v) => {
+                          sendEdit({
+                            kind: 'setProperties',
+                            target: node.path,
+                            properties: { [name]: v },
+                          });
+                        }}
+                        onPickImage={() => {
+                          postMessage({ type: 'pickImage', target: node.path, property: name });
+                        }}
+                      />
+                    )}
+                    {isBindable(p) && <BindSelect node={node} name={name} info={p} value={value} />}
                   </td>
                 </tr>
               );
@@ -293,6 +465,8 @@ export function Inspector() {
     content = <MenuEditor node={node} />;
   } else if (node?.kind === 'menu_item' || node?.kind === 'tool_item') {
     content = <EntryEditor node={node} />;
+  } else if (node?.kind === 'variable') {
+    content = <VariableEditor node={node} />;
   } else if (node?.editable && node.class !== undefined) {
     // 選んだノードが変わったら、タブを最初に戻す
     content = <NodeEditor key={node.id} node={node} />;

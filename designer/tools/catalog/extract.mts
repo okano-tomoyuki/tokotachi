@@ -160,6 +160,8 @@ interface RawClass {
   /** public のメンバ関数の名前(コンストラクタ・演算子を除く)。 */
   functions: string[];
   constructors: string[];
+  /** テンプレート(Variable<T> 等)か。 */
+  template: boolean;
 }
 
 interface RawEnum {
@@ -255,6 +257,7 @@ function readXml(xmlDir: string): RawXml {
         variables: readMembers(def, raw),
         functions,
         constructors,
+        template: child(def, 'templateparamlist') !== undefined,
       });
     }
   }
@@ -402,6 +405,7 @@ class Builder {
       ...(info.category ? { category: info.category } : {}),
       ...(info.accepts_children ? { accepts_children: true as const } : {}),
       ...(info.child_keys ? { child_keys: info.child_keys } : {}),
+      ...(self.template ? { template: true as const } : {}),
       ...(doc ? { doc } : {}),
       properties,
       handlers,

@@ -107,6 +107,7 @@ function generateWindow(dslPath: string, options: CppOptions, flags: Flags): num
     basename(dslPath),
     (path) => readIfExists(resolve(outDir, path)),
     options,
+    (path) => readBinaryIfExists(resolve(outDir, path)),
   );
   return write(generated, outDir, flags);
 }
@@ -267,6 +268,14 @@ function report(file: string, diagnostics: readonly Diagnostic[]): void {
 function readIfExists(path: string): string | undefined {
   try {
     return readFileSync(path, 'utf8');
+  } catch {
+    return undefined;
+  }
+}
+
+function readBinaryIfExists(path: string): Uint8Array | undefined {
+  try {
+    return readFileSync(path);
   } catch {
     return undefined;
   }

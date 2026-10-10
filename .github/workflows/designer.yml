@@ -1,0 +1,227 @@
+# デザイナー(VS Code の拡張。designer/)の CI(docs/designer/ci.md)。
+#   check:   型チェック・lint・書式・カタログ・JSON Schema・対応表・訳・テスト(WebAssembly 無し)
+#   canvas:  キャンバスを WebAssembly にし、Linux の Node.js でテスト(キャンバスを使うもの)と、ネイティブとの画素の比較をする
+#   package: WebAssembly を入れた .vsix を作る
+#   publish: タグ designer-v<版>(package.json の version と同じ)を push したときに、Marketplace に出す
+name: デザイナー
+
+on:
+  # タグの push にはパスの絞り込みが効かないので、push は絞り込まない
+  push:
+    branches: [master]
+    tags: ['designer-v*']
+  pull_request:
+    paths:
+      - 'designer/**'
+      - 'include/**'
+      - 'src/**'
+      - 'deps/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/designer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: designer-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: designer
+
+env:
+  # キャンバスを作った版(docs/adr/0039)。変えるときは deps-wasm のキャッシュのキーも変わる
+  EMSDK_VERSION: 6.0.12
+  DOXYGEN_VERSION: 1.18.0
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: designer/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: designer/pnpm-lock.yaml
+
+      # カタログの食い違いの検査(catalog:check)に使う。手元・リファレンスと同じ版。版と SHA256 を固定する
+      - name: Doxygen
+        working-directory: .
+        run: |
+          curl -sSfL -o doxygen.tar.gz https://www.doxygen.nl/files/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
+          echo "14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90  doxygen.tar.gz" | sha256sum -c -
+          tar xzf doxygen.tar.gz
+          echo "$PWD/doxygen-${DOXYGEN_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+
+  canvas:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: designer/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: designer/pnpm-lock.yaml
+
+      # ネイティブのビルド(codegen:verify-cpp)の開発用のパッケージと、キャンバス・ネイティブの両方で使うフォント
+      - name: 開発用のパッケージ・フォント
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libwayland-dev libxkbcommon-dev libdecor-0-dev libegl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libdrm-dev libgbm-dev libfontconfig-dev \
+            fonts-noto-cjk
+
+      - name: Emscripten
+        working-directory: .
+        run: |
+          git clone --depth 1 --branch "$EMSDK_VERSION" https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install "$EMSDK_VERSION"
+          "$RUNNER_TEMP/emsdk/emsdk" activate "$EMSDK_VERSION"
+          echo "EMSDK=$RUNNER_TEMP/emsdk" >> "$GITHUB_ENV"
+
+      # 依存ライブラリのビルドは数分かかるので、deps/ が変わらない限り使い回す(WebAssembly 版とネイティブ版)
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/emscripten-wasm32
+            deps/install/linux-x86_64
+            deps/download
+          key: deps-designer-${{ env.EMSDK_VERSION }}-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: キャンバスを WebAssembly にする
+        run: pnpm canvas:build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: canvas-wasm
+          path: designer/packages/canvas/wasm/
+          if-no-files-found: error
+
+      # キャンバスを使うテスト(入れる場所・つまみ)は、WebAssembly が無いと飛ばすので、ここで Linux の Node.js で動かす
+      - name: テスト(キャンバスを含む)
+        run: pnpm test
+
+      # 見本から生成した C++ をネイティブでビルド・実行して確かめ、キャンバスで描いた画像と画素を比べる
+      - name: 生成したコードのビルドと実行
+        run: pnpm codegen:verify-cpp
+
+      - name: キャンバスとネイティブの画素の比較
+        run: pnpm canvas:verify
+
+      # 生成したプロジェクト(main.cpp・CMakeLists.txt)を、インストールした Tokotachi でビルドする
+      - name: 生成したプロジェクトのビルド
+        run: |
+          cmake -S .. -B ../build -G Ninja -DCMAKE_BUILD_TYPE=Release -DTOKOTACHI_BUILD_TESTS=OFF -DTOKOTACHI_BUILD_EXAMPLES=OFF
+          cmake --build ../build
+          pnpm codegen:verify-project
+
+      - name: 比べた画像
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: canvas-images
+          path: |
+            designer/.cache/canvas-verify/
+            designer/.cache/verify-cpp/*.png
+          if-no-files-found: ignore
+
+  package:
+    needs: [check, canvas]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: designer/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: designer/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: canvas-wasm
+          path: designer/packages/canvas/wasm/
+
+      - name: .vsix を作る
+        run: |
+          pnpm build
+          pnpm package
+          # キャンバスのモジュールが入っていること(無いと拡張はキャンバスを描けない)
+          vsix=$(ls packages/extension/*.vsix)
+          unzip -l "$vsix" | tee vsix-files.txt
+          grep -q 'extension/dist/canvas/tokotachi_canvas.wasm' vsix-files.txt
+          grep -q 'extension/dist/canvas/tokotachi_canvas.mjs' vsix-files.txt
+          grep -q 'extension/dist/webview/main.js' vsix-files.txt
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: designer/packages/extension/*.vsix
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/designer-v')
+    needs: package
+    runs-on: ubuntu-24.04
+    # 公開の前に承認を求めたいときは、リポジトリの設定で環境 marketplace に保護の規則を付ける
+    environment: marketplace
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: designer/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: designer/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+          path: designer/dist-vsix/
+
+      - name: タグと package.json の版が同じか
+        run: |
+          version=$(node -p "require('./packages/extension/package.json').version")
+          if [ "designer-v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::タグ $GITHUB_REF_NAME と package.json の版 $version が違う"
+            exit 1
+          fi
+
+      - name: Marketplace に出す
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: pnpm --filter tokotachi-designer exec vsce publish --no-dependencies --packagePath "$(ls "$PWD"/dist-vsix/*.vsix)"

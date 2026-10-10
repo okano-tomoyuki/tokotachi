@@ -2147,6 +2147,9 @@
       ],
       "kind": "widget",
       "category": "view",
+      "child_keys": [
+        "columns"
+      ],
       "doc": "項目の一覧を表示するビュー(docs/adr/0026)。モデルの一番上の行だけを表示する。",
       "properties": {
         "x": {
@@ -2333,6 +2336,9 @@
       ],
       "kind": "widget",
       "category": "view",
+      "child_keys": [
+        "columns"
+      ],
       "doc": "項目の木を表示するビュー(docs/adr/0026)。子のある項目は、左の印・ダブルクリック・→← で開閉する。",
       "properties": {
         "x": {
@@ -3428,6 +3434,13 @@
           "declared_in": "Action",
           "default": ""
         },
+        "icon": {
+          "type": {
+            "value": "Image"
+          },
+          "declared_in": "Action",
+          "doc": "ツールバーのボタンに出す画像(メニューには出さない)。"
+        },
         "tooltip": {
           "type": "string",
           "declared_in": "Action",
@@ -3943,6 +3956,57 @@
         }
       },
       "handlers": {}
+    },
+    "Column": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "ビューの 1 つの列。ItemView が作り、所有する。",
+      "properties": {
+        "title": {
+          "type": "string",
+          "declared_in": "Column",
+          "doc": "見出しの文字。",
+          "default": ""
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Column",
+          "doc": "幅(dp。24 以上)。利用者は見出しの境目のドラッグでも変えられる。最後の列は、ビューに余りがあれば広げて描く。",
+          "default": 120
+        },
+        "alignment": {
+          "type": {
+            "enum": "Align"
+          },
+          "declared_in": "Column",
+          "doc": "セルの中の文字のそろえ方(START・CENTER・END。FILL は START と同じ)。",
+          "default": "START"
+        }
+      },
+      "handlers": {}
+    },
+    "Variable": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "template": true,
+      "doc": "値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。",
+      "properties": {},
+      "handlers": {
+        "on_set": {
+          "type": "NotifyHandler",
+          "declared_in": "Variable",
+          "doc": "value が設定された(同じ値の代入でも呼ぶ。docs/adr/0016)。"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "Variable",
+          "doc": "value が変わった(結びつけた相手から伝わったときも含む)。on_set の後に呼ぶ。"
+        }
+      }
     }
   },
   "values": {
@@ -3958,6 +4022,9 @@
       "members": {
         "size": "float"
       }
+    },
+    "Image": {
+      "special": true
     },
     "Margins": {
       "members": {

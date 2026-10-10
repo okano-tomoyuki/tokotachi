@@ -5,11 +5,16 @@ import { findOutlineNode, flattenOutline, outline } from './outline.ts';
 describe('outline', () => {
   const roots = outline(SAMPLE);
 
-  it('ウィンドウ・Action・オブジェクトを根に並べる', () => {
+  it('ウィンドウ・Action・オブジェクト・Variable を根に並べる', () => {
     expect(roots.map((r) => `${r.kind}:${r.label}`)).toEqual([
       'window:MainWindow',
       'group:actions',
       'group:objects',
+      'group:variables',
+    ]);
+    expect(roots[3]?.children.map((c) => `${c.kind}:${c.label}`)).toEqual([
+      'variable:file_name',
+      'variable:show_hidden',
     ]);
     expect(roots[0]?.children.map((c) => c.kind)).toEqual([
       'menu_bar',

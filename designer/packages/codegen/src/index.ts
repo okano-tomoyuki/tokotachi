@@ -2,8 +2,9 @@
  * コード生成(docs/designer/codegen-design.md)。
  * 文字列を受け取り文字列を返すだけで、ファイルの入出力は呼び出し側(拡張・CLI)が行う。
  */
-import type { TtuiDocument } from '@tokotachi-designer/core';
+import { imageReferences, l10n, normalizePath, type TtuiDocument } from '@tokotachi-designer/core';
 import { emitCpp } from './cpp/emit.ts';
+import { embedImages } from './cpp/images.ts';
 import { CPP_NAMES, cppSyntax } from './cpp/syntax.ts';
 import { DEFAULT_CPP_OPTIONS, fileNameOf, resolveCppTarget, type CppOptions } from './names.ts';
 import { createFile, mergeFile, type GeneratedCode, type MergeResult } from './region.ts';
@@ -48,15 +49,35 @@ export interface GenerateResult {
  * @param doc 検証を通ったドキュメント
  * @param dslFileName 定義ファイルの名前(出力先と、生成物の説明に使う)
  * @param readExisting 出力先の既存の内容を返す(無ければ undefined)
+ * @param readImage 定義ファイルが参照する画像の中身を返す(パスは定義ファイルのフォルダからの相対パス。無ければ undefined)。
+ *   読めない画像があれば、ソースを生成せずにエラーにする
  */
 export function generateCpp(
   doc: TtuiDocument,
   dslFileName: string,
   readExisting: (path: string) => string | undefined,
   options: CppOptions = DEFAULT_CPP_OPTIONS,
+  readImage: (path: string) => Uint8Array | undefined = () => undefined,
 ): GenerateResult {
   const target = resolveCppTarget(doc, dslFileName, options);
-  const code = emitCpp(doc, fileNameOf(dslFileName), target, options.commentLocale);
+  const paths = imageReferences(doc).map((r) => normalizePath(r.path));
+  const data = new Map<string, Uint8Array>();
+  for (const path of paths) {
+    const bytes = data.has(path) ? data.get(path) : readImage(path);
+    if (bytes === undefined) {
+      const error = l10n.t('Cannot read the image file "{0}"', path);
+      return {
+        files: [
+          { path: target.header, result: { ok: false, error } },
+          { path: target.source, result: { ok: false, error } },
+        ],
+        warnings: [],
+      };
+    }
+    data.set(path, bytes);
+  }
+  const images = embedImages(paths, data);
+  const code = emitCpp(doc, fileNameOf(dslFileName), target, options.commentLocale, images);
   const syntax = cppSyntax(target.className);
   const generate = (generated: GeneratedCode, existing: string | undefined): MergeResult =>
     existing === undefined

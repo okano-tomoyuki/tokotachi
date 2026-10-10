@@ -27,14 +27,19 @@ describe('tree', () => {
 
   it('名前を持つノード', () => {
     const names = namedNodes(SAMPLE).map((n) => `${n.kind}:${n.name}`);
-    expect(names.slice(0, 6)).toEqual([
+    expect(names.slice(0, 8)).toEqual([
       'action:action_open',
       'action:action_clear_recent',
       'action:action_details',
       'action:action_quit',
       'object:timer_refresh',
+      'variable:file_name',
+      'variable:show_hidden',
       'menu:menu_file',
     ]);
+    expect(namedNodes(SAMPLE).find((n) => n.name === 'file_name')?.class).toBe(
+      'Variable<std::string>',
+    );
     expect(names).toContain('tab:tab_detail');
   });
 
@@ -52,6 +57,8 @@ describe('tree', () => {
       'splitter_main_pane_1',
       'splitter_main_pane_2',
       'tab_widget_files_tab_1',
+      'list_view_files_column_1',
+      'list_view_files_column_2',
     ]);
   });
 });

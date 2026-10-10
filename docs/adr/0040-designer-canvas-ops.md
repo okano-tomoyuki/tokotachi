@@ -31,7 +31,8 @@
 
 - **操作の並び**([designer/packages/codegen/src/model.ts](../../designer/packages/codegen/src/model.ts) の `buildSetup`)。
   - 操作は `new`(作る)・`set`(プロパティ)・`connect`(ハンドラ)・`call`(add・add_tab 等の呼び出しと、その結果の変数)・
-    `place`(PlaceLayout)・`blank`(C++ の空行)。
+    `place`(PlaceLayout)・`blank`(C++ の空行)。2026-10-10 に `variable`(Variable を作る)・`bind`(プロパティを Variable に結びつける)を加えた
+    (キャンバスは Variable を作らず、値を覚えて、結びつけを値の設定として実行する。描くときには値が変わらないので同じ結果になる)。
   - C++ の書き出しは、この並びを文にする。分けた後も、生成するコードは 1 文字も変わらないことを、期待する出力のテストで確かめた。
   - キャンバス([designer/canvas/](../../designer/canvas/))は、並びを JSON で受け取って実行する。名前から部品を作る・プロパティを名前で
     読み書きする対応表は、カタログから生成する(`designer/canvas/src/generated/`。`pnpm canvas:table`。食い違いは `pnpm check` で見つける)。
@@ -56,4 +57,6 @@
 - コード生成を変えるときは、model.ts(操作の並び)を変え、C++ の書き出しとキャンバスの実行の両方に反映する。
   新しい呼び出し(`call` の method)を加えたら、キャンバスの `Runner::call` にも加える。
 - 公開のヘッダを変えたら、カタログの取り出し(`pnpm catalog:extract`)と、対応表の生成(`pnpm canvas:table`)を行う。
-- Linux の Node.js でのキャンバスの確認は、まだ行っていない(WSL に Node.js が無い。拡張の CI で行う)。
+- Linux の Node.js でのキャンバスの確認は、拡張の CI(`.github/workflows/designer.yml` の canvas。[ci.md](../designer/ci.md))で行う
+  (キャンバスを使うテスト・ネイティブとの画素の比較)。2026-10-10 に Ubuntu 24.04・Node.js 24 で、見本 2 つともネイティブ(GCC 13)と
+  **1 画素も違わなかった**(フォントは両方とも fontconfig で探した Noto CJK)。描く時間は組み直して約 12 ms(メインのウィンドウ)・約 2 ms(ダイアログ)。

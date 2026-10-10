@@ -12,12 +12,30 @@ MainWindow::MainWindow()
 }
 
 // <tokotachi-designer:begin id="tokotachi_setup_ui">
+// Contents of the image files referenced by the window definition (generated).
+namespace
+{
+
+// icons/open.png
+const unsigned char tokotachi_image_icons_open_png[] = {
+    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0xF3, 0xFF,
+    0x61, 0x00, 0x00, 0x00, 0x33, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x60, 0x18, 0x14, 0x60,
+    0x43, 0x95, 0xC0, 0x7F, 0x6C, 0x78, 0xE0, 0x0D, 0x20, 0x84, 0x51, 0x0C, 0xF8, 0xB4, 0xC3, 0x8A,
+    0x24, 0x4C, 0x7D, 0x03, 0x28, 0xF2, 0x06, 0x88, 0xF1, 0xFF, 0x52, 0x16, 0xC9, 0x78, 0xD4, 0x00,
+    0x34, 0x03, 0x28, 0x4E, 0x4C, 0x03, 0x06, 0x00, 0xF2, 0x2A, 0xB2, 0xA8, 0x11, 0xD9, 0x8F, 0x4F,
+    0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
+};
+
+}  // namespace
+
 // Creates the widgets, sets their properties, adds them to the layouts and connects the handlers (generated).
 void MainWindow::tokotachi_setup_ui()
 {
     action_open = new tokotachi::Action(this);
     action_open->text = "開く(&O)...";
     action_open->shortcut = tokotachi::Shortcut("Ctrl+O");
+    action_open->icon = tokotachi::Image::load_from_data(tokotachi_image_icons_open_png, sizeof(tokotachi_image_icons_open_png));
     action_open->on_trigger = [this](tokotachi::Object* sender) { action_open_trigger(sender); };
 
     action_clear_recent = new tokotachi::Action(this);
@@ -36,6 +54,11 @@ void MainWindow::tokotachi_setup_ui()
     timer_refresh = new tokotachi::Timer(this);
     timer_refresh->interval = 5000;
     timer_refresh->on_timer = [this](tokotachi::Object* sender) { refresh(sender); };
+
+    file_name = new tokotachi::Variable<std::string>(this, "メモ.txt");
+    file_name->on_change = [this](tokotachi::Object* sender) { file_name_change(sender); };
+
+    show_hidden = new tokotachi::Variable<bool>(this);
 
     width = 720;
     height = 480;
@@ -102,6 +125,10 @@ void MainWindow::tokotachi_setup_ui()
     list_view_files->sorting_enabled = true;
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
     list_view_files->on_activate = [this](tokotachi::Object* sender) { list_view_files_activate(sender); };
+    list_view_files->add_column("名前", 200);
+    tokotachi::Column* list_view_files_column_2 = list_view_files->add_column("大きさ", 80);
+    list_view_files_column_2->alignment = tokotachi::Align::END;
+    column_modified = list_view_files->add_column("更新日時");
     tab_widget_files->add_tab(list_view_files, "ファイル");
 
     page_detail = new tokotachi::Widget(tab_widget_files);
@@ -114,6 +141,7 @@ void MainWindow::tokotachi_setup_ui()
     page_detail_layout->add(label_name, 0, 0);
 
     line_edit_name = new tokotachi::LineEdit(page_detail);
+    tokotachi::bind(line_edit_name->text, file_name->value);
     page_detail_layout->add(line_edit_name, 0, 1);
 
     label_size = new tokotachi::Label(page_detail);
@@ -140,6 +168,7 @@ void MainWindow::tokotachi_setup_ui()
 
     check_box_hidden = new tokotachi::CheckBox(row_buttons);
     check_box_hidden->text = "隠しファイルも表示する";
+    tokotachi::bind(check_box_hidden->checked, show_hidden->value);
     row_buttons_layout->add(check_box_hidden);
 
     row_buttons_layout->add_stretch();
@@ -153,7 +182,7 @@ void MainWindow::tokotachi_setup_ui()
 
     window_layout->add(row_buttons);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="8f479f68">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="453c1dd4">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)
@@ -165,6 +194,10 @@ void MainWindow::action_quit_trigger(tokotachi::Object* sender)
 }
 
 void MainWindow::refresh(tokotachi::Object* sender)
+{
+}
+
+void MainWindow::file_name_change(tokotachi::Object* sender)
 {
 }
 

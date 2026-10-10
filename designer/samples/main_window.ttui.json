@@ -142,7 +142,28 @@
                           "sorting_enabled": true,
                           "selection_mode": "MULTI"
                         },
-                        "events": { "on_activate": "list_view_files_activate" }
+                        "events": { "on_activate": "list_view_files_activate" },
+                        "columns": [
+                          {
+                            "properties": {
+                              "title": "名前",
+                              "width": 200
+                            }
+                          },
+                          {
+                            "properties": {
+                              "title": "大きさ",
+                              "width": 80,
+                              "alignment": "END"
+                            }
+                          },
+                          {
+                            "name": "column_modified",
+                            "properties": {
+                              "title": "更新日時"
+                            }
+                          }
+                        ]
                       }
                     },
                     {
@@ -179,7 +200,10 @@
                               "column": 1,
                               "widget": {
                                 "name": "line_edit_name",
-                                "class": "LineEdit"
+                                "class": "LineEdit",
+                                "properties": {
+                                  "text": { "bind": "file_name" }
+                                }
                               }
                             },
                             {
@@ -232,7 +256,8 @@
                     "name": "check_box_hidden",
                     "class": "CheckBox",
                     "properties": {
-                      "text": "隠しファイルも表示する"
+                      "text": "隠しファイルも表示する",
+                      "checked": { "bind": "show_hidden" }
                     }
                   }
                 },
@@ -261,7 +286,8 @@
       "name": "action_open",
       "properties": {
         "text": "開く(&O)...",
-        "shortcut": "Ctrl+O"
+        "shortcut": "Ctrl+O",
+        "icon": "icons/open.png"
       },
       "events": { "on_trigger": "action_open_trigger" }
     },
@@ -296,6 +322,18 @@
         "interval": 5000
       },
       "events": { "on_timer": "refresh" }
+    }
+  ],
+  "variables": [
+    {
+      "name": "file_name",
+      "type": "string",
+      "value": "メモ.txt",
+      "events": { "on_change": "file_name_change" }
+    },
+    {
+      "name": "show_hidden",
+      "type": "bool"
     }
   ]
 }
