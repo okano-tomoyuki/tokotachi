@@ -1,0 +1,3611 @@
+{
+  "format_version": 1,
+  "tokotachi_version": "0.1.0",
+  "classes": {
+    "Window": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "window",
+      "accepts_children": true,
+      "doc": "トップレベルのウィンドウ。ウィジェットのツリーの根になる。 表示は visible に true を代入する(初めは表示されていない)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "title": {
+          "type": "string",
+          "declared_in": "Window"
+        },
+        "background": {
+          "type": {
+            "value": "ThemeColor"
+          },
+          "declared_in": "Window",
+          "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_close": {
+          "type": "CloseHandler",
+          "declared_in": "Window",
+          "doc": "閉じる操作がされた(ウィンドウの閉じるボタンなど)。can_close を false にすると閉じない。"
+        }
+      }
+    },
+    "Dialog": {
+      "bases": [
+        "Window",
+        "Widget",
+        "Object"
+      ],
+      "kind": "window",
+      "accepts_children": true,
+      "doc": "モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "title": {
+          "type": "string",
+          "declared_in": "Window"
+        },
+        "background": {
+          "type": {
+            "value": "ThemeColor"
+          },
+          "declared_in": "Window",
+          "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_close": {
+          "type": "CloseHandler",
+          "declared_in": "Window",
+          "doc": "閉じる操作がされた(ウィンドウの閉じるボタンなど)。can_close を false にすると閉じない。"
+        },
+        "on_finish": {
+          "type": "NotifyHandler",
+          "declared_in": "Dialog",
+          "doc": "閉じた(sender はこのダイアログ)。このハンドラの中で破棄するときは delete_later を使う。"
+        }
+      }
+    },
+    "Button": {
+      "bases": [
+        "ButtonBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "押しボタン。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "ButtonBase"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "ButtonBase"
+        },
+        "style": {
+          "type": {
+            "enum": "ButtonStyle"
+          },
+          "declared_in": "Button",
+          "doc": "既定は PRIMARY。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_click": {
+          "type": "NotifyHandler",
+          "declared_in": "ButtonBase",
+          "doc": "上で押して離した・フォーカスがあるときに Space か Enter を押した。"
+        }
+      }
+    },
+    "CheckBox": {
+      "bases": [
+        "ButtonBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "チェックボックス。押すと checked が切り替わる。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "ButtonBase"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "ButtonBase"
+        },
+        "checked": {
+          "type": "bool",
+          "declared_in": "CheckBox"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_click": {
+          "type": "NotifyHandler",
+          "declared_in": "ButtonBase",
+          "doc": "上で押して離した・フォーカスがあるときに Space か Enter を押した。"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "CheckBox",
+          "doc": "checked が変わった(利用者の操作・代入のどちらでも。docs/adr/0016)。押したときは on_change の後に on_click を呼ぶ。"
+        }
+      }
+    },
+    "RadioButton": {
+      "bases": [
+        "ButtonBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "ラジオボタン。group_value が自分の value と等しいときに選ばれている(docs/adr/0016)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "ButtonBase"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "ButtonBase"
+        },
+        "value": {
+          "type": "int",
+          "declared_in": "RadioButton",
+          "doc": "このボタンが表す値。"
+        },
+        "group_value": {
+          "type": "int",
+          "declared_in": "RadioButton",
+          "doc": "グループで選ばれている値(既定 -1)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_click": {
+          "type": "NotifyHandler",
+          "declared_in": "ButtonBase",
+          "doc": "上で押して離した・フォーカスがあるときに Space か Enter を押した。"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "RadioButton",
+          "doc": "checked が変わった(押した・group_value や value が変わったのどちらでも)。押したときは on_change の後に on_click を呼ぶ。"
+        }
+      }
+    },
+    "LineEdit": {
+      "bases": [
+        "TextInputBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "1 行のテキストの入力欄。IME の変換中の文字列は入力欄の中に描く(docs/adr/0009)。 編集・選択・クリップボード・変更の通知は TextInputBase が受け持つ(docs/adr/0021)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "TextInputBase",
+          "doc": "1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を にそろえ、タブは空白にし、その他の制御文字を取り除く。"
+        },
+        "placeholder_text": {
+          "type": "string",
+          "declared_in": "TextInputBase"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "TextInputBase"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "TextInputBase",
+          "doc": "テキストが変わった(利用者の操作・text への代入のどちらでも。同じ値の代入では呼ばない。docs/adr/0016)。"
+        },
+        "on_submit": {
+          "type": "NotifyHandler",
+          "declared_in": "LineEdit",
+          "doc": "Enter が押された。ハンドラが無ければ、Enter は親へ送る(ダイアログでは決定のボタンを押す)。"
+        }
+      }
+    },
+    "TextEdit": {
+      "bases": [
+        "TextInputBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "複数行のテキストの入力欄(docs/adr/0021)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "TextInputBase",
+          "doc": "1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を にそろえ、タブは空白にし、その他の制御文字を取り除く。",
+          "editor": "multiline"
+        },
+        "placeholder_text": {
+          "type": "string",
+          "declared_in": "TextInputBase"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "TextInputBase"
+        },
+        "word_wrap": {
+          "type": "bool",
+          "declared_in": "TextEdit"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "TextInputBase",
+          "doc": "テキストが変わった(利用者の操作・text への代入のどちらでも。同じ値の代入では呼ばない。docs/adr/0016)。"
+        }
+      }
+    },
+    "SpinBox": {
+      "bases": [
+        "RangeBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "minimum": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。"
+        },
+        "maximum": {
+          "type": "double",
+          "declared_in": "RangeBase"
+        },
+        "value": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。"
+        },
+        "single_step": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。"
+        },
+        "page_step": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "Page Up・Page Down で動く量(既定 10)。"
+        },
+        "decimals": {
+          "type": "int",
+          "declared_in": "SpinBox",
+          "doc": "小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "RangeBase",
+          "doc": "value が変わった(利用者の操作・代入のどちらでも)。"
+        }
+      }
+    },
+    "Slider": {
+      "bases": [
+        "RangeBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "スライダー: つまみを動かして、範囲の中の値を選ぶ(docs/adr/0024)。縦のときは下が minimum。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "minimum": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。"
+        },
+        "maximum": {
+          "type": "double",
+          "declared_in": "RangeBase"
+        },
+        "value": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。"
+        },
+        "single_step": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。"
+        },
+        "page_step": {
+          "type": "double",
+          "declared_in": "RangeBase",
+          "doc": "Page Up・Page Down で動く量(既定 10)。"
+        },
+        "orientation": {
+          "type": {
+            "enum": "Orientation"
+          },
+          "declared_in": "Slider"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "RangeBase",
+          "doc": "value が変わった(利用者の操作・代入のどちらでも)。"
+        }
+      }
+    },
+    "ComboBox": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "項目の一覧から 1 つを選ぶ(docs/adr/0022)。押すと一覧をポップアップで出す。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "items": {
+          "type": {
+            "array": "string"
+          },
+          "declared_in": "ComboBox"
+        },
+        "current_index": {
+          "type": "int",
+          "declared_in": "ComboBox",
+          "doc": "選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。"
+        },
+        "placeholder_text": {
+          "type": "string",
+          "declared_in": "ComboBox",
+          "doc": "選んでいないときに出す文字。"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "ComboBox"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "ComboBox",
+          "doc": "current_index が変わった(利用者の操作・代入のどちらでも)。"
+        }
+      }
+    },
+    "Label": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "display",
+      "doc": "テキストを表示する。改行文字で行を分け、word_wrap なら幅で折り返す(docs/adr/0019)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "Label",
+          "editor": "multiline"
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "Label"
+        },
+        "color": {
+          "type": {
+            "value": "ThemeColor"
+          },
+          "declared_in": "Label",
+          "doc": "文字の色(既定はテーマの TEXT。無効なときは TEXT_DISABLED で描く)。"
+        },
+        "alignment": {
+          "type": {
+            "enum": "Align"
+          },
+          "declared_in": "Label",
+          "doc": "文字の横のそろえ方(既定 START。FILL は START と同じ)。複数行なら各行をそろえる。"
+        },
+        "word_wrap": {
+          "type": "bool",
+          "declared_in": "Label",
+          "doc": "幅で折り返すか(既定 false)。折り返すと、望む高さは今の幅で折り返したときの高さになり、最小の幅は最も長い単語の幅になる。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "ProgressBar": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "display",
+      "doc": "進み具合を横の棒で見せる(docs/adr/0024)。利用者は操作できない。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "minimum": {
+          "type": "double",
+          "declared_in": "ProgressBar",
+          "doc": "範囲(既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。"
+        },
+        "maximum": {
+          "type": "double",
+          "declared_in": "ProgressBar"
+        },
+        "value": {
+          "type": "double",
+          "declared_in": "ProgressBar",
+          "doc": "値(既定 0)。範囲の外は丸める。"
+        },
+        "text_visible": {
+          "type": "bool",
+          "declared_in": "ProgressBar",
+          "doc": "割合(「40」)を棒の右に出すか(既定 false)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "ListView": {
+      "bases": [
+        "ItemView",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "view",
+      "doc": "項目の一覧を表示するビュー(docs/adr/0026)。モデルの一番上の行だけを表示する。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "header_visible": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "列があるときに見出しを出すか(既定 true)。"
+        },
+        "sorting_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。"
+        },
+        "sort_column": {
+          "type": "int",
+          "declared_in": "ItemView",
+          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。"
+        },
+        "sort_order": {
+          "type": {
+            "enum": "SortOrder"
+          },
+          "declared_in": "ItemView"
+        },
+        "selection_mode": {
+          "type": {
+            "enum": "SelectionMode"
+          },
+          "declared_in": "ItemView",
+          "doc": "選び方(既定 SINGLE)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_selection_change": {
+          "type": "NotifyHandler",
+          "declared_in": "ItemView",
+          "doc": "selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。"
+        },
+        "on_activate": {
+          "type": "NotifyHandler",
+          "declared_in": "ItemView",
+          "doc": "項目をダブルクリックした・Enter を押した(対象は current)。"
+        }
+      }
+    },
+    "TreeView": {
+      "bases": [
+        "ItemView",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "view",
+      "doc": "項目の木を表示するビュー(docs/adr/0026)。子のある項目は、左の印・ダブルクリック・→← で開閉する。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "header_visible": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "列があるときに見出しを出すか(既定 true)。"
+        },
+        "sorting_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。"
+        },
+        "sort_column": {
+          "type": "int",
+          "declared_in": "ItemView",
+          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。"
+        },
+        "sort_order": {
+          "type": {
+            "enum": "SortOrder"
+          },
+          "declared_in": "ItemView"
+        },
+        "selection_mode": {
+          "type": {
+            "enum": "SelectionMode"
+          },
+          "declared_in": "ItemView",
+          "doc": "選び方(既定 SINGLE)。"
+        },
+        "indentation": {
+          "type": "float",
+          "declared_in": "TreeView",
+          "doc": "1 段の字下げ(dp。既定 20。8 以上)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_selection_change": {
+          "type": "NotifyHandler",
+          "declared_in": "ItemView",
+          "doc": "selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。"
+        },
+        "on_activate": {
+          "type": "NotifyHandler",
+          "declared_in": "ItemView",
+          "doc": "項目をダブルクリックした・Enter を押した(対象は current)。"
+        }
+      }
+    },
+    "Widget": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "container",
+      "accepts_children": true,
+      "doc": "ウィジェットの基底(docs/adr/0010、0012、0013)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "TabWidget": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "container",
+      "child_keys": [
+        "tabs"
+      ],
+      "doc": "タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "current_index": {
+          "type": "int",
+          "declared_in": "TabWidget",
+          "doc": "選んでいるタブの番号(タブが無ければ -1)。範囲の外の値は無視する。",
+          "after_children": true
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "TabWidget",
+          "doc": "current_index が変わった(利用者の操作・代入・タブの追加と削除のどれでも)。"
+        }
+      }
+    },
+    "Splitter": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "container",
+      "child_keys": [
+        "panes"
+      ],
+      "doc": "分割ウィンドウ: 区画を横(または縦)に並べ、間の境目をドラッグして大きさを変える(docs/adr/0031)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "orientation": {
+          "type": {
+            "enum": "Orientation"
+          },
+          "declared_in": "Splitter"
+        },
+        "sizes": {
+          "type": {
+            "array": "float"
+          },
+          "declared_in": "Splitter",
+          "doc": "各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0)。代入すると、合計が合わない分は stretch の比率で合わせる。",
+          "after_children": true
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "Splitter",
+          "doc": "利用者が境目をドラッグして、大きさを変えた。"
+        }
+      }
+    },
+    "ScrollArea": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "container",
+      "child_keys": [
+        "content"
+      ],
+      "doc": "中身のウィジェットを、見えている範囲より大きくてもスクロールして見せる入れ物(docs/adr/0021)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "fit_width": {
+          "type": "bool",
+          "declared_in": "ScrollArea",
+          "doc": "中身の幅を見えている幅に合わせ、縦だけスクロールするか(既定 true)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "PaintBox": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "drawing",
+      "doc": "自由に描くための部品(VCL の TPaintBox に当たる。docs/adr/0033)。on_paint の中で Canvas に描く。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "cached": {
+          "type": "bool",
+          "declared_in": "PaintBox",
+          "doc": "描いた結果を覚えておくか(既定 false: 描き直すたびに on_paint を呼ぶ)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "Timer": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "object",
+      "category": "non_visual",
+      "doc": "タイマー: 一定の間隔で on_timer をメインスレッドで呼ぶ(docs/adr/0014)。",
+      "properties": {
+        "interval": {
+          "type": "int",
+          "declared_in": "Timer",
+          "doc": "間隔(ミリ秒、既定 1000)。動いている間に変えると、その時点から数え直す。"
+        },
+        "repeat": {
+          "type": "bool",
+          "declared_in": "Timer",
+          "doc": "繰り返すか(既定 true)。false なら 1 回呼んだ後に enabled が false になる。"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Timer",
+          "doc": "動いているか(既定 false)。true を代入すると動き始め、false を代入すると止まる。"
+        }
+      },
+      "handlers": {
+        "on_timer": {
+          "type": "NotifyHandler",
+          "declared_in": "Timer"
+        }
+      }
+    },
+    "BoxLayout": {
+      "bases": [
+        "Layout",
+        "Object"
+      ],
+      "kind": "layout",
+      "doc": "子を横または縦に並べるレイアウト(cpp_tk の pack に当たる。docs/adr/0017)。",
+      "properties": {
+        "margins": {
+          "type": {
+            "value": "Margins"
+          },
+          "declared_in": "Layout"
+        },
+        "orientation": {
+          "type": {
+            "enum": "Orientation"
+          },
+          "declared_in": "BoxLayout"
+        },
+        "spacing": {
+          "type": "float",
+          "declared_in": "BoxLayout",
+          "doc": "項目の間隔(dp、既定 8)。"
+        }
+      },
+      "handlers": {}
+    },
+    "GridLayout": {
+      "bases": [
+        "Layout",
+        "Object"
+      ],
+      "kind": "layout",
+      "doc": "子を行と列の格子に置くレイアウト(cpp_tk の grid に当たる。docs/adr/0017)。",
+      "properties": {
+        "margins": {
+          "type": {
+            "value": "Margins"
+          },
+          "declared_in": "Layout"
+        },
+        "row_spacing": {
+          "type": "float",
+          "declared_in": "GridLayout",
+          "doc": "行の間隔・列の間隔(dp、既定 8)。"
+        },
+        "column_spacing": {
+          "type": "float",
+          "declared_in": "GridLayout"
+        }
+      },
+      "handlers": {}
+    },
+    "PlaceLayout": {
+      "bases": [
+        "Layout",
+        "Object"
+      ],
+      "kind": "layout",
+      "doc": "子を親に対する位置・割合で置くレイアウト(cpp_tk の place に当たる。docs/adr/0017)。",
+      "properties": {
+        "margins": {
+          "type": {
+            "value": "Margins"
+          },
+          "declared_in": "Layout"
+        }
+      },
+      "handlers": {}
+    },
+    "Action": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "利用者が実行できる操作(docs/adr/0027)。メニューの項目・ショートカットのキーが同じ Action を指す。",
+      "properties": {
+        "text": {
+          "type": "string",
+          "declared_in": "Action",
+          "editor": "mnemonic"
+        },
+        "shortcut": {
+          "type": {
+            "value": "Shortcut"
+          },
+          "declared_in": "Action"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Action",
+          "doc": "ツールバーのボタンのツールチップ(空なら、text とショートカットから作る)。"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Action",
+          "doc": "false なら、メニューでもキーでも実行しない。"
+        },
+        "checkable": {
+          "type": "bool",
+          "declared_in": "Action",
+          "doc": "checkable なら、実行するたびに checked を反転する(メニューではチェックの印を出す)。"
+        },
+        "checked": {
+          "type": "bool",
+          "declared_in": "Action"
+        }
+      },
+      "handlers": {
+        "on_trigger": {
+          "type": "NotifyHandler",
+          "declared_in": "Action",
+          "doc": "実行された(メニューで選んだ・ショートカットを押した・trigger を呼んだ)。checked は反転した後。"
+        }
+      }
+    },
+    "MenuBar": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "ウィンドウの上端のメニューバー(docs/adr/0027)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "Menu": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。",
+      "properties": {
+        "title": {
+          "type": "string",
+          "declared_in": "Menu",
+          "doc": "メニューバー・親のメニューの項目に出す名前(& でニーモニック)。",
+          "editor": "mnemonic"
+        }
+      },
+      "handlers": {}
+    },
+    "ToolBar": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "ツールバー: Action をボタンとして横に並べる(docs/adr/0030)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "button_style": {
+          "type": {
+            "enum": "ToolButtonStyle"
+          },
+          "declared_in": "ToolBar"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "StatusBar": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "ウィンドウの下端のステータスバー(docs/adr/0030)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget"
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget"
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "StatusBar",
+          "doc": "普段に出す文字。"
+        }
+      },
+      "handlers": {
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      }
+    },
+    "Tab": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "1 つのタブ。TabWidget が作り、所有する。",
+      "properties": {
+        "title": {
+          "type": "string",
+          "declared_in": "Tab"
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Tab",
+          "doc": "false のタブは、押しても・キーでも選べない(current_index への代入では選べる)。"
+        }
+      },
+      "handlers": {}
+    },
+    "SplitterPane": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "1 つの区画。Splitter が作り、所有する。",
+      "properties": {
+        "stretch": {
+          "type": "int",
+          "declared_in": "SplitterPane",
+          "doc": "Splitter の大きさが変わったときの伸び縮みの比率(0 なら大きさを保つ。すべて 0 なら最後の区画が受け持つ)。"
+        },
+        "collapsible": {
+          "type": "bool",
+          "declared_in": "SplitterPane",
+          "doc": "たためるか(既定 true)。"
+        }
+      },
+      "handlers": {}
+    }
+  },
+  "values": {
+    "Color": {
+      "members": {
+        "r": "int",
+        "g": "int",
+        "b": "int",
+        "a": "int"
+      }
+    },
+    "Font": {
+      "members": {
+        "size": "float"
+      }
+    },
+    "Margins": {
+      "members": {
+        "left": "float",
+        "top": "float",
+        "right": "float",
+        "bottom": "float"
+      },
+      "doc": "レイアウトの内側の余白(dp)。"
+    },
+    "Placement": {
+      "members": {
+        "x": "float",
+        "y": "float",
+        "relative_x": "float",
+        "relative_y": "float",
+        "width": "float",
+        "height": "float",
+        "relative_width": "float",
+        "relative_height": "float",
+        "anchor": {
+          "enum": "Anchor"
+        }
+      }
+    },
+    "Shortcut": {
+      "special": true
+    },
+    "Size": {
+      "members": {
+        "width": "float",
+        "height": "float"
+      }
+    },
+    "ThemeColor": {
+      "special": true,
+      "doc": "色の指定: テーマの役割か、具体的な色のどちらか。役割で指定した色は、テーマを切り替えると変わる。"
+    }
+  },
+  "enums": {
+    "Align": {
+      "values": [
+        "START",
+        "CENTER",
+        "END",
+        "FILL"
+      ],
+      "doc": "始め・中央・終わりに寄せる。FILL は、レイアウトのセルでは最大の大きさまで広げ、広げられないもの(文字など)では START と同じ。 「左・右」ではなく「始め・終わり」とするのは、右から左へ書く言語に対応したときに意味が変わらないようにするため。"
+    },
+    "Anchor": {
+      "values": [
+        "TOP_LEFT",
+        "TOP",
+        "TOP_RIGHT",
+        "LEFT",
+        "CENTER",
+        "RIGHT",
+        "BOTTOM_LEFT",
+        "BOTTOM",
+        "BOTTOM_RIGHT"
+      ],
+      "doc": "子のどの点を、指定した位置に合わせるか。"
+    },
+    "ButtonStyle": {
+      "values": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "docs": {
+        "PRIMARY": "強調の色で塗る(主な操作)",
+        "SECONDARY": "地の色に枠(その他の操作。ダイアログのキャンセルなど)"
+      },
+      "doc": "見た目の種類。"
+    },
+    "ColorRole": {
+      "values": [
+        "WINDOW",
+        "POPUP",
+        "TEXT",
+        "TEXT_SECONDARY",
+        "TEXT_DISABLED",
+        "PLACEHOLDER",
+        "ACCENT",
+        "ACCENT_HOVER",
+        "ACCENT_PRESSED",
+        "ACCENT_DISABLED",
+        "ON_ACCENT",
+        "FOCUS_RING",
+        "FIELD",
+        "FIELD_DISABLED",
+        "BORDER",
+        "SELECTION",
+        "SELECTION_INACTIVE",
+        "ON_SELECTION",
+        "PREEDIT_UNDERLINE",
+        "SCROLL_TRACK",
+        "SCROLL_THUMB",
+        "SCROLL_THUMB_ACTIVE",
+        "TOOLTIP",
+        "ON_TOOLTIP"
+      ],
+      "docs": {
+        "WINDOW": "ウィンドウの背景",
+        "POPUP": "ポップアップ(メニュー・一覧)の背景",
+        "TEXT": "文字",
+        "TEXT_SECONDARY": "控えめな文字(説明・見出しの補足)",
+        "TEXT_DISABLED": "無効なウィジェットの文字",
+        "PLACEHOLDER": "入力欄の空のときの案内",
+        "ACCENT": "強調(ボタン・チェック・フォーカスのある枠)",
+        "ACCENT_HOVER": "ポインタが乗った強調",
+        "ACCENT_PRESSED": "押している強調",
+        "ACCENT_DISABLED": "無効な強調",
+        "ON_ACCENT": "強調の上の文字・印",
+        "FOCUS_RING": "フォーカスの輪",
+        "FIELD": "入力欄・チェックボックスの地",
+        "FIELD_DISABLED": "無効な入力欄の地",
+        "BORDER": "枠・区切り",
+        "SELECTION": "選択の範囲・選んでいる項目",
+        "SELECTION_INACTIVE": "フォーカスの無い入力欄の選択の範囲",
+        "ON_SELECTION": "選択の上の文字",
+        "PREEDIT_UNDERLINE": "IME の変換中の下線",
+        "SCROLL_TRACK": "スクロールバーの溝",
+        "SCROLL_THUMB": "スクロールバーのつまみ",
+        "SCROLL_THUMB_ACTIVE": "ポインタが乗った・つかんでいるつまみ",
+        "TOOLTIP": "ツールチップの背景",
+        "ON_TOOLTIP": "ツールチップの文字"
+      },
+      "doc": "テーマの中の色の役割。"
+    },
+    "DialogButton": {
+      "values": [
+        "NONE",
+        "OK",
+        "YES",
+        "SAVE",
+        "NO",
+        "DISCARD",
+        "CANCEL",
+        "CLOSE"
+      ],
+      "docs": {
+        "NONE": "ボタンを押さずに閉じた(取り消しのボタンが無いときの閉じるボタンなど)",
+        "OK": "決定",
+        "YES": "決定",
+        "SAVE": "決定",
+        "NO": "否定",
+        "DISCARD": "否定(保存しない)",
+        "CANCEL": "取り消し",
+        "CLOSE": "取り消し"
+      },
+      "doc": "ダイアログのボタンの役割(結果にもなる)。"
+    },
+    "FocusPolicy": {
+      "values": [
+        "NONE",
+        "TAB",
+        "CLICK",
+        "TAB_AND_CLICK"
+      ],
+      "docs": {
+        "TAB": "Tab キーでだけフォーカスを得る",
+        "CLICK": "クリックでだけフォーカスを得る",
+        "TAB_AND_CLICK": "Tab キーとクリックの両方"
+      }
+    },
+    "MouseCursor": {
+      "values": [
+        "ARROW",
+        "IBEAM",
+        "POINTING_HAND",
+        "WAIT",
+        "CROSSHAIR",
+        "SIZE_HORIZONTAL",
+        "SIZE_VERTICAL"
+      ]
+    },
+    "Orientation": {
+      "values": [
+        "HORIZONTAL",
+        "VERTICAL"
+      ]
+    },
+    "SelectionMode": {
+      "values": [
+        "NONE",
+        "SINGLE",
+        "MULTI"
+      ],
+      "docs": {
+        "NONE": "選ばない(current だけが動く)",
+        "SINGLE": "1 つだけ選ぶ(current と同じ項目)",
+        "MULTI": "Ctrl+クリック・Shift+クリック・Shift+矢印・Ctrl+A で複数を選ぶ"
+      }
+    },
+    "SortOrder": {
+      "values": [
+        "ASCENDING",
+        "DESCENDING"
+      ]
+    },
+    "ToolButtonStyle": {
+      "values": [
+        "ICON_ONLY",
+        "TEXT_BESIDE_ICON",
+        "TEXT_UNDER_ICON"
+      ],
+      "docs": {
+        "ICON_ONLY": "画像だけ(画像が無ければ文字)",
+        "TEXT_BESIDE_ICON": "画像の右に文字",
+        "TEXT_UNDER_ICON": "画像の下に文字"
+      }
+    }
+  },
+  "handler_types": {
+    "CloseHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "can_close",
+        "type": "bool&"
+      }
+    ],
+    "KeyHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "e",
+        "type": "KeyEvent&"
+      }
+    ],
+    "MouseHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "e",
+        "type": "MouseEvent&"
+      }
+    ],
+    "NotifyHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      }
+    ],
+    "PaintHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "canvas",
+        "type": "Canvas&"
+      }
+    ],
+    "WheelHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "e",
+        "type": "WheelEvent&"
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-# カタログ(草案)
+# カタログ
 
 デザイナーが扱う部品・レイアウト・オブジェクトの一覧と、それぞれのプロパティ・ハンドラの情報。
 定義ファイルの検証([dsl-spec.md](dsl-spec.md) §7)、デザイナーのパレットとインスペクタ、コード生成(プロパティの型・ハンドラの引数)、
@@ -27,16 +27,19 @@ Doxygen の XML には、宣言の順(カタログの順になる)・`std::vecto
 `designer/tools/catalog/`(TypeScript。Node.js で動かす。デザイナーの開発にはもともと Node.js が要るので、Python は要らない)。
 作ったカタログ(`designer/packages/core/src/catalog/catalog.json`)はコミットする。
 
-1. **型を取り出す**: 公開のヘッダから Doxygen の XML を作り(リファレンスと同じ Doxyfile に `GENERATE_XML` を加えた設定)、
+1. **型を取り出す**: 公開のヘッダから Doxygen の XML を作り(取り出しの道具が XML だけを作る設定で Doxygen を動かす。CMake の設定は要らない)、
    クラス・プロパティ・ハンドラ・列挙型・値の型を取り出す。
 2. **既定値を測る**: 取り出した型から、キャンバスの描画の部分が使う「名前から部品を作る・プロパティを読み書きする」C++ の対応表を生成し
    ([ADR 0039](../adr/0039-designer.md))、それを使う測定用のプログラムで、各クラスを作って各プロパティの値と望む大きさを読む。
    キャンバスと同じ WebAssembly(Node.js)で動かせるので、OS に依らない値が取れる(フォントで変わる望む大きさは、Windows の値を基準にする)。
 3. **補足を重ねる**: 手書きの補足(`designer/tools/catalog/overlay.json`)を重ねて、最終的なカタログにする。
 
+1 と 3 は実装済み([designer/tools/catalog/extract.mts](../../designer/tools/catalog/extract.mts))。
+2 の既定値の測定は、キャンバスの描画の部分(進める順序の 4)で対応表を作るときに加える。それまでカタログに既定値は無い。
+
 ```sh
-pnpm catalog:extract   # 1〜3(Doxygen と、WebAssembly の Tokotachi のビルドが要る)
-pnpm catalog:check     # カタログがヘッダ・補足と食い違っていればエラー(1 と 3 だけ。既定値は測り直さない)
+pnpm catalog:extract   # 1 と 3(Doxygen が要る。測った既定値は前のカタログから引き継ぐ)
+pnpm catalog:check     # カタログがヘッダ・補足と食い違っていればエラー
 ```
 
 ## 3. 手書きの補足
@@ -44,12 +47,18 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 | 項目 | 内容 | 例 |
 |---|---|---|
 | `classes` | パレットに出す、利用者が置けるクラスの一覧(抽象的なクラス・内部で使うクラスは書かない)。無いクラス・余分なクラスがあれば取り出しの道具がエラーにする | `Button`・`LineEdit`・`TabWidget`。`ButtonBase`・`RangeBase`・`ItemView`・`Popup` は書かない |
-| `category` / `order` | パレットの分類と順 | 入力(`Button`・`CheckBox`…)・表示(`Label`・`ProgressBar`)・一覧(`ListView`・`TreeView`)・入れ物(`Widget`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
-| `designable` / `not_designable` | デザイン時に設定できるか。まず型で決め(読み書きできて、値の型・列挙型・文字列・配列・参照のいずれか)、そのうえでクラスごとに除く・戻す | `parent`・`bounds`・`focused` は除く。`x`・`y`・`width`・`height` は除き、自由な配置の子とウィンドウだけで戻す |
+| `classes` の `kind` / `category` | 種類(window・widget・layout・part・object)とパレットの分類。`classes` の順がパレットの順 | 入力(`Button`・`CheckBox`…)・表示(`Label`・`ProgressBar`)・一覧(`ListView`・`TreeView`)・入れ物(`Widget`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
+| `designable` / `not_designable` | デザイン時に設定できるか。まず型で決め(読み書きできて、値の型・列挙型・文字列・配列・参照のいずれか)、そのうえでクラスごとに除く・戻す | `parent`・`bounds`・`focused` は除く(位置と大きさは `geometry` の印で表す) |
 | `accepts_children` | `layout`・`children` を書けるか | `Widget`・`Window`・`Dialog` は可、`Button` は不可 |
 | `child_keys` | 専用の子のキー | `TabWidget` は `tabs`、`Splitter` は `panes`、`ScrollArea` は `content` |
 | `editor` | インスペクタの編集の種類(型から決まらないもの) | `TextEdit` の `text` は複数行、`Action` の `text` は `&` を含む文字列、`Label` の `color` は色 |
-| `display_order` | インスペクタの並びと、生成するコードで設定する順(宣言の順と変えたいものだけ) | `Slider`・`SpinBox` の `value` を `minimum`・`maximum` の後に |
+| `excluded` | Widget の派生で親を渡して作れるが、パレットに出さないクラス(理由を書く)。classes にも excluded にも無い部品があれば、取り出しの道具がエラーにする(新しい部品の書き忘れを防ぐ) | `ButtonBase`・`ScrollBar` |
+| `geometry` | 位置と大きさのプロパティ(ウィンドウと自由な配置の子だけに書ける) | `Widget` の `x`・`y`・`width`・`height` |
+| `after_children` | 子(タブ・区画)を入れた後でないと効かないプロパティ(生成するコードでは子の後に設定する。codegen-design.md §4) | `TabWidget::current_index`・`Splitter::sizes` |
+| `extra_enums`・`extra_values` | プロパティの型には出てこないが、定義ファイルで使う列挙型・値の型 | `Align`・`Anchor`・`DialogButton`・`ColorRole`・`Placement`・`Color` |
+| `special_values` | メンバではなく専用の書き方で表す値の型 | `ThemeColor`・`Shortcut` |
+
+インスペクタの並びは宣言の順(カタログの順)のままにする。宣言の順で設定すれば正しく働くことを確かめたので(範囲の `minimum`・`maximum` が `value` の前、等)、並びを変える補足は今は持たない。
 
 ## 4. カタログの形(案)
 
@@ -60,7 +69,6 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
       "bases": ["ButtonBase", "Widget", "Object"],
       "kind": "widget",
       "category": "input",
-      "accepts_children": false,
       "preferred_size": { "width": 60, "height": 36 },
       "doc": "押すと on_click を呼ぶボタン。",
       "properties": {

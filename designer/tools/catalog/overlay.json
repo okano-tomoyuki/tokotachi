@@ -1,0 +1,73 @@
+{
+  "$comment": "カタログの手書きの補足(docs/designer/catalog.md §3)。classes の順がパレットの順になる。",
+  "classes": {
+    "Window": { "kind": "window", "accepts_children": true },
+    "Dialog": { "kind": "window", "accepts_children": true },
+
+    "Button": { "kind": "widget", "category": "input" },
+    "CheckBox": { "kind": "widget", "category": "input" },
+    "RadioButton": { "kind": "widget", "category": "input" },
+    "LineEdit": { "kind": "widget", "category": "input" },
+    "TextEdit": { "kind": "widget", "category": "input" },
+    "SpinBox": { "kind": "widget", "category": "input" },
+    "Slider": { "kind": "widget", "category": "input" },
+    "ComboBox": { "kind": "widget", "category": "input" },
+    "Label": { "kind": "widget", "category": "display" },
+    "ProgressBar": { "kind": "widget", "category": "display" },
+    "ListView": { "kind": "widget", "category": "view" },
+    "TreeView": { "kind": "widget", "category": "view" },
+    "Widget": { "kind": "widget", "category": "container", "accepts_children": true },
+    "TabWidget": { "kind": "widget", "category": "container", "child_keys": ["tabs"] },
+    "Splitter": { "kind": "widget", "category": "container", "child_keys": ["panes"] },
+    "ScrollArea": { "kind": "widget", "category": "container", "child_keys": ["content"] },
+    "PaintBox": { "kind": "widget", "category": "drawing" },
+
+    "Timer": { "kind": "object", "category": "non_visual" },
+
+    "BoxLayout": { "kind": "layout" },
+    "GridLayout": { "kind": "layout" },
+    "PlaceLayout": { "kind": "layout" },
+
+    "Action": { "kind": "part" },
+    "MenuBar": { "kind": "part" },
+    "Menu": { "kind": "part" },
+    "ToolBar": { "kind": "part" },
+    "StatusBar": { "kind": "part" },
+    "Tab": { "kind": "part" },
+    "SplitterPane": { "kind": "part" }
+  },
+  "$comment_excluded": "Widget の派生で、利用者が親を渡して作れるが、パレットに出さないもの。新しい部品を足したら classes か excluded に書く。",
+  "excluded": {
+    "ButtonBase": "Button・CheckBox・RadioButton の共通の基底",
+    "ScrollBar": "ScrollArea・一覧の部品の中で使う。単独で置くことはまれ"
+  },
+  "$comment_not_designable": "そのクラスと派生でデザイン時に設定できないプロパティ。designable で派生のクラスごとに戻せる。",
+  "not_designable": {
+    "Widget": ["parent", "bounds", "focused", "accepts_text_input"],
+    "TextInputBase": ["cursor_position"],
+    "ScrollArea": ["content", "scroll_position"],
+    "ItemView": ["model", "current"],
+    "Window": ["menu_bar", "tool_bar", "status_bar"]
+  },
+  "designable": {},
+  "$comment_geometry": "位置と大きさ。ウィンドウ(width・height)と、自由な配置の子だけに書ける(docs/designer/dsl-spec.md §5)。",
+  "geometry": {
+    "Widget": ["x", "y", "width", "height"]
+  },
+  "$comment_after_children": "子(タブ・区画)を入れた後でないと効かないので、生成するコードでは子を入れた後に設定するプロパティ。",
+  "after_children": {
+    "TabWidget": ["current_index"],
+    "Splitter": ["sizes"]
+  },
+  "editor": {
+    "TextEdit.text": "multiline",
+    "Label.text": "multiline",
+    "Action.text": "mnemonic",
+    "Menu.title": "mnemonic"
+  },
+  "$comment_extra_enums": "プロパティの型には出てこないが、定義ファイルで使う列挙型(レイアウトの項目・Dialog のボタン・色の役割)。",
+  "extra_enums": ["Align", "Anchor", "DialogButton", "ColorRole"],
+  "extra_values": ["Placement", "Color"],
+  "$comment_special_values": "メンバではなく専用の書き方で表す値の型(docs/designer/dsl-spec.md §5)。",
+  "special_values": ["ThemeColor", "Shortcut"]
+}

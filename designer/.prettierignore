@@ -1,0 +1,5 @@
+dist/
+coverage/
+pnpm-lock.yaml
+# tools/catalog/extract.mts が決まった形で書き出す
+packages/core/src/catalog/catalog.json

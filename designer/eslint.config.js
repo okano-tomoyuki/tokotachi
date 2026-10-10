@@ -1,0 +1,46 @@
+import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
+import globals from 'globals';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
+
+// core / codegen は VS Code・DOM・Node に依存しない(拡張ホスト・Webview・CLI で共有する。Bethany ADR 0035 と同じ)
+const pureModuleRestrictions = {
+  patterns: [
+    { group: ['vscode'], message: 'core / codegen では VS Code API を使わない' },
+    {
+      group: ['node:*', 'fs', 'path', 'os', 'child_process'],
+      message: 'core / codegen では Node API を使わない',
+    },
+  ],
+};
+
+export default defineConfig(
+  { ignores: ['**/dist/**', '**/coverage/**'] },
+  js.configs.recommended,
+  tseslint.configs.strictTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['*.js', '*.ts', 'packages/*/vitest.config.ts'],
+        },
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ['packages/core/**', 'packages/codegen/**'],
+    rules: { 'no-restricted-imports': ['error', pureModuleRestrictions] },
+  },
+  {
+    files: ['tools/**', '*.js', '*.ts'],
+    languageOptions: { globals: globals.node },
+  },
+  {
+    // 設定ファイル(JS)は型情報を持たないため、型情報を使うルールを外す
+    files: ['**/*.js', '**/*.mjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  prettier,
+);

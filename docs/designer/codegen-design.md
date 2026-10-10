@@ -170,7 +170,6 @@ void MainWindow::tokotachi_setup_ui()
     window_layout->add(search_row);
 
     split = new tokotachi::Splitter(this);
-    split->sizes = std::vector<float>{160, 360};
 
     folder_tree = new tokotachi::TreeView(split);
     split->add_widget(folder_tree, 0);
@@ -178,6 +177,7 @@ void MainWindow::tokotachi_setup_ui()
     file_list = new tokotachi::ListView(split);
     split->add_widget(file_list);
 
+    split->sizes = std::vector<float>{160, 360};
     window_layout->add(split, 1);
 }
 // <tokotachi-designer:end id="tokotachi_setup_ui" hash="...">
@@ -221,11 +221,13 @@ int main(int argc, char** argv)
 3. **メニューバー・ツールバー・ステータスバー**(作って中身を入れてから、ウィンドウに設定する)。
 4. **中身の部品を木の順(親が先)に。** 部品ごとに次の順で書く。
    1. 作る(`new tokotachi::Button(親)`。親を渡して、作った時点から親が所有する)。
-   2. プロパティ(カタログの順。範囲を持つ部品の `value` は `minimum`・`maximum` の後、ComboBox の `current_index` は `items` の後)。
+   2. プロパティ(カタログの順。宣言の順なので、範囲を持つ部品の `value` は `minimum`・`maximum` の後、ComboBox の `current_index` は `items` の後になる)。
+      ただし、カタログで `after_children` の印が付いたもの(`TabWidget::current_index`・`Splitter::sizes`。タブ・区画が無いと効かない)は除き、5 の後に設定する。
    3. ハンドラをつなぐ。
    4. `actions`(`add_action`)。
    5. 自分のレイアウトと子(`layout`・`children`・`tabs`・`panes`・`content`)。ここで再帰する。
-   6. 親のレイアウトに入れる(`add`)。子の設定がすべて済んでから入れる。
+   6. `after_children` の印が付いたプロパティ。
+   7. 親のレイアウトに入れる(`add`)。子の設定がすべて済んでから入れる。
 5. **部品への参照**(ほかの部品を指すプロパティ)。相手がすべてできてから、最後にまとめて設定する。
 
 この順で生成したウィンドウの配置が、キャンバス(同じ定義ファイルを WebAssembly の Tokotachi で組んだもの)と同じになることを、生成したコードの実行で確かめる(§7)。

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.cache/
+
+# VS Code extension packages
+*.vsix
