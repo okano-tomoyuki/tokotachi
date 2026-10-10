@@ -43,7 +43,7 @@ enum class ColorRole
     SCROLL_THUMB,         ///< スクロールバーのつまみ
     SCROLL_THUMB_ACTIVE,  ///< ポインタが乗った・つかんでいるつまみ
     TOOLTIP,              ///< ツールチップの背景
-    ON_TOOLTIP            // ツールチップの文字
+    ON_TOOLTIP            ///< ツールチップの文字
 };
 
 const int COLOR_ROLE_COUNT = static_cast<int>(ColorRole::ON_TOOLTIP) + 1;

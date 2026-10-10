@@ -32,7 +32,7 @@ enum class FileDialogMode
 {
     OPEN,   ///< 既にあるファイルを選ぶ
     SAVE,   ///< 保存するファイルの名前を決める
-    FOLDER  // フォルダーを選ぶ
+    FOLDER  ///< フォルダーを選ぶ
 };
 
 /// ファイルの種類の絞り込み。pattern は拡張子を ; でつなぐ("png;jpg")。"*" はすべて。

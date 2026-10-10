@@ -36,7 +36,7 @@ enum class ToolButtonStyle
 {
     ICON_ONLY,         ///< 画像だけ(画像が無ければ文字)
     TEXT_BESIDE_ICON,  ///< 画像の右に文字
-    TEXT_UNDER_ICON    // 画像の下に文字
+    TEXT_UNDER_ICON    ///< 画像の下に文字
 };
 
 class ToolBar : public Widget

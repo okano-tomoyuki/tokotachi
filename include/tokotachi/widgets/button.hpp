@@ -12,7 +12,7 @@ namespace tokotachi
 enum class ButtonStyle
 {
     PRIMARY,   ///< 強調の色で塗る(主な操作)
-    SECONDARY  // 地の色に枠(その他の操作。ダイアログのキャンセルなど)
+    SECONDARY  ///< 地の色に枠(その他の操作。ダイアログのキャンセルなど)
 };
 
 class Button : public ButtonBase

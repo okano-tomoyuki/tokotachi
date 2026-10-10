@@ -35,7 +35,7 @@ enum class SelectionMode
 {
     NONE,    ///< 選ばない(current だけが動く)
     SINGLE,  ///< 1 つだけ選ぶ(current と同じ項目)
-    MULTI    // Ctrl+クリック・Shift+クリック・Shift+矢印・Ctrl+A で複数を選ぶ
+    MULTI    ///< Ctrl+クリック・Shift+クリック・Shift+矢印・Ctrl+A で複数を選ぶ
 };
 
 /// ビューの 1 つの列。ItemView が作り、所有する。

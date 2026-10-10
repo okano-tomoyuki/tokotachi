@@ -35,7 +35,7 @@ enum class FocusPolicy
     NONE,
     TAB,           ///< Tab キーでだけフォーカスを得る
     CLICK,         ///< クリックでだけフォーカスを得る
-    TAB_AND_CLICK  // Tab キーとクリックの両方
+    TAB_AND_CLICK  ///< Tab キーとクリックの両方
 };
 
 enum class MouseCursor

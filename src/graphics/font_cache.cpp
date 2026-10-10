@@ -98,6 +98,27 @@ bool file_exists(const std::string& path)
     return false;
 }
 
+#ifdef __EMSCRIPTEN__
+// WebAssembly(デザイナーのキャンバス、docs/adr/0039): 探す手段が無いので、呼び出し側(拡張)が OS のフォントのファイルを
+// 環境変数 TOKOTACHI_FONT_FILES に ; 区切りで渡す(Node.js の NODERAWFS で、そのままのパスで読める)。
+std::vector<FaceSource> find_system_fonts()
+{
+    std::vector<FaceSource> out;
+    const char* list = std::getenv("TOKOTACHI_FONT_FILES");
+    std::string rest = list ? list : "";
+    while (!rest.empty())
+    {
+        const std::size_t sep = rest.find(';');
+        const std::string path = rest.substr(0, sep);
+        if (!path.empty() && file_exists(path))
+        {
+            add_source(out, path, 0);
+        }
+        rest = sep == std::string::npos ? std::string() : rest.substr(sep + 1);
+    }
+    return out;
+}
+#else
 // Windows: Fonts フォルダの既知のファイル。欧文は Segoe UI、日本語は游ゴシック・メイリオ、記号・絵文字は Segoe UI Symbol・Emoji。
 std::vector<FaceSource> find_system_fonts()
 {
@@ -116,6 +137,7 @@ std::vector<FaceSource> find_system_fonts()
     }
     return out;
 }
+#endif
 #endif
 
 }  // namespace

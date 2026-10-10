@@ -42,7 +42,7 @@ enum class DialogButton
     NO,       ///< 否定
     DISCARD,  ///< 否定(保存しない)
     CANCEL,   ///< 取り消し
-    CLOSE     // 取り消し
+    CLOSE     ///< 取り消し
 };
 
 class Dialog : public Window

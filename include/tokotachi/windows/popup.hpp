@@ -22,14 +22,14 @@ namespace tokotachi
 enum class PopupKind
 {
     MENU,    ///< メニュー・一覧(キーボードのフォーカスを得る。外側を押すと閉じる)
-    TOOLTIP  // ツールチップ(入力を受けない)
+    TOOLTIP  ///< ツールチップ(入力を受けない)
 };
 
 enum class PopupPlacement
 {
     BELOW,  ///< anchor の左下に、左上をそろえる
     RIGHT,  ///< anchor の右上に、左上をそろえる(サブメニュー)
-    AT      // anchor の左上に、左上をそろえる(右クリックの位置など)
+    AT      ///< anchor の左上に、左上をそろえる(右クリックの位置など)
 };
 
 class Popup : public Window

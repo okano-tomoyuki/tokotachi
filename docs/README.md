@@ -9,6 +9,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [adr/](adr/) | 設計判断の記録(1 判断 1 ファイル) | 随時追加 |
 | [../include/tokotachi/](../include/tokotachi/) | 公開のヘッダ(API の説明はヘッダのコメント)。役割ごとのディレクトリに分ける([ADR 0035](adr/0035-header-directories.md)) | 随時追加 |
 | [../spike/](../spike/) | 技術検証のコード(ライブラリには引き継がない) | マイルストーン1 |
+| [designer/](designer/) | デザイナー(VS Code の拡張)の設計([ADR 0039](adr/0039-designer.md)) | 草案 |
 
 `docs/` には、目的と設計判断(ADR)のように、あとから覆りにくい・背景ごと残したい情報を置く。
 
@@ -54,6 +55,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0036](adr/0036-library-name.md) | ライブラリの名前を Tokotachi(常立)にする | 承認 |
 | [0037](adr/0037-distribution.md) | 共有ライブラリを既定として配り、CMake のパッケージ・pkg-config・ソースからの組み込みに対応する | 承認 |
 | [0038](adr/0038-reference-site.md) | リファレンスは Doxygen でヘッダから作り、手引き・サンプルの一覧とともに GitHub Pages に出す | 承認 |
+| [0039](adr/0039-designer.md) | デザイナーを VS Code の拡張として本リポジトリに作り、キャンバスは WebAssembly にした Tokotachi で描く | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

@@ -35,6 +35,10 @@ set(TOKOTACHI_DEPS_COMMON_ARGS
 if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND TOKOTACHI_DEPS_COMMON_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
 endif()
+# Emscripten のツールチェーンは、find_package を自分の sysroot の中だけで探すように制限する。インストール先も探す対象に加える。
+if(EMSCRIPTEN)
+    list(APPEND TOKOTACHI_DEPS_COMMON_ARGS -DCMAKE_FIND_ROOT_PATH=${TOKOTACHI_DEPS_PREFIX})
+endif()
 
 # Linux: SDL3 は D-Bus・IBus(IME)や libdecor(Wayland のウィンドウの装飾)が無くてもエラーにせず、黙って無効にする。
 # IME が使えないビルドを作らないよう、ここで確かめる。
