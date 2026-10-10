@@ -73,7 +73,8 @@ OS の一部であるライブラリはシステムのものを使う。
 
 ## ビルド
 
-依存ライブラリのビルド(初回と依存ライブラリの更新時だけ。数分かかる):
+依存ライブラリは、見つからなければ本体の configure のときに自動でビルドする(初回だけ。数分かかる)。
+先に別にビルドしておくこともできる(依存ライブラリを更新するときなど):
 
 ```bash
 cmake -S deps -B build-deps -G Ninja
@@ -88,6 +89,58 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ./build/hello            # サンプル(--screenshot a.png で PNG に保存して終える)
 ```
+
+CMake のオプション:
+
+| オプション | 既定 | 内容 |
+|---|---|---|
+| `TOKOTACHI_SHARED` | ON | 共有ライブラリ(DLL / .so)を作る。OFF なら、依存ライブラリをまとめた静的ライブラリ(`libtokotachi.a`)を作る |
+| `TOKOTACHI_BUILD_EXAMPLES` / `TOKOTACHI_BUILD_TESTS` | 単独のとき ON | サンプル・テスト(利用者のプロジェクトに組み込まれたときは OFF) |
+| `TOKOTACHI_INSTALL` | 単独のとき ON | インストールの規則を作る |
+| `TOKOTACHI_DEPS_PREFIX` | `deps/install/<プラットフォーム>` | 依存ライブラリの場所(組み込まれたときはビルドのフォルダの中) |
+| `TOKOTACHI_BUILD_DEPS` | ON | 依存ライブラリが無ければ自動でビルドする |
+| `TOKOTACHI_STATIC_RUNTIME` | ON | 静的ライブラリのとき、MinGW のランタイムも静的にリンクする(exe が OS の DLL だけに依存する) |
+
+## 使う(インストール・組み込み)
+
+インストールする(`<prefix>` は `/usr/local` や任意のフォルダ):
+
+```bash
+cmake --install build --prefix <prefix>
+```
+
+`include/tokotachi/`・ライブラリ・CMake のパッケージ(`lib/cmake/tokotachi/`)・pkg-config(`lib/pkgconfig/tokotachi.pc`)・
+ライセンス(`share/licenses/tokotachi/`)が入る。
+
+CMake から使う:
+
+```cmake
+find_package(tokotachi 0.1 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
+target_link_libraries(app PRIVATE tokotachi::tokotachi)
+```
+
+pkg-config から使う(静的ライブラリなら `--static` を付ける):
+
+```bash
+g++ -std=c++11 main.cpp $(pkg-config --cflags --libs tokotachi)
+```
+
+ソースから一緒にビルドする(依存ライブラリも自動でビルドする):
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(tokotachi GIT_REPOSITORY <リポジトリ> GIT_TAG <タグ>)
+FetchContent_MakeAvailable(tokotachi)        # add_subdirectory(<ソースの場所>) でもよい
+target_link_libraries(app PRIVATE tokotachi::tokotachi)
+```
+
+```cpp
+#include <tokotachi/tokotachi.hpp>         // すべて(<tokotachi/widgets.hpp> などでグループごとにも読める)
+```
+
+共有ライブラリの版を配るときは、exe と一緒に `libtokotachi.dll`(Windows。MinGW のランタイムの `libstdc++-6.dll`・
+`libgcc_s_seh-1.dll`・`libwinpthread-1.dll` も)・`libtokotachi.so.<版>`(Linux)を配る。静的ライブラリの版なら exe 1 つで配れる。
+`share/licenses/tokotachi/` の LICENSE と THIRD_PARTY_LICENSES.txt も一緒に配る。
 
 ### Windows(MSYS2 mingw64)
 
@@ -141,3 +194,10 @@ WSLg の Wayland で、ビルドと描画・`video: wayland` の確認はでき�
 
 
 IME と分数スケーリングは WSLg では確かめきれないので、実機の GNOME / KDE で確認する。
+
+## ライセンス
+
+MIT([LICENSE](LICENSE))。ライブラリの中に含める依存ライブラリのライセンスは [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt)
+(SDL3・libunibreak は zlib、HarfBuzz・plutovg は MIT 系、FreeType は FreeType License、SheenBidi は Apache-2.0)。
+
+Portions of this software are copyright © The FreeType Project (https://freetype.org). All rights reserved.

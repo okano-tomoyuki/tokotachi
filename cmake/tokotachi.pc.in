@@ -1,0 +1,12 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: Tokotachi
+Description: Cross-platform C++11 GUI library built on SDL3
+Version: @PROJECT_VERSION@
+Requires.private: @TOKOTACHI_PC_REQUIRES_PRIVATE@
+Libs: -L${libdir} -ltokotachi
+Libs.private: @TOKOTACHI_PC_LIBS_PRIVATE@
+Cflags: -I${includedir}

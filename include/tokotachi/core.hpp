@@ -12,5 +12,6 @@
 #include "core/thread.hpp"
 #include "core/timer.hpp"
 #include "core/variable.hpp"
+#include "core/version.hpp"
 
 #endif
