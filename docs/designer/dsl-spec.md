@@ -267,8 +267,8 @@ Bethany と同じ。
 
 | # | 論点 | 案 |
 |---|---|---|
-| Q1 | ファイルの拡張子 | `*.tkui.json`(Tokotachi の UI。JSON であることが分かり、`jsonValidation` で関連付けられる) |
-| Q2 | 生成するファイルの名前 | 定義ファイルの名前から(`main_window.tkui.json` → `main_window.hpp`・`main_window.cpp`)。クラス名は `window.name` |
+| Q1 | ファイルの拡張子 | **決定(2026-10-10)**: `*.ttui.json`(Tokotachi の UI。`tk` は cpp_tk(Tcl/Tk のラッパー)と紛らわしいので `tt` にする。JSON であることが分かり、`jsonValidation` で関連付けられる)。プロジェクトファイルも同じく `*.ttproj.json` |
+| Q2 | 生成するファイルの名前 | 定義ファイルの名前から(`main_window.ttui.json` → `main_window.hpp`・`main_window.cpp`)。クラス名は `window.name` |
 | Q3 | Variable と結びつけ(`bind`) | Tokotachi の特徴なので扱いたい。`variables`(名前・型・初期値)をドキュメントに置き、プロパティに `{ "bind": "変数の名前" }` と書く案。MVP の後 |
 | Q4 | 画像(Action・ボタンの `icon` 等) | ファイルのパスを書いて生成したコードで読み込むか、埋め込むか(実行時のパスの扱い)。MVP の後 |
 | Q5 | 一覧の列・モデル(ListView の `add_column`、ListModel・TreeModel の項目) | 列はコレクション(`columns`)として書く。モデルの中身はふつうコードで作るので、デザイナーでは扱わない案 |

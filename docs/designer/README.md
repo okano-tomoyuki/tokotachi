@@ -11,8 +11,8 @@ Tokotachi 専用の GUI デザイナー(VS Code の拡張)の設計ドキュメ�
 | ドキュメント | 内容 | 状態 |
 |---|---|---|
 | [dsl-spec.md](dsl-spec.md) | 画面の定義ファイルの仕様 | 草案 |
-| codegen-design.md | コード生成(マーカー区間の更新)の設計と生成例 | これから |
-| catalog.md | カタログ(公開のヘッダからの取り出し) | これから |
+| [codegen-design.md](codegen-design.md) | コード生成(マーカー区間の更新)の設計と生成例 | 草案 |
+| [catalog.md](catalog.md) | カタログ(公開のヘッダからの取り出し・既定値の測定・手書きの補足) | 草案 |
 
 ## 進める順序(ADR 0039)
 

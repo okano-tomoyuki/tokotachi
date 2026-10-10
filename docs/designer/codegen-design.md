@@ -1,0 +1,284 @@
+# コード生成の設計(草案)
+
+画面の定義ファイル([dsl-spec.md](dsl-spec.md))から、Tokotachi の C++ のコードを生成する方法。
+生成したコードと利用者のコードの共存には、Bethany と同じく、マーカーで囲んだ区間だけを置き換える方式を使う([ADR 0039](../adr/0039-designer.md))。
+
+## 1. 生成の流れ
+
+```
+定義ファイル (*.ttui.json)
+  └─ 検証(Zod のスキーマ + カタログとの照合 + 意味の検証)
+       └─ 中間表現(作る・プロパティを設定する・レイアウトに入れる・ハンドラをつなぐ、の並び)
+            └─ C++ の書き出し → 区間ごとのコード片
+                 └─ 合わせる: ファイルが無ければ雛形を作り、あればマーカーの区間だけを置き換える
+```
+
+生成の単位は 1 つの定義ファイル = 1 ウィンドウ = 1 クラス。生成するクラスは `tokotachi::Window`(または `tokotachi::Dialog`)を継承する。
+
+| 生成するもの | 決まり方(定義ファイルが `main_window.ttui.json`、`window.name` が `MainWindow` の場合) |
+|---|---|
+| クラス名 | `window.name`(`MainWindow`) |
+| ヘッダ・ソース | 定義ファイルと同じフォルダの `main_window.hpp`・`main_window.cpp`(定義ファイルの名前から。拡張子とフォルダはプロジェクトの設定で変えられる。§8) |
+
+## 2. マーカーの区間
+
+| 区間 | 内容 | 置き場所 |
+|---|---|---|
+| `tokotachi_header_begin` | インクルードガードの始まりと `#include <tokotachi/tokotachi.hpp>` | ヘッダの先頭 |
+| `tokotachi_source_begin` | 自分のヘッダの include | ソースの先頭 |
+| `tokotachi_namespace_begin`・`tokotachi_namespace_end` | 名前空間の始まりと終わり(プロジェクトの設定。使わないときはマーカーの行だけ残す) | ヘッダ・ソース |
+| `declarations` | 部品・Action・オブジェクトのメンバ(ポインタ)と、**ハンドラのメンバ関数の宣言** | ヘッダ(クラスの定義の中、public) |
+| `tokotachi_setup_ui` | 部品を作り、プロパティを設定し、レイアウトに入れ、ハンドラをつなぐ関数の定義 | ソース |
+| `tokotachi_header_end` | インクルードガードの終わり | ヘッダの末尾 |
+
+利用者の include は `tokotachi_header_begin`・`tokotachi_source_begin` の後、名前空間の区間の前に書く。
+コンストラクタ・デストラクタと、ハンドラの中身は区間の外にあり、生成し直しても変わらない。
+
+### マーカーの書式
+
+```cpp
+// <tokotachi-designer:begin id="tokotachi_setup_ui">
+...
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="3f9a1c...">
+```
+
+`id` で区間を見分け、`hash` は区間の中身のハッシュ(手で変えたことに気づくため。§6 M2)。
+ハンドラの雛形は `// <tokotachi-designer:handler-stubs>` の行の後に足す。
+
+## 3. 生成例
+
+[dsl-spec.md §2](dsl-spec.md#2-例) の例から生成するコード(抜粋)。コメントの言語はプロジェクトの設定で決める(既定は英語。ここでは日本語)。
+
+`main_window.hpp`
+
+```cpp
+// <tokotachi-designer:begin id="tokotachi_header_begin">
+#ifndef MAIN_WINDOW_HPP
+#define MAIN_WINDOW_HPP
+
+#include <tokotachi/tokotachi.hpp>
+// <tokotachi-designer:end id="tokotachi_header_begin" hash="...">
+
+// <tokotachi-designer:begin id="tokotachi_namespace_begin">
+// <tokotachi-designer:end id="tokotachi_namespace_begin" hash="...">
+
+/// デザイナーで作ったウィンドウ(main_window.ttui.json)。マーカーで囲んだ区間は、生成し直すと上書きされる。
+class MainWindow : public tokotachi::Window
+{
+public:
+    MainWindow();
+
+    // <tokotachi-designer:begin id="declarations">
+    tokotachi::Widget* search_row;
+    tokotachi::LineEdit* search_edit;
+    tokotachi::Button* search_button;
+    tokotachi::Splitter* split;
+    tokotachi::TreeView* folder_tree;
+    tokotachi::ListView* file_list;
+    tokotachi::Menu* file_menu;
+    tokotachi::Action* open_action;
+    tokotachi::Action* quit_action;
+    tokotachi::Timer* autosave_timer;
+
+    void main_window_close(tokotachi::Object* sender, bool& can_close);
+    void search_button_click(tokotachi::Object* sender);
+    void open_action_trigger(tokotachi::Object* sender);
+    void quit_action_trigger(tokotachi::Object* sender);
+    void autosave(tokotachi::Object* sender);
+    // <tokotachi-designer:end id="declarations" hash="...">
+
+private:
+    void tokotachi_setup_ui();
+};
+
+// <tokotachi-designer:begin id="tokotachi_namespace_end">
+// <tokotachi-designer:end id="tokotachi_namespace_end" hash="...">
+
+// <tokotachi-designer:begin id="tokotachi_header_end">
+#endif  // MAIN_WINDOW_HPP
+// <tokotachi-designer:end id="tokotachi_header_end" hash="...">
+```
+
+`main_window.cpp`
+
+```cpp
+// <tokotachi-designer:begin id="tokotachi_source_begin">
+#include "main_window.hpp"
+// <tokotachi-designer:end id="tokotachi_source_begin" hash="...">
+
+// <tokotachi-designer:begin id="tokotachi_namespace_begin">
+// <tokotachi-designer:end id="tokotachi_namespace_begin" hash="...">
+
+MainWindow::MainWindow()
+    : tokotachi::Window(std::string())
+{
+    tokotachi_setup_ui();
+}
+
+// <tokotachi-designer:begin id="tokotachi_setup_ui">
+// 部品を作り、プロパティを設定し、レイアウトに入れ、ハンドラをつなぐ(生成したコード)。
+void MainWindow::tokotachi_setup_ui()
+{
+    open_action = new tokotachi::Action(this);
+    open_action->text = "開く(&O)...";
+    open_action->shortcut = tokotachi::Shortcut("Ctrl+O");
+    open_action->on_trigger = [this](tokotachi::Object* sender) { open_action_trigger(sender); };
+
+    quit_action = new tokotachi::Action(this);
+    quit_action->text = "終了(&X)";
+    quit_action->on_trigger = [this](tokotachi::Object* sender) { quit_action_trigger(sender); };
+
+    autosave_timer = new tokotachi::Timer(this);
+    autosave_timer->interval = 60000;
+    autosave_timer->on_timer = [this](tokotachi::Object* sender) { autosave(sender); };
+
+    title = "メモ";
+    width = 640;
+    height = 480;
+    on_close = [this](tokotachi::Object* sender, bool& can_close) { main_window_close(sender, can_close); };
+
+    tokotachi::MenuBar* window_menu_bar = new tokotachi::MenuBar();
+    file_menu = window_menu_bar->add_menu("ファイル(&F)");
+    file_menu->add_action(open_action);
+    file_menu->add_separator();
+    file_menu->add_action(quit_action);
+    menu_bar = window_menu_bar;
+
+    tokotachi::ToolBar* window_tool_bar = new tokotachi::ToolBar();
+    window_tool_bar->button_style = tokotachi::ToolButtonStyle::TEXT_BESIDE_ICON;
+    window_tool_bar->add_action(open_action);
+    tool_bar = window_tool_bar;
+
+    status_bar = new tokotachi::StatusBar();
+
+    tokotachi::BoxLayout* window_layout = new tokotachi::BoxLayout(this);
+    window_layout->margins = tokotachi::Margins(12);
+
+    search_row = new tokotachi::Widget(this);
+    tokotachi::BoxLayout* search_row_layout = new tokotachi::BoxLayout(search_row);
+    search_row_layout->orientation = tokotachi::Orientation::HORIZONTAL;
+
+    search_edit = new tokotachi::LineEdit(search_row);
+    search_edit->placeholder_text = "検索";
+    search_row_layout->add(search_edit, 1);
+
+    search_button = new tokotachi::Button(search_row);
+    search_button->text = "検索";
+    search_button->on_click = [this](tokotachi::Object* sender) { search_button_click(sender); };
+    search_row_layout->add(search_button);
+
+    window_layout->add(search_row);
+
+    split = new tokotachi::Splitter(this);
+    split->sizes = std::vector<float>{160, 360};
+
+    folder_tree = new tokotachi::TreeView(split);
+    split->add_widget(folder_tree, 0);
+
+    file_list = new tokotachi::ListView(split);
+    split->add_widget(file_list);
+
+    window_layout->add(split, 1);
+}
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="...">
+
+// <tokotachi-designer:handler-stubs>
+void MainWindow::main_window_close(tokotachi::Object* sender, bool& can_close)
+{
+}
+
+void MainWindow::search_button_click(tokotachi::Object* sender)
+{
+}
+// ...
+
+// <tokotachi-designer:begin id="tokotachi_namespace_end">
+// <tokotachi-designer:end id="tokotachi_namespace_end" hash="...">
+```
+
+`Dialog` のときは、コンストラクタが親のウィンドウを受け取る(`explicit SettingsDialog(tokotachi::Window* parent);`、
+`: tokotachi::Dialog(parent, std::string())`)。
+
+利用側(プロジェクトの起動部分。§8):
+
+```cpp
+#include <tokotachi/tokotachi.hpp>
+#include "main_window.hpp"
+
+int main(int argc, char** argv)
+{
+    tokotachi::Application app(argc, argv);
+    MainWindow window;
+    window.visible = true;
+    return app.exec();
+}
+```
+
+## 4. `tokotachi_setup_ui` の中の順序
+
+1. **Action と画面に出ないオブジェクト**(定義ファイルの順)。メニュー・ツールバー・部品から参照されるので先に作る。
+2. **ウィンドウ自身のプロパティとハンドラ。**
+3. **メニューバー・ツールバー・ステータスバー**(作って中身を入れてから、ウィンドウに設定する)。
+4. **中身の部品を木の順(親が先)に。** 部品ごとに次の順で書く。
+   1. 作る(`new tokotachi::Button(親)`。親を渡して、作った時点から親が所有する)。
+   2. プロパティ(カタログの順。範囲を持つ部品の `value` は `minimum`・`maximum` の後、ComboBox の `current_index` は `items` の後)。
+   3. ハンドラをつなぐ。
+   4. `actions`(`add_action`)。
+   5. 自分のレイアウトと子(`layout`・`children`・`tabs`・`panes`・`content`)。ここで再帰する。
+   6. 親のレイアウトに入れる(`add`)。子の設定がすべて済んでから入れる。
+5. **部品への参照**(ほかの部品を指すプロパティ)。相手がすべてできてから、最後にまとめて設定する。
+
+この順で生成したウィンドウの配置が、キャンバス(同じ定義ファイルを WebAssembly の Tokotachi で組んだもの)と同じになることを、生成したコードの実行で確かめる(§7)。
+
+## 5. 書き出しの決まり
+
+| # | 論点 | 案 |
+|---|---|---|
+| N1 | ハンドラのつなぎ方 | `[this](引数...) { メンバ関数(引数...); }` のラムダ。引数はカタログのハンドラの型から作る |
+| N2 | 名前空間 | 生成したコードは `tokotachi::` を省かずに書く(ヘッダにもソースにも `using namespace` を書かない。利用者の名前と衝突させないため) |
+| N3 | 名前の無いレイアウト・メニューバー等 | 一時的な変数にする。名前は `<親の名前>_layout`(ウィンドウは `window_layout`)、`window_menu_bar`・`window_tool_bar`。これらの名前はノードの `name` に使えない(dsl-spec.md §4 の衝突の検証に加える) |
+| N4 | 値の書き出し | 文字列は UTF-8 のまま C++ の文字列リテラルに(`"`・`\`・制御文字はエスケープ)。`float` の小数は `0.5f`。列挙型は `tokotachi::Orientation::HORIZONTAL`。`Margins` は `tokotachi::Margins(12)` か 4 つの値、`Size` 等は値をそろえたコンストラクタ、`ThemeColor` の役割は `tokotachi::ColorRole::ACCENT`・色は `tokotachi::Color(0xFF, 0x80, 0x00)`、`Shortcut` は `tokotachi::Shortcut("Ctrl+S")`、配列は `std::vector<std::string>{...}`。`Placement` は一時的な変数にメンバを設定して `add` に渡す |
+| N5 | 既定値 | 定義ファイルに書いたプロパティだけを書き出す |
+| N6 | レイアウトの `add` の引数 | 既定値と同じ後ろの引数は省く(`add(w)`、`add(w, 1)`)。途中の引数を書くときは、その前の引数も書く |
+| N7 | 予約の名前 | 生成したコードが使うメンバ関数・区間には接頭辞 `tokotachi_` を付ける(`tokotachi_setup_ui`)。ノードの `name`・ハンドラの名前に `tokotachi_` で始まる名前は使えない |
+
+## 6. Bethany から引き継ぐ決まり
+
+| # | 論点 | 決定 |
+|---|---|---|
+| M1 | ハンドラの宣言と中身の置き場所 | 宣言は `declarations` の区間に入れる。中身の雛形は `handler-stubs` の行の後に足すだけで、消さない(定義ファイルから消えたハンドラの中身は、宣言が無くなってコンパイルエラーになるので気づける) |
+| M2 | 区間の中の手での変更 | 終わりのマーカーに区間の中身のハッシュを持たせ、生成し直すときに合わなければ、上書きする前に警告して確かめる |
+| M3 | 整形の道具との共存 | ハッシュは空白(改行・字下げを含む)を取り除いてから求める(clang-format で整形しても手での変更とみなさない) |
+| M4 | 壊れたマーカー | マーカーが欠けている・重なっている・入れ子になっている・対応していないときは、何も書かずにエラーにする |
+| M7 | 名前を変えたとき | 警告だけにする。区間の外の参照は書き換えない(無くなった名前が区間の外で使われていれば警告する) |
+| M8 | VS Code での書き込み | WorkspaceEdit で書き込む。書き込む前に保存していない変更が無かったファイルは、書き込んだ後に保存する |
+
+## 7. 確かめ方
+
+- **期待する出力との比較**: 定義ファイル → 生成したコードを、codegen のテストで期待するファイルと比べる。
+- **ビルドと実行**: 見本の定義ファイル(`designer/samples/`)から生成した C++ を、本リポジトリの Tokotachi と一緒に CMake でビルドして実行し、次を確かめる。
+  1. 表示した後の各部品の位置と大きさが、キャンバス(WebAssembly で同じ定義ファイルから組んだもの)と同じであること。
+  2. ハンドラがつながっていること(ボタン・Action・Timer のハンドラが呼ばれる)。
+  3. 参照(メニュー・ツールバーの Action)・値の型(Margins・Font・色・Shortcut 等)・配列が設定されていること。
+- 生成したコードは `-Wall -Wextra -pedantic -Werror`(使っていない引数を除く)でコンパイルする。
+
+## 8. プロジェクトと設定
+
+定義ファイルは画面の設計だけを持ち、生成の設定はプロジェクトファイル(`*.ttproj.json`)に持つ。
+プロジェクトファイルの仕様は、拡張を作る段階で Bethany の project-spec.md を土台に書く。持つ設定は次のとおり。
+
+| 設定 | 既定 |
+|---|---|
+| 名前空間(`app::ui` なら `namespace app { namespace ui {` と 1 つずつ書く。C++11 でも通るように) | なし |
+| インクルードガードの接頭辞 | なし |
+| ヘッダ・ソースの拡張子とフォルダ | `.hpp`・`.cpp`、定義ファイルと同じフォルダ |
+| コメントの言語 | 英語(日本語も選べる) |
+| メインのウィンドウと、起動部分(`main.cpp`)を生成するか | — |
+
+## 9. 未決の論点
+
+| # | 論点 | 案 |
+|---|---|---|
+| G1 | 新しいプロジェクトで CMakeLists.txt も作るか | **決定(2026-10-10)**: 作る(`find_package(tokotachi)` と生成したファイルを並べた最小のもの)。すぐにビルドして動かせるように。一度作ったら上書きしない |
+| G2 | ハンドラをメンバ関数にせず、ラムダの中身を書けるようにするか | しない(dsl-spec.md §10 Q8) |
+| G3 | 生成したメンバの初期化 | コンストラクタの中で `tokotachi_setup_ui` が必ず設定するので、宣言では初期化しない。`-Weffc++` 等で警告が出るなら `= nullptr` を付ける |
