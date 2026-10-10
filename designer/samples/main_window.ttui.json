@@ -12,23 +12,23 @@
     "menu_bar": {
       "menus": [
         {
-          "name": "file_menu",
+          "name": "menu_file",
           "title": "ファイル(&F)",
           "items": [
-            { "action": "open_action" },
+            { "action": "action_open" },
             {
               "menu": {
                 "title": "最近使ったファイル(&R)",
-                "items": [{ "action": "clear_recent_action" }]
+                "items": [{ "action": "action_clear_recent" }]
               }
             },
             { "separator": true },
-            { "action": "quit_action" }
+            { "action": "action_quit" }
           ]
         },
         {
           "title": "表示(&V)",
-          "items": [{ "action": "details_action" }]
+          "items": [{ "action": "action_details" }]
         }
       ]
     },
@@ -37,11 +37,11 @@
         "button_style": "TEXT_BESIDE_ICON"
       },
       "items": [
-        { "action": "open_action" },
+        { "action": "action_open" },
         { "separator": true },
         {
           "widget": {
-            "name": "view_combo",
+            "name": "combo_box_view",
             "class": "ComboBox",
             "properties": {
               "items": ["一覧", "詳細"],
@@ -57,7 +57,7 @@
       },
       "widgets": [
         {
-          "name": "count_label",
+          "name": "label_count",
           "class": "Label",
           "properties": {
             "text": "0 件"
@@ -73,7 +73,7 @@
       "items": [
         {
           "widget": {
-            "name": "search_row",
+            "name": "row_search",
             "class": "Widget",
             "layout": {
               "class": "BoxLayout",
@@ -84,7 +84,7 @@
                 {
                   "stretch": 1,
                   "widget": {
-                    "name": "search_edit",
+                    "name": "line_edit_search",
                     "class": "LineEdit",
                     "properties": {
                       "placeholder_text": "検索する言葉"
@@ -94,7 +94,7 @@
                 },
                 {
                   "widget": {
-                    "name": "search_button",
+                    "name": "button_search",
                     "class": "Button",
                     "properties": {
                       "text": "検索"
@@ -109,7 +109,7 @@
         {
           "stretch": 1,
           "widget": {
-            "name": "split",
+            "name": "splitter_main",
             "class": "Splitter",
             "properties": {
               "sizes": [180, 500]
@@ -121,38 +121,38 @@
                   "collapsible": true
                 },
                 "widget": {
-                  "name": "folder_tree",
+                  "name": "tree_view_folders",
                   "class": "TreeView"
                 }
               },
               {
                 "widget": {
-                  "name": "tabs",
+                  "name": "tab_widget_files",
                   "class": "TabWidget",
-                  "events": { "on_change": "tabs_change" },
+                  "events": { "on_change": "tab_widget_files_change" },
                   "tabs": [
                     {
                       "properties": {
                         "title": "ファイル"
                       },
                       "page": {
-                        "name": "file_list",
+                        "name": "list_view_files",
                         "class": "ListView",
                         "properties": {
                           "sorting_enabled": true,
                           "selection_mode": "MULTI"
                         },
-                        "events": { "on_activate": "file_list_activate" }
+                        "events": { "on_activate": "list_view_files_activate" }
                       }
                     },
                     {
-                      "name": "detail_tab",
+                      "name": "tab_detail",
                       "properties": {
                         "title": "詳細",
                         "enabled": false
                       },
                       "page": {
-                        "name": "detail_page",
+                        "name": "page_detail",
                         "class": "Widget",
                         "layout": {
                           "class": "GridLayout",
@@ -167,7 +167,7 @@
                               "row": 0,
                               "column": 0,
                               "widget": {
-                                "name": "name_label",
+                                "name": "label_name",
                                 "class": "Label",
                                 "properties": {
                                   "text": "名前"
@@ -178,7 +178,7 @@
                               "row": 0,
                               "column": 1,
                               "widget": {
-                                "name": "name_edit",
+                                "name": "line_edit_name",
                                 "class": "LineEdit"
                               }
                             },
@@ -186,7 +186,7 @@
                               "row": 1,
                               "column": 0,
                               "widget": {
-                                "name": "size_label",
+                                "name": "label_size",
                                 "class": "Label",
                                 "properties": {
                                   "text": "大きさ",
@@ -199,7 +199,7 @@
                               "column": 1,
                               "horizontal": "START",
                               "widget": {
-                                "name": "size_spin",
+                                "name": "spin_box_size",
                                 "class": "SpinBox",
                                 "properties": {
                                   "maximum": 1000,
@@ -219,7 +219,7 @@
         },
         {
           "widget": {
-            "name": "button_row",
+            "name": "row_buttons",
             "class": "Widget",
             "layout": {
               "class": "BoxLayout",
@@ -229,7 +229,7 @@
               "items": [
                 {
                   "widget": {
-                    "name": "hidden_check",
+                    "name": "check_box_hidden",
                     "class": "CheckBox",
                     "properties": {
                       "text": "隠しファイルも表示する"
@@ -239,14 +239,14 @@
                 { "stretch": 1 },
                 {
                   "widget": {
-                    "name": "close_button",
+                    "name": "button_close",
                     "class": "Button",
                     "properties": {
                       "text": "閉じる",
                       "style": "SECONDARY"
                     },
-                    "events": { "on_click": "close_button_click" },
-                    "actions": ["quit_action"]
+                    "events": { "on_click": "button_close_click" },
+                    "actions": ["action_quit"]
                   }
                 }
               ]
@@ -258,21 +258,21 @@
   },
   "actions": [
     {
-      "name": "open_action",
+      "name": "action_open",
       "properties": {
         "text": "開く(&O)...",
         "shortcut": "Ctrl+O"
       },
-      "events": { "on_trigger": "open_action_trigger" }
+      "events": { "on_trigger": "action_open_trigger" }
     },
     {
-      "name": "clear_recent_action",
+      "name": "action_clear_recent",
       "properties": {
         "text": "一覧を消す(&C)"
       }
     },
     {
-      "name": "details_action",
+      "name": "action_details",
       "properties": {
         "text": "詳細を表示(&D)",
         "checkable": true,
@@ -280,17 +280,17 @@
       }
     },
     {
-      "name": "quit_action",
+      "name": "action_quit",
       "properties": {
         "text": "終了(&X)",
         "shortcut": "Ctrl+Q"
       },
-      "events": { "on_trigger": "quit_action_trigger" }
+      "events": { "on_trigger": "action_quit_trigger" }
     }
   ],
   "objects": [
     {
-      "name": "refresh_timer",
+      "name": "timer_refresh",
       "class": "Timer",
       "properties": {
         "interval": 5000

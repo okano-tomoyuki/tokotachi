@@ -67,43 +67,43 @@ int main(int argc, char** argv)
     // プロパティ
     check(window.title.get() == "ファイルの整理", "window.title");
     check(window.width.get() == 720 && window.height.get() == 480, "window size");
-    check(window.search_edit->placeholder_text.get() == "検索する言葉", "string property");
-    check(window.close_button->style.get() == tokotachi::ButtonStyle::SECONDARY, "enum property");
-    check(window.view_combo->items.get().size() == 2 && window.view_combo->current_index.get() == 0,
+    check(window.line_edit_search->placeholder_text.get() == "検索する言葉", "string property");
+    check(window.button_close->style.get() == tokotachi::ButtonStyle::SECONDARY, "enum property");
+    check(window.combo_box_view->items.get().size() == 2 && window.combo_box_view->current_index.get() == 0,
           "array property before index");
-    check(window.size_spin->maximum.get() == 1000 && window.size_spin->value.get() == 10, "range before value");
-    check(window.size_label->color.get().is_role() &&
-              window.size_label->color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
+    check(window.spin_box_size->maximum.get() == 1000 && window.spin_box_size->value.get() == 10, "range before value");
+    check(window.label_size->color.get().is_role() &&
+              window.label_size->color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
           "theme color");
-    check(window.open_action->shortcut.get() == tokotachi::Shortcut("Ctrl+O"), "shortcut");
-    check(window.details_action->checkable.get() && window.details_action->checked.get(), "action flags");
-    check(window.refresh_timer->interval.get() == 5000, "timer");
+    check(window.action_open->shortcut.get() == tokotachi::Shortcut("Ctrl+O"), "shortcut");
+    check(window.action_details->checkable.get() && window.action_details->checked.get(), "action flags");
+    check(window.timer_refresh->interval.get() == 5000, "timer");
     // 子を入れた後に設定するプロパティ(Splitter::sizes)。区画が無いと効かない
-    check(window.split->panes.get().size() == 2 && window.split->sizes.get().size() == 2, "splitter panes");
-    check(window.split->panes.get()[0]->collapsible.get() && window.split->panes.get()[0]->stretch.get() == 0,
+    check(window.splitter_main->panes.get().size() == 2 && window.splitter_main->sizes.get().size() == 2, "splitter panes");
+    check(window.splitter_main->panes.get()[0]->collapsible.get() && window.splitter_main->panes.get()[0]->stretch.get() == 0,
           "splitter pane properties");
-    check(window.tabs->tabs.get().size() == 2 && !window.detail_tab->enabled.get(), "tabs");
+    check(window.tab_widget_files->tabs.get().size() == 2 && !window.tab_detail->enabled.get(), "tabs");
     // メニュー・ツールバー・ステータスバー
     check(window.menu_bar.get() != nullptr && window.menu_bar.get()->menus.get().size() == 2, "menu bar");
     // actions は区切りとサブメニューを除く
-    check(window.file_menu->actions.get() ==
-              std::vector<tokotachi::Action*>{window.open_action, window.quit_action},
+    check(window.menu_file->actions.get() ==
+              std::vector<tokotachi::Action*>{window.action_open, window.action_quit},
           "menu items");
     check(window.tool_bar.get() != nullptr && window.status_bar.get() != nullptr, "tool bar and status bar");
     check(window.status_bar.get()->text.get() == "準備ができました", "status bar text");
-    check(window.count_label->parent.get() != nullptr, "status bar widget");
+    check(window.label_count->parent.get() != nullptr, "status bar widget");
     // ハンドラ
-    window.open_action->trigger();
-    check(called("open_action_trigger"), "action handler");
-    window.search_button->on_click.get()(window.search_button);
+    window.action_open->trigger();
+    check(called("action_open_trigger"), "action handler");
+    window.button_search->on_click.get()(window.button_search);
     check(called("search"), "button handler");
-    window.refresh_timer->on_timer.get()(window.refresh_timer);
+    window.timer_refresh->on_timer.get()(window.timer_refresh);
     check(called("refresh"), "timer handler");
     bool can_close = true;
     window.on_close.get()(&window, can_close);
     check(called("main_window_close"), "window close handler");
-    window.tabs->on_change.get()(window.tabs);
-    check(called("tabs_change"), "tab handler");
+    window.tab_widget_files->on_change.get()(window.tab_widget_files);
+    check(called("tab_widget_files_change"), "tab handler");
 
     // ダイアログ(Dialog の継承・ボタン・PlaceLayout・自由な配置・ScrollArea の中身・値の型)
     SettingsDialog* dialog = new SettingsDialog(&window);
@@ -111,24 +111,24 @@ int main(int argc, char** argv)
     dialog->save_png(argc > 2 ? argv[2] : "settings_dialog.png");
     check(dialog->title.get() == "設定", "dialog title");
     check(dialog->minimum_size.get().width == 400, "size value");
-    check(dialog->heading->font.get().size == 18, "font value");
-    check(!dialog->heading->color.get().is_role() &&
-              dialog->heading->color.get().color().r == 0x33 && dialog->heading->color.get().color().b == 0xCC,
+    check(dialog->label_heading->font.get().size == 18, "font value");
+    check(!dialog->label_heading->color.get().is_role() &&
+              dialog->label_heading->color.get().color().r == 0x33 && dialog->label_heading->color.get().color().b == 0xCC,
           "color value");
-    check(dialog->scroll->content.get() == dialog->badge_area && dialog->scroll->fit_width.get(),
+    check(dialog->scroll_area_badges->content.get() == dialog->area_badges && dialog->scroll_area_badges->fit_width.get(),
           "scroll area content");
-    const tokotachi::Rect area = dialog->badge_area->bounds;
-    const tokotachi::Rect badge = dialog->badge->bounds;
-    check(badge.x + badge.width / 2 > area.width / 2 - 1 && badge.x + badge.width / 2 < area.width / 2 + 1,
+    const tokotachi::Rect area = dialog->area_badges->bounds;
+    const tokotachi::Rect label_badge = dialog->label_badge->bounds;
+    check(label_badge.x + label_badge.width / 2 > area.width / 2 - 1 && label_badge.x + label_badge.width / 2 < area.width / 2 + 1,
           "place layout (center)");
-    const tokotachi::Rect corner = dialog->corner_check->bounds;
+    const tokotachi::Rect corner = dialog->check_box_corner->bounds;
     check(corner.x + corner.width > area.width - 9 && corner.x + corner.width < area.width - 7 && corner.y == 8,
           "place layout (top right)");
-    const tokotachi::Rect slider = dialog->zoom_slider->bounds;
+    const tokotachi::Rect slider = dialog->slider_zoom->bounds;
     check(slider.x == 0 && slider.y == 8 && slider.width == 200 && slider.height == 32, "free placement");
-    check(dialog->zoom_slider->maximum.get() == 200 && dialog->zoom_slider->value.get() == 100, "slider range");
-    dialog->zoom_slider->on_change.get()(dialog->zoom_slider);
-    check(called("zoom_change"), "dialog widget handler");
+    check(dialog->slider_zoom->maximum.get() == 200 && dialog->slider_zoom->value.get() == 100, "slider range");
+    dialog->slider_zoom->on_change.get()(dialog->slider_zoom);
+    check(called("slider_zoom_change"), "dialog widget handler");
     dialog->on_finish.get()(dialog);
     check(called("settings_finish"), "dialog handler");
     std::printf("\n  ],\n  \"rects\": [\n");

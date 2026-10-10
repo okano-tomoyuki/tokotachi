@@ -32,7 +32,7 @@ describe.skipIf(!isBuilt())('dropTarget', () => {
   };
 
   it('横の BoxLayout では、点に近い項目の間に入れる', () => {
-    const button = at('search_button');
+    const button = at('button_search');
     // 検索のボタンの左半分 → 検索欄と検索のボタンの間(1)
     const t = dropTarget(doc, outline(doc), frame, button.x + 2, button.y + button.height / 2, {
       kind: 'new',
@@ -48,7 +48,7 @@ describe.skipIf(!isBuilt())('dropTarget', () => {
 
   it('表示していないタブの中には入れない', () => {
     // 詳細のタブは表示していないので、隠れた部品の上には入れる場所が無い(外側の Splitter の区画になる)
-    const edit = at('name_edit');
+    const edit = at('line_edit_name');
     const t = dropTarget(doc, outline(doc), frame, edit.x + 4, edit.y + 4, {
       kind: 'new',
       class: 'Button',
@@ -57,7 +57,10 @@ describe.skipIf(!isBuilt())('dropTarget', () => {
   });
 
   it('GridLayout では、空いたセルにだけ入れられる(タブを表示して)', async () => {
-    const shown = (await Canvas.load()).render(doc, { placeholders: true, tabs: { tabs: 1 } });
+    const shown = (await Canvas.load()).render(doc, {
+      placeholders: true,
+      tabs: { tab_widget_files: 1 },
+    });
     const grid = [
       'window',
       'layout',
@@ -72,8 +75,8 @@ describe.skipIf(!isBuilt())('dropTarget', () => {
       'page',
       'layout',
     ];
-    const edit = shown.rects['name_edit'];
-    const spin = shown.rects['size_spin'];
+    const edit = shown.rects['line_edit_name'];
+    const spin = shown.rects['spin_box_size'];
     if (!edit || !spin) {
       throw new Error('rects');
     }
@@ -93,18 +96,18 @@ describe.skipIf(!isBuilt())('dropTarget', () => {
   });
 
   it('自分の中へは移せない', () => {
-    const row = at('search_row');
+    const row = at('row_search');
     const t = dropTarget(doc, outline(doc), frame, row.x + 2, row.y + 2, {
       kind: 'move',
       path: ['window', 'layout', 'items', 0, 'widget'],
       id: 'window/layout/items/0/widget',
     });
-    // search_row の中ではなく、ウィンドウのレイアウトの位置になる
+    // row_search の中ではなく、ウィンドウのレイアウトの位置になる
     expect(t?.slot).toMatchObject({ kind: 'item', layout: ['window', 'layout'] });
   });
 
   it('空きは BoxLayout にだけ入れられる', () => {
-    const tree = at('folder_tree');
+    const tree = at('tree_view_folders');
     const t = dropTarget(doc, outline(doc), frame, tree.x + 4, tree.y + 4, {
       kind: 'spacer',
       spacer: { stretch: 1 },

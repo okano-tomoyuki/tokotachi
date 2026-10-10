@@ -17,6 +17,7 @@ import { beginDrag } from '../dragController.ts';
 import { dropTarget } from '../dropTarget.ts';
 import { widgetGhost } from '../ghost.ts';
 import { ResizeHandles } from './ResizeHandles.tsx';
+import { stepZoom } from './ZoomControl.tsx';
 import { selectedNode, sendEdit, useDesigner } from '../store.ts';
 import { postMessage } from '../vscode.ts';
 
@@ -52,6 +53,28 @@ export function CanvasView() {
   const drag = useDesigner((s) => s.drag);
   const target = useDesigner((s) => s.target);
   const ref = useRef<HTMLCanvasElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const zoom = useDesigner((s) => s.zoom);
+
+  useEffect(() => {
+    // Ctrl+ホイールで倍率を変える(React の wheel は passive なので、既定の動作を止めるために直接つなぐ)
+    const element = scrollRef.current;
+    if (!element) {
+      return;
+    }
+    const wheel = (e: WheelEvent): void => {
+      if (!e.ctrlKey) {
+        return;
+      }
+      e.preventDefault();
+      const current = useDesigner.getState().zoom;
+      useDesigner.setState({ zoom: stepZoom(current, e.deltaY < 0 ? 1 : -1) });
+    };
+    element.addEventListener('wheel', wheel, { passive: false });
+    return () => {
+      element.removeEventListener('wheel', wheel);
+    };
+  });
 
   useEffect(() => {
     const canvas = ref.current;
@@ -95,109 +118,116 @@ export function CanvasView() {
     return best;
   };
 
+  // 倍率(CSS の zoom)を除いた、キャンバスの座標(dp)
   const point = (e: React.MouseEvent): { x: number; y: number } => {
+    // 画面上の大きさと論理の大きさの比で割る(倍率の掛け方によらず正しい位置になる)
     const box = e.currentTarget.getBoundingClientRect();
-    return { x: e.clientX - box.left, y: e.clientY - box.top };
+    const sx = box.width > 0 ? box.width / width : 1;
+    const sy = box.height > 0 ? box.height / height : 1;
+    return { x: (e.clientX - box.left) / sx, y: (e.clientY - box.top) / sy };
   };
 
   const selectionRect = rectOf(selected, roots, frame.rects);
   const document = useDesigner.getState().document;
   return (
-    <div className="canvas-scroll">
-      <div className="window-frame" style={{ width }}>
+    <div className="canvas-scroll" ref={scrollRef}>
+      <div className="window-frame" style={{ width: width * zoom }}>
         <div className="window-title">{findOutlineNode(roots, 'window')?.label}</div>
-        <div
-          className="canvas-surface"
-          style={{ width, height }}
-          onMouseDown={(e) => {
-            // 部品を押したまま動かしたら、移すドラッグにする
-            if (e.button !== 0) {
-              return;
-            }
-            const p = point(e);
-            const node = hit(p.x, p.y);
-            if (node?.kind === 'widget') {
-              const r = node.variable === undefined ? undefined : frame.rects[node.variable];
-              const ghost = r ? widgetGhost(frame, r, p.x - r.x, p.y - r.y) : undefined;
-              beginDrag({ kind: 'move', path: node.path, id: node.id }, e, undefined, ghost);
-            }
-          }}
-          onMouseMove={(e) => {
-            if (!drag || !document) {
-              return;
-            }
-            const p = point(e);
-            useDesigner.setState({ target: dropTarget(document, roots, frame, p.x, p.y, drag) });
-          }}
-          onMouseLeave={() => {
-            if (drag) {
-              useDesigner.setState({ target: undefined });
-            }
-          }}
-          onClick={(e) => {
-            const p = point(e);
-            select(hit(p.x, p.y)?.id ?? 'window');
-          }}
-          onDoubleClick={(e) => {
-            const p = point(e);
-            const node = hit(p.x, p.y) ?? findOutlineNode(roots, 'window');
-            if (!node?.class) {
-              return;
-            }
-            const event = defaultEventOf(node.class);
-            if (event === undefined) {
-              return;
-            }
-            // ハンドラが無ければ既定の名前で設定してから移動する
-            const events = (
-              valueAt(document, node.path) as { events?: Record<string, string> } | undefined
-            )?.events;
-            const handler =
-              events?.[event] ??
-              defaultHandlerName(node.kind === 'window' ? undefined : node.label, event);
-            if (events?.[event] === undefined) {
-              sendEdit({ kind: 'setEvent', target: node.path, event, handler });
-            }
-            postMessage({ type: 'goToHandler', handler });
-          }}
-        >
-          <canvas ref={ref} style={{ width, height }} />
-          {selectionRect && !drag && (
-            <div
-              className="selection"
-              style={{
-                left: selectionRect.x,
-                top: selectionRect.y,
-                width: selectionRect.width,
-                height: selectionRect.height,
-              }}
-            />
-          )}
-          {selectionRect && !drag && selected && (
-            <ResizeHandles node={selected} rect={selectionRect} />
-          )}
-          {target && (
-            <>
+        {/* 倍率は transform で掛け、スクロールの範囲は外側の大きさで合わせる */}
+        <div className="zoom-box" style={{ width: width * zoom, height: height * zoom }}>
+          <div
+            className="canvas-surface"
+            style={{ width, height, transform: `scale(${String(zoom)})`, transformOrigin: '0 0' }}
+            onMouseDown={(e) => {
+              // 部品を押したまま動かしたら、移すドラッグにする
+              if (e.button !== 0) {
+                return;
+              }
+              const p = point(e);
+              const node = hit(p.x, p.y);
+              if (node?.kind === 'widget') {
+                const r = node.variable === undefined ? undefined : frame.rects[node.variable];
+                const ghost = r ? widgetGhost(frame, r, p.x - r.x, p.y - r.y) : undefined;
+                beginDrag({ kind: 'move', path: node.path, id: node.id }, e, undefined, ghost);
+              }
+            }}
+            onMouseMove={(e) => {
+              if (!drag || !document) {
+                return;
+              }
+              const p = point(e);
+              useDesigner.setState({ target: dropTarget(document, roots, frame, p.x, p.y, drag) });
+            }}
+            onMouseLeave={() => {
+              if (drag) {
+                useDesigner.setState({ target: undefined });
+              }
+            }}
+            onClick={(e) => {
+              const p = point(e);
+              select(hit(p.x, p.y)?.id ?? 'window');
+            }}
+            onDoubleClick={(e) => {
+              const p = point(e);
+              const node = hit(p.x, p.y) ?? findOutlineNode(roots, 'window');
+              if (!node?.class) {
+                return;
+              }
+              const event = defaultEventOf(node.class);
+              if (event === undefined) {
+                return;
+              }
+              // ハンドラが無ければ既定の名前で設定してから移動する
+              const events = (
+                valueAt(document, node.path) as { events?: Record<string, string> } | undefined
+              )?.events;
+              const handler =
+                events?.[event] ??
+                defaultHandlerName(node.kind === 'window' ? undefined : node.label, event);
+              if (events?.[event] === undefined) {
+                sendEdit({ kind: 'setEvent', target: node.path, event, handler });
+              }
+              postMessage({ type: 'goToHandler', handler });
+            }}
+          >
+            <canvas ref={ref} style={{ width, height }} />
+            {selectionRect && !drag && (
               <div
-                className="drop-container"
+                className="selection"
                 style={{
-                  left: target.container.x,
-                  top: target.container.y,
-                  width: target.container.width,
-                  height: target.container.height,
+                  left: selectionRect.x,
+                  top: selectionRect.y,
+                  width: selectionRect.width,
+                  height: selectionRect.height,
                 }}
               />
-              <div
-                className={`drop-indicator ${target.indicator.shape}${target.slot ? '' : ' invalid'}`}
-                style={{
-                  left: target.indicator.x,
-                  top: target.indicator.y,
-                  width: target.indicator.width,
-                  height: target.indicator.height,
-                }}
-              />
-            </>
-          )}
+            )}
+            {selectionRect && !drag && selected && (
+              <ResizeHandles node={selected} rect={selectionRect} />
+            )}
+            {target && (
+              <>
+                <div
+                  className="drop-container"
+                  style={{
+                    left: target.container.x,
+                    top: target.container.y,
+                    width: target.container.width,
+                    height: target.container.height,
+                  }}
+                />
+                <div
+                  className={`drop-indicator ${target.indicator.shape}${target.slot ? '' : ' invalid'}`}
+                  style={{
+                    left: target.indicator.x,
+                    top: target.indicator.y,
+                    width: target.indicator.width,
+                    height: target.indicator.height,
+                  }}
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

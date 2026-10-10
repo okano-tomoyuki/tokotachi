@@ -32,11 +32,11 @@ describe('validateDocument', () => {
 
   it('名前の重複・識別子・予約の名前', () => {
     const doc = sampleCopy();
-    doc.actions[1].name = 'open_action';
+    doc.actions[1].name = 'action_open';
     // Window のメンバ
     doc.objects[0].name = 'close';
     items(doc)[0].widget.name = 'tokotachi_row';
-    // clear_recent_action が無くなるので、メニューの参照も見つからない
+    // action_clear_recent が無くなるので、メニューの参照も見つからない
     expect(codes(doc)).toEqual([
       'duplicate-name',
       'invalid-identifier',
@@ -47,8 +47,8 @@ describe('validateDocument', () => {
 
   it('一時的な変数の名前と重なる名前は使えない', () => {
     const doc = sampleCopy();
-    // search_row のレイアウトの一時的な変数
-    doc.objects[0].name = 'search_row_layout';
+    // row_search のレイアウトの一時的な変数
+    doc.objects[0].name = 'row_search_layout';
     const d = diagnostics(doc);
     expect(d.map((x) => x.code)).toEqual(['reserved-name']);
     expect(d[0]?.path).toEqual(['objects', 0, 'name']);
@@ -57,8 +57,8 @@ describe('validateDocument', () => {
   it('名前の書き方は警告', () => {
     const doc = sampleCopy();
     doc.window.name = 'main_window';
-    doc.actions[2].name = 'DetailsAction';
-    doc.window.menu_bar.menus[1].items[0].action = 'DetailsAction';
+    doc.actions[2].name = 'ActionDetails';
+    doc.window.menu_bar.menus[1].items[0].action = 'ActionDetails';
     const d = diagnostics(doc);
     expect(d.map((x) => [x.severity, x.code])).toEqual([
       ['warning', 'naming-style'],
@@ -125,7 +125,7 @@ describe('validateDocument', () => {
       'handler-signature-conflict',
     ]);
     const member = sampleCopy();
-    member.objects[0].events.on_timer = 'search_edit';
+    member.objects[0].events.on_timer = 'line_edit_search';
     expect(codes(member)).toEqual(['duplicate-name']);
   });
 

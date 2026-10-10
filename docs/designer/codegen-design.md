@@ -70,21 +70,21 @@ public:
     MainWindow();
 
     // <tokotachi-designer:begin id="declarations">
-    tokotachi::Widget* search_row;
-    tokotachi::LineEdit* search_edit;
-    tokotachi::Button* search_button;
-    tokotachi::Splitter* split;
-    tokotachi::TreeView* folder_tree;
-    tokotachi::ListView* file_list;
-    tokotachi::Menu* file_menu;
-    tokotachi::Action* open_action;
-    tokotachi::Action* quit_action;
+    tokotachi::Widget* row_search;
+    tokotachi::LineEdit* line_edit_search;
+    tokotachi::Button* button_search;
+    tokotachi::Splitter* splitter_main;
+    tokotachi::TreeView* tree_view_folders;
+    tokotachi::ListView* list_view_files;
+    tokotachi::Menu* menu_file;
+    tokotachi::Action* action_open;
+    tokotachi::Action* action_quit;
     tokotachi::Timer* autosave_timer;
 
     void main_window_close(tokotachi::Object* sender, bool& can_close);
-    void search_button_click(tokotachi::Object* sender);
-    void open_action_trigger(tokotachi::Object* sender);
-    void quit_action_trigger(tokotachi::Object* sender);
+    void button_search_click(tokotachi::Object* sender);
+    void action_open_trigger(tokotachi::Object* sender);
+    void action_quit_trigger(tokotachi::Object* sender);
     void autosave(tokotachi::Object* sender);
     // <tokotachi-designer:end id="declarations" hash="...">
 
@@ -120,14 +120,14 @@ MainWindow::MainWindow()
 // 部品を作り、プロパティを設定し、レイアウトに入れ、ハンドラをつなぐ(生成したコード)。
 void MainWindow::tokotachi_setup_ui()
 {
-    open_action = new tokotachi::Action(this);
-    open_action->text = "開く(&O)...";
-    open_action->shortcut = tokotachi::Shortcut("Ctrl+O");
-    open_action->on_trigger = [this](tokotachi::Object* sender) { open_action_trigger(sender); };
+    action_open = new tokotachi::Action(this);
+    action_open->text = "開く(&O)...";
+    action_open->shortcut = tokotachi::Shortcut("Ctrl+O");
+    action_open->on_trigger = [this](tokotachi::Object* sender) { action_open_trigger(sender); };
 
-    quit_action = new tokotachi::Action(this);
-    quit_action->text = "終了(&X)";
-    quit_action->on_trigger = [this](tokotachi::Object* sender) { quit_action_trigger(sender); };
+    action_quit = new tokotachi::Action(this);
+    action_quit->text = "終了(&X)";
+    action_quit->on_trigger = [this](tokotachi::Object* sender) { action_quit_trigger(sender); };
 
     autosave_timer = new tokotachi::Timer(this);
     autosave_timer->interval = 60000;
@@ -139,15 +139,15 @@ void MainWindow::tokotachi_setup_ui()
     on_close = [this](tokotachi::Object* sender, bool& can_close) { main_window_close(sender, can_close); };
 
     tokotachi::MenuBar* window_menu_bar = new tokotachi::MenuBar();
-    file_menu = window_menu_bar->add_menu("ファイル(&F)");
-    file_menu->add_action(open_action);
-    file_menu->add_separator();
-    file_menu->add_action(quit_action);
+    menu_file = window_menu_bar->add_menu("ファイル(&F)");
+    menu_file->add_action(action_open);
+    menu_file->add_separator();
+    menu_file->add_action(action_quit);
     menu_bar = window_menu_bar;
 
     tokotachi::ToolBar* window_tool_bar = new tokotachi::ToolBar();
     window_tool_bar->button_style = tokotachi::ToolButtonStyle::TEXT_BESIDE_ICON;
-    window_tool_bar->add_action(open_action);
+    window_tool_bar->add_action(action_open);
     tool_bar = window_tool_bar;
 
     status_bar = new tokotachi::StatusBar();
@@ -155,31 +155,31 @@ void MainWindow::tokotachi_setup_ui()
     tokotachi::BoxLayout* window_layout = new tokotachi::BoxLayout(this);
     window_layout->margins = tokotachi::Margins(12);
 
-    search_row = new tokotachi::Widget(this);
-    tokotachi::BoxLayout* search_row_layout = new tokotachi::BoxLayout(search_row);
-    search_row_layout->orientation = tokotachi::Orientation::HORIZONTAL;
+    row_search = new tokotachi::Widget(this);
+    tokotachi::BoxLayout* row_search_layout = new tokotachi::BoxLayout(row_search);
+    row_search_layout->orientation = tokotachi::Orientation::HORIZONTAL;
 
-    search_edit = new tokotachi::LineEdit(search_row);
-    search_edit->placeholder_text = "検索";
-    search_row_layout->add(search_edit, 1);
+    line_edit_search = new tokotachi::LineEdit(row_search);
+    line_edit_search->placeholder_text = "検索";
+    row_search_layout->add(line_edit_search, 1);
 
-    search_button = new tokotachi::Button(search_row);
-    search_button->text = "検索";
-    search_button->on_click = [this](tokotachi::Object* sender) { search_button_click(sender); };
-    search_row_layout->add(search_button);
+    button_search = new tokotachi::Button(row_search);
+    button_search->text = "検索";
+    button_search->on_click = [this](tokotachi::Object* sender) { button_search_click(sender); };
+    row_search_layout->add(button_search);
 
-    window_layout->add(search_row);
+    window_layout->add(row_search);
 
-    split = new tokotachi::Splitter(this);
+    splitter_main = new tokotachi::Splitter(this);
 
-    folder_tree = new tokotachi::TreeView(split);
-    split->add_widget(folder_tree, 0);
+    tree_view_folders = new tokotachi::TreeView(splitter_main);
+    splitter_main->add_widget(tree_view_folders, 0);
 
-    file_list = new tokotachi::ListView(split);
-    split->add_widget(file_list);
+    list_view_files = new tokotachi::ListView(splitter_main);
+    splitter_main->add_widget(list_view_files);
 
-    split->sizes = std::vector<float>{160, 360};
-    window_layout->add(split, 1);
+    splitter_main->sizes = std::vector<float>{160, 360};
+    window_layout->add(splitter_main, 1);
 }
 // <tokotachi-designer:end id="tokotachi_setup_ui" hash="...">
 
@@ -188,7 +188,7 @@ void MainWindow::main_window_close(tokotachi::Object* sender, bool& can_close)
 {
 }
 
-void MainWindow::search_button_click(tokotachi::Object* sender)
+void MainWindow::button_search_click(tokotachi::Object* sender)
 {
 }
 // ...

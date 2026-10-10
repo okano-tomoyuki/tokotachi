@@ -15,18 +15,18 @@ public:
     explicit SettingsDialog(tokotachi::Window* parent);
 
     // <tokotachi-designer:begin id="declarations">
-    tokotachi::Label* heading;
-    tokotachi::ScrollArea* scroll;
-    tokotachi::Widget* badge_area;
-    tokotachi::Label* badge;
-    tokotachi::CheckBox* corner_check;
-    tokotachi::Widget* free_area;
-    tokotachi::Slider* zoom_slider;
-    tokotachi::ProgressBar* zoom_bar;
+    tokotachi::Label* label_heading;
+    tokotachi::ScrollArea* scroll_area_badges;
+    tokotachi::Widget* area_badges;
+    tokotachi::Label* label_badge;
+    tokotachi::CheckBox* check_box_corner;
+    tokotachi::Widget* area_free;
+    tokotachi::Slider* slider_zoom;
+    tokotachi::ProgressBar* progress_bar_zoom;
 
     void settings_finish(tokotachi::Object* sender);
-    void zoom_change(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="c370c31d">
+    void slider_zoom_change(tokotachi::Object* sender);
+    // <tokotachi-designer:end id="declarations" hash="6e69fdc9">
 
 private:
     void tokotachi_setup_ui();

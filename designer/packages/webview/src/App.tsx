@@ -6,6 +6,8 @@ import { Tree } from './components/Tree.tsx';
 import { useEffect } from 'react';
 import { GhostView } from './components/GhostView.tsx';
 import { Palette } from './components/Palette.tsx';
+import { TreeToolbar } from './components/TreeToolbar.tsx';
+import { ZoomControl } from './components/ZoomControl.tsx';
 import { selectedNode, sendEdit, useDesigner } from './store.ts';
 import { postMessage } from './vscode.ts';
 
@@ -23,6 +25,10 @@ function canRemove(node: OutlineNode | undefined): boolean {
       'menu_bar',
       'tool_bar',
       'status_bar',
+      'menu',
+      'menu_item',
+      'separator',
+      'tool_item',
     ].includes(node.kind)
   );
 }
@@ -107,12 +113,14 @@ export function App() {
         >
           {l10n.t('Delete')}
         </button>
+        <ZoomControl />
         {editError !== undefined && <span className="edit-error">{editError}</span>}
       </div>
       <GhostView />
       <div className="panes">
         <div className="pane tree-pane">
           <Palette />
+          <TreeToolbar />
           <Tree />
         </div>
         <div className="pane canvas-pane">

@@ -17,7 +17,7 @@
       "items": [
         {
           "widget": {
-            "name": "heading",
+            "name": "label_heading",
             "class": "Label",
             "properties": {
               "text": "表示の設定",
@@ -30,14 +30,14 @@
         {
           "stretch": 1,
           "widget": {
-            "name": "scroll",
+            "name": "scroll_area_badges",
             "class": "ScrollArea",
             "properties": {
               "minimum_size": { "height": 120 },
               "fit_width": true
             },
             "content": {
-              "name": "badge_area",
+              "name": "area_badges",
               "class": "Widget",
               "properties": {
                 "minimum_size": { "width": 200, "height": 160 }
@@ -48,7 +48,7 @@
                   {
                     "placement": { "relative_x": 0.5, "relative_y": 0.5, "anchor": "CENTER" },
                     "widget": {
-                      "name": "badge",
+                      "name": "label_badge",
                       "class": "Label",
                       "properties": {
                         "text": "中央"
@@ -58,7 +58,7 @@
                   {
                     "placement": { "x": -8, "y": 8, "relative_x": 1, "anchor": "TOP_RIGHT" },
                     "widget": {
-                      "name": "corner_check",
+                      "name": "check_box_corner",
                       "class": "CheckBox",
                       "properties": {
                         "text": "右上"
@@ -72,14 +72,14 @@
         },
         {
           "widget": {
-            "name": "free_area",
+            "name": "area_free",
             "class": "Widget",
             "properties": {
               "minimum_size": { "height": 48 }
             },
             "children": [
               {
-                "name": "zoom_slider",
+                "name": "slider_zoom",
                 "class": "Slider",
                 "properties": {
                   "x": 0,
@@ -89,10 +89,10 @@
                   "maximum": 200,
                   "value": 100
                 },
-                "events": { "on_change": "zoom_change" }
+                "events": { "on_change": "slider_zoom_change" }
               },
               {
-                "name": "zoom_bar",
+                "name": "progress_bar_zoom",
                 "class": "ProgressBar",
                 "properties": {
                   "x": 216,

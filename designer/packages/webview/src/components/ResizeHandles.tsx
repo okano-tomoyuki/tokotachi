@@ -88,8 +88,9 @@ export function ResizeHandles({ node, rect }: { node: OutlineNode; rect: CanvasR
     const sx = e.clientX;
     const sy = e.clientY;
     let last = rect;
+    const zoom = useDesigner.getState().zoom;
     const move = (m: MouseEvent): void => {
-      last = resized(rect, edge, m.clientX - sx, m.clientY - sy);
+      last = resized(rect, edge, (m.clientX - sx) / zoom, (m.clientY - sy) / zoom);
       setPreview(last);
     };
     const up = (): void => {

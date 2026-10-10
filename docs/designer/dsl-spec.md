@@ -32,15 +32,15 @@
     "menu_bar": {
       "menus": [
         {
-          "name": "file_menu",
+          "name": "menu_file",
           "title": "ファイル(&F)",
-          "items": [{ "action": "open_action" }, { "separator": true }, { "action": "quit_action" }]
+          "items": [{ "action": "action_open" }, { "separator": true }, { "action": "action_quit" }]
         }
       ]
     },
     "tool_bar": {
       "properties": { "button_style": "TEXT_BESIDE_ICON" },
-      "items": [{ "action": "open_action" }]
+      "items": [{ "action": "action_open" }]
     },
     "status_bar": {},
     "layout": {
@@ -49,26 +49,26 @@
       "items": [
         {
           "widget": {
-            "name": "search_row",
+            "name": "row_search",
             "class": "Widget",
             "layout": {
               "class": "BoxLayout",
               "properties": { "orientation": "HORIZONTAL" },
               "items": [
-                { "widget": { "name": "search_edit", "class": "LineEdit", "properties": { "placeholder_text": "検索" } }, "stretch": 1 },
-                { "widget": { "name": "search_button", "class": "Button", "properties": { "text": "検索" }, "events": { "on_click": "search_button_click" } } }
+                { "widget": { "name": "line_edit_search", "class": "LineEdit", "properties": { "placeholder_text": "検索" } }, "stretch": 1 },
+                { "widget": { "name": "button_search", "class": "Button", "properties": { "text": "検索" }, "events": { "on_click": "button_search_click" } } }
               ]
             }
           }
         },
         {
           "widget": {
-            "name": "split",
+            "name": "splitter_main",
             "class": "Splitter",
             "properties": { "sizes": [160, 360] },
             "panes": [
-              { "properties": { "stretch": 0 }, "widget": { "name": "folder_tree", "class": "TreeView" } },
-              { "widget": { "name": "file_list", "class": "ListView" } }
+              { "properties": { "stretch": 0 }, "widget": { "name": "tree_view_folders", "class": "TreeView" } },
+              { "widget": { "name": "list_view_files", "class": "ListView" } }
             ]
           },
           "stretch": 1
@@ -78,11 +78,11 @@
   },
   "actions": [
     {
-      "name": "open_action",
+      "name": "action_open",
       "properties": { "text": "開く(&O)...", "shortcut": "Ctrl+O" },
-      "events": { "on_trigger": "open_action_trigger" }
+      "events": { "on_trigger": "action_open_trigger" }
     },
-    { "name": "quit_action", "properties": { "text": "終了(&X)" }, "events": { "on_trigger": "quit_action_trigger" } }
+    { "name": "action_quit", "properties": { "text": "終了(&X)" }, "events": { "on_trigger": "action_quit_trigger" } }
   ],
   "objects": [
     { "name": "autosave_timer", "class": "Timer", "properties": { "interval": 60000 }, "events": { "on_timer": "autosave" } }
@@ -141,7 +141,7 @@
 | `panes` | | 区画のノードの配列 | `Splitter` だけ。`{ "name"?, "properties": { "stretch": 0, "collapsible": true }, "widget": 部品のノード }`(`add_widget`) |
 | `content` | | 部品のノード | `ScrollArea` だけ(`ScrollArea::content`) |
 
-- 子を持つ部品を組むには、ふつう `class` を `Widget` にしてレイアウトを書く(上の例の `search_row`)。
+- 子を持つ部品を組むには、ふつう `class` を `Widget` にしてレイアウトを書く(上の例の `row_search`)。
 - 配列の順が生成の順になる。フォーカスを Tab キーで移す順にも影響する。
 
 ### 4.3 レイアウトのノード
@@ -222,7 +222,7 @@
 | `Shortcut` | 表記の文字列(`Shortcut(const char*)` と同じ) | `"Ctrl+S"` |
 | `std::vector<std::string>` | 文字列の配列 | `["小", "中", "大"]` |
 | `std::vector<float>` | 数値の配列 | `[160, 360]` |
-| 部品・Action・メニューへのポインタ | 同じファイルのノードの `name` | `"open_action"` |
+| 部品・Action・メニューへのポインタ | 同じファイルのノードの `name` | `"action_open"` |
 | `Image` | §10 Q4 | |
 
 - **位置と大きさは書かない**(レイアウトが決める)。自由な配置(§4.4)の子と、ウィンドウの `width`・`height` だけが例外。
@@ -232,7 +232,7 @@
 
 `events` のキーは Tokotachi のハンドラのプロパティの名前(`on_click` 等)、値は生成するクラスのメンバ関数の名前(識別子)。
 
-- メンバ関数の引数は、ハンドラの型(カタログ)で決まる。`NotifyHandler` なら `void search_button_click(tokotachi::Object* sender);`、
+- メンバ関数の引数は、ハンドラの型(カタログ)で決まる。`NotifyHandler` なら `void button_search_click(tokotachi::Object* sender);`、
   `CloseHandler` なら `void main_window_close(tokotachi::Object* sender, bool& can_close);`。
 - 同じメンバ関数を複数のハンドラに書ける。ただし、ハンドラの型が同じでなければならない。
 - メンバ関数の名前は、ノードの `name` と衝突してはならない。

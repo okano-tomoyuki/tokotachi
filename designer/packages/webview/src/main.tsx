@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 import { handleMessage, selectedNode, useDesigner } from './store.ts';
-import { onMessage, postMessage } from './vscode.ts';
+import { loadState, onMessage, postMessage, saveState } from './vscode.ts';
 import './style.css';
 
 const container = document.getElementById('root');
@@ -18,6 +18,17 @@ configureL10n(
 );
 
 onMessage(handleMessage);
+
+// 倍率は Webview の状態に保存し、開き直したときに戻す
+const { zoom } = loadState();
+if (typeof zoom === 'number' && zoom >= 0.5 && zoom <= 2) {
+  useDesigner.setState({ zoom });
+}
+useDesigner.subscribe((state, previous) => {
+  if (state.zoom !== previous.zoom) {
+    saveState({ ...loadState(), zoom: state.zoom });
+  }
+});
 
 // 選んだ部品が入っているタブを、キャンバスで表示する(定義ファイルは変えない)
 let lastTabs = '{}';

@@ -25,77 +25,77 @@ void SettingsDialog::tokotachi_setup_ui()
     window_layout->margins = tokotachi::Margins(16);
     window_layout->spacing = 12;
 
-    heading = new tokotachi::Label(this);
-    heading->text = "表示の設定";
-    heading->font = tokotachi::Font(18);
-    heading->color = tokotachi::Color(0x33, 0x66, 0xCC);
-    window_layout->add(heading);
+    label_heading = new tokotachi::Label(this);
+    label_heading->text = "表示の設定";
+    label_heading->font = tokotachi::Font(18);
+    label_heading->color = tokotachi::Color(0x33, 0x66, 0xCC);
+    window_layout->add(label_heading);
 
     window_layout->add_spacing(4);
 
-    scroll = new tokotachi::ScrollArea(this);
-    scroll->minimum_size = tokotachi::Size(0, 120);
-    scroll->fit_width = true;
+    scroll_area_badges = new tokotachi::ScrollArea(this);
+    scroll_area_badges->minimum_size = tokotachi::Size(0, 120);
+    scroll_area_badges->fit_width = true;
 
-    badge_area = new tokotachi::Widget(scroll);
-    badge_area->minimum_size = tokotachi::Size(200, 160);
-    tokotachi::PlaceLayout* badge_area_layout = new tokotachi::PlaceLayout(badge_area);
+    area_badges = new tokotachi::Widget(scroll_area_badges);
+    area_badges->minimum_size = tokotachi::Size(200, 160);
+    tokotachi::PlaceLayout* area_badges_layout = new tokotachi::PlaceLayout(area_badges);
 
-    badge = new tokotachi::Label(badge_area);
-    badge->text = "中央";
+    label_badge = new tokotachi::Label(area_badges);
+    label_badge->text = "中央";
     {
         tokotachi::Placement placement;
         placement.relative_x = 0.5f;
         placement.relative_y = 0.5f;
         placement.anchor = tokotachi::Anchor::CENTER;
-        badge_area_layout->add(badge, placement);
+        area_badges_layout->add(label_badge, placement);
     }
 
-    corner_check = new tokotachi::CheckBox(badge_area);
-    corner_check->text = "右上";
+    check_box_corner = new tokotachi::CheckBox(area_badges);
+    check_box_corner->text = "右上";
     {
         tokotachi::Placement placement;
         placement.x = -8;
         placement.y = 8;
         placement.relative_x = 1;
         placement.anchor = tokotachi::Anchor::TOP_RIGHT;
-        badge_area_layout->add(corner_check, placement);
+        area_badges_layout->add(check_box_corner, placement);
     }
 
-    scroll->content = badge_area;
+    scroll_area_badges->content = area_badges;
 
-    window_layout->add(scroll, 1);
+    window_layout->add(scroll_area_badges, 1);
 
-    free_area = new tokotachi::Widget(this);
-    free_area->minimum_size = tokotachi::Size(0, 48);
+    area_free = new tokotachi::Widget(this);
+    area_free->minimum_size = tokotachi::Size(0, 48);
 
-    zoom_slider = new tokotachi::Slider(free_area);
-    zoom_slider->x = 0;
-    zoom_slider->y = 8;
-    zoom_slider->width = 200;
-    zoom_slider->height = 32;
-    zoom_slider->maximum = 200;
-    zoom_slider->value = 100;
-    zoom_slider->on_change = [this](tokotachi::Object* sender) { zoom_change(sender); };
+    slider_zoom = new tokotachi::Slider(area_free);
+    slider_zoom->x = 0;
+    slider_zoom->y = 8;
+    slider_zoom->width = 200;
+    slider_zoom->height = 32;
+    slider_zoom->maximum = 200;
+    slider_zoom->value = 100;
+    slider_zoom->on_change = [this](tokotachi::Object* sender) { slider_zoom_change(sender); };
 
-    zoom_bar = new tokotachi::ProgressBar(free_area);
-    zoom_bar->x = 216;
-    zoom_bar->y = 16;
-    zoom_bar->width = 160;
-    zoom_bar->height = 16;
-    zoom_bar->maximum = 200;
-    zoom_bar->value = 100;
+    progress_bar_zoom = new tokotachi::ProgressBar(area_free);
+    progress_bar_zoom->x = 216;
+    progress_bar_zoom->y = 16;
+    progress_bar_zoom->width = 160;
+    progress_bar_zoom->height = 16;
+    progress_bar_zoom->maximum = 200;
+    progress_bar_zoom->value = 100;
 
-    window_layout->add(free_area);
+    window_layout->add(area_free);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="fa6eb65c">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="86f2fb91">
 
 // <tokotachi-designer:handler-stubs>
 void SettingsDialog::settings_finish(tokotachi::Object* sender)
 {
 }
 
-void SettingsDialog::zoom_change(tokotachi::Object* sender)
+void SettingsDialog::slider_zoom_change(tokotachi::Object* sender)
 {
 }
 

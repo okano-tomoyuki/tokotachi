@@ -368,3 +368,19 @@ textarea.invalid {
   outline: 1px dashed var(--vscode-focusBorder);
   background: rgba(127, 127, 127, 0.15);
 }
+
+.tree-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.tree-toolbar button {
+  padding: 1px 6px;
+}
+
+.zoom {
+  margin-left: auto;
+}

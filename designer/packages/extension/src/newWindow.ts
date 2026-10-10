@@ -33,7 +33,7 @@ export function newWindowDocument(name: string): TtuiDocument {
         items: [
           {
             widget: {
-              name: 'message_label',
+              name: 'label_message',
               class: 'Label',
               properties: { text: 'Hello, Tokotachi' },
             },

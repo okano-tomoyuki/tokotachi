@@ -61,10 +61,10 @@ describe('applyCommand', () => {
       kind: 'setEvent',
       target: SEARCH_BUTTON,
       event: 'on_click',
-      handler: 'search_button_click',
+      handler: 'button_search_click',
     });
     expect(doc.window.layout.items[0].widget.layout.items[1].widget.events).toEqual({
-      on_click: 'search_button_click',
+      on_click: 'button_search_click',
     });
     const removed = apply({
       kind: 'setEvent',
@@ -83,8 +83,13 @@ describe('applyCommand', () => {
       }),
     ).toContain('CloseHandler');
     expect(
-      error({ kind: 'setEvent', target: SEARCH_BUTTON, event: 'on_click', handler: 'search_edit' }),
-    ).toContain('search_edit');
+      error({
+        kind: 'setEvent',
+        target: SEARCH_BUTTON,
+        event: 'on_click',
+        handler: 'line_edit_search',
+      }),
+    ).toContain('line_edit_search');
     expect(
       error({ kind: 'setEvent', target: SEARCH_BUTTON, event: 'on_nothing', handler: 'x' }),
     ).toContain('on_nothing');
@@ -99,8 +104,8 @@ describe('applyCommand', () => {
     expect(quit.window.layout.items[2].widget.layout.items[2].widget.actions).toEqual([
       'exit_action',
     ]);
-    expect(error({ kind: 'rename', target: SEARCH_BUTTON, name: 'search_edit' })).toContain(
-      'search_edit',
+    expect(error({ kind: 'rename', target: SEARCH_BUTTON, name: 'line_edit_search' })).toContain(
+      'line_edit_search',
     );
     expect(error({ kind: 'rename', target: SEARCH_BUTTON, name: 'close' })).toContain('close');
     expect(apply({ kind: 'rename', target: ['window'], name: 'FileWindow' }).window.name).toBe(
@@ -126,7 +131,7 @@ describe('applyCommand', () => {
   });
 
   it('ハンドラの既定の名前', () => {
-    expect(defaultHandlerName('search_button', 'on_click')).toBe('search_button_click');
+    expect(defaultHandlerName('button_search', 'on_click')).toBe('button_search_click');
     expect(defaultHandlerName(undefined, 'on_close')).toBe('window_close');
   });
 });

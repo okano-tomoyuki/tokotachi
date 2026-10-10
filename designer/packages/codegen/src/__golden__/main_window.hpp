@@ -15,40 +15,40 @@ public:
     MainWindow();
 
     // <tokotachi-designer:begin id="declarations">
-    tokotachi::Action* open_action;
-    tokotachi::Action* clear_recent_action;
-    tokotachi::Action* details_action;
-    tokotachi::Action* quit_action;
-    tokotachi::Timer* refresh_timer;
-    tokotachi::Menu* file_menu;
-    tokotachi::ComboBox* view_combo;
-    tokotachi::Label* count_label;
-    tokotachi::Widget* search_row;
-    tokotachi::LineEdit* search_edit;
-    tokotachi::Button* search_button;
-    tokotachi::Splitter* split;
-    tokotachi::TreeView* folder_tree;
-    tokotachi::TabWidget* tabs;
-    tokotachi::Tab* detail_tab;
-    tokotachi::ListView* file_list;
-    tokotachi::Widget* detail_page;
-    tokotachi::Label* name_label;
-    tokotachi::LineEdit* name_edit;
-    tokotachi::Label* size_label;
-    tokotachi::SpinBox* size_spin;
-    tokotachi::Widget* button_row;
-    tokotachi::CheckBox* hidden_check;
-    tokotachi::Button* close_button;
+    tokotachi::Action* action_open;
+    tokotachi::Action* action_clear_recent;
+    tokotachi::Action* action_details;
+    tokotachi::Action* action_quit;
+    tokotachi::Timer* timer_refresh;
+    tokotachi::Menu* menu_file;
+    tokotachi::ComboBox* combo_box_view;
+    tokotachi::Label* label_count;
+    tokotachi::Widget* row_search;
+    tokotachi::LineEdit* line_edit_search;
+    tokotachi::Button* button_search;
+    tokotachi::Splitter* splitter_main;
+    tokotachi::TreeView* tree_view_folders;
+    tokotachi::TabWidget* tab_widget_files;
+    tokotachi::Tab* tab_detail;
+    tokotachi::ListView* list_view_files;
+    tokotachi::Widget* page_detail;
+    tokotachi::Label* label_name;
+    tokotachi::LineEdit* line_edit_name;
+    tokotachi::Label* label_size;
+    tokotachi::SpinBox* spin_box_size;
+    tokotachi::Widget* row_buttons;
+    tokotachi::CheckBox* check_box_hidden;
+    tokotachi::Button* button_close;
 
-    void open_action_trigger(tokotachi::Object* sender);
-    void quit_action_trigger(tokotachi::Object* sender);
+    void action_open_trigger(tokotachi::Object* sender);
+    void action_quit_trigger(tokotachi::Object* sender);
     void refresh(tokotachi::Object* sender);
     void main_window_close(tokotachi::Object* sender, bool& can_close);
     void search(tokotachi::Object* sender);
-    void tabs_change(tokotachi::Object* sender);
-    void file_list_activate(tokotachi::Object* sender);
-    void close_button_click(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="1c7f8e2e">
+    void tab_widget_files_change(tokotachi::Object* sender);
+    void list_view_files_activate(tokotachi::Object* sender);
+    void button_close_click(tokotachi::Object* sender);
+    // <tokotachi-designer:end id="declarations" hash="de275751">
 
 private:
     void tokotachi_setup_ui();

@@ -62,7 +62,7 @@ describe('generateCpp', () => {
     const out = text(r, 'main_window.cpp');
     expect(out).toContain('#include <cstdio>\n');
     expect(out).toContain('    std::puts("search");\n');
-    expect(out).toContain('search_button->text = "探す";');
+    expect(out).toContain('button_search->text = "探す";');
     expect(out).toContain(
       '// <tokotachi-designer:handler-stubs>\n\nvoid MainWindow::clear_recent(tokotachi::Object* sender)\n{\n}\n',
     );
@@ -74,12 +74,12 @@ describe('generateCpp', () => {
 
   it('区間の中を手で変えたことに気づく(整形の違いは除く)', () => {
     const reformatted = lf(goldenCpp).replace(
-      '    open_action = new tokotachi::Action(this);',
-      '    open_action =\n        new tokotachi::Action(this);',
+      '    action_open = new tokotachi::Action(this);',
+      '    action_open =\n        new tokotachi::Action(this);',
     );
     const edited = lf(goldenCpp).replace(
-      '    open_action->text',
-      '    // 手で足した行\n    open_action->text',
+      '    action_open->text',
+      '    // 手で足した行\n    action_open->text',
     );
     const read = (cpp: string) => (path: string) =>
       path === 'main_window.cpp' ? cpp : lf(goldenHpp);
@@ -106,7 +106,7 @@ describe('generateCpp', () => {
   it('定義ファイルから消えた名前が区間の外で使われていれば警告する', () => {
     const cpp = lf(goldenCpp).replace(
       'void MainWindow::search(tokotachi::Object* sender)\n{\n}',
-      'void MainWindow::search(tokotachi::Object* sender)\n{\n    search_edit->text = "";\n}',
+      'void MainWindow::search(tokotachi::Object* sender)\n{\n    line_edit_search->text = "";\n}',
     );
     const doc = mainWindowCopy();
     doc.window.layout.items[0].widget.layout.items[0].widget.name = 'query_edit';
@@ -114,7 +114,7 @@ describe('generateCpp', () => {
       path === 'main_window.cpp' ? cpp : lf(goldenHpp),
     );
     expect(r.warnings).toHaveLength(1);
-    expect(r.warnings[0]).toContain('search_edit');
+    expect(r.warnings[0]).toContain('line_edit_search');
   });
 
   it('名前空間・フォルダ・インクルードガードの接頭辞・コメントの言語', () => {

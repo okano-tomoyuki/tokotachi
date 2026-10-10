@@ -5,37 +5,37 @@ import { namedNodes, temporaryNames, widgets } from './tree.ts';
 describe('tree', () => {
   it('部品を木の順(ツールバー・ステータスバー・中身)に並べる', () => {
     expect(widgets(SAMPLE).map((w) => w.node.name)).toEqual([
-      'view_combo',
-      'count_label',
-      'search_row',
-      'search_edit',
-      'search_button',
-      'split',
-      'folder_tree',
-      'tabs',
-      'file_list',
-      'detail_page',
-      'name_label',
-      'name_edit',
-      'size_label',
-      'size_spin',
-      'button_row',
-      'hidden_check',
-      'close_button',
+      'combo_box_view',
+      'label_count',
+      'row_search',
+      'line_edit_search',
+      'button_search',
+      'splitter_main',
+      'tree_view_folders',
+      'tab_widget_files',
+      'list_view_files',
+      'page_detail',
+      'label_name',
+      'line_edit_name',
+      'label_size',
+      'spin_box_size',
+      'row_buttons',
+      'check_box_hidden',
+      'button_close',
     ]);
   });
 
   it('名前を持つノード', () => {
     const names = namedNodes(SAMPLE).map((n) => `${n.kind}:${n.name}`);
     expect(names.slice(0, 6)).toEqual([
-      'action:open_action',
-      'action:clear_recent_action',
-      'action:details_action',
-      'action:quit_action',
-      'object:refresh_timer',
-      'menu:file_menu',
+      'action:action_open',
+      'action:action_clear_recent',
+      'action:action_details',
+      'action:action_quit',
+      'object:timer_refresh',
+      'menu:menu_file',
     ]);
-    expect(names).toContain('tab:detail_tab');
+    expect(names).toContain('tab:tab_detail');
   });
 
   it('一時的な変数の名前', () => {
@@ -43,15 +43,15 @@ describe('tree', () => {
       'window_menu_bar',
       'window_tool_bar',
       'window_status_bar',
-      'file_menu_menu_2',
+      'menu_file_menu_2',
       'window_menu_bar_menu_2',
       'window_layout',
-      'search_row_layout',
-      'detail_page_layout',
-      'button_row_layout',
-      'split_pane_1',
-      'split_pane_2',
-      'tabs_tab_1',
+      'row_search_layout',
+      'page_detail_layout',
+      'row_buttons_layout',
+      'splitter_main_pane_1',
+      'splitter_main_pane_2',
+      'tab_widget_files_tab_1',
     ]);
   });
 });

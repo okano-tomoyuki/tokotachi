@@ -4,6 +4,7 @@
 import {
   defaultHandlerName,
   findClass,
+  flattenOutline,
   l10n,
   type OutlineNode,
   type Properties,
@@ -16,6 +17,7 @@ import { PropertyField } from './PropertyField.tsx';
 
 interface NodeJson {
   readonly name?: string;
+  readonly title?: string;
   readonly properties?: Properties;
   readonly events?: Readonly<Record<string, string>>;
 }
@@ -126,22 +128,11 @@ function HandlerField({
   );
 }
 
-export function Inspector() {
-  const node = useDesigner(selectedNode);
-  // ドキュメントが変わったら描き直す
-  useDesigner((s) => s.version);
+/** ノードの名前・レイアウトの欄・プロパティ・ハンドラ。 */
+function NodeEditor({ node }: { node: OutlineNode }) {
   const [tab, setTab] = useState<'properties' | 'events'>('properties');
-  if (node?.kind === 'spacer') {
-    return (
-      <div className="inspector">
-        <LayoutSection node={node} />
-      </div>
-    );
-  }
-  if (!node?.editable || node.class === undefined) {
-    return (
-      <div className="inspector-empty">{l10n.t('Select a widget to edit its properties.')}</div>
-    );
+  if (node.class === undefined) {
+    return null;
   }
   const info = findClass(node.class);
   const json = nodeJson(node.path);
@@ -153,7 +144,7 @@ export function Inspector() {
   );
   const handlers = Object.entries(info.handlers);
   return (
-    <div className="inspector">
+    <>
       <div className="inspector-head">
         <span className="inspector-class">{node.class}</span>
         {json.name !== undefined && <NameField node={node} name={json.name} />}
@@ -219,6 +210,96 @@ export function Inspector() {
           </tbody>
         </table>
       )}
-    </div>
+    </>
   );
+}
+
+/** メニュー: 名前(省略できる)と見出し。 */
+function MenuEditor({ node }: { node: OutlineNode }) {
+  const json = nodeJson(node.path);
+  return (
+    <>
+      <div className="inspector-head">
+        <span className="inspector-class">Menu</span>
+        <NameField node={node} name={json?.name ?? ''} />
+      </div>
+      <table className="grid">
+        <tbody>
+          <tr>
+            <th className="set">title</th>
+            <td>
+              <PropertyField
+                name="title"
+                info={{ type: 'string', declared_in: 'Menu', editor: 'mnemonic' }}
+                value={json?.title ?? ''}
+                onCommit={(v) => {
+                  sendEdit({
+                    kind: 'setMenuTitle',
+                    target: node.path,
+                    title: typeof v === 'string' ? v : '',
+                  });
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+/** メニュー・ツールバーの項目: 参照する Action を選び、その Action を編集する。 */
+function EntryEditor({ node }: { node: OutlineNode }) {
+  const outline = useDesigner((s) => s.outline);
+  const document = useDesigner((s) => s.document);
+  const action = (nodeJson(node.path) as { action?: string } | undefined)?.action ?? '';
+  const target = flattenOutline(outline).find((n) => n.kind === 'action' && n.label === action);
+  return (
+    <>
+      <table className="grid">
+        <tbody>
+          <tr>
+            <th className="set">action</th>
+            <td>
+              <select
+                value={action}
+                onChange={(e) => {
+                  sendEdit({ kind: 'setEntryAction', target: node.path, action: e.target.value });
+                }}
+              >
+                {(document?.actions ?? []).map((a) => (
+                  <option key={a.name} value={a.name}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      {target && <NodeEditor node={target} />}
+    </>
+  );
+}
+
+export function Inspector() {
+  const node = useDesigner(selectedNode);
+  // ドキュメントが変わったら描き直す
+  useDesigner((s) => s.version);
+  let content;
+  if (node?.kind === 'spacer') {
+    content = <LayoutSection node={node} />;
+  } else if (node?.kind === 'menu') {
+    content = <MenuEditor node={node} />;
+  } else if (node?.kind === 'menu_item' || node?.kind === 'tool_item') {
+    content = <EntryEditor node={node} />;
+  } else if (node?.editable && node.class !== undefined) {
+    // 選んだノードが変わったら、タブを最初に戻す
+    content = <NodeEditor key={node.id} node={node} />;
+  } else {
+    return (
+      <div className="inspector-empty">{l10n.t('Select a widget to edit its properties.')}</div>
+    );
+  }
+  return <div className="inspector">{content}</div>;
 }

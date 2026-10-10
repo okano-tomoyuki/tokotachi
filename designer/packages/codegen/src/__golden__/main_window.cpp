@@ -15,27 +15,27 @@ MainWindow::MainWindow()
 // Creates the widgets, sets their properties, adds them to the layouts and connects the handlers (generated).
 void MainWindow::tokotachi_setup_ui()
 {
-    open_action = new tokotachi::Action(this);
-    open_action->text = "開く(&O)...";
-    open_action->shortcut = tokotachi::Shortcut("Ctrl+O");
-    open_action->on_trigger = [this](tokotachi::Object* sender) { open_action_trigger(sender); };
+    action_open = new tokotachi::Action(this);
+    action_open->text = "開く(&O)...";
+    action_open->shortcut = tokotachi::Shortcut("Ctrl+O");
+    action_open->on_trigger = [this](tokotachi::Object* sender) { action_open_trigger(sender); };
 
-    clear_recent_action = new tokotachi::Action(this);
-    clear_recent_action->text = "一覧を消す(&C)";
+    action_clear_recent = new tokotachi::Action(this);
+    action_clear_recent->text = "一覧を消す(&C)";
 
-    details_action = new tokotachi::Action(this);
-    details_action->text = "詳細を表示(&D)";
-    details_action->checkable = true;
-    details_action->checked = true;
+    action_details = new tokotachi::Action(this);
+    action_details->text = "詳細を表示(&D)";
+    action_details->checkable = true;
+    action_details->checked = true;
 
-    quit_action = new tokotachi::Action(this);
-    quit_action->text = "終了(&X)";
-    quit_action->shortcut = tokotachi::Shortcut("Ctrl+Q");
-    quit_action->on_trigger = [this](tokotachi::Object* sender) { quit_action_trigger(sender); };
+    action_quit = new tokotachi::Action(this);
+    action_quit->text = "終了(&X)";
+    action_quit->shortcut = tokotachi::Shortcut("Ctrl+Q");
+    action_quit->on_trigger = [this](tokotachi::Object* sender) { action_quit_trigger(sender); };
 
-    refresh_timer = new tokotachi::Timer(this);
-    refresh_timer->interval = 5000;
-    refresh_timer->on_timer = [this](tokotachi::Object* sender) { refresh(sender); };
+    timer_refresh = new tokotachi::Timer(this);
+    timer_refresh->interval = 5000;
+    timer_refresh->on_timer = [this](tokotachi::Object* sender) { refresh(sender); };
 
     width = 720;
     height = 480;
@@ -43,124 +43,124 @@ void MainWindow::tokotachi_setup_ui()
     on_close = [this](tokotachi::Object* sender, bool& can_close) { main_window_close(sender, can_close); };
 
     tokotachi::MenuBar* window_menu_bar = new tokotachi::MenuBar();
-    file_menu = window_menu_bar->add_menu("ファイル(&F)");
-    file_menu->add_action(open_action);
-    tokotachi::Menu* file_menu_menu_2 = file_menu->add_submenu("最近使ったファイル(&R)");
-    file_menu_menu_2->add_action(clear_recent_action);
-    file_menu->add_separator();
-    file_menu->add_action(quit_action);
+    menu_file = window_menu_bar->add_menu("ファイル(&F)");
+    menu_file->add_action(action_open);
+    tokotachi::Menu* menu_file_menu_2 = menu_file->add_submenu("最近使ったファイル(&R)");
+    menu_file_menu_2->add_action(action_clear_recent);
+    menu_file->add_separator();
+    menu_file->add_action(action_quit);
     tokotachi::Menu* window_menu_bar_menu_2 = window_menu_bar->add_menu("表示(&V)");
-    window_menu_bar_menu_2->add_action(details_action);
+    window_menu_bar_menu_2->add_action(action_details);
     menu_bar = window_menu_bar;
 
     tokotachi::ToolBar* window_tool_bar = new tokotachi::ToolBar();
     window_tool_bar->button_style = tokotachi::ToolButtonStyle::TEXT_BESIDE_ICON;
-    window_tool_bar->add_action(open_action);
+    window_tool_bar->add_action(action_open);
     window_tool_bar->add_separator();
-    view_combo = new tokotachi::ComboBox(window_tool_bar);
-    view_combo->items = std::vector<std::string>{"一覧", "詳細"};
-    view_combo->current_index = 0;
-    window_tool_bar->add_widget(view_combo);
+    combo_box_view = new tokotachi::ComboBox(window_tool_bar);
+    combo_box_view->items = std::vector<std::string>{"一覧", "詳細"};
+    combo_box_view->current_index = 0;
+    window_tool_bar->add_widget(combo_box_view);
     tool_bar = window_tool_bar;
 
     tokotachi::StatusBar* window_status_bar = new tokotachi::StatusBar();
     window_status_bar->text = "準備ができました";
-    count_label = new tokotachi::Label(window_status_bar);
-    count_label->text = "0 件";
-    window_status_bar->add_widget(count_label);
+    label_count = new tokotachi::Label(window_status_bar);
+    label_count->text = "0 件";
+    window_status_bar->add_widget(label_count);
     status_bar = window_status_bar;
 
     tokotachi::BoxLayout* window_layout = new tokotachi::BoxLayout(this);
     window_layout->margins = tokotachi::Margins(12);
 
-    search_row = new tokotachi::Widget(this);
-    tokotachi::BoxLayout* search_row_layout = new tokotachi::BoxLayout(search_row);
-    search_row_layout->orientation = tokotachi::Orientation::HORIZONTAL;
+    row_search = new tokotachi::Widget(this);
+    tokotachi::BoxLayout* row_search_layout = new tokotachi::BoxLayout(row_search);
+    row_search_layout->orientation = tokotachi::Orientation::HORIZONTAL;
 
-    search_edit = new tokotachi::LineEdit(search_row);
-    search_edit->placeholder_text = "検索する言葉";
-    search_edit->on_submit = [this](tokotachi::Object* sender) { search(sender); };
-    search_row_layout->add(search_edit, 1);
+    line_edit_search = new tokotachi::LineEdit(row_search);
+    line_edit_search->placeholder_text = "検索する言葉";
+    line_edit_search->on_submit = [this](tokotachi::Object* sender) { search(sender); };
+    row_search_layout->add(line_edit_search, 1);
 
-    search_button = new tokotachi::Button(search_row);
-    search_button->text = "検索";
-    search_button->on_click = [this](tokotachi::Object* sender) { search(sender); };
-    search_row_layout->add(search_button);
+    button_search = new tokotachi::Button(row_search);
+    button_search->text = "検索";
+    button_search->on_click = [this](tokotachi::Object* sender) { search(sender); };
+    row_search_layout->add(button_search);
 
-    window_layout->add(search_row);
+    window_layout->add(row_search);
 
-    split = new tokotachi::Splitter(this);
+    splitter_main = new tokotachi::Splitter(this);
 
-    folder_tree = new tokotachi::TreeView(split);
-    tokotachi::SplitterPane* split_pane_1 = split->add_widget(folder_tree, 0);
-    split_pane_1->collapsible = true;
+    tree_view_folders = new tokotachi::TreeView(splitter_main);
+    tokotachi::SplitterPane* splitter_main_pane_1 = splitter_main->add_widget(tree_view_folders, 0);
+    splitter_main_pane_1->collapsible = true;
 
-    tabs = new tokotachi::TabWidget(split);
-    tabs->on_change = [this](tokotachi::Object* sender) { tabs_change(sender); };
+    tab_widget_files = new tokotachi::TabWidget(splitter_main);
+    tab_widget_files->on_change = [this](tokotachi::Object* sender) { tab_widget_files_change(sender); };
 
-    file_list = new tokotachi::ListView(tabs);
-    file_list->sorting_enabled = true;
-    file_list->selection_mode = tokotachi::SelectionMode::MULTI;
-    file_list->on_activate = [this](tokotachi::Object* sender) { file_list_activate(sender); };
-    tabs->add_tab(file_list, "ファイル");
+    list_view_files = new tokotachi::ListView(tab_widget_files);
+    list_view_files->sorting_enabled = true;
+    list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+    list_view_files->on_activate = [this](tokotachi::Object* sender) { list_view_files_activate(sender); };
+    tab_widget_files->add_tab(list_view_files, "ファイル");
 
-    detail_page = new tokotachi::Widget(tabs);
-    tokotachi::GridLayout* detail_page_layout = new tokotachi::GridLayout(detail_page);
-    detail_page_layout->margins = tokotachi::Margins(8, 8, 8, 8);
-    detail_page_layout->set_column_stretch(1, 1);
+    page_detail = new tokotachi::Widget(tab_widget_files);
+    tokotachi::GridLayout* page_detail_layout = new tokotachi::GridLayout(page_detail);
+    page_detail_layout->margins = tokotachi::Margins(8, 8, 8, 8);
+    page_detail_layout->set_column_stretch(1, 1);
 
-    name_label = new tokotachi::Label(detail_page);
-    name_label->text = "名前";
-    detail_page_layout->add(name_label, 0, 0);
+    label_name = new tokotachi::Label(page_detail);
+    label_name->text = "名前";
+    page_detail_layout->add(label_name, 0, 0);
 
-    name_edit = new tokotachi::LineEdit(detail_page);
-    detail_page_layout->add(name_edit, 0, 1);
+    line_edit_name = new tokotachi::LineEdit(page_detail);
+    page_detail_layout->add(line_edit_name, 0, 1);
 
-    size_label = new tokotachi::Label(detail_page);
-    size_label->text = "大きさ";
-    size_label->color = tokotachi::ColorRole::TEXT_SECONDARY;
-    detail_page_layout->add(size_label, 1, 0);
+    label_size = new tokotachi::Label(page_detail);
+    label_size->text = "大きさ";
+    label_size->color = tokotachi::ColorRole::TEXT_SECONDARY;
+    page_detail_layout->add(label_size, 1, 0);
 
-    size_spin = new tokotachi::SpinBox(detail_page);
-    size_spin->maximum = 1000;
-    size_spin->value = 10;
-    detail_page_layout->add(size_spin, 1, 1, 1, 1, tokotachi::Align::START);
+    spin_box_size = new tokotachi::SpinBox(page_detail);
+    spin_box_size->maximum = 1000;
+    spin_box_size->value = 10;
+    page_detail_layout->add(spin_box_size, 1, 1, 1, 1, tokotachi::Align::START);
 
-    detail_tab = tabs->add_tab(detail_page, "詳細");
-    detail_tab->enabled = false;
+    tab_detail = tab_widget_files->add_tab(page_detail, "詳細");
+    tab_detail->enabled = false;
 
-    split->add_widget(tabs);
+    splitter_main->add_widget(tab_widget_files);
 
-    split->sizes = std::vector<float>{180, 500};
-    window_layout->add(split, 1);
+    splitter_main->sizes = std::vector<float>{180, 500};
+    window_layout->add(splitter_main, 1);
 
-    button_row = new tokotachi::Widget(this);
-    tokotachi::BoxLayout* button_row_layout = new tokotachi::BoxLayout(button_row);
-    button_row_layout->orientation = tokotachi::Orientation::HORIZONTAL;
+    row_buttons = new tokotachi::Widget(this);
+    tokotachi::BoxLayout* row_buttons_layout = new tokotachi::BoxLayout(row_buttons);
+    row_buttons_layout->orientation = tokotachi::Orientation::HORIZONTAL;
 
-    hidden_check = new tokotachi::CheckBox(button_row);
-    hidden_check->text = "隠しファイルも表示する";
-    button_row_layout->add(hidden_check);
+    check_box_hidden = new tokotachi::CheckBox(row_buttons);
+    check_box_hidden->text = "隠しファイルも表示する";
+    row_buttons_layout->add(check_box_hidden);
 
-    button_row_layout->add_stretch();
+    row_buttons_layout->add_stretch();
 
-    close_button = new tokotachi::Button(button_row);
-    close_button->text = "閉じる";
-    close_button->style = tokotachi::ButtonStyle::SECONDARY;
-    close_button->on_click = [this](tokotachi::Object* sender) { close_button_click(sender); };
-    close_button->add_action(quit_action);
-    button_row_layout->add(close_button);
+    button_close = new tokotachi::Button(row_buttons);
+    button_close->text = "閉じる";
+    button_close->style = tokotachi::ButtonStyle::SECONDARY;
+    button_close->on_click = [this](tokotachi::Object* sender) { button_close_click(sender); };
+    button_close->add_action(action_quit);
+    row_buttons_layout->add(button_close);
 
-    window_layout->add(button_row);
+    window_layout->add(row_buttons);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="490540ff">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="8f479f68">
 
 // <tokotachi-designer:handler-stubs>
-void MainWindow::open_action_trigger(tokotachi::Object* sender)
+void MainWindow::action_open_trigger(tokotachi::Object* sender)
 {
 }
 
-void MainWindow::quit_action_trigger(tokotachi::Object* sender)
+void MainWindow::action_quit_trigger(tokotachi::Object* sender)
 {
 }
 
@@ -176,15 +176,15 @@ void MainWindow::search(tokotachi::Object* sender)
 {
 }
 
-void MainWindow::tabs_change(tokotachi::Object* sender)
+void MainWindow::tab_widget_files_change(tokotachi::Object* sender)
 {
 }
 
-void MainWindow::file_list_activate(tokotachi::Object* sender)
+void MainWindow::list_view_files_activate(tokotachi::Object* sender)
 {
 }
 
-void MainWindow::close_button_click(tokotachi::Object* sender)
+void MainWindow::button_close_click(tokotachi::Object* sender)
 {
 }
 

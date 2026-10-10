@@ -24,9 +24,21 @@ import {
   setItem,
   setLayout,
   tidy,
+  valueAt,
   type Positions,
   type Slot,
 } from './structure.ts';
+import {
+  addAction,
+  addBar,
+  addEntry,
+  addMenu,
+  moveSibling,
+  removeActionReferences,
+  setEntryAction,
+  setMenuTitle,
+  type Bar,
+} from './menus.ts';
 
 export type EditCommand =
   /** プロパティを設定する。値が null なら書いたものを消す(既定値に戻す)。 */
@@ -73,6 +85,30 @@ export type EditCommand =
       readonly layout: string | null;
       readonly positions?: Positions;
     }
+  /** ウィンドウにメニューバー・ツールバー・ステータスバーを付ける。 */
+  | { readonly kind: 'addBar'; readonly bar: Bar }
+  /** Action を足す(名前は送る側が newName で決める。同じ batch の中で項目から参照するため)。 */
+  | { readonly kind: 'addAction'; readonly name: string; readonly index?: number }
+  /** メニューを足す(parent がメニューバーならそのメニュー、メニューならサブメニュー)。 */
+  | {
+      readonly kind: 'addMenu';
+      readonly parent: JsonPath;
+      readonly index: number;
+      readonly title: string;
+    }
+  /** メニュー・ツールバーに項目(Action の参照か区切り)を足す。 */
+  | {
+      readonly kind: 'addEntry';
+      readonly container: JsonPath;
+      readonly index: number;
+      readonly entry: { readonly action: string } | { readonly separator: true };
+    }
+  /** 項目が参照する Action を変える。 */
+  | { readonly kind: 'setEntryAction'; readonly target: JsonPath; readonly action: string }
+  /** メニューの見出しを変える。 */
+  | { readonly kind: 'setMenuTitle'; readonly target: JsonPath; readonly title: string }
+  /** 同じ並びの中で前(-1)・後ろ(1)へ動かす。 */
+  | { readonly kind: 'moveSibling'; readonly target: JsonPath; readonly delta: number }
   | { readonly kind: 'batch'; readonly commands: readonly EditCommand[] };
 
 export type CommandResult =
@@ -322,8 +358,39 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
     case 'moveWidget':
       moveWidget(doc, command.target, command.slot);
       return;
-    case 'remove':
+    case 'remove': {
+      // Action を消すときは、その Action を参照する項目も消す
+      const actions = command.targets.flatMap((t) =>
+        t.length === 2 && t[0] === 'actions'
+          ? [String((valueAt(doc, t) as { name?: string } | undefined)?.name)]
+          : [],
+      );
       removeNodes(doc, command.targets);
+      for (const name of actions) {
+        removeActionReferences(doc, name);
+      }
+      return;
+    }
+    case 'addBar':
+      addBar(doc, command.bar);
+      return;
+    case 'addAction':
+      addAction(doc, command.name, command.index);
+      return;
+    case 'addMenu':
+      addMenu(doc, command.parent, command.index, command.title);
+      return;
+    case 'addEntry':
+      addEntry(doc, command.container, command.index, command.entry);
+      return;
+    case 'setEntryAction':
+      setEntryAction(doc, command.target, command.action);
+      return;
+    case 'setMenuTitle':
+      setMenuTitle(doc, command.target, command.title);
+      return;
+    case 'moveSibling':
+      moveSibling(doc, command.target, command.delta);
       return;
     case 'addSpacer':
       addSpacer(doc, command.layout, command.index, command.spacer);
@@ -376,7 +443,7 @@ export function applyCommand(doc: TtuiDocument, command: EditCommand): CommandRe
   return { ok: true, document: copy };
 }
 
-/** ハンドラの既定の名前(`search_button` の `on_click` → `search_button_click`。ウィンドウは `window_close`)。 */
+/** ハンドラの既定の名前(`button_search` の `on_click` → `button_search_click`。ウィンドウは `window_close`)。 */
 export function defaultHandlerName(nodeName: string | undefined, event: string): string {
   return `${nodeName ?? 'window'}_${event.replace(/^on_/, '')}`;
 }

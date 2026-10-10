@@ -341,7 +341,9 @@ export function moveWidget(doc: TtuiDocument, from: JsonPath, slot: Slot): void 
 /** ノード(部品・空き・タブ・区画・Action・オブジェクト)を消す。後ろのものから消す(前のものの位置がずれないように)。 */
 export function removeNodes(doc: TtuiDocument, paths: readonly JsonPath[]): void {
   const root = doc as unknown as Json;
-  const sorted = [...paths].sort((a, b) => compareDesc(a, b));
+  // サブメニューは、それを入れているメニューの項目ごと消す
+  const normalized = paths.map((p) => (p[p.length - 1] === 'menu' ? p.slice(0, -1) : p));
+  const sorted = [...normalized].sort((a, b) => compareDesc(a, b));
   for (const path of sorted) {
     const key = path[path.length - 1];
     const parentKey = path[path.length - 2];
@@ -353,6 +355,7 @@ export function removeNodes(doc: TtuiDocument, paths: readonly JsonPath[]): void
       (parentKey === 'items' ||
         parentKey === 'tabs' ||
         parentKey === 'panes' ||
+        parentKey === 'menus' ||
         parentKey === 'actions' ||
         parentKey === 'objects')
     ) {
@@ -392,7 +395,7 @@ export function tidy(node: unknown): void {
     if (
       Array.isArray(value) &&
       value.length === 0 &&
-      ['items', 'tabs', 'panes', 'children', 'widgets'].includes(key)
+      ['items', 'tabs', 'panes', 'children', 'widgets', 'menus'].includes(key)
     ) {
       removeKey(node, key);
     } else {

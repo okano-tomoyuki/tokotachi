@@ -48,6 +48,8 @@ export interface DesignerState {
   /** ドラッグ中にカーソルについて動かす像(移す部品の画像か、パレットの部品の名前)と、カーソルの位置(画面の座標)。 */
   readonly ghost: Ghost | undefined;
   readonly pointer: { readonly x: number; readonly y: number } | undefined;
+  /** キャンバスの倍率(1 = 100%)。 */
+  readonly zoom: number;
   readonly select: (id: string | undefined) => void;
 }
 
@@ -65,6 +67,7 @@ export const useDesigner = create<DesignerState>()((set) => ({
   target: undefined,
   ghost: undefined,
   pointer: undefined,
+  zoom: 1,
   select: (id) => {
     set({ selection: id });
   },
@@ -99,7 +102,9 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
           pendingSelection === undefined
             ? undefined
             : flattenOutline(tree).find(
-                (n) => (n.kind === 'widget' || n.kind === 'object') && n.label === pendingSelection,
+                (n) =>
+                  ['widget', 'object', 'menu_item', 'tool_item', 'action'].includes(n.kind) &&
+                  n.label === pendingSelection,
               );
         if (added) {
           pendingSelection = undefined;

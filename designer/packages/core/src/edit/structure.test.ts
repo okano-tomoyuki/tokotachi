@@ -71,9 +71,9 @@ describe('部品の追加・移動・削除', () => {
       widget: newWidget(SAMPLE, 'Button'),
     });
     expect(names(doc.window.layout.items[0].widget.layout.items)).toEqual([
-      'search_edit',
+      'line_edit_search',
       'button_1',
-      'search_button',
+      'button_search',
     ]);
   });
 
@@ -99,7 +99,7 @@ describe('部品の追加・移動・削除', () => {
       slot: { kind: 'item', layout: SEARCH_ROW_LAYOUT, index: 2 },
     });
     const items = doc.window.layout.items[0].widget.layout.items;
-    expect(names(items)).toEqual(['search_button', 'search_edit']);
+    expect(names(items)).toEqual(['button_search', 'line_edit_search']);
     expect(items[1].stretch).toBe(1);
   });
 
@@ -110,12 +110,12 @@ describe('部品の追加・移動・削除', () => {
       slot: { kind: 'item', layout: WINDOW_LAYOUT, index: 3 },
     });
     expect(names(doc.window.layout.items)).toEqual([
-      'search_row',
-      'split',
-      'button_row',
-      'search_button',
+      'row_search',
+      'splitter_main',
+      'row_buttons',
+      'button_search',
     ]);
-    expect(names(doc.window.layout.items[0].widget.layout.items)).toEqual(['search_edit']);
+    expect(names(doc.window.layout.items[0].widget.layout.items)).toEqual(['line_edit_search']);
   });
 
   it('自分の中へは移せない', () => {
@@ -147,9 +147,9 @@ describe('部品の追加・移動・削除', () => {
     });
     const children = doc.window.layout.items[2].widget.children;
     expect(children.map((c: any) => c.name)).toEqual([
-      'hidden_check',
-      'close_button',
-      'search_button',
+      'check_box_hidden',
+      'button_close',
+      'button_search',
     ]);
     expect(children[2].properties).toMatchObject({ x: 10, y: 20, text: '検索' });
   });
@@ -178,8 +178,8 @@ describe('部品の追加・移動・削除', () => {
     });
     expect(doc.window.layout.items[0].widget.layout.items).toBeUndefined();
     expect(names(doc.window.layout.items[2].widget.layout.items)).toEqual([
-      'hidden_check',
-      'close_button',
+      'check_box_hidden',
+      'button_close',
     ]);
     expect(error({ kind: 'remove', targets: [['window']] })).toContain('window');
   });
@@ -211,15 +211,15 @@ describe('レイアウトの切り替え', () => {
     const layout = doc.window.layout.items[0].widget.layout;
     expect(layout.class).toBe('GridLayout');
     expect(layout.items.map((i: any) => [i.row, i.column, i.widget.name])).toEqual([
-      [0, 0, 'search_edit'],
-      [0, 1, 'search_button'],
+      [0, 0, 'line_edit_search'],
+      [0, 1, 'button_search'],
     ]);
     // orientation は GridLayout に無いので引き継がない
     expect(layout.properties).toBeUndefined();
   });
 
   it('PlaceLayout・自由な配置へは、描いた位置に置く', () => {
-    const positions = { search_edit: { x: 0, y: 0 }, search_button: { x: 476.4, y: 0 } };
+    const positions = { line_edit_search: { x: 0, y: 0 }, button_search: { x: 476.4, y: 0 } };
     const place = apply({ kind: 'setLayout', target: ROW, layout: 'PlaceLayout', positions });
     expect(place.window.layout.items[0].widget.layout.items[1].placement).toEqual({ x: 476, y: 0 });
     const free = apply({ kind: 'setLayout', target: ROW, layout: null, positions });
