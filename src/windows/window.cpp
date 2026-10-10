@@ -1123,6 +1123,20 @@ bool Window::save_png(const std::string& path)
     return ok;
 }
 
+Bitmap Window::capture()
+{
+    d_->invalidate_all();
+    d_->render(false);
+    Bitmap b(d_->pixel_width, d_->pixel_height, d_->scale);
+    std::uint32_t* out = b.pixels();
+    // ウィンドウの描画先は不透明(ARGB8888)。Bitmap はアルファ乗算済みなので、アルファを 255 にして写す
+    for (std::size_t i = 0; i < d_->buffer.size(); ++i)
+    {
+        out[i] = d_->buffer[i] | 0xff000000u;
+    }
+    return b;
+}
+
 namespace
 {
 

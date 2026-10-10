@@ -7,44 +7,18 @@
  *   ハンドラの雛形、tokotachi_namespace_end。
  * - 生成したコードは tokotachi:: を省かずに書き、using namespace を書かない(N2)。
  */
-import {
-  findClass,
-  getCatalog,
-  layoutVariable,
-  MENU_BAR_VARIABLE,
-  menuVariable,
-  namedNodes,
-  paneVariable,
-  STATUS_BAR_VARIABLE,
-  tabVariable,
-  TOOL_BAR_VARIABLE,
-  type Events,
-  type LayoutItem,
-  type LayoutNode,
-  type MenuNode,
-  type NamedNode,
-  type PaneNode,
-  type Properties,
-  type TabNode,
-  type TtuiDocument,
-  type WidgetNode,
-} from '@tokotachi-designer/core';
+import { getCatalog, namedNodes, type TtuiDocument } from '@tokotachi-designer/core';
 import { generatedComments } from '../comments.ts';
+import { buildSetup, type Arg, type Op } from '../model.ts';
 import type { CppTarget, CommentLocale } from '../names.ts';
 import type { GeneratedCode, HandlerStub, Region } from '../region.ts';
-import { cppString, cppValue, enumValue, placementStatements, scalarText } from './values.ts';
+import { cppString, cppValue, enumValue, placementStatements } from './values.ts';
 
 const INDENT = '    ';
 
 export interface CppFiles {
   readonly header: GeneratedCode;
   readonly source: GeneratedCode;
-}
-
-interface Handler {
-  readonly name: string;
-  /** ハンドラの型(NotifyHandler 等)。 */
-  readonly type: string;
 }
 
 /** ハンドラの型の引数の並び(`tokotachi::Object* sender, bool& can_close`)。 */
@@ -58,390 +32,65 @@ function argList(type: string): string {
   return (getCatalog().handler_types[type] ?? []).map((p) => p.name).join(', ');
 }
 
-/** 空行が続かないように行を集める。 */
-class Lines {
-  readonly lines: string[] = [];
+/** target が undefined ならウィンドウ自身(メンバをそのまま書く)。 */
+function access(target: string | undefined, member: string): string {
+  return target === undefined ? member : `${target}->${member}`;
+}
 
-  add(...lines: string[]): void {
-    this.lines.push(...lines);
-  }
-
-  blank(): void {
-    if (this.lines.length > 0 && this.lines[this.lines.length - 1] !== '') {
-      this.lines.push('');
-    }
-  }
-
-  /** 末尾の空行を除いた行。 */
-  done(): string[] {
-    const out = [...this.lines];
-    while (out.length > 0 && out[out.length - 1] === '') {
-      out.pop();
-    }
-    return out;
+function argText(arg: Arg): string {
+  switch (arg.kind) {
+    case 'ref':
+      return arg.name;
+    case 'int':
+      return String(arg.value);
+    case 'float':
+      return cppValue('float', arg.value);
+    case 'string':
+      return cppString(arg.value);
+    case 'enum':
+      return enumValue(arg.enum, arg.value);
   }
 }
 
-/** tokotachi_setup_ui の中身を作る(§4 の順)。 */
-class SetupEmitter {
-  private readonly doc: TtuiDocument;
-  private readonly out = new Lines();
-  readonly handlers: Handler[] = [];
-  /** 名前 → ノード(参照の相手が部品か)。 */
-  private readonly named: ReadonlyMap<string, NamedNode>;
-  /** ほかの部品への参照(すべての部品を作った後に設定する)。 */
-  private readonly deferred: string[] = [];
-
-  constructor(doc: TtuiDocument) {
-    this.doc = doc;
-    this.named = new Map(namedNodes(doc).map((n) => [n.name, n]));
-  }
-
-  emit(): string[] {
-    const { doc, out } = this;
-    const w = doc.window;
-    for (const a of doc.actions ?? []) {
-      out.add(`${a.name} = new tokotachi::Action(this);`);
-      this.properties(a.name, 'Action', a.properties);
-      this.events(a.name, 'Action', a.events);
-      out.blank();
-    }
-    for (const o of doc.objects ?? []) {
-      out.add(`${o.name} = new tokotachi::${o.class}(this);`);
-      this.properties(o.name, o.class, o.properties);
-      this.events(o.name, o.class, o.events);
-      out.blank();
-    }
-    this.properties(undefined, w.class, w.properties);
-    this.events(undefined, w.class, w.events);
-    for (const b of w.buttons ?? []) {
-      const text = b.text === undefined ? '' : `, ${cppString(b.text)}`;
-      out.add(`add_button(${enumValue('DialogButton', b.button)}${text});`);
-    }
-    out.blank();
-    this.menuBar();
-    this.toolBar();
-    this.statusBar();
-    this.children(w, 'this', undefined);
-    if (this.deferred.length > 0) {
-      out.blank();
-      out.add(...this.deferred);
-    }
-    return out.done();
-  }
-
-  // ---- プロパティ・ハンドラ ----
-
-  /** target が undefined ならウィンドウ自身。 */
-  private access(target: string | undefined, member: string): string {
-    return target === undefined ? member : `${target}->${member}`;
-  }
-
-  /**
-   * プロパティを設定する文。カタログの順に書く。
-   * @param late true なら after_children の印が付いたものだけ、false ならそれ以外
-   */
-  private properties(
-    target: string | undefined,
-    cls: string,
-    props: Properties | undefined,
-    late = false,
-    skip: readonly string[] = [],
-  ): void {
-    const info = findClass(cls);
-    if (!info || !props) {
-      return;
-    }
-    for (const [name, prop] of Object.entries(info.properties)) {
-      const value = props[name];
-      if (value === undefined || skip.includes(name) || (prop.after_children === true) !== late) {
-        continue;
-      }
-      const statement = `${this.access(target, name)} = ${cppValue(prop.type, value)};`;
-      const ref = typeof prop.type === 'object' && 'ref' in prop.type;
-      if (ref && this.named.get(scalarText(value))?.kind === 'widget') {
-        this.deferred.push(statement);
-      } else {
-        this.out.add(statement);
-      }
-    }
-  }
-
-  private events(target: string | undefined, cls: string, events: Events | undefined): void {
-    const info = findClass(cls);
-    if (!info || !events) {
-      return;
-    }
-    for (const [name, h] of Object.entries(info.handlers)) {
-      const handler = events[name];
-      if (handler === undefined) {
-        continue;
-      }
-      if (!this.handlers.some((x) => x.name === handler)) {
-        this.handlers.push({ name: handler, type: h.type });
-      }
-      this.out.add(
-        `${this.access(target, name)} = [this](${paramList(h.type)}) { ${handler}(${argList(h.type)}); };`,
-      );
-    }
-  }
-
-  // ---- メニューバー・ツールバー・ステータスバー ----
-
-  private menuBar(): void {
-    const bar = this.doc.window.menu_bar;
-    if (!bar) {
-      return;
-    }
-    const variable = bar.name ?? MENU_BAR_VARIABLE;
-    this.out.add(`${this.declaration('MenuBar', bar.name, variable)} = new tokotachi::MenuBar();`);
-    this.properties(variable, 'MenuBar', bar.properties);
-    bar.menus?.forEach((m, i) => {
-      this.menu(m, menuVariable(m, variable, i), `${variable}->add_menu`);
-    });
-    this.out.add(`menu_bar = ${variable};`);
-    this.out.blank();
-  }
-
-  private menu(menu: MenuNode, variable: string, create: string): void {
-    this.out.add(
-      `${this.declaration('Menu', menu.name, variable)} = ${create}(${cppString(menu.title)});`,
-    );
-    menu.items?.forEach((item, j) => {
-      if (item.action !== undefined) {
-        this.out.add(`${variable}->add_action(${item.action});`);
-      } else if (item.separator) {
-        this.out.add(`${variable}->add_separator();`);
-      } else if (item.menu) {
-        this.menu(item.menu, menuVariable(item.menu, variable, j), `${variable}->add_submenu`);
-      }
-    });
-  }
-
-  private toolBar(): void {
-    const bar = this.doc.window.tool_bar;
-    if (!bar) {
-      return;
-    }
-    const variable = bar.name ?? TOOL_BAR_VARIABLE;
-    this.out.add(`${this.declaration('ToolBar', bar.name, variable)} = new tokotachi::ToolBar();`);
-    this.properties(variable, 'ToolBar', bar.properties);
-    for (const item of bar.items ?? []) {
-      if (item.action !== undefined) {
-        this.out.add(`${variable}->add_action(${item.action});`);
-      } else if (item.separator) {
-        this.out.add(`${variable}->add_separator();`);
-      } else if (item.widget) {
-        this.widget(item.widget, variable);
-        this.out.add(`${variable}->add_widget(${item.widget.name});`);
-      }
-    }
-    this.out.add(`tool_bar = ${variable};`);
-    this.out.blank();
-  }
-
-  private statusBar(): void {
-    const bar = this.doc.window.status_bar;
-    if (!bar) {
-      return;
-    }
-    const variable = bar.name ?? STATUS_BAR_VARIABLE;
-    this.out.add(
-      `${this.declaration('StatusBar', bar.name, variable)} = new tokotachi::StatusBar();`,
-    );
-    this.properties(variable, 'StatusBar', bar.properties);
-    for (const w of bar.widgets ?? []) {
-      this.widget(w, variable);
-      this.out.add(`${variable}->add_widget(${w.name});`);
-    }
-    this.out.add(`status_bar = ${variable};`);
-    this.out.blank();
-  }
-
-  /** 名前があればメンバへの代入、無ければ一時的な変数の宣言。 */
-  private declaration(cls: string, name: string | undefined, variable: string): string {
-    return name === undefined ? `tokotachi::${cls}* ${variable}` : variable;
-  }
-
-  // ---- 部品とレイアウト ----
-
-  /**
-   * 部品を作り、プロパティ・ハンドラ・子を設定する(親のレイアウトに入れる文は呼び出し側が書く)。
-   * @param parent 親の部品の式(`this`・メンバ・一時的な変数)
-   */
-  private widget(node: WidgetNode, parent: string): void {
-    const { out } = this;
-    const name = node.name;
-    out.add(`${name} = new tokotachi::${node.class}(${parent});`);
-    this.properties(name, node.class, node.properties);
-    this.events(name, node.class, node.events);
-    for (const a of node.actions ?? []) {
-      out.add(`${name}->add_action(${a});`);
-    }
-    const hasChildren =
-      node.layout !== undefined ||
-      node.children !== undefined ||
-      node.tabs !== undefined ||
-      node.panes !== undefined ||
-      node.content !== undefined;
-    if (!hasChildren) {
-      return;
-    }
-    this.children(node, name, name);
-    out.blank();
-    this.properties(name, node.class, node.properties, true);
-  }
-
-  /** 子(レイアウト・自由な配置・タブ・区画・中身)。owner は部品の名前(ウィンドウなら undefined)。 */
-  private children(
-    node: {
-      readonly layout?: LayoutNode | undefined;
-      readonly children?: readonly WidgetNode[] | undefined;
-      readonly tabs?: readonly TabNode[] | undefined;
-      readonly panes?: readonly PaneNode[] | undefined;
-      readonly content?: WidgetNode | undefined;
-    },
-    target: string,
-    owner: string | undefined,
-  ): void {
-    const { out } = this;
-    if (node.layout) {
-      this.layout(node.layout, target, owner);
-    }
-    for (const c of node.children ?? []) {
-      out.blank();
-      this.widget(c, target);
-    }
-    node.tabs?.forEach((tab, i) => {
-      out.blank();
-      this.widget(tab.page, target);
-      const title = tab.properties?.['title'];
-      const call = `${target}->add_tab(${tab.page.name}, ${cppString(typeof title === 'string' ? title : '')})`;
-      this.withPart('Tab', tab.name, tabVariable(tab, owner ?? 'window', i), call, tab.properties, [
-        'title',
-      ]);
-    });
-    node.panes?.forEach((pane, i) => {
-      out.blank();
-      this.widget(pane.widget, target);
-      const stretch = pane.properties?.['stretch'];
-      const args = typeof stretch === 'number' && stretch !== 1 ? `, ${String(stretch)}` : '';
-      const call = `${target}->add_widget(${pane.widget.name}${args})`;
-      this.withPart(
-        'SplitterPane',
-        pane.name,
-        paneVariable(pane, owner ?? 'window', i),
-        call,
-        pane.properties,
-        ['stretch'],
-      );
-    });
-    if (node.content) {
-      out.blank();
-      this.widget(node.content, target);
-      out.add(`${target}->content = ${node.content.name};`);
-    }
-  }
-
-  /**
-   * add_tab・add_widget の結果(Tab・SplitterPane)に、引数で渡さないプロパティを設定する。
-   * 設定するものが無く名前も無ければ、結果を受け取らない。
-   */
-  private withPart(
-    cls: string,
-    name: string | undefined,
-    variable: string,
-    call: string,
-    props: Properties | undefined,
-    passed: readonly string[],
-  ): void {
-    const rest = Object.keys(props ?? {}).filter((k) => !passed.includes(k));
-    if (name === undefined && rest.length === 0) {
-      this.out.add(`${call};`);
-      return;
-    }
-    this.out.add(`${this.declaration(cls, name, variable)} = ${call};`);
-    this.properties(variable, cls, props, false, passed);
-  }
-
-  private layout(layout: LayoutNode, target: string, owner: string | undefined): void {
-    const { out } = this;
-    const variable = layoutVariable(layout, owner);
-    out.add(
-      `${this.declaration(layout.class, layout.name, variable)} = new tokotachi::${layout.class}(${target});`,
-    );
-    this.properties(variable, layout.class, layout.properties);
-    for (const [kind, tracks] of [
-      ['row', layout.rows],
-      ['column', layout.columns],
-    ] as const) {
-      for (const [index, t] of Object.entries(tracks ?? {}).sort(
-        ([a], [b]) => Number(a) - Number(b),
-      )) {
-        if (t.stretch !== undefined) {
-          out.add(`${variable}->set_${kind}_stretch(${index}, ${String(t.stretch)});`);
-        }
-        if (t.minimum !== undefined) {
-          out.add(`${variable}->set_${kind}_minimum(${index}, ${cppValue('float', t.minimum)});`);
-        }
-      }
-    }
-    for (const item of layout.items ?? []) {
-      this.item(layout.class, variable, item, target);
-    }
-  }
-
-  private item(cls: string, variable: string, item: LayoutItem, target: string): void {
-    const { out } = this;
-    const w = item.widget;
-    if (!w) {
-      out.blank();
-      if (item.spacing !== undefined) {
-        out.add(`${variable}->add_spacing(${cppValue('float', item.spacing)});`);
-      } else {
-        const stretch = item.stretch ?? 1;
-        out.add(`${variable}->add_stretch(${stretch === 1 ? '' : String(stretch)});`);
-      }
-      return;
-    }
-    out.blank();
-    this.widget(w, target);
-    if (cls === 'PlaceLayout') {
-      out.add('{');
-      out.add(`${INDENT}tokotachi::Placement placement;`);
-      out.add(...placementStatements('placement', item.placement ?? {}).map((s) => INDENT + s));
-      out.add(`${INDENT}${variable}->add(${w.name}, placement);`);
-      out.add('}');
-      return;
-    }
-    const args =
-      cls === 'GridLayout'
-        ? trimDefaults(
-            [
-              String(item.row ?? 0),
-              String(item.column ?? 0),
-              String(item.row_span ?? 1),
-              String(item.column_span ?? 1),
-              enumValue('Align', item.horizontal ?? 'FILL'),
-              enumValue('Align', item.vertical ?? 'CENTER'),
-            ],
-            ['', '', '1', '1', enumValue('Align', 'FILL'), enumValue('Align', 'CENTER')],
-          )
-        : trimDefaults(
-            [String(item.stretch ?? 0), enumValue('Align', item.alignment ?? 'FILL')],
-            ['0', enumValue('Align', 'FILL')],
-          );
-    out.add(`${variable}->add(${[w.name, ...args].join(', ')});`);
-  }
+/** 名前があればメンバへの代入、無ければ一時的な変数の宣言。 */
+function assignee(variable: string, cls: string, declare: boolean): string {
+  return declare ? `tokotachi::${cls}* ${variable}` : variable;
 }
 
-/** 既定値と同じ後ろの引数を省く(N6)。defaults の '' は省けない引数。 */
-function trimDefaults(args: readonly string[], defaults: readonly string[]): string[] {
-  let n = args.length;
-  while (n > 0 && defaults[n - 1] !== '' && args[n - 1] === defaults[n - 1]) {
-    n--;
-  }
-  return args.slice(0, n);
+/** 操作の並びを tokotachi_setup_ui の中身の行にする(空行は '')。 */
+function printOps(ops: readonly Op[]): string[] {
+  return ops.flatMap((op): string[] => {
+    switch (op.op) {
+      case 'new':
+        return [
+          `${assignee(op.variable, op.class, op.declare)} = new tokotachi::${op.class}(${op.parent ?? ''});`,
+        ];
+      case 'set':
+        return [`${access(op.target, op.property)} = ${cppValue(op.type, op.value)};`];
+      case 'connect':
+        return [
+          `${access(op.target, op.property)} = [this](${paramList(op.handlerType)}) { ${op.handler}(${argList(op.handlerType)}); };`,
+        ];
+      case 'call': {
+        const call = `${access(op.target, op.method)}(${op.args.map(argText).join(', ')});`;
+        return [
+          op.result
+            ? `${assignee(op.result.variable, op.result.class, op.result.declare)} = ${call}`
+            : call,
+        ];
+      }
+      case 'place':
+        return [
+          '{',
+          `${INDENT}tokotachi::Placement placement;`,
+          ...placementStatements('placement', op.placement).map((s) => INDENT + s),
+          `${INDENT}${op.layout}->add(${op.widget}, placement);`,
+          '}',
+        ];
+      case 'blank':
+        return [''];
+    }
+  });
 }
 
 /** 名前空間の始まり(C++11 でも通るよう、入れ子は 1 つずつ書く)。 */
@@ -468,8 +117,8 @@ export function emitCpp(
   const comments = generatedComments(locale);
   const { className, includeGuard, namespace } = target;
   const base = doc.window.class;
-  const setup = new SetupEmitter(doc);
-  const body = setup.emit();
+  const setup = buildSetup(doc);
+  const body = printOps(setup.ops);
   const members = namedNodes(doc);
 
   const declarations: Region = {

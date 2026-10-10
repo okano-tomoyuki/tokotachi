@@ -34,11 +34,13 @@ Doxygen の XML には、宣言の順(カタログの順になる)・`std::vecto
    キャンバスと同じ WebAssembly(Node.js)で動かせるので、OS に依らない値が取れる(フォントで変わる望む大きさは、Windows の値を基準にする)。
 3. **補足を重ねる**: 手書きの補足(`designer/tools/catalog/overlay.json`)を重ねて、最終的なカタログにする。
 
-1 と 3 は実装済み([designer/tools/catalog/extract.mts](../../designer/tools/catalog/extract.mts))。
-2 の既定値の測定は、キャンバスの描画の部分(進める順序の 4)で対応表を作るときに加える。それまでカタログに既定値は無い。
+1 と 3 は [designer/tools/catalog/extract.mts](../../designer/tools/catalog/extract.mts)、2 は [measure.mts](../../designer/tools/catalog/measure.mts)
+(`pnpm catalog:measure`。キャンバスのモジュールが要る。[ADR 0040](../adr/0040-designer-canvas-ops.md))。
+測った値はプロパティの `default` と、部品の `preferred_size` に書き、取り出し直しても引き継ぐ。
 
 ```sh
 pnpm catalog:extract   # 1 と 3(Doxygen が要る。測った既定値は前のカタログから引き継ぐ)
+pnpm catalog:measure   # 2(先に pnpm canvas:build)
 pnpm catalog:check     # カタログがヘッダ・補足と食い違っていればエラー
 ```
 

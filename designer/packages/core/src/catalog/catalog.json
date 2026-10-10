@@ -9,6 +9,7 @@
     "apply_layout",
     "background",
     "bounds",
+    "capture",
     "child_at",
     "children",
     "close",
@@ -78,71 +79,90 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 640
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 480
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": false
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "title": {
           "type": "string",
-          "declared_in": "Window"
+          "declared_in": "Window",
+          "default": ""
         },
         "background": {
           "type": {
             "value": "ThemeColor"
           },
           "declared_in": "Window",
-          "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。"
+          "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。",
+          "default": "WINDOW"
         }
       },
       "handlers": {
@@ -216,71 +236,90 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 400
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 200
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": false
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "title": {
           "type": "string",
-          "declared_in": "Window"
+          "declared_in": "Window",
+          "default": ""
         },
         "background": {
           "type": {
             "value": "ThemeColor"
           },
           "declared_in": "Window",
-          "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。"
+          "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。",
+          "default": "WINDOW"
         }
       },
       "handlers": {
@@ -359,77 +398,99 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "POINTING_HAND"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
-          "declared_in": "ButtonBase"
+          "declared_in": "ButtonBase",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "ButtonBase"
+          "declared_in": "ButtonBase",
+          "default": {
+            "size": 14
+          }
         },
         "style": {
           "type": {
             "enum": "ButtonStyle"
           },
           "declared_in": "Button",
-          "doc": "既定は PRIMARY。"
+          "doc": "既定は PRIMARY。",
+          "default": "PRIMARY"
         }
       },
       "handlers": {
@@ -488,6 +549,10 @@
           "declared_in": "ButtonBase",
           "doc": "上で押して離した・フォーカスがあるときに Space か Enter を押した。"
         }
+      },
+      "preferred_size": {
+        "width": 32,
+        "height": 36
       }
     },
     "CheckBox": {
@@ -503,74 +568,96 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "POINTING_HAND"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
-          "declared_in": "ButtonBase"
+          "declared_in": "ButtonBase",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "ButtonBase"
+          "declared_in": "ButtonBase",
+          "default": {
+            "size": 14
+          }
         },
         "checked": {
           "type": "bool",
-          "declared_in": "CheckBox"
+          "declared_in": "CheckBox",
+          "default": false
         }
       },
       "handlers": {
@@ -634,6 +721,10 @@
           "declared_in": "CheckBox",
           "doc": "checked が変わった(利用者の操作・代入のどちらでも。docs/adr/0016)。押したときは on_change の後に on_click を呼ぶ。"
         }
+      },
+      "preferred_size": {
+        "width": 24,
+        "height": 28
       }
     },
     "RadioButton": {
@@ -649,80 +740,103 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "POINTING_HAND"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
-          "declared_in": "ButtonBase"
+          "declared_in": "ButtonBase",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "ButtonBase"
+          "declared_in": "ButtonBase",
+          "default": {
+            "size": 14
+          }
         },
         "value": {
           "type": "int",
           "declared_in": "RadioButton",
-          "doc": "このボタンが表す値。"
+          "doc": "このボタンが表す値。",
+          "default": 0
         },
         "group_value": {
           "type": "int",
           "declared_in": "RadioButton",
-          "doc": "グループで選ばれている値(既定 -1)。"
+          "doc": "グループで選ばれている値(既定 -1)。",
+          "default": -1
         }
       },
       "handlers": {
@@ -786,6 +900,10 @@
           "declared_in": "RadioButton",
           "doc": "checked が変わった(押した・group_value や value が変わったのどちらでも)。押したときは on_change の後に on_click を呼ぶ。"
         }
+      },
+      "preferred_size": {
+        "width": 24,
+        "height": 28
       }
     },
     "LineEdit": {
@@ -801,75 +919,97 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "IBEAM"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
           "declared_in": "TextInputBase",
-          "doc": "1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を にそろえ、タブは空白にし、その他の制御文字を取り除く。"
+          "doc": "1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を にそろえ、タブは空白にし、その他の制御文字を取り除く。",
+          "default": ""
         },
         "placeholder_text": {
           "type": "string",
-          "declared_in": "TextInputBase"
+          "declared_in": "TextInputBase",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "TextInputBase"
+          "declared_in": "TextInputBase",
+          "default": {
+            "size": 14
+          }
         }
       },
       "handlers": {
@@ -933,6 +1073,10 @@
           "declared_in": "LineEdit",
           "doc": "Enter が押された。ハンドラが無ければ、Enter は親へ送る(ダイアログでは決定のボタンを押す)。"
         }
+      },
+      "preferred_size": {
+        "width": 160,
+        "height": 36
       }
     },
     "TextEdit": {
@@ -948,80 +1092,103 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "IBEAM"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
           "declared_in": "TextInputBase",
           "doc": "1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を にそろえ、タブは空白にし、その他の制御文字を取り除く。",
-          "editor": "multiline"
+          "editor": "multiline",
+          "default": ""
         },
         "placeholder_text": {
           "type": "string",
-          "declared_in": "TextInputBase"
+          "declared_in": "TextInputBase",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "TextInputBase"
+          "declared_in": "TextInputBase",
+          "default": {
+            "size": 14
+          }
         },
         "word_wrap": {
           "type": "bool",
-          "declared_in": "TextEdit"
+          "declared_in": "TextEdit",
+          "default": true
         }
       },
       "handlers": {
@@ -1080,6 +1247,10 @@
           "declared_in": "TextInputBase",
           "doc": "テキストが変わった(利用者の操作・text への代入のどちらでも。同じ値の代入では呼ばない。docs/adr/0016)。"
         }
+      },
+      "preferred_size": {
+        "width": 240,
+        "height": 132
       }
     },
     "SpinBox": {
@@ -1095,89 +1266,112 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "minimum": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。"
+          "doc": "範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。",
+          "default": 0
         },
         "maximum": {
           "type": "double",
-          "declared_in": "RangeBase"
+          "declared_in": "RangeBase",
+          "default": 100
         },
         "value": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。"
+          "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。",
+          "default": 0
         },
         "single_step": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。"
+          "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。",
+          "default": 1
         },
         "page_step": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "Page Up・Page Down で動く量(既定 10)。"
+          "doc": "Page Up・Page Down で動く量(既定 10)。",
+          "default": 10
         },
         "decimals": {
           "type": "int",
           "declared_in": "SpinBox",
-          "doc": "小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。"
+          "doc": "小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。",
+          "default": 0
         }
       },
       "handlers": {
@@ -1236,6 +1430,10 @@
           "declared_in": "RangeBase",
           "doc": "value が変わった(利用者の操作・代入のどちらでも)。"
         }
+      },
+      "preferred_size": {
+        "width": 92,
+        "height": 36
       }
     },
     "Slider": {
@@ -1251,90 +1449,113 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "minimum": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。"
+          "doc": "範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。",
+          "default": 0
         },
         "maximum": {
           "type": "double",
-          "declared_in": "RangeBase"
+          "declared_in": "RangeBase",
+          "default": 100
         },
         "value": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。"
+          "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。",
+          "default": 0
         },
         "single_step": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。"
+          "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。",
+          "default": 1
         },
         "page_step": {
           "type": "double",
           "declared_in": "RangeBase",
-          "doc": "Page Up・Page Down で動く量(既定 10)。"
+          "doc": "Page Up・Page Down で動く量(既定 10)。",
+          "default": 10
         },
         "orientation": {
           "type": {
             "enum": "Orientation"
           },
-          "declared_in": "Slider"
+          "declared_in": "Slider",
+          "default": "HORIZONTAL"
         }
       },
       "handlers": {
@@ -1393,6 +1614,10 @@
           "declared_in": "RangeBase",
           "doc": "value が変わった(利用者の操作・代入のどちらでも)。"
         }
+      },
+      "preferred_size": {
+        "width": 160,
+        "height": 24
       }
     },
     "ComboBox": {
@@ -1407,82 +1632,105 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "items": {
           "type": {
             "array": "string"
           },
-          "declared_in": "ComboBox"
+          "declared_in": "ComboBox",
+          "default": []
         },
         "current_index": {
           "type": "int",
           "declared_in": "ComboBox",
-          "doc": "選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。"
+          "doc": "選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。",
+          "default": -1
         },
         "placeholder_text": {
           "type": "string",
           "declared_in": "ComboBox",
-          "doc": "選んでいないときに出す文字。"
+          "doc": "選んでいないときに出す文字。",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "ComboBox"
+          "declared_in": "ComboBox",
+          "default": {
+            "size": 14
+          }
         }
       },
       "handlers": {
@@ -1541,6 +1789,10 @@
           "declared_in": "ComboBox",
           "doc": "current_index が変わった(利用者の操作・代入のどちらでも)。"
         }
+      },
+      "preferred_size": {
+        "width": 72,
+        "height": 36
       }
     },
     "Label": {
@@ -1555,90 +1807,114 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
           "declared_in": "Label",
-          "editor": "multiline"
+          "editor": "multiline",
+          "default": ""
         },
         "font": {
           "type": {
             "value": "Font"
           },
-          "declared_in": "Label"
+          "declared_in": "Label",
+          "default": {
+            "size": 14
+          }
         },
         "color": {
           "type": {
             "value": "ThemeColor"
           },
           "declared_in": "Label",
-          "doc": "文字の色(既定はテーマの TEXT。無効なときは TEXT_DISABLED で描く)。"
+          "doc": "文字の色(既定はテーマの TEXT。無効なときは TEXT_DISABLED で描く)。",
+          "default": "TEXT"
         },
         "alignment": {
           "type": {
             "enum": "Align"
           },
           "declared_in": "Label",
-          "doc": "文字の横のそろえ方(既定 START。FILL は START と同じ)。複数行なら各行をそろえる。"
+          "doc": "文字の横のそろえ方(既定 START。FILL は START と同じ)。複数行なら各行をそろえる。",
+          "default": "START"
         },
         "word_wrap": {
           "type": "bool",
           "declared_in": "Label",
-          "doc": "幅で折り返すか(既定 false)。折り返すと、望む高さは今の幅で折り返したときの高さになり、最小の幅は最も長い単語の幅になる。"
+          "doc": "幅で折り返すか(既定 false)。折り返すと、望む高さは今の幅で折り返したときの高さになり、最小の幅は最も長い単語の幅になる。",
+          "default": false
         }
       },
       "handlers": {
@@ -1692,6 +1968,10 @@
           "type": "NotifyHandler",
           "declared_in": "Widget"
         }
+      },
+      "preferred_size": {
+        "width": 0,
+        "height": 20
       }
     },
     "ProgressBar": {
@@ -1706,79 +1986,100 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "minimum": {
           "type": "double",
           "declared_in": "ProgressBar",
-          "doc": "範囲(既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。"
+          "doc": "範囲(既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。",
+          "default": 0
         },
         "maximum": {
           "type": "double",
-          "declared_in": "ProgressBar"
+          "declared_in": "ProgressBar",
+          "default": 100
         },
         "value": {
           "type": "double",
           "declared_in": "ProgressBar",
-          "doc": "値(既定 0)。範囲の外は丸める。"
+          "doc": "値(既定 0)。範囲の外は丸める。",
+          "default": 0
         },
         "text_visible": {
           "type": "bool",
           "declared_in": "ProgressBar",
-          "doc": "割合(「40」)を棒の右に出すか(既定 false)。"
+          "doc": "割合(「40」)を棒の右に出すか(既定 false)。",
+          "default": false
         }
       },
       "handlers": {
@@ -1832,6 +2133,10 @@
           "type": "NotifyHandler",
           "declared_in": "Widget"
         }
+      },
+      "preferred_size": {
+        "width": 160,
+        "height": 8
       }
     },
     "ListView": {
@@ -1847,88 +2152,110 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "header_visible": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "列があるときに見出しを出すか(既定 true)。"
+          "doc": "列があるときに見出しを出すか(既定 true)。",
+          "default": true
         },
         "sorting_enabled": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。"
+          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。",
+          "default": false
         },
         "sort_column": {
           "type": "int",
           "declared_in": "ItemView",
-          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。"
+          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。",
+          "default": -1
         },
         "sort_order": {
           "type": {
             "enum": "SortOrder"
           },
-          "declared_in": "ItemView"
+          "declared_in": "ItemView",
+          "default": "ASCENDING"
         },
         "selection_mode": {
           "type": {
             "enum": "SelectionMode"
           },
           "declared_in": "ItemView",
-          "doc": "選び方(既定 SINGLE)。"
+          "doc": "選び方(既定 SINGLE)。",
+          "default": "SINGLE"
         }
       },
       "handlers": {
@@ -1992,6 +2319,10 @@
           "declared_in": "ItemView",
           "doc": "項目をダブルクリックした・Enter を押した(対象は current)。"
         }
+      },
+      "preferred_size": {
+        "width": 202,
+        "height": 226
       }
     },
     "TreeView": {
@@ -2007,93 +2338,116 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "header_visible": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "列があるときに見出しを出すか(既定 true)。"
+          "doc": "列があるときに見出しを出すか(既定 true)。",
+          "default": true
         },
         "sorting_enabled": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。"
+          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。",
+          "default": false
         },
         "sort_column": {
           "type": "int",
           "declared_in": "ItemView",
-          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。"
+          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。",
+          "default": -1
         },
         "sort_order": {
           "type": {
             "enum": "SortOrder"
           },
-          "declared_in": "ItemView"
+          "declared_in": "ItemView",
+          "default": "ASCENDING"
         },
         "selection_mode": {
           "type": {
             "enum": "SelectionMode"
           },
           "declared_in": "ItemView",
-          "doc": "選び方(既定 SINGLE)。"
+          "doc": "選び方(既定 SINGLE)。",
+          "default": "SINGLE"
         },
         "indentation": {
           "type": "float",
           "declared_in": "TreeView",
-          "doc": "1 段の字下げ(dp。既定 20。8 以上)。"
+          "doc": "1 段の字下げ(dp。既定 20。8 以上)。",
+          "default": 20
         }
       },
       "handlers": {
@@ -2157,6 +2511,10 @@
           "declared_in": "ItemView",
           "doc": "項目をダブルクリックした・Enter を押した(対象は current)。"
         }
+      },
+      "preferred_size": {
+        "width": 202,
+        "height": 226
       }
     },
     "Widget": {
@@ -2171,60 +2529,77 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         }
       },
       "handlers": {
@@ -2278,6 +2653,10 @@
           "type": "NotifyHandler",
           "declared_in": "Widget"
         }
+      },
+      "preferred_size": {
+        "width": 0,
+        "height": 0
       }
     },
     "TabWidget": {
@@ -2295,66 +2674,84 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "CLICK"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "current_index": {
           "type": "int",
           "declared_in": "TabWidget",
           "doc": "選んでいるタブの番号(タブが無ければ -1)。範囲の外の値は無視する。",
-          "after_children": true
+          "after_children": true,
+          "default": -1
         }
       },
       "handlers": {
@@ -2413,6 +2810,10 @@
           "declared_in": "TabWidget",
           "doc": "current_index が変わった(利用者の操作・代入・タブの追加と削除のどれでも)。"
         }
+      },
+      "preferred_size": {
+        "width": 96,
+        "height": 36
       }
     },
     "Splitter": {
@@ -2430,66 +2831,84 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "orientation": {
           "type": {
             "enum": "Orientation"
           },
-          "declared_in": "Splitter"
+          "declared_in": "Splitter",
+          "default": "HORIZONTAL"
         },
         "sizes": {
           "type": {
@@ -2497,7 +2916,8 @@
           },
           "declared_in": "Splitter",
           "doc": "各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0)。代入すると、合計が合わない分は stretch の比率で合わせる。",
-          "after_children": true
+          "after_children": true,
+          "default": []
         }
       },
       "handlers": {
@@ -2556,6 +2976,10 @@
           "declared_in": "Splitter",
           "doc": "利用者が境目をドラッグして、大きさを変えた。"
         }
+      },
+      "preferred_size": {
+        "width": 0,
+        "height": 0
       }
     },
     "ScrollArea": {
@@ -2573,65 +2997,83 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "fit_width": {
           "type": "bool",
           "declared_in": "ScrollArea",
-          "doc": "中身の幅を見えている幅に合わせ、縦だけスクロールするか(既定 true)。"
+          "doc": "中身の幅を見えている幅に合わせ、縦だけスクロールするか(既定 true)。",
+          "default": true
         }
       },
       "handlers": {
@@ -2685,6 +3127,10 @@
           "type": "NotifyHandler",
           "declared_in": "Widget"
         }
+      },
+      "preferred_size": {
+        "width": 30,
+        "height": 30
       }
     },
     "PaintBox": {
@@ -2699,65 +3145,83 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "cached": {
           "type": "bool",
           "declared_in": "PaintBox",
-          "doc": "描いた結果を覚えておくか(既定 false: 描き直すたびに on_paint を呼ぶ)。"
+          "doc": "描いた結果を覚えておくか(既定 false: 描き直すたびに on_paint を呼ぶ)。",
+          "default": false
         }
       },
       "handlers": {
@@ -2811,6 +3275,10 @@
           "type": "NotifyHandler",
           "declared_in": "Widget"
         }
+      },
+      "preferred_size": {
+        "width": 0,
+        "height": 0
       }
     },
     "Timer": {
@@ -2824,17 +3292,20 @@
         "interval": {
           "type": "int",
           "declared_in": "Timer",
-          "doc": "間隔(ミリ秒、既定 1000)。動いている間に変えると、その時点から数え直す。"
+          "doc": "間隔(ミリ秒、既定 1000)。動いている間に変えると、その時点から数え直す。",
+          "default": 1000
         },
         "repeat": {
           "type": "bool",
           "declared_in": "Timer",
-          "doc": "繰り返すか(既定 true)。false なら 1 回呼んだ後に enabled が false になる。"
+          "doc": "繰り返すか(既定 true)。false なら 1 回呼んだ後に enabled が false になる。",
+          "default": true
         },
         "enabled": {
           "type": "bool",
           "declared_in": "Timer",
-          "doc": "動いているか(既定 false)。true を代入すると動き始め、false を代入すると止まる。"
+          "doc": "動いているか(既定 false)。true を代入すると動き始め、false を代入すると止まる。",
+          "default": false
         }
       },
       "handlers": {
@@ -2856,18 +3327,26 @@
           "type": {
             "value": "Margins"
           },
-          "declared_in": "Layout"
+          "declared_in": "Layout",
+          "default": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
         },
         "orientation": {
           "type": {
             "enum": "Orientation"
           },
-          "declared_in": "BoxLayout"
+          "declared_in": "BoxLayout",
+          "default": "VERTICAL"
         },
         "spacing": {
           "type": "float",
           "declared_in": "BoxLayout",
-          "doc": "項目の間隔(dp、既定 8)。"
+          "doc": "項目の間隔(dp、既定 8)。",
+          "default": 8
         }
       },
       "handlers": {}
@@ -2884,16 +3363,24 @@
           "type": {
             "value": "Margins"
           },
-          "declared_in": "Layout"
+          "declared_in": "Layout",
+          "default": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
         },
         "row_spacing": {
           "type": "float",
           "declared_in": "GridLayout",
-          "doc": "行の間隔・列の間隔(dp、既定 8)。"
+          "doc": "行の間隔・列の間隔(dp、既定 8)。",
+          "default": 8
         },
         "column_spacing": {
           "type": "float",
-          "declared_in": "GridLayout"
+          "declared_in": "GridLayout",
+          "default": 8
         }
       },
       "handlers": {}
@@ -2910,7 +3397,13 @@
           "type": {
             "value": "Margins"
           },
-          "declared_in": "Layout"
+          "declared_in": "Layout",
+          "default": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
         }
       },
       "handlers": {}
@@ -2925,32 +3418,38 @@
         "text": {
           "type": "string",
           "declared_in": "Action",
-          "editor": "mnemonic"
+          "editor": "mnemonic",
+          "default": ""
         },
         "shortcut": {
           "type": {
             "value": "Shortcut"
           },
-          "declared_in": "Action"
+          "declared_in": "Action",
+          "default": ""
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Action",
-          "doc": "ツールバーのボタンのツールチップ(空なら、text とショートカットから作る)。"
+          "doc": "ツールバーのボタンのツールチップ(空なら、text とショートカットから作る)。",
+          "default": ""
         },
         "enabled": {
           "type": "bool",
           "declared_in": "Action",
-          "doc": "false なら、メニューでもキーでも実行しない。"
+          "doc": "false なら、メニューでもキーでも実行しない。",
+          "default": true
         },
         "checkable": {
           "type": "bool",
           "declared_in": "Action",
-          "doc": "checkable なら、実行するたびに checked を反転する(メニューではチェックの印を出す)。"
+          "doc": "checkable なら、実行するたびに checked を反転する(メニューではチェックの印を出す)。",
+          "default": false
         },
         "checked": {
           "type": "bool",
-          "declared_in": "Action"
+          "declared_in": "Action",
+          "default": false
         }
       },
       "handlers": {
@@ -2972,60 +3471,77 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         }
       },
       "handlers": {
@@ -3092,7 +3608,8 @@
           "type": "string",
           "declared_in": "Menu",
           "doc": "メニューバー・親のメニューの項目に出す名前(& でニーモニック)。",
-          "editor": "mnemonic"
+          "editor": "mnemonic",
+          "default": ""
         }
       },
       "handlers": {}
@@ -3108,66 +3625,84 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "button_style": {
           "type": {
             "enum": "ToolButtonStyle"
           },
-          "declared_in": "ToolBar"
+          "declared_in": "ToolBar",
+          "default": "ICON_ONLY"
         }
       },
       "handlers": {
@@ -3234,65 +3769,83 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
-          "geometry": true
+          "geometry": true,
+          "default": 0
         },
         "minimum_size": {
           "type": {
             "value": "Size"
           },
           "declared_in": "Widget",
-          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。"
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
         },
         "maximum_size": {
           "type": {
             "value": "Size"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
         },
         "visible": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "enabled": {
           "type": "bool",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": true
         },
         "focus_policy": {
           "type": {
             "enum": "FocusPolicy"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "NONE"
         },
         "cursor": {
           "type": {
             "enum": "MouseCursor"
           },
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "default": "ARROW"
         },
         "tooltip": {
           "type": "string",
           "declared_in": "Widget",
-          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。"
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
         },
         "text": {
           "type": "string",
           "declared_in": "StatusBar",
-          "doc": "普段に出す文字。"
+          "doc": "普段に出す文字。",
+          "default": ""
         }
       },
       "handlers": {
@@ -3357,12 +3910,14 @@
       "properties": {
         "title": {
           "type": "string",
-          "declared_in": "Tab"
+          "declared_in": "Tab",
+          "default": ""
         },
         "enabled": {
           "type": "bool",
           "declared_in": "Tab",
-          "doc": "false のタブは、押しても・キーでも選べない(current_index への代入では選べる)。"
+          "doc": "false のタブは、押しても・キーでも選べない(current_index への代入では選べる)。",
+          "default": true
         }
       },
       "handlers": {}
@@ -3377,12 +3932,14 @@
         "stretch": {
           "type": "int",
           "declared_in": "SplitterPane",
-          "doc": "Splitter の大きさが変わったときの伸び縮みの比率(0 なら大きさを保つ。すべて 0 なら最後の区画が受け持つ)。"
+          "doc": "Splitter の大きさが変わったときの伸び縮みの比率(0 なら大きさを保つ。すべて 0 なら最後の区画が受け持つ)。",
+          "default": 1
         },
         "collapsible": {
           "type": "bool",
           "declared_in": "SplitterPane",
-          "doc": "たためるか(既定 true)。"
+          "doc": "たためるか(既定 true)。",
+          "default": true
         }
       },
       "handlers": {}

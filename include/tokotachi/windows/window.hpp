@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "../graphics/bitmap.hpp"
 #include "../graphics/theme.hpp"
 #include "../widgets/widget.hpp"
 
@@ -46,6 +47,8 @@ public:
     virtual void close();
     /// 全体を描いて PNG に保存する(目視の確認・ヘッドレスのテスト用)。
     bool save_png(const std::string& path);
+    /// 全体を描いて Bitmap にする(大きさはピクセル。scale は dp からピクセルへの倍率)。表示していなくても描く。
+    Bitmap capture();
 
     detail::WindowImpl* impl() const { return d_; }
 

@@ -6,3 +6,4 @@ coverage/
 
 # VS Code extension packages
 *.vsix
+packages/canvas/wasm/

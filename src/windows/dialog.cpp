@@ -62,6 +62,14 @@ bool accept_first()
 #else
     static const bool kde = []()
     {
+#ifdef __EMSCRIPTEN__
+        // デザイナーのキャンバス(docs/adr/0039): 拡張が、デザイナーを動かしている OS を渡す(Windows なら決定のボタンが先)
+        const char* os = std::getenv("TOKOTACHI_HOST_OS");
+        if (os && std::strcmp(os, "windows") == 0)
+        {
+            return true;
+        }
+#endif
         const char* desktop = std::getenv("XDG_CURRENT_DESKTOP");
         return desktop && std::strstr(desktop, "KDE") != nullptr;
     }();

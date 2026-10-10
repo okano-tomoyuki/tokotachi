@@ -65,6 +65,8 @@ export interface ClassInfo {
   category?: Category;
   /** `layout`・`children` を書けるか。 */
   accepts_children?: true;
+  /** 部品の望む大きさ(dp。実物で測った値。Windows のフォントでの値)。 */
+  preferred_size?: { width: number; height: number };
   /** 専用の子のキー(`tabs`・`panes`・`content`)。 */
   child_keys?: string[];
   doc?: string;

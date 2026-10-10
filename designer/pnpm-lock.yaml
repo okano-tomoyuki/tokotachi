@@ -169,6 +169,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.12.0)
+      '@tokotachi-designer/canvas':
+        specifier: workspace:*
+        version: link:packages/canvas
       '@tokotachi-designer/codegen':
         specifier: workspace:*
         version: link:packages/codegen
@@ -202,6 +205,15 @@ importers:
       vitest:
         specifier: ^5.0.1
         version: 5.0.3(@types/node@24.19.1)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2))
+
+  packages/canvas:
+    dependencies:
+      '@tokotachi-designer/codegen':
+        specifier: workspace:*
+        version: link:../codegen
+      '@tokotachi-designer/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/cli:
     dependencies:

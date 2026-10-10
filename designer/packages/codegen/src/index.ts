@@ -20,6 +20,14 @@ export {
 } from './names.ts';
 export type { MergeResult } from './region.ts';
 export { cppString } from './cpp/values.ts';
+export {
+  buildSetup,
+  type Arg,
+  type Handler,
+  type Op,
+  type Result,
+  type SetupModel,
+} from './model.ts';
 
 /** 出力する 1 ファイル分の生成結果。 */
 export interface OutputFile {

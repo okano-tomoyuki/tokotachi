@@ -7,3 +7,6 @@ packages/core/src/catalog/catalog.json
 packages/codegen/src/__golden__/
 # *.ttui.json は core の serializeDocument が決まった形で書き出す
 *.ttui.json
+# Emscripten が作る(pnpm canvas:build)
+packages/canvas/wasm/
+.cache/

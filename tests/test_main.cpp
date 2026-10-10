@@ -1546,6 +1546,20 @@ TEST(window_close_hides)
     CHECK(!window.visible);
 }
 
+TEST(window_capture)
+{
+    tokotachi::Window window("t", 120, 60);
+    window.background = tokotachi::Color(0x10, 0x20, 0x30);
+    window.visible = true;
+    tokotachi::Bitmap b = window.capture();
+    CHECK(b.width() == window.impl()->pixel_width && b.height() == window.impl()->pixel_height);
+    CHECK(b.width() >= 120 && b.height() >= 60);
+    // 背景の色(不透明)。描画先の画素と同じ
+    const tokotachi::Color c = b.pixel(5, 5);
+    CHECK(c.r == 0x10 && c.g == 0x20 && c.b == 0x30 && c.a == 255);
+    CHECK((b.pixels()[0] | 0xff000000u) == (window.impl()->buffer[0] | 0xff000000u));
+}
+
 TEST(save_png)
 {
     tokotachi::Window window("t", 120, 60);

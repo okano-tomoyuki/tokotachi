@@ -56,6 +56,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0037](adr/0037-distribution.md) | 共有ライブラリを既定として配り、CMake のパッケージ・pkg-config・ソースからの組み込みに対応する | 承認 |
 | [0038](adr/0038-reference-site.md) | リファレンスは Doxygen でヘッダから作り、手引き・サンプルの一覧とともに GitHub Pages に出す | 承認 |
 | [0039](adr/0039-designer.md) | デザイナーを VS Code の拡張として本リポジトリに作り、キャンバスは WebAssembly にした Tokotachi で描く | 承認 |
+| [0040](adr/0040-designer-canvas-ops.md) | キャンバスとコード生成は同じ「部品を組む操作の並び」を使い、ウィンドウの画素を Window::capture で取り出す | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

@@ -552,12 +552,16 @@ function readVersion(): string {
   return `${part('MAJOR')}.${part('MINOR')}.${part('PATCH')}`;
 }
 
-/** 測った既定値は取り出し直しても消さない(測り直すまで前の値を使う)。 */
+/** 測った既定値・望む大きさは取り出し直しても消さない(測り直すまで前の値を使う。pnpm catalog:measure)。 */
 function carryDefaults(next: Catalog, prev: Partial<Catalog> | undefined): void {
   if (!prev?.classes) {
     return;
   }
   for (const [cls, info] of Object.entries(next.classes)) {
+    const size = prev.classes[cls]?.preferred_size;
+    if (size) {
+      info.preferred_size = size;
+    }
     for (const [prop, p] of Object.entries(info.properties)) {
       const old = prev.classes[cls]?.properties[prop];
       if (old && 'default' in old && JSON.stringify(old.type) === JSON.stringify(p.type)) {

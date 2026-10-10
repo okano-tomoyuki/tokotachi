@@ -16,7 +16,7 @@ const pureModuleRestrictions = {
 };
 
 export default defineConfig(
-  { ignores: ['**/dist/**', '**/coverage/**'] },
+  { ignores: ['**/dist/**', '**/coverage/**', 'packages/canvas/wasm/**', '.cache/**'] },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   {

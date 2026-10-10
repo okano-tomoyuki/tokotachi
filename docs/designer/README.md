@@ -12,12 +12,12 @@ Tokotachi 専用の GUI デザイナー(VS Code の拡張)の設計ドキュメ�
 |---|---|---|
 | [dsl-spec.md](dsl-spec.md) | 画面の定義ファイルの仕様 | 実装済み(スキーマ・検証・書き出し) |
 | [codegen-design.md](codegen-design.md) | コード生成(マーカー区間の更新)の設計と生成例 | 実装済み(Tokotachi でのビルド・実行で確認) |
-| [catalog.md](catalog.md) | カタログ(公開のヘッダからの取り出し・既定値の測定・手書きの補足) | 取り出しを実装済み(既定値の測定は手順 4 で) |
+| [catalog.md](catalog.md) | カタログ(公開のヘッダからの取り出し・既定値の測定・手書きの補足) | 実装済み |
 
 ## 進める順序(ADR 0039)
 
 1. 定義ファイルの形式・コード生成・カタログの設計(このフォルダ)。並行して WebAssembly の試作(`spike/wasm/`。描けた。ADR 0039) ← 済み
-2. カタログの取り出し(`designer/tools/catalog/`) ← 済み(既定値の測定は 4 で)
+2. カタログの取り出し(`designer/tools/catalog/`) ← 済み
 3. コード生成と CLI(`designer/packages/codegen`・`cli`) ← 済み
-4. キャンバスの描画の部分(WebAssembly)
+4. キャンバスの描画の部分(WebAssembly。`designer/canvas`・`packages/canvas`。[ADR 0040](../adr/0040-designer-canvas-ops.md)) ← 済み
 5. VS Code の拡張とデザイナーの画面

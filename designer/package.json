@@ -14,14 +14,19 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && pnpm test",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && node tools/canvas/table.mts --check && pnpm test",
     "catalog:extract": "node tools/catalog/extract.mts",
     "catalog:check": "node tools/catalog/extract.mts --check",
     "codegen:verify-cpp": "node tools/codegen/verify-cpp.mts",
-    "codegen:golden": "node tools/codegen/golden.mts"
+    "codegen:golden": "node tools/codegen/golden.mts",
+    "canvas:table": "node tools/canvas/table.mts",
+    "canvas:build": "node tools/canvas/build.mts",
+    "canvas:verify": "node tools/canvas/verify.mts",
+    "catalog:measure": "node tools/catalog/measure.mts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tokotachi-designer/canvas": "workspace:*",
     "@tokotachi-designer/codegen": "workspace:*",
     "@tokotachi-designer/core": "workspace:*",
     "@types/node": "^24.13.6",
