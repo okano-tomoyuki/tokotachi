@@ -1,0 +1,167 @@
+{
+  "name": "tokotachi-designer",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "okano-tomoyuki",
+  "license": "MIT",
+  "preview": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okano-tomoyuki/tokotachi.git",
+    "directory": "designer/packages/extension"
+  },
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "tokotachi",
+    "gui",
+    "designer",
+    "c++"
+  ],
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onLanguage:json"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "tokotachiDesigner.designer",
+        "displayName": "%customEditor.displayName%",
+        "selector": [
+          {
+            "filenamePattern": "*.ttui.json"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "tokotachiDesigner.newWindow",
+        "title": "%command.newWindow.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tokotachiDesigner.generateCode",
+        "title": "%command.generateCode.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(code)"
+      },
+      {
+        "command": "tokotachiDesigner.openAsText",
+        "title": "%command.openAsText.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(go-to-file)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "tokotachiDesigner.generateCode",
+          "when": "activeCustomEditorId == tokotachiDesigner.designer",
+          "group": "navigation"
+        },
+        {
+          "command": "tokotachiDesigner.openAsText",
+          "when": "activeCustomEditorId == tokotachiDesigner.designer",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tokotachiDesigner.newWindow",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@9"
+        },
+        {
+          "command": "tokotachiDesigner.generateCode",
+          "when": "resourceFilename =~ /\\.ttui\\.json$/",
+          "group": "navigation@9"
+        }
+      ],
+      "file/newFile": [
+        {
+          "command": "tokotachiDesigner.newWindow"
+        }
+      ]
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "*.ttui.json",
+        "url": "./schema/ttui.schema.json"
+      }
+    ],
+    "configuration": {
+      "title": "Tokotachi Designer",
+      "properties": {
+        "tokotachiDesigner.codegen.generateOnSave": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%config.generateOnSave%"
+        },
+        "tokotachiDesigner.codegen.commentLocale": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ja"
+          ],
+          "default": "en",
+          "markdownDescription": "%config.commentLocale%"
+        },
+        "tokotachiDesigner.codegen.namespace": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "%config.namespace%"
+        },
+        "tokotachiDesigner.codegen.headerDir": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "%config.headerDir%"
+        },
+        "tokotachiDesigner.codegen.sourceDir": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "%config.sourceDir%"
+        },
+        "tokotachiDesigner.canvas.colorScheme": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "light",
+            "dark"
+          ],
+          "default": "auto",
+          "markdownDescription": "%config.colorScheme%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "vscode:prepublish": "pnpm --filter @tokotachi-designer/webview run build && pnpm run build",
+    "typecheck": "tsc -p tsconfig.json",
+    "package": "vsce package --no-dependencies",
+    "generate:schema": "node scripts/generate-json-schema.mts",
+    "check:schema": "node scripts/generate-json-schema.mts --check"
+  },
+  "dependencies": {
+    "@tokotachi-designer/canvas": "workspace:*",
+    "@tokotachi-designer/codegen": "workspace:*",
+    "@tokotachi-designer/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/vscode": "~1.100.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "zod": "^4.6.5"
+  },
+  "l10n": "./l10n"
+}

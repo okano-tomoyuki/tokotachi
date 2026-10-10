@@ -1,0 +1,266 @@
+/* デザイナーの画面。色は VS Code のテーマの変数を使う。 */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+button {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: none;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+input,
+select,
+textarea {
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  font-family: inherit;
+  font-size: inherit;
+  box-sizing: border-box;
+}
+
+input.invalid,
+textarea.invalid {
+  border-color: var(--vscode-inputValidation-errorBorder);
+}
+
+.message {
+  padding: 16px;
+}
+
+.designer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.edit-error {
+  color: var(--vscode-errorForeground);
+}
+
+.panes {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.pane {
+  overflow: auto;
+}
+
+.tree-pane {
+  width: 220px;
+  border-right: 1px solid var(--vscode-panel-border);
+}
+
+.canvas-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+}
+
+.inspector-pane {
+  width: 300px;
+  border-left: 1px solid var(--vscode-panel-border);
+}
+
+/* ---- 構造の木 ---- */
+
+.tree-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  white-space: nowrap;
+  cursor: default;
+  line-height: 22px;
+}
+
+.tree-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.tree-row.selected {
+  color: var(--vscode-list-activeSelectionForeground);
+  background: var(--vscode-list-activeSelectionBackground);
+}
+
+.twisty {
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+}
+
+.tree-class {
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+
+/* ---- キャンバス ---- */
+
+.canvas-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+
+.canvas-message {
+  padding: 24px;
+  opacity: 0.7;
+}
+
+.window-frame {
+  border: 1px solid var(--vscode-panel-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.window-title {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--vscode-titleBar-activeBackground, var(--vscode-sideBar-background));
+  color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
+}
+
+.canvas-surface {
+  position: relative;
+}
+
+.canvas-surface canvas {
+  display: block;
+}
+
+.selection {
+  position: absolute;
+  pointer-events: none;
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.problems {
+  margin: 0;
+  padding: 6px 12px;
+  list-style: none;
+  border-top: 1px solid var(--vscode-panel-border);
+  max-height: 30%;
+  overflow: auto;
+}
+
+.problems .error::before {
+  content: '⛔ ';
+}
+
+.problems .warning::before {
+  content: '⚠ ';
+}
+
+.problem-path {
+  opacity: 0.6;
+}
+
+/* ---- インスペクタ ---- */
+
+.inspector-empty {
+  padding: 12px;
+  opacity: 0.7;
+}
+
+.inspector-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+}
+
+.inspector-class {
+  font-weight: bold;
+}
+
+.name-field {
+  flex: 1;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.tabs button {
+  color: var(--vscode-foreground);
+  background: transparent;
+  border-bottom: 2px solid transparent;
+}
+
+.tabs button.active {
+  border-bottom-color: var(--vscode-focusBorder);
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.grid th {
+  text-align: left;
+  font-weight: normal;
+  opacity: 0.8;
+  padding: 2px 6px;
+  white-space: nowrap;
+  vertical-align: top;
+  width: 40%;
+}
+
+.grid th.set {
+  font-weight: bold;
+  opacity: 1;
+}
+
+.grid td {
+  padding: 2px 6px;
+}
+
+.grid input[type='text'],
+.grid select,
+.grid textarea {
+  width: 100%;
+}
+
+.handler-field,
+.color-field {
+  display: flex;
+  gap: 4px;
+}
+
+.handler-field input {
+  flex: 1;
+}

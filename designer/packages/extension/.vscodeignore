@@ -1,0 +1,11 @@
+**
+!dist/extension.cjs
+!dist/canvas/**
+!dist/webview/**
+!schema/**
+!l10n/**
+!package.json
+!package.nls.json
+!package.nls.ja.json
+!README.md
+!LICENSE

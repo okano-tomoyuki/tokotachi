@@ -1,0 +1,14 @@
+{
+  "displayName": "Tokotachi Designer",
+  "description": "GUI designer for the Tokotachi C++ GUI library",
+  "customEditor.displayName": "Tokotachi Designer",
+  "command.newWindow.title": "New Window...",
+  "command.generateCode.title": "Generate Code",
+  "command.openAsText.title": "Open as Text",
+  "config.generateOnSave": "Generate the C++ code when a window definition (`*.ttui.json`) is saved.",
+  "config.commentLocale": "Language of the comments in the generated code.",
+  "config.namespace": "Namespace of the generated classes (e.g. `app::ui`). Empty for none.",
+  "config.headerDir": "Folder of the generated headers, relative to the window definition. Empty for the same folder.",
+  "config.sourceDir": "Folder of the generated sources, relative to the window definition. Empty for the same folder.",
+  "config.colorScheme": "Color scheme of the canvas. `auto` follows the color theme of VS Code."
+}

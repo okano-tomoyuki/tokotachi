@@ -1,0 +1,14 @@
+{
+  "displayName": "Tokotachi Designer",
+  "description": "C++ の GUI ライブラリ Tokotachi のデザイナー",
+  "customEditor.displayName": "Tokotachi Designer",
+  "command.newWindow.title": "新しいウィンドウ...",
+  "command.generateCode.title": "コードを生成",
+  "command.openAsText.title": "テキストとして開く",
+  "config.generateOnSave": "ウィンドウの定義(`*.ttui.json`)を保存したときに、C++ のコードを生成する。",
+  "config.commentLocale": "生成するコードのコメントの言語。",
+  "config.namespace": "生成するクラスの名前空間(例: `app::ui`)。空なら使わない。",
+  "config.headerDir": "生成するヘッダのフォルダ(定義ファイルからの相対パス)。空なら定義ファイルと同じフォルダ。",
+  "config.sourceDir": "生成するソースのフォルダ(定義ファイルからの相対パス)。空なら定義ファイルと同じフォルダ。",
+  "config.colorScheme": "キャンバスの配色。`auto` は VS Code の配色テーマに合わせる。"
+}

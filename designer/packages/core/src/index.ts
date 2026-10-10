@@ -29,3 +29,13 @@ export { serializeDocument } from './dsl/serialize.ts';
 export * from './dsl/tree.ts';
 export { validateDocument } from './dsl/validate.ts';
 export { checkValue, COLOR_PATTERN, isEnumValue, isShortcut } from './dsl/values.ts';
+export * from './dsl/outline.ts';
+export {
+  applyCommand,
+  defaultEventOf,
+  defaultHandlerName,
+  type CommandResult,
+  type EditCommand,
+} from './edit/commands.ts';
+export { minimalTextEdit, type TextEdit } from './edit/textEdit.ts';
+export type * from './protocol.ts';

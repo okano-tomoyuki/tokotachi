@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Webview と拡張をビルドし、見本の写しを用意する(F5 の前に動く)
+      "label": "build",
+      "type": "shell",
+      "command": "node tools/dev/playground.mjs && pnpm --filter @tokotachi-designer/webview run build && pnpm --filter tokotachi-designer run build",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "silent" }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  // F5(Run Extension)で開発用のホストが起動の直後に落ちるのを避ける(Bethany の docs/designer/development.md と同じ)
+  "debug.javascript.enableNetworkView": false,
+  "cmake.sourceDirectory": "C:/source/gui/designer/canvas"
+}

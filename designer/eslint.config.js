@@ -28,6 +28,7 @@ export default defineConfig(
             '*.ts',
             'packages/*/vitest.config.ts',
             'packages/*/build.mjs',
+            'packages/webview/vite.config.ts',
           ],
         },
         tsconfigRootDir: import.meta.dirname,
@@ -39,7 +40,19 @@ export default defineConfig(
     rules: { 'no-restricted-imports': ['error', pureModuleRestrictions] },
   },
   {
-    files: ['tools/**', 'packages/cli/**', '*.js', '*.ts', 'packages/*/build.mjs'],
+    files: ['packages/webview/src/**'],
+    languageOptions: { globals: globals.browser },
+  },
+  {
+    files: [
+      'tools/**',
+      'packages/cli/**',
+      'packages/extension/**',
+      'packages/canvas/**',
+      '*.js',
+      '*.ts',
+      'packages/*/build.mjs',
+    ],
     languageOptions: { globals: globals.node },
   },
   {

@@ -7,14 +7,14 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "pnpm --filter @tokotachi-designer/cli run build",
+    "build": "pnpm --filter @tokotachi-designer/webview --filter tokotachi-designer --filter @tokotachi-designer/cli run build",
     "typecheck": "pnpm -r run typecheck && tsc -p tools",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && node tools/canvas/table.mts --check && pnpm test",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm catalog:check && pnpm --filter tokotachi-designer check:schema && node tools/canvas/table.mts --check && pnpm test",
     "catalog:extract": "node tools/catalog/extract.mts",
     "catalog:check": "node tools/catalog/extract.mts --check",
     "codegen:verify-cpp": "node tools/codegen/verify-cpp.mts",
@@ -22,7 +22,8 @@
     "canvas:table": "node tools/canvas/table.mts",
     "canvas:build": "node tools/canvas/build.mts",
     "canvas:verify": "node tools/canvas/verify.mts",
-    "catalog:measure": "node tools/catalog/measure.mts"
+    "catalog:measure": "node tools/catalog/measure.mts",
+    "package": "pnpm --filter tokotachi-designer run package"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

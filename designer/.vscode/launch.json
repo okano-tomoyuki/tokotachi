@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 拡張の開発用のホストを起動する(designer/ を VS Code で開いて F5)。見本の写し(.cache/playground)を開く
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/extension",
+        // 開発用のウィンドウでは、ほかの拡張を読み込まない
+        "--disable-extensions",
+        "${workspaceFolder}/.cache/playground"
+      ],
+      "outFiles": ["${workspaceFolder}/packages/extension/dist/**/*.cjs"],
+      "preLaunchTask": "build"
+    }
+  ]
+}

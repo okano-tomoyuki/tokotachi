@@ -54,11 +54,13 @@ interface Module {
   HEAPU8: Uint8Array;
 }
 
-/** wasm/ の場所(既定はこのパッケージの wasm/)。 */
-export const DEFAULT_WASM_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'wasm');
+/** wasm/ の場所(既定はこのパッケージの wasm/)。拡張にまとめるときは、読み込むときに場所を渡す。 */
+export function defaultWasmDir(): string {
+  return join(dirname(fileURLToPath(import.meta.url)), '..', 'wasm');
+}
 const MODULE_FILE = 'tokotachi_canvas.mjs';
 
-export function isBuilt(wasmDir: string = DEFAULT_WASM_DIR): boolean {
+export function isBuilt(wasmDir: string = defaultWasmDir()): boolean {
   return existsSync(join(wasmDir, MODULE_FILE));
 }
 
@@ -76,7 +78,7 @@ export class Canvas {
   static async load(
     options: { wasmDir?: string; fonts?: readonly string[] } = {},
   ): Promise<Canvas> {
-    const dir = options.wasmDir ?? DEFAULT_WASM_DIR;
+    const dir = options.wasmDir ?? defaultWasmDir();
     const file = join(dir, MODULE_FILE);
     if (!existsSync(file)) {
       throw new Error(`${file} が無い。pnpm canvas:build で作る`);

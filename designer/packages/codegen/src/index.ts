@@ -10,6 +10,7 @@ import { createFile, mergeFile, type GeneratedCode, type MergeResult } from './r
 import { findStaleNames, staleNamesWarning } from './stale.ts';
 
 export { regionHash } from './hash.ts';
+export { findHandler, type HandlerPosition } from './locate.ts';
 export {
   baseName,
   DEFAULT_CPP_OPTIONS,
