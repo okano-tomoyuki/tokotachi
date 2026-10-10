@@ -141,9 +141,25 @@
 | `tabs` | | タブのノードの配列 | `TabWidget` だけ。`{ "name"?, "properties": { "title": "一般" }, "page": 部品のノード }`(`add_tab`) |
 | `panes` | | 区画のノードの配列 | `Splitter` だけ。`{ "name"?, "properties": { "stretch": 0, "collapsible": true }, "widget": 部品のノード }`(`add_widget`) |
 | `content` | | 部品のノード | `ScrollArea` だけ(`ScrollArea::content`) |
+| `columns` | | 列のノードの配列 | `ListView`・`TreeView` だけ。`{ "name"?, "properties": { "title": "名前", "width": 200, "alignment": "END" } }`(`add_column`。§4.2.1) |
 
 - 子を持つ部品を組むには、ふつう `class` を `Widget` にしてレイアウトを書く(上の例の `row_search`)。
+- 列(`columns`)は子の部品ではないが、タブ・区画と同じく専用のキーで書く(§4.2.1)。
 - 配列の順が生成の順になる。フォーカスを Tab キーで移す順にも影響する。
+
+#### 4.2.1 一覧の列(`columns`)
+
+ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。`properties` は Column のプロパティ(`title`・`width`・`alignment`)で、
+`title`・`width` は `add_column` の引数で渡し、それ以外は結果に設定する。列が無ければ見出しの無い 1 列の一覧になる。
+
+```json
+"columns": [
+  { "properties": { "title": "名前", "width": 200 } },
+  { "properties": { "title": "大きさ", "width": 80, "alignment": "END" } }
+]
+```
+
+一覧の中身(モデルの項目)はふつう実行時にコードで作るので、定義ファイルには書かない(§10 Q5)。
 
 ### 4.3 レイアウトのノード
 
@@ -285,7 +301,7 @@
 - `name`・メンバ関数の名前の重複と、識別子・予約語・基底クラスのメンバとの衝突
 - クラス・プロパティ・ハンドラがカタログにあること、値が型に合うこと
 - 参照(Action・部品・メニュー)の解決と型の一致
-- 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content` は対応するクラスだけ、`buttons` は Dialog だけ)
+- 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content`・`columns` は対応するクラスだけ、`buttons` は Dialog だけ)
 - レイアウトの項目の制約(GridLayout のセルの重なり、BoxLayout の項目のキー)
 - 同じメンバ関数を書いたハンドラの型が一致すること
 - 生成したコードの一時的な変数の名前(codegen-design.md N3)とノードの `name` が重ならないこと
@@ -299,7 +315,7 @@ Bethany と同じ。
 
 - 実装は [serialize.ts](../../designer/packages/core/src/dsl/serialize.ts)。`*.ttui.json` は Prettier の対象から外している。
 - キーの順: ドキュメントは `$schema`・`format_version`・`window`・`actions`・`objects`・`variables`。Variable は `name`・`type`・`value`・`events`。レイアウトは `name`・`class`・`properties`・`rows`・`columns`・`items`。ノードは `name`・`class`・`properties`・`events`・
-  そのあとに子を表すキー(`menu_bar`・`tool_bar`・`status_bar`・`layout`・`children`・`tabs`・`panes`・`content`・`buttons`・`items` 等)。
+  そのあとに子を表すキー(`menu_bar`・`tool_bar`・`status_bar`・`layout`・`children`・`tabs`・`panes`・`content`・`columns`・`buttons`・`items` 等)。
   レイアウトの項目は `widget` を最後に置く(設定が先に読める)。`properties`・`events` の中はカタログの順。
 - `properties` とノードは 1 行に 1 つのキー。値が単純なもの(文字列・数値・真偽とその配列)だけのオブジェクト・配列は、
   1 行(100 文字)に収まれば 1 行で書く。
@@ -318,7 +334,7 @@ Bethany と同じ。
 | Q2 | 生成するファイルの名前 | 定義ファイルの名前から(`main_window.ttui.json` → `main_window.hpp`・`main_window.cpp`)。クラス名は `window.name` |
 | Q3 | Variable と結びつけ(`bind`) | **決定(2026-10-10)**: 案のとおり、`variables`(名前・型・初期値・ハンドラ。§4.8)をドキュメントに置き、プロパティに `{ "bind": "変数の名前" }` と書く(§5.2)。部品どうしを直接結ぶこと(読み取り専用のプロパティからの一方向の結びつけ)は扱わない(Variable を介せば同じことができる) |
 | Q4 | 画像(Action・ボタンの `icon` 等) | **決定(2026-10-10)**: 定義ファイルからの相対パスを書き、生成するコードには中身を埋め込む(§5.1)。実行時に読むと、作業フォルダ・インストール先に依って見つからなくなるため。アイコンは小さいので、ソースが大きくなるのは許す |
-| Q5 | 一覧の列・モデル(ListView の `add_column`、ListModel・TreeModel の項目) | 列はコレクション(`columns`)として書く。モデルの中身はふつうコードで作るので、デザイナーでは扱わない案 |
+| Q5 | 一覧の列・モデル(ListView の `add_column`、ListModel・TreeModel の項目) | **決定(2026-10-10)**: 列は部品の `columns` に書く(§4.2.1)。モデル(ListModel・TreeModel)とその中身はふつうコードで作るので、デザイナーでは扱わない |
 | Q6 | 再利用できる部品の組み合わせ(C++Builder のフレーム) | ルートを `Widget` にしたファイルを認め、別のファイルから部品として置く。MVP の後 |
 | Q7 | 色の書き方 | ThemeColor は役割(テーマに従う)と具体的な色の両方を持つので、役割の名前と `#RRGGBB(AA)` の両方を書けるようにする |
 | Q8 | ハンドラのメンバ関数を生成するか、ラムダで書くか | メンバ関数(C++Builder と同じ。利用者がソースの中身を書く場所が決まる)。ラムダの本体を定義ファイルに書くことはしない |

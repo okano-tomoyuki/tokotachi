@@ -15,6 +15,7 @@ import { namedNodes } from '../dsl/tree.ts';
 import { validateDocument } from '../dsl/validate.ts';
 import type { WidgetNode } from '../dsl/schema.ts';
 import {
+  addColumn,
   addObject,
   addSpacer,
   addWidget,
@@ -128,6 +129,13 @@ export type EditCommand =
       readonly type?: VariableType;
       readonly value?: PropertyValue;
     }
+  /** 一覧の部品(ListView・TreeView)に列を足す(index が無ければ最後)。 */
+  | {
+      readonly kind: 'addColumn';
+      readonly target: JsonPath;
+      readonly title: string;
+      readonly index?: number;
+    }
   /** 同じ並びの中で前(-1)・後ろ(1)へ動かす。 */
   | { readonly kind: 'moveSibling'; readonly target: JsonPath; readonly delta: number }
   | { readonly kind: 'batch'; readonly commands: readonly EditCommand[] };
@@ -185,6 +193,9 @@ function classOf(path: JsonPath, node: Json): string {
   }
   if (parentKey === 'panes') {
     return 'SplitterPane';
+  }
+  if (parentKey === 'columns') {
+    return 'Column';
   }
   throw new CommandError(l10n.t('The target has no properties: {0}', path.join('.')));
 }
@@ -407,6 +418,9 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
       }
       return;
     }
+    case 'addColumn':
+      addColumn(doc, command.target, command.title, command.index);
+      return;
     case 'addVariable':
       addVariable(doc, command.name, command.type, command.value);
       return;

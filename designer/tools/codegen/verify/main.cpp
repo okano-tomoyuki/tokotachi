@@ -85,6 +85,11 @@ int main(int argc, char** argv)
     check(window.splitter_main->panes.get()[0]->collapsible.get() && window.splitter_main->panes.get()[0]->stretch.get() == 0,
           "splitter pane properties");
     check(window.tab_widget_files->tabs.get().size() == 2 && !window.tab_detail->enabled.get(), "tabs");
+    check(window.list_view_files->columns.get().size() == 3 &&
+              window.list_view_files->columns.get()[0]->width.get() == 200 &&
+              window.list_view_files->columns.get()[1]->alignment.get() == tokotachi::Align::END &&
+              window.column_modified->title.get() == "更新日時",
+          "list columns");
     // メニュー・ツールバー・ステータスバー
     check(window.menu_bar.get() != nullptr && window.menu_bar.get()->menus.get().size() == 2, "menu bar");
     // actions は区切りとサブメニューを除く

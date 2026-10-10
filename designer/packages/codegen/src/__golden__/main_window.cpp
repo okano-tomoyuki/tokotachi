@@ -125,6 +125,10 @@ void MainWindow::tokotachi_setup_ui()
     list_view_files->sorting_enabled = true;
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
     list_view_files->on_activate = [this](tokotachi::Object* sender) { list_view_files_activate(sender); };
+    list_view_files->add_column("名前", 200);
+    tokotachi::Column* list_view_files_column_2 = list_view_files->add_column("大きさ", 80);
+    list_view_files_column_2->alignment = tokotachi::Align::END;
+    column_modified = list_view_files->add_column("更新日時");
     tab_widget_files->add_tab(list_view_files, "ファイル");
 
     page_detail = new tokotachi::Widget(tab_widget_files);
@@ -178,7 +182,7 @@ void MainWindow::tokotachi_setup_ui()
 
     window_layout->add(row_buttons);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="186f9bdf">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="453c1dd4">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)

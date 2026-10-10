@@ -142,7 +142,28 @@
                           "sorting_enabled": true,
                           "selection_mode": "MULTI"
                         },
-                        "events": { "on_activate": "list_view_files_activate" }
+                        "events": { "on_activate": "list_view_files_activate" },
+                        "columns": [
+                          {
+                            "properties": {
+                              "title": "名前",
+                              "width": 200
+                            }
+                          },
+                          {
+                            "properties": {
+                              "title": "大きさ",
+                              "width": 80,
+                              "alignment": "END"
+                            }
+                          },
+                          {
+                            "name": "column_modified",
+                            "properties": {
+                              "title": "更新日時"
+                            }
+                          }
+                        ]
                       }
                     },
                     {

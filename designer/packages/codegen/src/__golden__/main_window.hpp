@@ -33,6 +33,7 @@ public:
     tokotachi::TabWidget* tab_widget_files;
     tokotachi::Tab* tab_detail;
     tokotachi::ListView* list_view_files;
+    tokotachi::Column* column_modified;
     tokotachi::Widget* page_detail;
     tokotachi::Label* label_name;
     tokotachi::LineEdit* line_edit_name;
@@ -51,7 +52,7 @@ public:
     void tab_widget_files_change(tokotachi::Object* sender);
     void list_view_files_activate(tokotachi::Object* sender);
     void button_close_click(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="9e3e2a52">
+    // <tokotachi-designer:end id="declarations" hash="9800f673">
 
 private:
     void tokotachi_setup_ui();

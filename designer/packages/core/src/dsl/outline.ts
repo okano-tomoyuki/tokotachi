@@ -19,6 +19,7 @@ export type OutlineKind =
   | 'spacer'
   | 'tab'
   | 'pane'
+  | 'column'
   | 'menu_bar'
   | 'menu'
   | 'menu_item'
@@ -62,6 +63,15 @@ function node(
 
 function widget(w: WidgetNode, path: JsonPath): OutlineNode {
   const children: OutlineNode[] = [];
+  w.columns?.forEach((c, i) => {
+    const title = c.properties?.['title'];
+    children.push(
+      node([...path, 'columns', i], 'column', c.name ?? (typeof title === 'string' ? title : ''), {
+        class: 'Column',
+        editable: true,
+      }),
+    );
+  });
   if (w.layout) {
     children.push(layout(w.layout, [...path, 'layout'], w.name));
   }

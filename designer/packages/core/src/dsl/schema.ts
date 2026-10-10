@@ -43,6 +43,8 @@ export interface WidgetNode {
   readonly panes?: readonly PaneNode[] | undefined;
   /** ScrollArea の中身。 */
   readonly content?: WidgetNode | undefined;
+  /** ListView・TreeView の列。 */
+  readonly columns?: readonly ColumnNode[] | undefined;
 }
 
 /** レイアウトの項目。どのキーを書けるかはレイアウトのクラスで決まる(意味の検証で調べる)。 */
@@ -86,6 +88,12 @@ export interface TabNode {
   readonly page: WidgetNode;
 }
 
+/** 一覧の列(ItemView::add_column)。properties は Column のプロパティ(title・width・alignment)。 */
+export interface ColumnNode {
+  readonly name?: string | undefined;
+  readonly properties?: Properties | undefined;
+}
+
 export interface PaneNode {
   readonly name?: string | undefined;
   readonly properties?: Properties | undefined;
@@ -112,6 +120,9 @@ export const WidgetNode: z.ZodType<WidgetNode> = z.strictObject({
   },
   get content() {
     return WidgetNode.optional();
+  },
+  get columns() {
+    return z.array(ColumnNode).optional();
   },
 });
 
@@ -151,6 +162,11 @@ export const TabNode: z.ZodType<TabNode> = z.strictObject({
   get page() {
     return WidgetNode;
   },
+});
+
+export const ColumnNode: z.ZodType<ColumnNode> = z.strictObject({
+  name: z.string().optional(),
+  properties: Properties.optional(),
 });
 
 export const PaneNode: z.ZodType<PaneNode> = z.strictObject({

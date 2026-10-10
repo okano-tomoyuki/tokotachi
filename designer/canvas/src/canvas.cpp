@@ -392,6 +392,13 @@ private:
                 return split->add_widget(arg_widget(args, 0), arg_int(args, 1, 1));
             }
         }
+        if (tokotachi::ItemView* view = dynamic_cast<tokotachi::ItemView*>(object))
+        {
+            if (method == "add_column")
+            {
+                return view->add_column(arg_string(args, 0), arg_float(args, 1, 120));
+            }
+        }
         if (tokotachi::TabWidget* tabs = dynamic_cast<tokotachi::TabWidget*>(object))
         {
             if (method == "add_tab")
@@ -596,16 +603,18 @@ EMSCRIPTEN_KEEPALIVE const char* ttc_defaults()
     tokotachi::MenuBar* bar = new tokotachi::MenuBar(host);
     tokotachi::TabWidget* tabs = new tokotachi::TabWidget(host);
     tokotachi::Splitter* split = new tokotachi::Splitter(host);
+    tokotachi::ListView* list = new tokotachi::ListView(host);
     std::map<std::string, tokotachi::Object*> extra;
     extra["Window"] = &window;
     extra["Dialog"] = dialog;
     extra["Menu"] = bar->add_menu(std::string());
     extra["Tab"] = tabs->add_tab(new tokotachi::Widget(tabs), std::string());
     extra["SplitterPane"] = split->add_widget(new tokotachi::Widget(split));
+    extra["Column"] = list->add_column(std::string());
 
-    const char* const CLASSES[] = {"Window", "Dialog", "Menu", "Tab", "SplitterPane"};
+    const char* const CLASSES[] = {"Window", "Dialog", "Menu", "Tab", "SplitterPane", "Column"};
     std::vector<std::string> classes = ttc::creatable_classes();
-    classes.insert(classes.end(), CLASSES, CLASSES + 5);
+    classes.insert(classes.end(), CLASSES, CLASSES + 6);
 
     ttc::Json result = ttc::Json::object();
     for (std::size_t i = 0; i < classes.size(); ++i)

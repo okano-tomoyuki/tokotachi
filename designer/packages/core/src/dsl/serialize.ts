@@ -13,6 +13,7 @@ import { findClass, getCatalog } from '../catalog/catalog.ts';
 import type { ClassInfo } from '../catalog/types.ts';
 import type {
   ActionNode,
+  ColumnNode,
   LayoutItem,
   LayoutNode,
   MenuItem,
@@ -85,6 +86,8 @@ const CHILD_TRANSFORMS: Transform = {
       }),
     ),
   content: (c) => widgetNode(c as WidgetNode),
+  columns: (list) =>
+    (list as ColumnNode[]).map((c) => pick(c, ['name', 'properties'], members('Column'))),
 };
 
 function windowNode(w: WindowNode): Json {
@@ -143,6 +146,7 @@ function widgetNode(node: WidgetNode): Json {
       'tabs',
       'panes',
       'content',
+      'columns',
     ],
     members(node.class, CHILD_TRANSFORMS),
   );

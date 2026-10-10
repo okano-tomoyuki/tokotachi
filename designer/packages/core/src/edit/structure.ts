@@ -358,9 +358,10 @@ export function removeNodes(doc: TtuiDocument, paths: readonly JsonPath[]): void
         parentKey === 'menus' ||
         parentKey === 'actions' ||
         parentKey === 'objects' ||
-        parentKey === 'variables')
+        parentKey === 'variables' ||
+        parentKey === 'columns')
     ) {
-      // 空き・タブ・区画・メニュー・ツールバーの項目・Action・オブジェクト・Variable
+      // 空き・タブ・区画・メニュー・ツールバーの項目・Action・オブジェクト・Variable・列
       const list = valueAt(root, path.slice(0, -1));
       if (Array.isArray(list)) {
         (list as unknown[]).splice(key, 1);
@@ -396,7 +397,7 @@ export function tidy(node: unknown): void {
     if (
       Array.isArray(value) &&
       value.length === 0 &&
-      ['items', 'tabs', 'panes', 'children', 'widgets', 'menus'].includes(key)
+      ['items', 'tabs', 'panes', 'children', 'widgets', 'menus', 'columns'].includes(key)
     ) {
       removeKey(node, key);
     } else {
@@ -428,6 +429,24 @@ export function addObject(doc: TtuiDocument, cls: string): void {
   }
   const root = doc as unknown as Json;
   arrayOf(root, 'objects').push({ name: newName(doc, snakeCase(cls)), class: cls });
+}
+
+/** 一覧の部品に列を足す(見出しの文字を title に書く)。 */
+export function addColumn(
+  doc: TtuiDocument,
+  target: JsonPath,
+  title: string,
+  index?: number,
+): void {
+  const node = objectAt(doc, target);
+  const cls = typeof node['class'] === 'string' ? node['class'] : '';
+  if (!(findClass(cls)?.child_keys ?? []).includes('columns')) {
+    throw new CommandError(l10n.t('{0} cannot have "{1}"', cls, 'columns'));
+  }
+  const list = arrayOf(node, 'columns');
+  list.splice(Math.max(0, Math.min(index ?? list.length, list.length)), 0, {
+    properties: { title },
+  });
 }
 
 /** 空き(BoxLayout の伸びる空き・固定の空き)を足す。 */

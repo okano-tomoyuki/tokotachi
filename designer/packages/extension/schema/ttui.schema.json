@@ -685,6 +685,27 @@
         },
         "content": {
           "$ref": "#/$defs/__schema2"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "required": [

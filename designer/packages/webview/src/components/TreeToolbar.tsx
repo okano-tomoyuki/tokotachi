@@ -2,6 +2,7 @@
  * 構造の木の上のボタン(docs/designer/editor-design.md §5)。選んだノードに合わせて、足す・並べ替える操作を出す。
  */
 import {
+  findClass,
   l10n,
   newName,
   valueAt,
@@ -79,6 +80,22 @@ function opsFor(node: OutlineNode): Op[] {
         }
       }
       break;
+    case 'widget':
+    case 'column': {
+      // 一覧の部品(ListView・TreeView)と、その列: 列を足す(列を選んでいれば、その後ろに)
+      const view = node.kind === 'column' ? p.slice(0, -2) : p;
+      const cls = (valueAt(doc, view) as Json | undefined)?.['class'];
+      if (typeof cls === 'string' && (findClass(cls)?.child_keys ?? []).includes('columns')) {
+        const index =
+          node.kind === 'column' ? Number(p[p.length - 1]) + 1 : length(view, 'columns');
+        ops.push({
+          label: `+ ${l10n.t('Column')}`,
+          title: l10n.t('Add a column'),
+          run: send({ kind: 'addColumn', target: view, title: l10n.t('Column'), index }),
+        });
+      }
+      break;
+    }
     case 'menu_bar':
       ops.push({
         label: `+ ${l10n.t('Menu')}`,

@@ -15,6 +15,8 @@ import {
   tabVariable,
   TOOL_BAR_VARIABLE,
   type Events,
+  columnVariable,
+  type ColumnNode,
   type LayoutItem,
   type LayoutNode,
   type MenuNode,
@@ -365,6 +367,9 @@ class SetupBuilder {
     for (const a of node.actions ?? []) {
       this.call(name, 'add_action', [ref(a)]);
     }
+    node.columns?.forEach((c, i) => {
+      this.column(c, columnVariable(c, name, i), name);
+    });
     const hasChildren =
       node.layout !== undefined ||
       node.children !== undefined ||
@@ -442,6 +447,32 @@ class SetupBuilder {
         value: node.content.name,
       });
     }
+  }
+
+  /** 列(`add_column(title, width)`。width は既定の 120 なら省く。alignment は結果に設定する)。 */
+  private column(column: ColumnNode, variable: string, view: string): void {
+    const title = column.properties?.['title'];
+    const width = column.properties?.['width'];
+    const passed = [
+      ...(bindingOf(title) === undefined ? ['title'] : []),
+      ...(typeof width === 'number' ? ['width'] : []),
+    ];
+    this.withPart(
+      'Column',
+      column.name,
+      variable,
+      view,
+      'add_column',
+      trimDefaults(
+        [
+          str(typeof title === 'string' ? title : ''),
+          float(typeof width === 'number' ? width : 120),
+        ],
+        [undefined, float(120)],
+      ),
+      column.properties,
+      passed,
+    );
   }
 
   /**

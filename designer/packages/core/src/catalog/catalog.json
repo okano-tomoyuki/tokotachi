@@ -2147,6 +2147,9 @@
       ],
       "kind": "widget",
       "category": "view",
+      "child_keys": [
+        "columns"
+      ],
       "doc": "項目の一覧を表示するビュー(docs/adr/0026)。モデルの一番上の行だけを表示する。",
       "properties": {
         "x": {
@@ -2333,6 +2336,9 @@
       ],
       "kind": "widget",
       "category": "view",
+      "child_keys": [
+        "columns"
+      ],
       "doc": "項目の木を表示するビュー(docs/adr/0026)。子のある項目は、左の印・ダブルクリック・→← で開閉する。",
       "properties": {
         "x": {
@@ -3947,6 +3953,36 @@
           "declared_in": "SplitterPane",
           "doc": "たためるか(既定 true)。",
           "default": true
+        }
+      },
+      "handlers": {}
+    },
+    "Column": {
+      "bases": [
+        "Object"
+      ],
+      "kind": "part",
+      "doc": "ビューの 1 つの列。ItemView が作り、所有する。",
+      "properties": {
+        "title": {
+          "type": "string",
+          "declared_in": "Column",
+          "doc": "見出しの文字。",
+          "default": ""
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Column",
+          "doc": "幅(dp。24 以上)。利用者は見出しの境目のドラッグでも変えられる。最後の列は、ビューに余りがあれば広げて描く。",
+          "default": 120
+        },
+        "alignment": {
+          "type": {
+            "enum": "Align"
+          },
+          "declared_in": "Column",
+          "doc": "セルの中の文字のそろえ方(START・CENTER・END。FILL は START と同じ)。",
+          "default": "START"
         }
       },
       "handlers": {}

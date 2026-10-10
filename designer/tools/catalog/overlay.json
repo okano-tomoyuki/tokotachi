@@ -14,8 +14,8 @@
     "ComboBox": { "kind": "widget", "category": "input" },
     "Label": { "kind": "widget", "category": "display" },
     "ProgressBar": { "kind": "widget", "category": "display" },
-    "ListView": { "kind": "widget", "category": "view" },
-    "TreeView": { "kind": "widget", "category": "view" },
+    "ListView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
+    "TreeView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "Widget": { "kind": "widget", "category": "container", "accepts_children": true },
     "TabWidget": { "kind": "widget", "category": "container", "child_keys": ["tabs"] },
     "Splitter": { "kind": "widget", "category": "container", "child_keys": ["panes"] },
@@ -35,6 +35,7 @@
     "StatusBar": { "kind": "part" },
     "Tab": { "kind": "part" },
     "SplitterPane": { "kind": "part" },
+    "Column": { "kind": "part" },
     "Variable": { "kind": "part" }
   },
   "$comment_excluded": "Widget の派生で、利用者が親を渡して作れるが、パレットに出さないもの。新しい部品を足したら classes か excluded に書く。",

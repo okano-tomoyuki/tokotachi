@@ -57,6 +57,8 @@ describe('tree', () => {
       'splitter_main_pane_1',
       'splitter_main_pane_2',
       'tab_widget_files_tab_1',
+      'list_view_files_column_1',
+      'list_view_files_column_2',
     ]);
   });
 });

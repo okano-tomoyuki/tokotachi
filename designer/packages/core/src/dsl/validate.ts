@@ -375,6 +375,7 @@ class Validator {
       readonly tabs?: readonly unknown[] | undefined;
       readonly panes?: readonly unknown[] | undefined;
       readonly content?: WidgetNode | undefined;
+      readonly columns?: readonly unknown[] | undefined;
     },
     path: JsonPath,
     cls: string,
@@ -399,7 +400,7 @@ class Validator {
         [...path, 'children'],
       );
     }
-    for (const key of ['tabs', 'panes', 'content'] as const) {
+    for (const key of ['tabs', 'panes', 'content', 'columns'] as const) {
       if (node[key] !== undefined && !(info.child_keys ?? []).includes(key)) {
         this.error('child-key-not-allowed', l10n.t('{0} cannot have "{1}"', cls, key), [
           ...path,
@@ -429,6 +430,9 @@ class Validator {
     });
     node.panes?.forEach((p, i) => {
       this.checkProperties('SplitterPane', p.properties, [...path, 'panes', i]);
+    });
+    node.columns?.forEach((c, i) => {
+      this.checkProperties('Column', c.properties, [...path, 'columns', i]);
     });
   }
 

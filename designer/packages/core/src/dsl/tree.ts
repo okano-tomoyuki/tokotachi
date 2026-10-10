@@ -4,6 +4,7 @@
  */
 import type { JsonPath } from './diagnostics.ts';
 import type {
+  ColumnNode,
   LayoutNode,
   MenuNode,
   PaneNode,
@@ -148,6 +149,7 @@ export type NamedKind =
   | 'layout'
   | 'tab'
   | 'pane'
+  | 'column'
   | 'menu_bar'
   | 'tool_bar'
   | 'status_bar'
@@ -203,6 +205,9 @@ export function namedNodes(doc: TtuiDocument): NamedNode[] {
     e.node.panes?.forEach((p, i) => {
       add(p.name, 'pane', 'SplitterPane', [...e.path, 'panes', i]);
     });
+    e.node.columns?.forEach((c, i) => {
+      add(c.name, 'column', 'Column', [...e.path, 'columns', i]);
+    });
   }
   return out;
 }
@@ -233,6 +238,11 @@ export function tabVariable(tab: TabNode, owner: string, index: number): string 
 
 export function paneVariable(pane: PaneNode, owner: string, index: number): string {
   return pane.name ?? `${owner}_pane_${String(index + 1)}`;
+}
+
+/** 名前の無い列の一時的な変数の名前(部品の名前 + `_column_` + 1 から数えた番号)。 */
+export function columnVariable(column: ColumnNode, owner: string, index: number): string {
+  return column.name ?? `${owner}_column_${String(index + 1)}`;
 }
 
 /**
@@ -280,6 +290,11 @@ export function temporaryNames(doc: TtuiDocument): { name: string; path: JsonPat
     e.node.panes?.forEach((p, i) => {
       if (p.name === undefined) {
         out.push({ name: paneVariable(p, e.node.name, i), path: [...e.path, 'panes', i] });
+      }
+    });
+    e.node.columns?.forEach((c, i) => {
+      if (c.name === undefined) {
+        out.push({ name: columnVariable(c, e.node.name, i), path: [...e.path, 'columns', i] });
       }
     });
   }

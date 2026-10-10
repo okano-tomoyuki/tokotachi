@@ -101,6 +101,15 @@ Bethany と同じ。
   新しい検証のエラーが出るので失敗する。
 - `rename` は結びつけも書き換え、`remove` は結びつけていたプロパティに Variable の初期値を書く。
 
+### 3.5 一覧の列の編集
+
+| コマンド | 内容 |
+|---|---|
+| `addColumn` | ListView・TreeView に列を足す(見出しの文字を `title` に書く) |
+
+- 列の削除・並べ替えは `remove`・`moveSibling`、プロパティ(title・width・alignment)は `setProperties`。
+- 構造の木では列を一覧の部品の子に出し、一覧の部品か列を選んでいるときに「+ 列」を出す。列を選ぶと、キャンバスには一覧の部品の枠を出す。
+
 ## 4. キャンバス
 
 - 拡張は、TextDocument が変わるたびに(続けて変わったときは最後の内容だけを)、WebAssembly の Tokotachi で描き直し、

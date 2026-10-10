@@ -5904,6 +5904,61 @@ bool get_SplitterPane(tokotachi::SplitterPane* o, const std::string& p, Json& ou
     return false;
 }
 
+bool set_Column(tokotachi::Column* o, const std::string& p, const Json& v)
+{
+    if (p == "title")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->title = t;
+        return true;
+    }
+    if (p == "width")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->width = t;
+        return true;
+    }
+    if (p == "alignment")
+    {
+        tokotachi::Align t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->alignment = t;
+        return true;
+    }
+    return false;
+}
+
+bool get_Column(tokotachi::Column* o, const std::string& p, Json& out)
+{
+    if (p == "title")
+    {
+        out = to_json(o->title.get());
+        return true;
+    }
+    if (p == "width")
+    {
+        out = to_json(o->width.get());
+        return true;
+    }
+    if (p == "alignment")
+    {
+        out = to_json(o->alignment.get());
+        return true;
+    }
+    return false;
+}
+
 }  // namespace
 
 tokotachi::Object* create(const std::string& cls, tokotachi::Object* parent)
@@ -6134,6 +6189,10 @@ bool set_property(tokotachi::Object* object, const std::string& cls, const std::
     {
         return set_SplitterPane(static_cast<tokotachi::SplitterPane*>(object), property, value);
     }
+    if (cls == "Column")
+    {
+        return set_Column(static_cast<tokotachi::Column*>(object), property, value);
+    }
     return false;
 }
 
@@ -6259,6 +6318,10 @@ bool get_property(tokotachi::Object* object, const std::string& cls, const std::
     {
         return get_SplitterPane(static_cast<tokotachi::SplitterPane*>(object), property, out);
     }
+    if (cls == "Column")
+    {
+        return get_Column(static_cast<tokotachi::Column*>(object), property, out);
+    }
     return false;
 }
 
@@ -6383,6 +6446,10 @@ std::vector<std::string> property_names(const std::string& cls)
     if (cls == "SplitterPane")
     {
         return std::vector<std::string>{"stretch", "collapsible"};
+    }
+    if (cls == "Column")
+    {
+        return std::vector<std::string>{"title", "width", "alignment"};
     }
     return std::vector<std::string>();
 }
