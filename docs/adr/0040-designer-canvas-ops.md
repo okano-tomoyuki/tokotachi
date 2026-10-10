@@ -58,4 +58,5 @@
   新しい呼び出し(`call` の method)を加えたら、キャンバスの `Runner::call` にも加える。
 - 公開のヘッダを変えたら、カタログの取り出し(`pnpm catalog:extract`)と、対応表の生成(`pnpm canvas:table`)を行う。
 - Linux の Node.js でのキャンバスの確認は、拡張の CI(`.github/workflows/designer.yml` の canvas。[ci.md](../designer/ci.md))で行う
-  (キャンバスを使うテスト・ネイティブとの画素の比較)。
+  (キャンバスを使うテスト・ネイティブとの画素の比較)。2026-10-10 に Ubuntu 24.04・Node.js 24 で、見本 2 つともネイティブ(GCC 13)と
+  **1 画素も違わなかった**(フォントは両方とも fontconfig で探した Noto CJK)。描く時間は組み直して約 12 ms(メインのウィンドウ)・約 2 ms(ダイアログ)。

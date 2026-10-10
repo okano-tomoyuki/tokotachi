@@ -15,7 +15,7 @@ Tokotachi 専用の GUI デザイナー(VS Code の拡張)の設計ドキュメ�
 | [editor-design.md](editor-design.md) | VS Code の拡張とデザイナーの画面(編集のしくみ・キャンバス・インスペクタ・コード生成) | 実装済み |
 | [project-spec.md](project-spec.md) | プロジェクトファイル(`*.ttproj.json`)と、起動部分・CMakeLists.txt の生成 | 実装済み |
 | [catalog.md](catalog.md) | カタログ(公開のヘッダからの取り出し・既定値の測定・手書きの補足) | 実装済み |
-| [ci.md](ci.md) | CI(WebAssembly のビルド・Linux でのキャンバスの確認・.vsix)と Marketplace への公開 | ワークフローを用意した(まだ CI で動かしていない) |
+| [ci.md](ci.md) | CI(WebAssembly のビルド・Linux でのキャンバスの確認・.vsix)と Marketplace への公開 | 実装済み(2026-10-10 に CI で通った) |
 
 ## 進める順序(ADR 0039)
 
