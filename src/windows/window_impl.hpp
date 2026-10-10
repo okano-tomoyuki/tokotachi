@@ -1,19 +1,19 @@
 // Window の中身(内部)。SDL3 のウィンドウ・描画のバッファ・入力の状態を持つ。
-#ifndef GUI_SRC_CORE_WINDOW_IMPL_HPP
-#define GUI_SRC_CORE_WINDOW_IMPL_HPP
+#ifndef TOKOTACHI_SRC_WINDOWS_WINDOW_IMPL_HPP
+#define TOKOTACHI_SRC_WINDOWS_WINDOW_IMPL_HPP
 
 #include <SDL3/SDL.h>
 
 #include <cstdint>
 #include <vector>
 
-#include <gui/windows/popup.hpp>
-#include <gui/core/timer.hpp>
-#include <gui/windows/window.hpp>
+#include <tokotachi/windows/popup.hpp>
+#include <tokotachi/core/timer.hpp>
+#include <tokotachi/windows/window.hpp>
 
 #include "../graphics/raster_canvas.hpp"
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -110,6 +110,6 @@ private:
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

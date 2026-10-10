@@ -1,12 +1,12 @@
 // UTF-8 の処理(内部)。
-#ifndef GUI_SRC_TEXT_UTF8_HPP
-#define GUI_SRC_TEXT_UTF8_HPP
+#ifndef TOKOTACHI_SRC_GRAPHICS_UTF8_HPP
+#define TOKOTACHI_SRC_GRAPHICS_UTF8_HPP
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -124,6 +124,6 @@ inline std::string normalize_multiline(const std::string& s)
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

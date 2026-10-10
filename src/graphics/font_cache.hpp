@@ -1,6 +1,6 @@
 // フォントの探索・フォールバックの順序・大きさごとのフォントの実体とグリフのキャッシュ(内部。docs/adr/0007)。
-#ifndef GUI_SRC_TEXT_FONT_CACHE_HPP
-#define GUI_SRC_TEXT_FONT_CACHE_HPP
+#ifndef TOKOTACHI_SRC_GRAPHICS_FONT_CACHE_HPP
+#define TOKOTACHI_SRC_GRAPHICS_FONT_CACHE_HPP
 
 #include <cstdint>
 #include <map>
@@ -9,13 +9,13 @@
 #include <utility>
 #include <vector>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 struct FT_LibraryRec_;
 struct FT_FaceRec_;
 struct hb_font_t;
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -94,6 +94,6 @@ private:
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

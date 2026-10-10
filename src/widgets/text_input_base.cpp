@@ -1,17 +1,17 @@
-#include <gui/widgets/text_input_base.hpp>
+#include <tokotachi/widgets/text_input_base.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/core/clipboard.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/core/clipboard.hpp>
 
 #include "../core/property_impl.hpp"
 #include "../graphics/utf8.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -21,13 +21,13 @@ const int BLINK_MS = 530;
 
 TextInputBase::TextInputBase(Widget* parent_widget, const std::string& initial_text, bool multi_line)
     : Widget(parent_widget),
-      GUI_PROPERTY_MEMBER_SELF_NOTIFY(TextInputBase, std::string, text),
-      GUI_PROPERTY_MEMBER(TextInputBase, std::string, placeholder_text),
-      GUI_PROPERTY_MEMBER(TextInputBase, Font, font),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(TextInputBase, std::size_t, cursor_position),
-      GUI_READONLY_PROPERTY(TextInputBase, bool, has_selection),
-      GUI_READONLY_PROPERTY(TextInputBase, std::string, selected_text),
-      GUI_HANDLER_PROPERTY(TextInputBase, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(TextInputBase, std::string, text),
+      TOKOTACHI_PROPERTY_MEMBER(TextInputBase, std::string, placeholder_text),
+      TOKOTACHI_PROPERTY_MEMBER(TextInputBase, Font, font),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(TextInputBase, std::size_t, cursor_position),
+      TOKOTACHI_READONLY_PROPERTY(TextInputBase, bool, has_selection),
+      TOKOTACHI_READONLY_PROPERTY(TextInputBase, std::string, selected_text),
+      TOKOTACHI_HANDLER_PROPERTY(TextInputBase, NotifyHandler, on_change),
       multi_line_(multi_line),
       text_(multi_line ? detail::normalize_multiline(initial_text) : detail::strip_control(initial_text)),
       cursor_(text_.size()),
@@ -719,4 +719,4 @@ Rect TextInputBase::input_method_rect() const
     return Rect(c.x, c.y, 1, l.ascent() + l.descent());
 }
 
-}  // namespace gui
+}  // namespace tokotachi

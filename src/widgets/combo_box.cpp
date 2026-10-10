@@ -1,17 +1,17 @@
-#include <gui/widgets/combo_box.hpp>
+#include <tokotachi/widgets/combo_box.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/layout/box_layout.hpp>
-#include <gui/graphics/canvas.hpp>
-#include <gui/widgets/scroll_area.hpp>
+#include <tokotachi/layout/box_layout.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/widgets/scroll_area.hpp>
 
 #include "../core/property_impl.hpp"
 #include "popup_list.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -22,12 +22,12 @@ const std::size_t MAX_ROWS = 10;  // 一覧に一度に見せる項目の数
 
 ComboBox::ComboBox(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ComboBox, std::vector<std::string>, items),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ComboBox, int, current_index),
-      GUI_READONLY_PROPERTY(ComboBox, std::string, current_text),
-      GUI_PROPERTY_MEMBER(ComboBox, std::string, placeholder_text),
-      GUI_PROPERTY_MEMBER(ComboBox, Font, font),
-      GUI_HANDLER_PROPERTY(ComboBox, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ComboBox, std::vector<std::string>, items),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ComboBox, int, current_index),
+      TOKOTACHI_READONLY_PROPERTY(ComboBox, std::string, current_text),
+      TOKOTACHI_PROPERTY_MEMBER(ComboBox, std::string, placeholder_text),
+      TOKOTACHI_PROPERTY_MEMBER(ComboBox, Font, font),
+      TOKOTACHI_HANDLER_PROPERTY(ComboBox, NotifyHandler, on_change),
       current_index_(-1),
       hovered_(false),
       popup_(nullptr),
@@ -259,4 +259,4 @@ void ComboBox::focus_out()
 
 void ComboBox::scale_changed() { layout_ = TextLayout(); }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,17 +1,17 @@
-#include <gui/widgets/button.hpp>
+#include <tokotachi/widgets/button.hpp>
 
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Button::Button(Widget* parent_widget, const std::string& initial_text)
-    : ButtonBase(parent_widget, initial_text), GUI_PROPERTY_MEMBER(Button, ButtonStyle, style), style_(ButtonStyle::PRIMARY)
+    : ButtonBase(parent_widget, initial_text), TOKOTACHI_PROPERTY_MEMBER(Button, ButtonStyle, style), style_(ButtonStyle::PRIMARY)
 {
 }
 
@@ -74,4 +74,4 @@ void Button::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

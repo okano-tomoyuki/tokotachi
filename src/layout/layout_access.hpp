@@ -1,10 +1,10 @@
 // Widget・Window の実装から Layout の保護された部分を扱うための窓口(内部)。
-#ifndef GUI_SRC_LAYOUT_LAYOUT_ACCESS_HPP
-#define GUI_SRC_LAYOUT_LAYOUT_ACCESS_HPP
+#ifndef TOKOTACHI_SRC_LAYOUT_LAYOUT_ACCESS_HPP
+#define TOKOTACHI_SRC_LAYOUT_LAYOUT_ACCESS_HPP
 
-#include <gui/layout/layout.hpp>
+#include <tokotachi/layout/layout.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -35,6 +35,6 @@ struct LayoutAccess
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

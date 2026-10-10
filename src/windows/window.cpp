@@ -1,17 +1,17 @@
-#include <gui/windows/window.hpp>
+#include <tokotachi/windows/window.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 
-#include <gui/core/application.hpp>
-#include <gui/layout/box_layout.hpp>
-#include <gui/graphics/canvas.hpp>
-#include <gui/widgets/label.hpp>
-#include <gui/windows/menu_bar.hpp>
-#include <gui/windows/status_bar.hpp>
-#include <gui/windows/tool_bar.hpp>
-#include <gui/windows/popup.hpp>
+#include <tokotachi/core/application.hpp>
+#include <tokotachi/layout/box_layout.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/widgets/label.hpp>
+#include <tokotachi/windows/menu_bar.hpp>
+#include <tokotachi/windows/status_bar.hpp>
+#include <tokotachi/windows/tool_bar.hpp>
+#include <tokotachi/windows/popup.hpp>
 
 #include "../layout/layout_access.hpp"
 #include "../actions/menu_access.hpp"
@@ -21,7 +21,7 @@
 #include "../widgets/widget_access.hpp"
 #include "window_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace detail
@@ -367,7 +367,7 @@ void WindowImpl::render(bool present)
     {
         if (trace_enabled())
         {
-            std::fprintf(stderr, "[gui] present         %s\n", trace_name(this));
+            std::fprintf(stderr, "[tokotachi] present         %s\n", trace_name(this));
         }
         SDL_RenderTexture(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
@@ -1006,13 +1006,13 @@ void WindowImpl::handle(const SDL_Event& e)
 }  // namespace detail
 
 Window::Window(const std::string& title_text, float width_dp, float height_dp)
-    : GUI_PROPERTY_GETTER(Window, std::string, title),
-      GUI_PROPERTY_GETTER(Window, ThemeColor, background),
-      GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
-      GUI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
-      GUI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
-      GUI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
-      GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
+    : TOKOTACHI_PROPERTY_GETTER(Window, std::string, title),
+      TOKOTACHI_PROPERTY_GETTER(Window, ThemeColor, background),
+      TOKOTACHI_READONLY_PROPERTY(Window, Widget*, focused_widget),
+      TOKOTACHI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
+      TOKOTACHI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
+      TOKOTACHI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
+      TOKOTACHI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
       background_(ColorRole::WINDOW),
       menu_bar_(nullptr),
@@ -1022,7 +1022,7 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
     Application* app = Application::instance();
     if (!app)
     {
-        std::fprintf(stderr, "gui::Window: create gui::Application first\n");
+        std::fprintf(stderr, "tokotachi::Window: create tokotachi::Application first\n");
         return;
     }
     detail::WidgetAccess::set_is_window(this, true);
@@ -1075,13 +1075,13 @@ void Window::set_background(const ThemeColor& v)
 Widget* Window::get_focused_widget() const { return d_->focus; }
 
 Window::Window(Object* owner_object)
-    : GUI_PROPERTY_GETTER(Window, std::string, title),
-      GUI_PROPERTY_GETTER(Window, ThemeColor, background),
-      GUI_READONLY_PROPERTY(Window, Widget*, focused_widget),
-      GUI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
-      GUI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
-      GUI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
-      GUI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
+    : TOKOTACHI_PROPERTY_GETTER(Window, std::string, title),
+      TOKOTACHI_PROPERTY_GETTER(Window, ThemeColor, background),
+      TOKOTACHI_READONLY_PROPERTY(Window, Widget*, focused_widget),
+      TOKOTACHI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
+      TOKOTACHI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
+      TOKOTACHI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
+      TOKOTACHI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
       d_(nullptr),
       background_(ColorRole::POPUP),
       menu_bar_(nullptr),
@@ -1248,4 +1248,4 @@ void Window::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

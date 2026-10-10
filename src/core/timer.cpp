@@ -1,19 +1,19 @@
-#include <gui/core/timer.hpp>
+#include <tokotachi/core/timer.hpp>
 
-#include <gui/core/application.hpp>
+#include <tokotachi/core/application.hpp>
 
 #include "application_impl.hpp"
 #include "property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Timer::Timer(Object* owner_object)
     : Object(owner_object),
-      GUI_PROPERTY_MEMBER(Timer, int, interval),
-      GUI_PROPERTY_MEMBER(Timer, bool, repeat),
-      GUI_PROPERTY_MEMBER(Timer, bool, enabled),
-      GUI_HANDLER_PROPERTY(Timer, NotifyHandler, on_timer),
+      TOKOTACHI_PROPERTY_MEMBER(Timer, int, interval),
+      TOKOTACHI_PROPERTY_MEMBER(Timer, bool, repeat),
+      TOKOTACHI_PROPERTY_MEMBER(Timer, bool, enabled),
+      TOKOTACHI_HANDLER_PROPERTY(Timer, NotifyHandler, on_timer),
       interval_(1000),
       repeat_(true),
       enabled_(false),
@@ -100,4 +100,4 @@ void Timer::timeout()
     detail::fire(on_timer_, self);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

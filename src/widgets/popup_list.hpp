@@ -1,15 +1,15 @@
 // ポップアップの中の項目の一覧(内部。ComboBox が使う。docs/adr/0022)。
-#ifndef GUI_SRC_WIDGETS_POPUP_LIST_HPP
-#define GUI_SRC_WIDGETS_POPUP_LIST_HPP
+#ifndef TOKOTACHI_SRC_WIDGETS_POPUP_LIST_HPP
+#define TOKOTACHI_SRC_WIDGETS_POPUP_LIST_HPP
 
 #include <functional>
 #include <string>
 #include <vector>
 
-#include <gui/graphics/text_layout.hpp>
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -51,6 +51,6 @@ private:
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

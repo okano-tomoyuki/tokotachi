@@ -1,15 +1,15 @@
-#include <gui/widgets/tab_widget.hpp>
+#include <tokotachi/widgets/tab_widget.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/windows/window.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/windows/window.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -25,9 +25,9 @@ const int HIT_RIGHT = -3;
 
 Tab::Tab(TabWidget* tab_widget, Widget* initial_page, const std::string& initial_title)
     : Object(tab_widget),
-      GUI_PROPERTY_MEMBER(Tab, std::string, title),
-      GUI_PROPERTY_MEMBER(Tab, bool, enabled),
-      GUI_READONLY_PROPERTY(Tab, Widget*, page),
+      TOKOTACHI_PROPERTY_MEMBER(Tab, std::string, title),
+      TOKOTACHI_PROPERTY_MEMBER(Tab, bool, enabled),
+      TOKOTACHI_READONLY_PROPERTY(Tab, Widget*, page),
       tab_widget_(tab_widget),
       page_(initial_page),
       title_(initial_title),
@@ -58,10 +58,10 @@ void Tab::set_enabled(const bool& v)
 
 TabWidget::TabWidget(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_READONLY_PROPERTY(TabWidget, std::vector<Tab*>, tabs),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(TabWidget, int, current_index),
-      GUI_READONLY_PROPERTY(TabWidget, Tab*, current_tab),
-      GUI_HANDLER_PROPERTY(TabWidget, NotifyHandler, on_change),
+      TOKOTACHI_READONLY_PROPERTY(TabWidget, std::vector<Tab*>, tabs),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(TabWidget, int, current_index),
+      TOKOTACHI_READONLY_PROPERTY(TabWidget, Tab*, current_tab),
+      TOKOTACHI_HANDLER_PROPERTY(TabWidget, NotifyHandler, on_change),
       current_(-1),
       scroll_(0),
       hover_(-1),
@@ -567,4 +567,4 @@ void TabWidget::scale_changed()
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,15 +1,15 @@
-#include <gui/widgets/button_base.hpp>
+#include <tokotachi/widgets/button_base.hpp>
 
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 ButtonBase::ButtonBase(Widget* parent_widget, const std::string& initial_text)
     : Widget(parent_widget),
-      GUI_PROPERTY_MEMBER(ButtonBase, std::string, text),
-      GUI_PROPERTY_MEMBER(ButtonBase, Font, font),
-      GUI_HANDLER_PROPERTY(ButtonBase, NotifyHandler, on_click),
+      TOKOTACHI_PROPERTY_MEMBER(ButtonBase, std::string, text),
+      TOKOTACHI_PROPERTY_MEMBER(ButtonBase, Font, font),
+      TOKOTACHI_HANDLER_PROPERTY(ButtonBase, NotifyHandler, on_click),
       text_(initial_text),
       hovered_(false),
       pressed_(false),
@@ -144,4 +144,4 @@ void ButtonBase::scale_changed() { layout_ = TextLayout(); }
 
 Size ButtonBase::compute_minimum_size() const { return compute_preferred_size(); }
 
-}  // namespace gui
+}  // namespace tokotachi

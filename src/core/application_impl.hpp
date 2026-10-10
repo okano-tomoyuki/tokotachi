@@ -1,16 +1,16 @@
 // Application の中身(内部)。
-#ifndef GUI_SRC_CORE_APPLICATION_IMPL_HPP
-#define GUI_SRC_CORE_APPLICATION_IMPL_HPP
+#ifndef TOKOTACHI_SRC_CORE_APPLICATION_IMPL_HPP
+#define TOKOTACHI_SRC_CORE_APPLICATION_IMPL_HPP
 
 #include <SDL3/SDL.h>
 
-#include <gui/graphics/theme.hpp>
+#include <tokotachi/graphics/theme.hpp>
 
 #include <functional>
 #include <map>
 #include <vector>
 
-namespace gui
+namespace tokotachi
 {
 
 class Application;
@@ -21,7 +21,7 @@ namespace detail
 
 struct WindowImpl;
 
-// 環境変数 GUI_TRACE が 1 なら、イベントの流れを標準エラーに出す(不具合の調べ用)。
+// 環境変数 TOKOTACHI_TRACE が 1 なら、イベントの流れを標準エラーに出す(不具合の調べ用)。
 bool trace_enabled();
 // ビデオドライバが Wayland か。
 bool is_wayland();
@@ -87,6 +87,6 @@ struct ApplicationImpl
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

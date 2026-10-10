@@ -1,13 +1,13 @@
-#include <gui/core/property.hpp>
+#include <tokotachi/core/property.hpp>
 
 #include <algorithm>
 
-#include <gui/core/application.hpp>
+#include <tokotachi/core/application.hpp>
 
 #include "application_impl.hpp"
 #include "binding_registry.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Object::Object(Object* owner_object) : owner(this, &Object::get_owner), owner_(owner_object)
@@ -83,4 +83,4 @@ void Object::delete_owned()
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

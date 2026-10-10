@@ -1,10 +1,10 @@
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include <algorithm>
 #include <cstdio>
 
-#include <gui/layout/layout.hpp>
-#include <gui/windows/window.hpp>
+#include <tokotachi/layout/layout.hpp>
+#include <tokotachi/windows/window.hpp>
 
 #include "../layout/layout_access.hpp"
 #include "../actions/action_access.hpp"
@@ -12,48 +12,48 @@
 #include "widget_access.hpp"
 #include "../windows/window_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Widget::Widget(Widget* parent_widget)
     : Object(parent_widget),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, Widget*, parent),
-      GUI_READONLY_PROPERTY(Widget, std::vector<Widget*>, children),
-      GUI_READONLY_PROPERTY(Widget, Window*, window),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, x),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, y),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, width),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, height),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, Rect, bounds),
-      GUI_READONLY_PROPERTY(Widget, Rect, local_rect),
-      GUI_READONLY_PROPERTY(Widget, Size, preferred_size),
-      GUI_PROPERTY_GETTER(Widget, Size, minimum_size),
-      GUI_PROPERTY_GETTER(Widget, Size, maximum_size),
-      GUI_READONLY_PROPERTY(Widget, Size, minimum_hint),
-      GUI_READONLY_PROPERTY(Widget, Layout*, layout),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, bool, visible),
-      GUI_READONLY_PROPERTY(Widget, bool, showing),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, bool, enabled),
-      GUI_READONLY_PROPERTY(Widget, bool, effectively_enabled),
-      GUI_PROPERTY_GETTER(Widget, FocusPolicy, focus_policy),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Widget, bool, focused),
-      GUI_PROPERTY_GETTER(Widget, MouseCursor, cursor),
-      GUI_PROPERTY_GETTER(Widget, bool, accepts_text_input),
-      GUI_READONLY_PROPERTY(Widget, float, display_scale),
-      GUI_PROPERTY_MEMBER(Widget, std::string, tooltip),
-      GUI_READONLY_PROPERTY(Widget, std::vector<Action*>, actions),
-      GUI_HANDLER_PROPERTY(Widget, PaintHandler, on_paint),
-      GUI_HANDLER_PROPERTY(Widget, NotifyHandler, on_resize),
-      GUI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_down),
-      GUI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_up),
-      GUI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_move),
-      GUI_HANDLER_PROPERTY(Widget, NotifyHandler, on_mouse_enter),
-      GUI_HANDLER_PROPERTY(Widget, NotifyHandler, on_mouse_leave),
-      GUI_HANDLER_PROPERTY(Widget, WheelHandler, on_mouse_wheel),
-      GUI_HANDLER_PROPERTY(Widget, KeyHandler, on_key_down),
-      GUI_HANDLER_PROPERTY(Widget, KeyHandler, on_key_up),
-      GUI_HANDLER_PROPERTY(Widget, NotifyHandler, on_focus_in),
-      GUI_HANDLER_PROPERTY(Widget, NotifyHandler, on_focus_out),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, Widget*, parent),
+      TOKOTACHI_READONLY_PROPERTY(Widget, std::vector<Widget*>, children),
+      TOKOTACHI_READONLY_PROPERTY(Widget, Window*, window),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, x),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, y),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, width),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, float, height),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, Rect, bounds),
+      TOKOTACHI_READONLY_PROPERTY(Widget, Rect, local_rect),
+      TOKOTACHI_READONLY_PROPERTY(Widget, Size, preferred_size),
+      TOKOTACHI_PROPERTY_GETTER(Widget, Size, minimum_size),
+      TOKOTACHI_PROPERTY_GETTER(Widget, Size, maximum_size),
+      TOKOTACHI_READONLY_PROPERTY(Widget, Size, minimum_hint),
+      TOKOTACHI_READONLY_PROPERTY(Widget, Layout*, layout),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, bool, visible),
+      TOKOTACHI_READONLY_PROPERTY(Widget, bool, showing),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, bool, enabled),
+      TOKOTACHI_READONLY_PROPERTY(Widget, bool, effectively_enabled),
+      TOKOTACHI_PROPERTY_GETTER(Widget, FocusPolicy, focus_policy),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, bool, focused),
+      TOKOTACHI_PROPERTY_GETTER(Widget, MouseCursor, cursor),
+      TOKOTACHI_PROPERTY_GETTER(Widget, bool, accepts_text_input),
+      TOKOTACHI_READONLY_PROPERTY(Widget, float, display_scale),
+      TOKOTACHI_PROPERTY_MEMBER(Widget, std::string, tooltip),
+      TOKOTACHI_READONLY_PROPERTY(Widget, std::vector<Action*>, actions),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, PaintHandler, on_paint),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_resize),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_down),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_up),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_move),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_mouse_enter),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_mouse_leave),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, WheelHandler, on_mouse_wheel),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, KeyHandler, on_key_down),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, KeyHandler, on_key_up),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_focus_in),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_focus_out),
       parent_(parent_widget),
       maximum_size_(1e9f, 1e9f),
       layout_(nullptr),
@@ -148,14 +148,14 @@ void Widget::set_parent(Widget* const& p)
     }
     if (is_window_)
     {
-        std::fprintf(stderr, "gui: a window cannot have a parent (ignored)\n");
+        std::fprintf(stderr, "tokotachi: a window cannot have a parent (ignored)\n");
         return;
     }
     for (const Widget* a = p; a; a = a->parent_)
     {
         if (a == this)
         {
-            std::fprintf(stderr, "gui: cannot make a descendant the parent (ignored)\n");
+            std::fprintf(stderr, "tokotachi: cannot make a descendant the parent (ignored)\n");
             return;
         }
     }
@@ -678,4 +678,4 @@ Size Widget::compute_minimum_size() const
     return layout_ ? detail::LayoutAccess::minimum_size(layout_) : Size();
 }
 
-}  // namespace gui
+}  // namespace tokotachi

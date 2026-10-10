@@ -1,19 +1,19 @@
-#include <gui/layout/box_layout.hpp>
+#include <tokotachi/layout/box_layout.hpp>
 
 #include <algorithm>
 
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include "../core/property_impl.hpp"
 #include "distribute.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 BoxLayout::BoxLayout(Widget* target, Orientation initial_orientation)
     : Layout(target),
-      GUI_PROPERTY_GETTER(BoxLayout, Orientation, orientation),
-      GUI_PROPERTY_GETTER(BoxLayout, float, spacing),
+      TOKOTACHI_PROPERTY_GETTER(BoxLayout, Orientation, orientation),
+      TOKOTACHI_PROPERTY_GETTER(BoxLayout, float, spacing),
       orientation_(initial_orientation),
       spacing_(8)
 {
@@ -197,4 +197,4 @@ void BoxLayout::arrange(const Rect& area)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

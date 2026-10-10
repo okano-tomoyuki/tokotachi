@@ -1,4 +1,4 @@
-#include <gui/graphics/bitmap.hpp>
+#include <tokotachi/graphics/bitmap.hpp>
 
 #include <plutovg.h>
 
@@ -10,7 +10,7 @@
 #include "image_data.hpp"
 #include "raster_canvas.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -163,4 +163,4 @@ Image Bitmap::to_image() const
     return Image(std::make_shared<detail::ImageData>(s));
 }
 
-}  // namespace gui
+}  // namespace tokotachi

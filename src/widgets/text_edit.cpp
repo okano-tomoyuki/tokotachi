@@ -1,14 +1,14 @@
-#include <gui/widgets/text_edit.hpp>
+#include <tokotachi/widgets/text_edit.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -18,7 +18,7 @@ const float PADDING_Y = 6;
 
 TextEdit::TextEdit(Widget* parent_widget, const std::string& initial_text)
     : TextInputBase(parent_widget, initial_text, true),
-      GUI_PROPERTY_GETTER(TextEdit, bool, word_wrap),
+      TOKOTACHI_PROPERTY_GETTER(TextEdit, bool, word_wrap),
       word_wrap_(true),
       bar_(new ScrollBar(this, Orientation::VERTICAL))
 {
@@ -100,4 +100,4 @@ Size TextEdit::compute_minimum_size() const
     return Size(80, std::ceil(line * 2) + PADDING_Y * 2);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,16 +1,16 @@
-#include <gui/views/item_view.hpp>
+#include <tokotachi/views/item_view.hpp>
 
 #include <algorithm>
 #include <climits>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/widgets/scroll_bar.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/widgets/scroll_bar.hpp>
 
 #include "../core/property_impl.hpp"
 #include "../widgets/theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -70,9 +70,9 @@ void paint_arrow(Canvas& canvas, const Rect& r, bool expanded, const Color& colo
 
 Column::Column(ItemView* view, const std::string& initial_title, float initial_width)
     : Object(view),
-      GUI_PROPERTY_MEMBER(Column, std::string, title),
-      GUI_PROPERTY_MEMBER(Column, float, width),
-      GUI_PROPERTY_MEMBER(Column, Align, alignment),
+      TOKOTACHI_PROPERTY_MEMBER(Column, std::string, title),
+      TOKOTACHI_PROPERTY_MEMBER(Column, float, width),
+      TOKOTACHI_PROPERTY_MEMBER(Column, Align, alignment),
       view_(view),
       title_(initial_title),
       width_(std::max(MIN_COLUMN, initial_width)),
@@ -114,17 +114,17 @@ void Column::set_alignment(const Align& v)
 
 ItemView::ItemView(Widget* parent_widget, bool tree)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER(ItemView, ItemModel*, model),
-      GUI_READONLY_PROPERTY(ItemView, std::vector<Column*>, columns),
-      GUI_PROPERTY_GETTER(ItemView, bool, header_visible),
-      GUI_PROPERTY_GETTER(ItemView, bool, sorting_enabled),
-      GUI_PROPERTY_GETTER(ItemView, int, sort_column),
-      GUI_PROPERTY_GETTER(ItemView, SortOrder, sort_order),
-      GUI_PROPERTY_GETTER(ItemView, SelectionMode, selection_mode),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ItemView, ModelIndex, current),
-      GUI_READONLY_PROPERTY(ItemView, std::vector<ModelIndex>, selection),
-      GUI_HANDLER_PROPERTY(ItemView, NotifyHandler, on_selection_change),
-      GUI_HANDLER_PROPERTY(ItemView, NotifyHandler, on_activate),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, ItemModel*, model),
+      TOKOTACHI_READONLY_PROPERTY(ItemView, std::vector<Column*>, columns),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, bool, header_visible),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, bool, sorting_enabled),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, int, sort_column),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, SortOrder, sort_order),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, SelectionMode, selection_mode),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ItemView, ModelIndex, current),
+      TOKOTACHI_READONLY_PROPERTY(ItemView, std::vector<ModelIndex>, selection),
+      TOKOTACHI_HANDLER_PROPERTY(ItemView, NotifyHandler, on_selection_change),
+      TOKOTACHI_HANDLER_PROPERTY(ItemView, NotifyHandler, on_activate),
       model_(nullptr),
       header_visible_(true),
       sorting_enabled_(false),
@@ -1598,4 +1598,4 @@ void ItemView::theme_changed()
     invalidate();
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,11 +1,11 @@
 // 標準のウィジェットが今のテーマの色・寸法を読むための関数(内部。docs/adr/0023)。
 // 色は描くたびに読む(キャッシュしない)ので、テーマを切り替えたら描き直すだけで変わる。
-#ifndef GUI_SRC_WIDGETS_THEME_HPP
-#define GUI_SRC_WIDGETS_THEME_HPP
+#ifndef TOKOTACHI_SRC_WIDGETS_THEME_HPP
+#define TOKOTACHI_SRC_WIDGETS_THEME_HPP
 
-#include <gui/graphics/theme.hpp>
+#include <tokotachi/graphics/theme.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -45,6 +45,6 @@ inline float field_radius() { return detail::current_theme().field_radius; }
 inline float field_padding() { return detail::current_theme().field_padding; }
 
 }  // namespace theme
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

@@ -1,9 +1,9 @@
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -167,4 +167,4 @@ Paint Paint::radial(const Point& center, float radius, const Point& focal, const
     return p;
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,16 +1,16 @@
-#include <gui/windows/file_dialog.hpp>
+#include <tokotachi/windows/file_dialog.hpp>
 
 #include <SDL3/SDL.h>
 
 #include <map>
 
-#include <gui/windows/window.hpp>
+#include <tokotachi/windows/window.hpp>
 
 #include "../core/application_impl.hpp"
 #include "../core/property_impl.hpp"
 #include "window_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 struct FileDialogAccess
@@ -84,16 +84,16 @@ void SDLCALL dialog_callback(void* userdata, const char* const* filelist, int fi
 
 FileDialog::FileDialog(Window* parent, FileDialogMode initial_mode)
     : Object(parent),
-      GUI_PROPERTY_MEMBER(FileDialog, FileDialogMode, mode),
-      GUI_PROPERTY_MEMBER(FileDialog, std::string, title),
-      GUI_PROPERTY_MEMBER(FileDialog, std::vector<FileFilter>, filters),
-      GUI_PROPERTY_MEMBER(FileDialog, std::string, location),
-      GUI_PROPERTY_MEMBER(FileDialog, bool, allow_many),
-      GUI_READONLY_PROPERTY(FileDialog, std::vector<std::string>, paths),
-      GUI_READONLY_PROPERTY(FileDialog, std::string, error),
-      GUI_READONLY_PROPERTY(FileDialog, int, selected_filter),
-      GUI_READONLY_PROPERTY(FileDialog, bool, running),
-      GUI_HANDLER_PROPERTY(FileDialog, NotifyHandler, on_finish),
+      TOKOTACHI_PROPERTY_MEMBER(FileDialog, FileDialogMode, mode),
+      TOKOTACHI_PROPERTY_MEMBER(FileDialog, std::string, title),
+      TOKOTACHI_PROPERTY_MEMBER(FileDialog, std::vector<FileFilter>, filters),
+      TOKOTACHI_PROPERTY_MEMBER(FileDialog, std::string, location),
+      TOKOTACHI_PROPERTY_MEMBER(FileDialog, bool, allow_many),
+      TOKOTACHI_READONLY_PROPERTY(FileDialog, std::vector<std::string>, paths),
+      TOKOTACHI_READONLY_PROPERTY(FileDialog, std::string, error),
+      TOKOTACHI_READONLY_PROPERTY(FileDialog, int, selected_filter),
+      TOKOTACHI_READONLY_PROPERTY(FileDialog, bool, running),
+      TOKOTACHI_HANDLER_PROPERTY(FileDialog, NotifyHandler, on_finish),
       parent_(parent),
       mode_(initial_mode),
       allow_many_(false),
@@ -179,4 +179,4 @@ void FileDialog::finished(const std::vector<std::string>& result, int filter, co
     detail::fire(on_finish_, self);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

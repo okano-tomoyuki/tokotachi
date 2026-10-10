@@ -1,4 +1,4 @@
-#include <gui/widgets/spin_box.hpp>
+#include <tokotachi/widgets/spin_box.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -6,13 +6,13 @@
 #include <cstdlib>
 #include <string>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/widgets/line_edit.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/widgets/line_edit.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -59,8 +59,8 @@ private:
 
 SpinBox::SpinBox(Widget* parent_widget)
     : RangeBase(parent_widget),
-      GUI_PROPERTY_GETTER(SpinBox, int, decimals),
-      GUI_READONLY_PROPERTY(SpinBox, std::string, text),
+      TOKOTACHI_PROPERTY_GETTER(SpinBox, int, decimals),
+      TOKOTACHI_READONLY_PROPERTY(SpinBox, std::string, text),
       edit_(nullptr),
       decimals_(0),
       pressed_(0)
@@ -282,4 +282,4 @@ void SpinBox::key_down(KeyEvent& e)
     step_by(amount);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

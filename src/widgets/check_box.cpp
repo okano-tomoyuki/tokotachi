@@ -1,20 +1,20 @@
-#include <gui/widgets/check_box.hpp>
+#include <tokotachi/widgets/check_box.hpp>
 
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 #include "toggle_painter.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 CheckBox::CheckBox(Widget* parent_widget, const std::string& initial_text)
     : ButtonBase(parent_widget, initial_text),
-      GUI_PROPERTY_MEMBER_SELF_NOTIFY(CheckBox, bool, checked),
-      GUI_HANDLER_PROPERTY(CheckBox, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(CheckBox, bool, checked),
+      TOKOTACHI_HANDLER_PROPERTY(CheckBox, NotifyHandler, on_change),
       checked_(false)
 {
 }
@@ -65,4 +65,4 @@ void CheckBox::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

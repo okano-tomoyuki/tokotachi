@@ -1,14 +1,14 @@
-#include <gui/widgets/splitter.hpp>
+#include <tokotachi/widgets/splitter.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 const float Splitter::HANDLE = 6;
@@ -22,10 +22,10 @@ const float GRAB_MARGIN = 2;  // 境目の外側でもつかめる幅(dp)
 
 SplitterPane::SplitterPane(Splitter* splitter, Widget* pane_widget, int initial_stretch)
     : Object(splitter),
-      GUI_PROPERTY_MEMBER(SplitterPane, int, stretch),
-      GUI_PROPERTY_MEMBER(SplitterPane, bool, collapsible),
-      GUI_READONLY_PROPERTY(SplitterPane, bool, collapsed),
-      GUI_READONLY_PROPERTY(SplitterPane, Widget*, widget),
+      TOKOTACHI_PROPERTY_MEMBER(SplitterPane, int, stretch),
+      TOKOTACHI_PROPERTY_MEMBER(SplitterPane, bool, collapsible),
+      TOKOTACHI_READONLY_PROPERTY(SplitterPane, bool, collapsed),
+      TOKOTACHI_READONLY_PROPERTY(SplitterPane, Widget*, widget),
       splitter_(splitter),
       widget_(pane_widget),
       stretch_(std::max(0, initial_stretch)),
@@ -48,10 +48,10 @@ void SplitterPane::set_collapsible(const bool& v) { collapsible_ = v; }
 
 Splitter::Splitter(Widget* parent_widget, Orientation initial_orientation)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER(Splitter, Orientation, orientation),
-      GUI_READONLY_PROPERTY(Splitter, std::vector<SplitterPane*>, panes),
-      GUI_PROPERTY_GETTER(Splitter, std::vector<float>, sizes),
-      GUI_HANDLER_PROPERTY(Splitter, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_GETTER(Splitter, Orientation, orientation),
+      TOKOTACHI_READONLY_PROPERTY(Splitter, std::vector<SplitterPane*>, panes),
+      TOKOTACHI_PROPERTY_GETTER(Splitter, std::vector<float>, sizes),
+      TOKOTACHI_HANDLER_PROPERTY(Splitter, NotifyHandler, on_change),
       orientation_(initial_orientation),
       hover_handle_(-1),
       drag_handle_(-1),
@@ -504,4 +504,4 @@ void Splitter::mouse_leave()
     Widget::mouse_leave();
 }
 
-}  // namespace gui
+}  // namespace tokotachi

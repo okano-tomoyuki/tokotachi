@@ -11,11 +11,11 @@
 #include <cstdlib>
 #include <cstring>
 
-#ifdef GUI_USE_FONTCONFIG
+#ifdef TOKOTACHI_USE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
 #endif
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -38,7 +38,7 @@ void add_source(std::vector<FaceSource>& out, const std::string& path, int index
     out.push_back(s);
 }
 
-#ifdef GUI_USE_FONTCONFIG
+#ifdef TOKOTACHI_USE_FONTCONFIG
 // fontconfig に sans-serif を問い合わせ、文字の範囲が広い順(FcFontSort)に並べる。
 // 漢字の字形が国によって違うので、ロケールの言語を指定する(LANG=ja_JP.UTF-8 なら ja)。
 std::vector<FaceSource> find_system_fonts()
@@ -297,8 +297,8 @@ FontCache::FontCache() : lib_(nullptr)
     {
         lib_ = nullptr;
     }
-    // GUI_FONT_FILE でフォントのファイルを先頭に足せる(確認用)。
-    const char* extra = std::getenv("GUI_FONT_FILE");
+    // TOKOTACHI_FONT_FILE でフォントのファイルを先頭に足せる(確認用)。
+    const char* extra = std::getenv("TOKOTACHI_FONT_FILE");
     if (extra && *extra)
     {
         add_source(sources_, extra, 0);
@@ -310,7 +310,7 @@ FontCache::FontCache() : lib_(nullptr)
     }
     if (sources_.empty())
     {
-        std::fprintf(stderr, "gui: no font found\n");
+        std::fprintf(stderr, "tokotachi: no font found\n");
     }
 }
 
@@ -348,4 +348,4 @@ FontInstance* FontCache::get(std::size_t face, int pixel_size)
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi

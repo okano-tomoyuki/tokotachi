@@ -1,9 +1,9 @@
-#include <gui/actions/shortcut.hpp>
+#include <tokotachi/actions/shortcut.hpp>
 
 #include <cctype>
 #include <cstdlib>
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -177,4 +177,4 @@ bool Shortcut::matches(const KeyEvent& e) const
     return !is_empty() && e.key == key && (e.modifiers & MODIFIER_MASK) == (modifiers & MODIFIER_MASK);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

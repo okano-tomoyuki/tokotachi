@@ -1,9 +1,9 @@
 // Canvas の手軽な描画(基本の描画を組み合わせる)。
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
-namespace gui
+namespace tokotachi
 {
 
 void Canvas::stroke_path(const Path& path, float width, const Paint& paint, LineCap cap)
@@ -50,4 +50,4 @@ void Canvas::draw_text(const std::string& text, const Point& pos, const Color& c
     draw_text(TextLayout(text, font, scale()), pos, color);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,14 +1,14 @@
-#include <gui/windows/status_bar.hpp>
+#include <tokotachi/windows/status_bar.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "../widgets/theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -20,8 +20,8 @@ const float GAP = 12;        // 部品の間(区切りの線を挟む)
 
 StatusBar::StatusBar(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_PROPERTY_MEMBER(StatusBar, std::string, text),
-      GUI_READONLY_PROPERTY(StatusBar, std::string, message)
+      TOKOTACHI_PROPERTY_MEMBER(StatusBar, std::string, text),
+      TOKOTACHI_READONLY_PROPERTY(StatusBar, std::string, message)
 {
     timer_.repeat = false;
     timer_.on_timer = [this](Object*) { clear_message(); };
@@ -144,4 +144,4 @@ void StatusBar::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

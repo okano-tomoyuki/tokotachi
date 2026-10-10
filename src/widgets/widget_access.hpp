@@ -1,11 +1,11 @@
 // ウィンドウ・アプリケーションの実装から Widget の非公開の部分を扱うための窓口(内部)。
-#ifndef GUI_SRC_CORE_WIDGET_ACCESS_HPP
-#define GUI_SRC_CORE_WIDGET_ACCESS_HPP
+#ifndef TOKOTACHI_SRC_WIDGETS_WIDGET_ACCESS_HPP
+#define TOKOTACHI_SRC_WIDGETS_WIDGET_ACCESS_HPP
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -87,6 +87,6 @@ inline bool is_ancestor_or_self(const Widget* a, const Widget* b)
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

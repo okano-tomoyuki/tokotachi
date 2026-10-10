@@ -1,19 +1,19 @@
-#include <gui/layout/grid_layout.hpp>
+#include <tokotachi/layout/grid_layout.hpp>
 
 #include <algorithm>
 
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include "../core/property_impl.hpp"
 #include "distribute.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 GridLayout::GridLayout(Widget* target)
     : Layout(target),
-      GUI_PROPERTY_GETTER(GridLayout, float, row_spacing),
-      GUI_PROPERTY_GETTER(GridLayout, float, column_spacing),
+      TOKOTACHI_PROPERTY_GETTER(GridLayout, float, row_spacing),
+      TOKOTACHI_PROPERTY_GETTER(GridLayout, float, column_spacing),
       row_spacing_(8),
       column_spacing_(8)
 {
@@ -313,4 +313,4 @@ void GridLayout::arrange(const Rect& area)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,13 +1,13 @@
 // Action の内部の状態に触るためのヘルパー(内部)。
-#ifndef GUI_SRC_CORE_ACTION_ACCESS_HPP
-#define GUI_SRC_CORE_ACTION_ACCESS_HPP
+#ifndef TOKOTACHI_SRC_ACTIONS_ACTION_ACCESS_HPP
+#define TOKOTACHI_SRC_ACTIONS_ACTION_ACCESS_HPP
 
 #include <algorithm>
 #include <vector>
 
-#include <gui/actions/action.hpp>
+#include <tokotachi/actions/action.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -44,6 +44,6 @@ struct ActionAccess
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

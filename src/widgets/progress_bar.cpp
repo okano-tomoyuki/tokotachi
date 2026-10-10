@@ -1,15 +1,15 @@
-#include <gui/widgets/progress_bar.hpp>
+#include <tokotachi/widgets/progress_bar.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <string>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -20,10 +20,10 @@ const float TEXT_GAP = 8;    // 棒と割合の文字の間(dp)
 
 ProgressBar::ProgressBar(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ProgressBar, double, minimum),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ProgressBar, double, maximum),
-      GUI_PROPERTY_GETTER(ProgressBar, double, value),
-      GUI_PROPERTY_GETTER(ProgressBar, bool, text_visible),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ProgressBar, double, minimum),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ProgressBar, double, maximum),
+      TOKOTACHI_PROPERTY_GETTER(ProgressBar, double, value),
+      TOKOTACHI_PROPERTY_GETTER(ProgressBar, bool, text_visible),
       minimum_(0),
       maximum_(100),
       value_(0),
@@ -148,4 +148,4 @@ void ProgressBar::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

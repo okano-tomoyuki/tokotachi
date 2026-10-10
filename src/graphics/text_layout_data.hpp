@@ -1,15 +1,15 @@
 // TextLayout の中身(内部)。位置はピクセル。
-#ifndef GUI_SRC_TEXT_TEXT_LAYOUT_DATA_HPP
-#define GUI_SRC_TEXT_TEXT_LAYOUT_DATA_HPP
+#ifndef TOKOTACHI_SRC_GRAPHICS_TEXT_LAYOUT_DATA_HPP
+#define TOKOTACHI_SRC_GRAPHICS_TEXT_LAYOUT_DATA_HPP
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -67,6 +67,6 @@ struct TextLayoutData
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

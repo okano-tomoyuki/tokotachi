@@ -1,20 +1,20 @@
-#include <gui/widgets/radio_button.hpp>
+#include <tokotachi/widgets/radio_button.hpp>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 #include "toggle_painter.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 RadioButton::RadioButton(Widget* parent_widget, const std::string& initial_text, int initial_value)
     : ButtonBase(parent_widget, initial_text),
-      GUI_PROPERTY_MEMBER_SELF_NOTIFY(RadioButton, int, value),
-      GUI_PROPERTY_MEMBER_SELF_NOTIFY(RadioButton, int, group_value),
-      GUI_READONLY_PROPERTY(RadioButton, bool, checked),
-      GUI_HANDLER_PROPERTY(RadioButton, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(RadioButton, int, value),
+      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(RadioButton, int, group_value),
+      TOKOTACHI_READONLY_PROPERTY(RadioButton, bool, checked),
+      TOKOTACHI_HANDLER_PROPERTY(RadioButton, NotifyHandler, on_change),
       value_(initial_value),
       group_value_(-1)
 {
@@ -98,4 +98,4 @@ void RadioButton::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -9,30 +9,30 @@
 #endif
 #endif
 
-#include <gui/gui.hpp>
+#include <tokotachi/tokotachi.hpp>
 
 namespace
 {
 
 // プロパティ・enum を実際に使い、マクロとの衝突がテンプレートの中に隠れないようにする。
-void use_everything(gui::LineEdit* edit, gui::Button* button)
+void use_everything(tokotachi::LineEdit* edit, tokotachi::Button* button)
 {
-    gui::KeyEvent e(gui::Key::DEL, gui::MODIFIER_SHIFT, false, 0);
+    tokotachi::KeyEvent e(tokotachi::Key::DEL, tokotachi::MODIFIER_SHIFT, false, 0);
     (void)e;
     edit->text = std::string("a") + edit->text;
-    edit->focus_policy = gui::FocusPolicy::TAB_AND_CLICK;
-    edit->cursor = gui::MouseCursor::IBEAM;
-    button->on_click = [](gui::Object*) {};
-    gui::Paint p(gui::Color::rgb(0));
-    p.type = gui::Paint::Type::LINEAR;
-    gui::Path path;
+    edit->focus_policy = tokotachi::FocusPolicy::TAB_AND_CLICK;
+    edit->cursor = tokotachi::MouseCursor::IBEAM;
+    button->on_click = [](tokotachi::Object*) {};
+    tokotachi::Paint p(tokotachi::Color::rgb(0));
+    p.type = tokotachi::Paint::Type::LINEAR;
+    tokotachi::Path path;
     path.move_to(0, 0);
-    (void)gui::Align::CENTER;
-    (void)gui::Orientation::HORIZONTAL;
-    (void)gui::MouseButton::NONE;
-    (void)gui::LineCap::ROUND;
+    (void)tokotachi::Align::CENTER;
+    (void)tokotachi::Orientation::HORIZONTAL;
+    (void)tokotachi::MouseButton::NONE;
+    (void)tokotachi::LineCap::ROUND;
 }
 
 }  // namespace
 
-void gui_header_check_dummy(gui::LineEdit* edit, gui::Button* button) { use_everything(edit, button); }
+void tokotachi_header_check_dummy(tokotachi::LineEdit* edit, tokotachi::Button* button) { use_everything(edit, button); }

@@ -16,9 +16,9 @@
 - **`Object` のコンストラクタは `Object* owner` を受け取る**(既定は nullptr)。所有者が破棄されるときに、所有しているオブジェクトも破棄される。
   所有者は読み取り専用のプロパティ `owner` で読める。
   ```cpp
-  gui::LineEdit* edit = new gui::LineEdit(&window);              // ウィジェットは親が所有者を兼ねる
-  gui::Timer* timer = new gui::Timer(&window);
-  gui::StringVariable* name = new gui::StringVariable(&window);
+  tokotachi::LineEdit* edit = new tokotachi::LineEdit(&window);              // ウィジェットは親が所有者を兼ねる
+  tokotachi::Timer* timer = new tokotachi::Timer(&window);
+  tokotachi::StringVariable* name = new tokotachi::StringVariable(&window);
   ```
 - **所有者が nullptr のオブジェクトは利用者が寿命を管理する**(スタック・メンバ変数にも置ける)。所有者を持つオブジェクトをスタックに置くと
   二重に破棄されるので、置いてはいけない(ウィジェットと同じ制約)。

@@ -1,23 +1,23 @@
-#include <gui/widgets/label.hpp>
+#include <tokotachi/widgets/label.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Label::Label(Widget* parent_widget, const std::string& initial_text)
     : Widget(parent_widget),
-      GUI_PROPERTY_MEMBER(Label, std::string, text),
-      GUI_PROPERTY_MEMBER(Label, Font, font),
-      GUI_PROPERTY_MEMBER(Label, ThemeColor, color),
-      GUI_PROPERTY_MEMBER(Label, Align, alignment),
-      GUI_PROPERTY_MEMBER(Label, bool, word_wrap),
+      TOKOTACHI_PROPERTY_MEMBER(Label, std::string, text),
+      TOKOTACHI_PROPERTY_MEMBER(Label, Font, font),
+      TOKOTACHI_PROPERTY_MEMBER(Label, ThemeColor, color),
+      TOKOTACHI_PROPERTY_MEMBER(Label, Align, alignment),
+      TOKOTACHI_PROPERTY_MEMBER(Label, bool, word_wrap),
       text_(initial_text),
       color_(ColorRole::TEXT),
       alignment_(Align::START),
@@ -141,4 +141,4 @@ void Label::paint(Canvas& canvas)
 
 void Label::scale_changed() { layout_ = TextLayout(); }
 
-}  // namespace gui
+}  // namespace tokotachi

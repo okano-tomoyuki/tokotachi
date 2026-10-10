@@ -1,0 +1,42 @@
+// 項目の木を表示するビュー(docs/adr/0026)。子のある項目は、左の印・ダブルクリック・→← で開閉する。
+//
+//   tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+//   tokotachi::TreeItem* docs = tree->add_item("文書");
+//   docs->add_child("報告書.txt");
+//   tokotachi::TreeView* view = new tokotachi::TreeView(&window);
+//   view->model = tree;
+//   view->expand(tree->index_of(docs));
+//
+// → は閉じた項目を開き、開いた項目では最初の子へ動く。← は開いた項目を閉じ、閉じた項目では親へ動く。
+// 選び方・列・見出し・キーの操作は ItemView(item_view.hpp)を参照。
+#ifndef TOKOTACHI_VIEWS_TREE_VIEW_HPP
+#define TOKOTACHI_VIEWS_TREE_VIEW_HPP
+
+#include "item_view.hpp"
+
+namespace tokotachi
+{
+
+class TreeView : public ItemView
+{
+public:
+    explicit TreeView(Widget* parent = nullptr);
+
+    // 1 段の字下げ(dp。既定 20。8 以上)。
+    Property<float> indentation;
+
+    // 子を見せる・隠す。閉じた中に current があれば、閉じた項目へ移す。
+    void expand(const ModelIndex& index) { ItemView::expand(index); }
+    void collapse(const ModelIndex& index) { ItemView::collapse(index); }
+    bool is_expanded(const ModelIndex& index) const { return ItemView::is_expanded(index); }
+    void expand_all() { ItemView::expand_all(); }
+    void collapse_all() { ItemView::collapse_all(); }
+
+private:
+    float get_indentation() const { return ItemView::get_indentation(); }
+    void set_indentation(const float& v) { ItemView::set_indentation(v); }
+};
+
+}  // namespace tokotachi
+
+#endif

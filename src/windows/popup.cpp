@@ -1,25 +1,25 @@
-#include <gui/windows/popup.hpp>
+#include <tokotachi/windows/popup.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 
-#include <gui/core/application.hpp>
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/core/application.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../widgets/theme.hpp"
 #include "../core/application_impl.hpp"
 #include "../core/property_impl.hpp"
 #include "window_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Popup::Popup(Widget* owner, PopupKind popup_kind, Object* owner_object)
     : Window(owner_object ? owner_object : owner),
-      GUI_READONLY_PROPERTY(Popup, Widget*, owner_widget),
-      GUI_READONLY_PROPERTY(Popup, PopupKind, kind),
-      GUI_HANDLER_PROPERTY(Popup, NotifyHandler, on_closed),
+      TOKOTACHI_READONLY_PROPERTY(Popup, Widget*, owner_widget),
+      TOKOTACHI_READONLY_PROPERTY(Popup, PopupKind, kind),
+      TOKOTACHI_HANDLER_PROPERTY(Popup, NotifyHandler, on_closed),
       owner_widget_(owner),
       kind_(popup_kind)
 {
@@ -64,7 +64,7 @@ void Popup::open(const Rect& anchor, const Size& size, PopupPlacement placement)
     }
     if (detail::trace_enabled())
     {
-        std::fprintf(stderr, "[gui] popup open    %-10s parent=%s at=(%d, %d) size=(%d, %d) bounds=(%.1f, %.1f)\n",
+        std::fprintf(stderr, "[tokotachi] popup open    %-10s parent=%s at=(%d, %d) size=(%d, %d) bounds=(%.1f, %.1f)\n",
                      detail::trace_name(impl()), detail::trace_name(pw), x, y, w, h, width.get(), height.get());
     }
     if (kind_ == PopupKind::MENU)
@@ -100,7 +100,7 @@ void Popup::close()
     }
     if (detail::trace_enabled())
     {
-        std::fprintf(stderr, "[gui] popup close   %s\n", detail::trace_name(impl()));
+        std::fprintf(stderr, "[tokotachi] popup close   %s\n", detail::trace_name(impl()));
     }
     visible = false;
     // ハンドラの中でこのポップアップが破棄されてもよいよう、最後に呼ぶ。
@@ -117,4 +117,4 @@ void Popup::paint(Canvas& canvas)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

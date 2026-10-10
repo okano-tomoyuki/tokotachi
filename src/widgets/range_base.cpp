@@ -1,21 +1,21 @@
-#include <gui/widgets/range_base.hpp>
+#include <tokotachi/widgets/range_base.hpp>
 
 #include <algorithm>
 #include <cmath>
 
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 RangeBase::RangeBase(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, minimum),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, maximum),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, value),
-      GUI_PROPERTY_GETTER(RangeBase, double, single_step),
-      GUI_PROPERTY_GETTER(RangeBase, double, page_step),
-      GUI_HANDLER_PROPERTY(RangeBase, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, minimum),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, maximum),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, value),
+      TOKOTACHI_PROPERTY_GETTER(RangeBase, double, single_step),
+      TOKOTACHI_PROPERTY_GETTER(RangeBase, double, page_step),
+      TOKOTACHI_HANDLER_PROPERTY(RangeBase, NotifyHandler, on_change),
       minimum_(0),
       maximum_(100),
       value_(0),
@@ -108,4 +108,4 @@ double RangeBase::ratio() const { return maximum_ > minimum_ ? (value_ - minimum
 
 void RangeBase::range_changed() { invalidate(); }
 
-}  // namespace gui
+}  // namespace tokotachi

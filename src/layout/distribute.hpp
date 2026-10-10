@@ -1,11 +1,11 @@
 // 1 つの向きの長さを項目(Box の項目・Grid の行や列)に分ける(内部。docs/adr/0017)。
-#ifndef GUI_SRC_LAYOUT_DISTRIBUTE_HPP
-#define GUI_SRC_LAYOUT_DISTRIBUTE_HPP
+#ifndef TOKOTACHI_SRC_LAYOUT_DISTRIBUTE_HPP
+#define TOKOTACHI_SRC_LAYOUT_DISTRIBUTE_HPP
 
 #include <algorithm>
 #include <vector>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -80,6 +80,6 @@ inline void distribute(std::vector<float>& sizes, const std::vector<float>& mini
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

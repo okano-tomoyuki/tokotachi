@@ -1,8 +1,8 @@
-#include <gui/core/clipboard.hpp>
+#include <tokotachi/core/clipboard.hpp>
 
 #include <SDL3/SDL.h>
 
-namespace gui
+namespace tokotachi
 {
 namespace clipboard
 {
@@ -23,4 +23,4 @@ void set_text(const std::string& text) { SDL_SetClipboardText(text.c_str()); }
 bool has_text() { return SDL_HasClipboardText(); }
 
 }  // namespace clipboard
-}  // namespace gui
+}  // namespace tokotachi

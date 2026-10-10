@@ -1,4 +1,4 @@
-#include <gui/windows/dialog.hpp>
+#include <tokotachi/windows/dialog.hpp>
 
 #include <SDL3/SDL.h>
 
@@ -7,8 +7,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <gui/core/application.hpp>
-#include <gui/layout/layout.hpp>
+#include <tokotachi/core/application.hpp>
+#include <tokotachi/layout/layout.hpp>
 
 #include "../core/application_impl.hpp"
 #include "../core/property_impl.hpp"
@@ -16,7 +16,7 @@
 #include "window_impl.hpp"
 #include "../layout/layout_access.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -125,8 +125,8 @@ std::string standard_text(DialogButton b)
 
 Dialog::Dialog(Window* parent, const std::string& title_text)
     : Window(title_text, 400, 200),
-      GUI_READONLY_PROPERTY(Dialog, DialogButton, result),
-      GUI_HANDLER_PROPERTY(Dialog, NotifyHandler, on_finish),
+      TOKOTACHI_READONLY_PROPERTY(Dialog, DialogButton, result),
+      TOKOTACHI_HANDLER_PROPERTY(Dialog, NotifyHandler, on_finish),
       parent_window_(parent),
       result_(DialogButton::NONE),
       running_(false)
@@ -429,4 +429,4 @@ void Dialog::key_down(KeyEvent& e)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

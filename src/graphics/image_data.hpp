@@ -1,10 +1,10 @@
 // Image の中身(内部): plutovg の画像(アルファ乗算済みの ARGB32)。
-#ifndef GUI_SRC_GFX_IMAGE_DATA_HPP
-#define GUI_SRC_GFX_IMAGE_DATA_HPP
+#ifndef TOKOTACHI_SRC_GRAPHICS_IMAGE_DATA_HPP
+#define TOKOTACHI_SRC_GRAPHICS_IMAGE_DATA_HPP
 
 struct plutovg_surface;
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -21,6 +21,6 @@ struct ImageData
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

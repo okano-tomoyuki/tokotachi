@@ -1,13 +1,13 @@
-#include <gui/windows/message_dialog.hpp>
+#include <tokotachi/windows/message_dialog.hpp>
 
-#include <gui/layout/box_layout.hpp>
-#include <gui/graphics/canvas.hpp>
-#include <gui/widgets/label.hpp>
+#include <tokotachi/layout/box_layout.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/widgets/label.hpp>
 
 #include "../core/property_impl.hpp"
 #include "../widgets/theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace detail
@@ -57,8 +57,8 @@ protected:
 MessageDialog::MessageDialog(Window* parent, const std::string& title_text, const std::string& initial_text,
                              MessageType initial_type)
     : Dialog(parent, title_text),
-      GUI_PROPERTY_GETTER(MessageDialog, std::string, text),
-      GUI_PROPERTY_GETTER(MessageDialog, MessageType, type),
+      TOKOTACHI_PROPERTY_GETTER(MessageDialog, std::string, text),
+      TOKOTACHI_PROPERTY_GETTER(MessageDialog, MessageType, type),
       type_(initial_type),
       icon_(nullptr),
       label_(nullptr)
@@ -110,4 +110,4 @@ MessageDialog* MessageDialog::show(Window* parent, const std::string& title_text
     return d;
 }
 
-}  // namespace gui
+}  // namespace tokotachi

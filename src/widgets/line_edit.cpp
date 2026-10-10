@@ -1,17 +1,17 @@
-#include <gui/widgets/line_edit.hpp>
+#include <tokotachi/widgets/line_edit.hpp>
 
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 LineEdit::LineEdit(Widget* parent_widget, const std::string& initial_text)
-    : TextInputBase(parent_widget, initial_text, false), GUI_HANDLER_PROPERTY(LineEdit, NotifyHandler, on_submit)
+    : TextInputBase(parent_widget, initial_text, false), TOKOTACHI_HANDLER_PROPERTY(LineEdit, NotifyHandler, on_submit)
 {
 }
 
@@ -48,4 +48,4 @@ void LineEdit::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

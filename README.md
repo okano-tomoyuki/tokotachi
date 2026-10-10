@@ -1,15 +1,19 @@
-# gui
+# Tokotachi
 
-SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ(構想段階)。
+SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ(開発中)。
 対象は Windows(MinGW-w64)、Linux(Wayland を主、X11 を従。x86_64 / aarch64)。
 
-設計判断は [docs/](docs/README.md) の ADR を参照。名前は未定で、名前空間・インクルードのパスは仮に `gui` としている。
+既存の GUI の層には頼らず、OS との境界には必要最小限のもの(SDL3)だけを使い、その上に高機能な部品を一から積み上げる。
+名前は、日本の神話で国の土台そのものとして最初に現れる国之常立神(くにのとこたちのかみ)の「常立(とこたち)」から取った
+(国の床が立ち現れる・永久に立ち続ける、の意)。
+
+設計判断は [docs/](docs/README.md) の ADR を参照。名前空間は `tokotachi`、インクルードのパスは `<tokotachi/...>`。
 
 ## 構成
 
 | 場所 | 内容 |
 |---|---|
-| [include/gui/](include/gui/) | 公開のヘッダ。役割ごとのディレクトリに分ける(下の表)。`#include <gui/gui.hpp>` ですべて、`<gui/widgets.hpp>` などでグループごとに読み込める |
+| [include/tokotachi/](include/tokotachi/) | 公開のヘッダ。役割ごとのディレクトリに分ける(下の表)。`#include <tokotachi/tokotachi.hpp>` ですべて、`<tokotachi/widgets.hpp>` などでグループごとに読み込める |
 | [src/](src/) | 実装。公開のヘッダと同じディレクトリに分け、内部のヘッダもそこに置く |
 | [examples/](examples/) | サンプル |
 | [tests/](tests/) | テスト(SDL の offscreen のビデオドライバで、画面なしで動く) |
@@ -26,16 +30,16 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | `views/` | 一覧と木のモデルとビュー |
 
 ```cpp
-#include <gui/gui.hpp>
+#include <tokotachi/tokotachi.hpp>
 
 int main(int argc, char** argv)
 {
-    gui::Application app(argc, argv);
-    gui::Window window("hello", 400, 200);
+    tokotachi::Application app(argc, argv);
+    tokotachi::Window window("hello", 400, 200);
 
-    gui::Button* button = new gui::Button(&window, "クリック");  // 親(window)が所有する
-    button->bounds = gui::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
-    button->on_click = [&](gui::Object* sender)                   // イベントは単一のハンドラ
+    tokotachi::Button* button = new tokotachi::Button(&window, "クリック");  // 親(window)が所有する
+    button->bounds = tokotachi::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
+    button->on_click = [&](tokotachi::Object* sender)                   // イベントは単一のハンドラ
     {
         window.close();
     };
@@ -110,8 +114,8 @@ WSL2 で Windows と同じソースのフォルダを使う場合は、ビルド
 `/mnt/c` の上でのビルドは遅いので、ビルドのフォルダは WSL の側に置くとよい:
 
 ```bash
-cmake -S deps -B ~/gui-build/deps -G Ninja && cmake --build ~/gui-build/deps
-cmake -S . -B ~/gui-build/main -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build ~/gui-build/main
+cmake -S deps -B ~/tokotachi-build/deps -G Ninja && cmake --build ~/tokotachi-build/deps
+cmake -S . -B ~/tokotachi-build/main -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build ~/tokotachi-build/main
 ```
 
 WSLg の Wayland で、ビルドと描画・`video: wayland` の確認はできる。WSL で気を付けること:

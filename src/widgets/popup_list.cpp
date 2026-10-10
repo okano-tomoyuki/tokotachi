@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -190,4 +190,4 @@ void PopupList::key_down(KeyEvent& e)
 void PopupList::scale_changed() { layouts_.clear(); }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi

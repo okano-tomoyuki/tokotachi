@@ -1,16 +1,16 @@
 // ニーモニック(「保存(&S)」の & の次の文字。内部。docs/adr/0027)。
-#ifndef GUI_SRC_WIDGETS_MNEMONIC_HPP
-#define GUI_SRC_WIDGETS_MNEMONIC_HPP
+#ifndef TOKOTACHI_SRC_ACTIONS_MNEMONIC_HPP
+#define TOKOTACHI_SRC_ACTIONS_MNEMONIC_HPP
 
 #include <algorithm>
 #include <cmath>
 #include <string>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/core/event.hpp>
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/core/event.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -77,6 +77,6 @@ inline void paint_mnemonic_underline(Canvas& canvas, const TextLayout& layout, c
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

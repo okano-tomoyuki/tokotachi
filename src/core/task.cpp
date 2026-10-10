@@ -1,4 +1,4 @@
-#include <gui/core/task.hpp>
+#include <tokotachi/core/task.hpp>
 
 #include <atomic>
 #include <exception>
@@ -6,11 +6,11 @@
 #include <system_error>
 #include <thread>
 
-#include <gui/core/thread.hpp>
+#include <tokotachi/core/thread.hpp>
 
 #include "property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace detail
@@ -68,12 +68,12 @@ void TaskContext::report_progress(double value)
 
 TaskBase::TaskBase(Object* owner_object)
     : Object(owner_object),
-      GUI_READONLY_PROPERTY(TaskBase, bool, running),
-      GUI_READONLY_PROPERTY(TaskBase, double, progress),
-      GUI_READONLY_PROPERTY(TaskBase, bool, cancelled),
-      GUI_READONLY_PROPERTY(TaskBase, std::string, error),
-      GUI_HANDLER_PROPERTY(TaskBase, NotifyHandler, on_progress),
-      GUI_HANDLER_PROPERTY(TaskBase, NotifyHandler, on_finish),
+      TOKOTACHI_READONLY_PROPERTY(TaskBase, bool, running),
+      TOKOTACHI_READONLY_PROPERTY(TaskBase, double, progress),
+      TOKOTACHI_READONLY_PROPERTY(TaskBase, bool, cancelled),
+      TOKOTACHI_READONLY_PROPERTY(TaskBase, std::string, error),
+      TOKOTACHI_HANDLER_PROPERTY(TaskBase, NotifyHandler, on_progress),
+      TOKOTACHI_HANDLER_PROPERTY(TaskBase, NotifyHandler, on_finish),
       progress_(0),
       cancelled_(false)
 {
@@ -221,4 +221,4 @@ void TaskBase::finished(const std::shared_ptr<detail::TaskShared>& run, const st
     detail::fire(on_finish_, self);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

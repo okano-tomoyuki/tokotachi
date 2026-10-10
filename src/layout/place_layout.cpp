@@ -1,10 +1,10 @@
-#include <gui/layout/place_layout.hpp>
+#include <tokotachi/layout/place_layout.hpp>
 
 #include <algorithm>
 
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
-namespace gui
+namespace tokotachi
 {
 
 PlaceLayout::PlaceLayout(Widget* target) : Layout(target) {}
@@ -94,4 +94,4 @@ void PlaceLayout::arrange(const Rect& area)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

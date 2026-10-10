@@ -1,4 +1,4 @@
-#include <gui/core/binding.hpp>
+#include <tokotachi/core/binding.hpp>
 
 #include <algorithm>
 #include <set>
@@ -7,7 +7,7 @@
 
 #include "binding_registry.hpp"
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -191,4 +191,4 @@ void property_changed(Object*, const void* property)
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi

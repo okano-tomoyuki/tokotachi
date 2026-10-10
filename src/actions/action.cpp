@@ -1,26 +1,26 @@
-#include <gui/actions/action.hpp>
+#include <tokotachi/actions/action.hpp>
 
-#include <gui/actions/menu.hpp>
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/actions/menu.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include "menu_access.hpp"
 #include "action_access.hpp"
 #include "../widgets/widget_access.hpp"
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Action::Action(Object* owner_object, const std::string& initial_text)
     : Object(owner_object),
-      GUI_PROPERTY_MEMBER(Action, std::string, text),
-      GUI_PROPERTY_MEMBER(Action, Shortcut, shortcut),
-      GUI_PROPERTY_MEMBER(Action, Image, icon),
-      GUI_PROPERTY_MEMBER(Action, std::string, tooltip),
-      GUI_PROPERTY_MEMBER(Action, bool, enabled),
-      GUI_PROPERTY_MEMBER(Action, bool, checkable),
-      GUI_PROPERTY_MEMBER(Action, bool, checked),
-      GUI_HANDLER_PROPERTY(Action, NotifyHandler, on_trigger),
+      TOKOTACHI_PROPERTY_MEMBER(Action, std::string, text),
+      TOKOTACHI_PROPERTY_MEMBER(Action, Shortcut, shortcut),
+      TOKOTACHI_PROPERTY_MEMBER(Action, Image, icon),
+      TOKOTACHI_PROPERTY_MEMBER(Action, std::string, tooltip),
+      TOKOTACHI_PROPERTY_MEMBER(Action, bool, enabled),
+      TOKOTACHI_PROPERTY_MEMBER(Action, bool, checkable),
+      TOKOTACHI_PROPERTY_MEMBER(Action, bool, checked),
+      TOKOTACHI_HANDLER_PROPERTY(Action, NotifyHandler, on_trigger),
       text_(initial_text),
       enabled_(true),
       checkable_(false),
@@ -112,4 +112,4 @@ void Action::trigger()
     detail::fire(on_trigger_, self);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

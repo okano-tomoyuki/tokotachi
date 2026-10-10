@@ -1,17 +1,17 @@
-#include <gui/widgets/scroll_area.hpp>
+#include <tokotachi/widgets/scroll_area.hpp>
 
 #include <algorithm>
 
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 ScrollArea::ScrollArea(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER(ScrollArea, Widget*, content),
-      GUI_PROPERTY_GETTER(ScrollArea, bool, fit_width),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ScrollArea, Point, scroll_position),
+      TOKOTACHI_PROPERTY_GETTER(ScrollArea, Widget*, content),
+      TOKOTACHI_PROPERTY_GETTER(ScrollArea, bool, fit_width),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ScrollArea, Point, scroll_position),
       viewport_(new Widget(this)),
       vertical_(new ScrollBar(this, Orientation::VERTICAL)),
       horizontal_(new ScrollBar(this, Orientation::HORIZONTAL)),
@@ -175,4 +175,4 @@ Size ScrollArea::compute_minimum_size() const
     return Size(bar * 3, bar * 3);
 }
 
-}  // namespace gui
+}  // namespace tokotachi

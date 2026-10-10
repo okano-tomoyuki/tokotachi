@@ -15,7 +15,7 @@ cpp_tk の `StringVar` 等(Tk の変数)のような、値を観察できる変�
 
 - 選択肢A: Tk の `-textvariable` のように、結びつけられるウィジェットにだけ専用のプロパティを用意する(`edit->text_variable = name`)。
   走り出しは楽だが、ウィジェットごとに専用のプロパティと処理が増える。
-- 選択肢B: 任意のプロパティどうしを結びつける汎用の仕組みにする(`gui::bind(edit->text, name->value)`)。
+- 選択肢B: 任意のプロパティどうしを結びつける汎用の仕組みにする(`tokotachi::bind(edit->text, name->value)`)。
   プロパティの変更を知らせる仕組みが要るが、一度作れば、ウィジェットごとに必要なのは「変わったプロパティを知らせる」ことだけになる。
 
 統一的な仕組みの方が全体の実装の手間が下がると考え、選択肢B を試作した。
@@ -38,18 +38,18 @@ cpp_tk の `StringVar` 等(Tk の変数)のような、値を観察できる変�
 
 ### 結びつき
 
-- `gui::bind(target, source)`: 同じ型(`==` で比べられる型)のプロパティを双方向に結び、結んだ時点で target を source の値にする。
+- `tokotachi::bind(target, source)`: 同じ型(`==` で比べられる型)のプロパティを双方向に結び、結んだ時点で target を source の値にする。
 - **結びつきは、値が変わったときだけ相手へ伝える**。相手がすでに同じ値なら書き込まない(同じ値を書き込むと、LineEdit のキャレットが
   末尾へ動くなどの副作用があるため)。
   source が `ReadOnlyProperty` なら source から target への一方向。
-- `gui::unbind(a, b)` で 1 組、`gui::unbind(property)` でそのプロパティの結びつきをすべて外す。どちらかのオブジェクトが破棄されると、
+- `tokotachi::unbind(a, b)` で 1 組、`tokotachi::unbind(property)` でそのプロパティの結びつきをすべて外す。どちらかのオブジェクトが破棄されると、
   その結びつきは自動で外れる。同じ組を 2 度結んでも 1 つにする。
 - 結びつきは内部の一覧で管理し、利用者には見せない。メインスレッドだけで扱う。
 - **循環の防止**: 結びつきは「伝えている最中」の印を持ち、伝えた先から戻ってきた通知を通さない。結びつきが輪になっていても止まる。
 
 ### Variable
 
-- `gui::Variable<T>` は「値のプロパティ `value` を 1 つ持つ Object」で、結びつきの特別な場合として扱う(Variable 専用の仕組みは無い)。
+- `tokotachi::Variable<T>` は「値のプロパティ `value` を 1 つ持つ Object」で、結びつきの特別な場合として扱う(Variable 専用の仕組みは無い)。
   別名 `StringVariable`・`IntVariable`・`BoolVariable`・`DoubleVariable` を用意する。
 - ハンドラを 2 つに分けて提供する(どちらも単一のハンドラ。[ADR 0013](0013-api-style-properties-and-handlers.md))。
   - `on_set`: `value` が設定されるたびに呼ぶ(同じ値の代入でも)。内部の処理で明示的に代入したのにハンドラが呼ばれない、

@@ -1,4 +1,4 @@
-#include <gui/graphics/image.hpp>
+#include <tokotachi/graphics/image.hpp>
 
 #include <plutovg.h>
 
@@ -6,7 +6,7 @@
 
 #include "image_data.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace detail
@@ -87,4 +87,4 @@ Color Image::pixel(int x, int y) const
     return c;
 }
 
-}  // namespace gui
+}  // namespace tokotachi

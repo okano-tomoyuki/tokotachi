@@ -1,13 +1,13 @@
-#include <gui/graphics/theme.hpp>
+#include <tokotachi/graphics/theme.hpp>
 
-#include <gui/core/application.hpp>
+#include <tokotachi/core/application.hpp>
 
 #include <cstdint>
 
 #include "../widgets/theme.hpp"
 #include "../core/application_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -127,4 +127,4 @@ const Theme& current_theme()
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi

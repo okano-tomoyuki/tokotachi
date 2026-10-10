@@ -1,17 +1,17 @@
-#include <gui/windows/menu_bar.hpp>
+#include <tokotachi/windows/menu_bar.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
 #include "../actions/action_access.hpp"
 #include "../core/property_impl.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../widgets/theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -37,7 +37,7 @@ Action* find_shortcut(const Menu* menu, const KeyEvent& e)
 
 MenuBar::MenuBar(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_READONLY_PROPERTY(MenuBar, std::vector<Menu*>, menus),
+      TOKOTACHI_READONLY_PROPERTY(MenuBar, std::vector<Menu*>, menus),
       open_(-1),
       hover_(-1),
       active_(-1),
@@ -450,4 +450,4 @@ bool MenuBar::trigger_shortcut(const KeyEvent& e)
     return false;
 }
 
-}  // namespace gui
+}  // namespace tokotachi

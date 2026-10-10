@@ -1,21 +1,21 @@
-#include <gui/layout/layout.hpp>
+#include <tokotachi/layout/layout.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include "../core/property_impl.hpp"
 #include "../widgets/widget_access.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Layout::Layout(Widget* target)
     : Object(target),
-      GUI_READONLY_PROPERTY(Layout, Widget*, widget),
-      GUI_PROPERTY_MEMBER(Layout, Margins, margins),
+      TOKOTACHI_READONLY_PROPERTY(Layout, Widget*, widget),
+      TOKOTACHI_PROPERTY_MEMBER(Layout, Margins, margins),
       target_(target)
 {
     if (!target_)
@@ -70,7 +70,7 @@ bool Layout::adopt(Widget* w)
     }
     if (detail::WidgetAccess::parent_of(w) != target_)
     {
-        std::fprintf(stderr, "gui: Layout::add: the widget cannot be placed in this layout (ignored)\n");
+        std::fprintf(stderr, "tokotachi: Layout::add: the widget cannot be placed in this layout (ignored)\n");
         return false;
     }
     return true;
@@ -121,4 +121,4 @@ void Layout::place_in_cell(Widget* w, const Rect& cell, Align horizontal, Align 
     w->bounds = Rect(x0, y0, std::max(0.0f, x1 - x0), std::max(0.0f, y1 - y0));
 }
 
-}  // namespace gui
+}  // namespace tokotachi

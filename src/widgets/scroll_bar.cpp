@@ -1,13 +1,13 @@
-#include <gui/widgets/scroll_bar.hpp>
+#include <tokotachi/widgets/scroll_bar.hpp>
 
 #include <algorithm>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 const float ScrollBar::THICKNESS = 10;
@@ -19,12 +19,12 @@ const float MIN_THUMB = 20;  // つまみの最小の長さ(dp)
 
 ScrollBar::ScrollBar(Widget* parent_widget, Orientation initial_orientation)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER(ScrollBar, Orientation, orientation),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ScrollBar, float, value),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(ScrollBar, float, maximum),
-      GUI_PROPERTY_GETTER(ScrollBar, float, page_step),
-      GUI_PROPERTY_GETTER(ScrollBar, float, single_step),
-      GUI_HANDLER_PROPERTY(ScrollBar, NotifyHandler, on_change),
+      TOKOTACHI_PROPERTY_GETTER(ScrollBar, Orientation, orientation),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ScrollBar, float, value),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ScrollBar, float, maximum),
+      TOKOTACHI_PROPERTY_GETTER(ScrollBar, float, page_step),
+      TOKOTACHI_PROPERTY_GETTER(ScrollBar, float, single_step),
+      TOKOTACHI_HANDLER_PROPERTY(ScrollBar, NotifyHandler, on_change),
       orientation_(initial_orientation),
       value_(0),
       maximum_(0),
@@ -206,4 +206,4 @@ void ScrollBar::mouse_wheel(WheelEvent& e)
     value = value_ + ticks * single_step_;
 }
 
-}  // namespace gui
+}  // namespace tokotachi

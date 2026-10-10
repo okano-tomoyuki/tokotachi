@@ -6,7 +6,8 @@
 ## 背景
 
 ライブラリの土台(Widget・Window・Application)を作るにあたり、ウィジェットの寿命の管理と API の命名を決める。
-ライブラリの名前は未定で、名前空間・インクルードのパスは仮に `gui` とする(`#include <gui/gui.hpp>`、`gui::Button`)。
+ライブラリの名前は未定で、名前空間・インクルードのパスは仮に `gui` とする(後に [ADR 0036](0036-library-name.md) で Tokotachi に決め、
+`#include <tokotachi/tokotachi.hpp>`・`tokotachi::Button` になった)。
 
 ## 検討した選択肢
 

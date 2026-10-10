@@ -1,17 +1,17 @@
 // CheckBox・RadioButton の共通の描画(内部): 左の印と、その右の文字。
-#ifndef GUI_SRC_WIDGETS_TOGGLE_PAINTER_HPP
-#define GUI_SRC_WIDGETS_TOGGLE_PAINTER_HPP
+#ifndef TOKOTACHI_SRC_WIDGETS_TOGGLE_PAINTER_HPP
+#define TOKOTACHI_SRC_WIDGETS_TOGGLE_PAINTER_HPP
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/graphics/text_layout.hpp>
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -41,6 +41,6 @@ inline void paint_toggle_text(Canvas& canvas, const TextLayout& l, const Rect& r
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

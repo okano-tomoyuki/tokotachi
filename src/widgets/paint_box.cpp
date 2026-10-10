@@ -1,16 +1,16 @@
-#include <gui/widgets/paint_box.hpp>
+#include <tokotachi/widgets/paint_box.hpp>
 
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 PaintBox::PaintBox(Widget* parent_widget)
-    : Widget(parent_widget), GUI_PROPERTY_MEMBER(PaintBox, bool, cached), cached_(false), valid_(false)
+    : Widget(parent_widget), TOKOTACHI_PROPERTY_MEMBER(PaintBox, bool, cached), cached_(false), valid_(false)
 {
 }
 
@@ -73,4 +73,4 @@ void PaintBox::paint(Canvas& canvas)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

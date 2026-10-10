@@ -1,18 +1,18 @@
-#include <gui/windows/tool_bar.hpp>
+#include <tokotachi/windows/tool_bar.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/actions/menu.hpp>
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/actions/menu.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
 #include "../actions/action_access.hpp"
 #include "../core/property_impl.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../widgets/theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -207,7 +207,7 @@ private:
 
 ToolBar::ToolBar(Widget* parent_widget)
     : Widget(parent_widget),
-      GUI_PROPERTY_GETTER(ToolBar, ToolButtonStyle, button_style),
+      TOKOTACHI_PROPERTY_GETTER(ToolBar, ToolButtonStyle, button_style),
       button_style_(ToolButtonStyle::ICON_ONLY),
       overflow_button_(nullptr),
       overflow_menu_(nullptr),
@@ -460,4 +460,4 @@ void ToolBar::show_overflow()
     overflow_menu_->popup(overflow_button_, Point(0, overflow_button_->height));
 }
 
-}  // namespace gui
+}  // namespace tokotachi

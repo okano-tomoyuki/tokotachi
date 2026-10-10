@@ -1,14 +1,14 @@
-#include <gui/widgets/slider.hpp>
+#include <tokotachi/widgets/slider.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -21,7 +21,7 @@ const float MIN_LENGTH = 48;    // 最小の長さ(dp)
 
 Slider::Slider(Widget* parent_widget, Orientation initial_orientation)
     : RangeBase(parent_widget),
-      GUI_PROPERTY_GETTER(Slider, Orientation, orientation),
+      TOKOTACHI_PROPERTY_GETTER(Slider, Orientation, orientation),
       orientation_(initial_orientation),
       hovered_(false),
       dragging_(false)
@@ -234,4 +234,4 @@ void Slider::focus_out()
     Widget::focus_out();
 }
 
-}  // namespace gui
+}  // namespace tokotachi

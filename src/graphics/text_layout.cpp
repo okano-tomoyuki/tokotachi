@@ -1,4 +1,4 @@
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
 #include <hb.h>
 
@@ -14,7 +14,7 @@
 #include "text_layout_data.hpp"
 #include "utf8.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -840,4 +840,4 @@ void TextLayout::word_at(std::size_t offset, std::size_t& start, std::size_t& en
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

@@ -1,4 +1,4 @@
-#include <gui/core/application.hpp>
+#include <tokotachi/core/application.hpp>
 
 #include <SDL3/SDL.h>
 
@@ -11,13 +11,13 @@
 #include <functional>
 #include <mutex>
 
-#include <gui/core/thread.hpp>
+#include <tokotachi/core/thread.hpp>
 
 #include "application_impl.hpp"
 #include "property_impl.hpp"
 #include "../windows/window_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace
@@ -25,7 +25,7 @@ namespace
 
 Application* g_instance = nullptr;
 Uint32 g_timer_event = 0;
-Uint32 g_call_event = 0;  // gui::post
+Uint32 g_call_event = 0;  // tokotachi::post
 
 // post を受け付けているか(Application が生きている間)。別のスレッドから読むので、mutex で守る。
 std::mutex& post_mutex()
@@ -136,7 +136,7 @@ bool trace_enabled()
 {
     static const int enabled = []()
     {
-        const char* v = std::getenv("GUI_TRACE");
+        const char* v = std::getenv("TOKOTACHI_TRACE");
         return v && v[0] == '1' ? 1 : 0;
     }();
     return enabled != 0;
@@ -232,13 +232,13 @@ void trace_event(const SDL_Event& e, const WindowImpl* w, std::size_t open_menus
     default:
         return;
     }
-    std::fprintf(stderr, "[gui] %-15s %-10s (%.1f, %.1f) %d  open_menus=%u\n", name, trace_name(w), x, y, extra,
+    std::fprintf(stderr, "[tokotachi] %-15s %-10s (%.1f, %.1f) %d  open_menus=%u\n", name, trace_name(w), x, y, extra,
                  static_cast<unsigned>(open_menus));
 }
 
 }  // namespace
 
-void ApplicationImpl::post(const std::function<void()>& fn) { gui::post(fn); }
+void ApplicationImpl::post(const std::function<void()>& fn) { tokotachi::post(fn); }
 
 void ApplicationImpl::flush_doomed()
 {
@@ -384,12 +384,12 @@ void ApplicationImpl::stop_timer(int id)
 }  // namespace detail
 
 Application::Application(int, char**)
-    : GUI_PROPERTY_GETTER_SELF_NOTIFY(Application, ColorScheme, color_scheme),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, light_theme),
-      GUI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, dark_theme),
-      GUI_READONLY_PROPERTY(Application, bool, dark),
-      GUI_READONLY_PROPERTY(Application, Theme, theme),
-      GUI_HANDLER_PROPERTY(Application, NotifyHandler, on_theme_change),
+    : TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, ColorScheme, color_scheme),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, light_theme),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, dark_theme),
+      TOKOTACHI_READONLY_PROPERTY(Application, bool, dark),
+      TOKOTACHI_READONLY_PROPERTY(Application, Theme, theme),
+      TOKOTACHI_HANDLER_PROPERTY(Application, NotifyHandler, on_theme_change),
       d_(new detail::ApplicationImpl(this))
 {
     g_instance = this;
@@ -549,4 +549,4 @@ bool post(const std::function<void()>& fn)
     return true;
 }
 
-}  // namespace gui
+}  // namespace tokotachi

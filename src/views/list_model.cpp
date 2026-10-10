@@ -1,20 +1,20 @@
-#include <gui/views/list_model.hpp>
+#include <tokotachi/views/list_model.hpp>
 
 #include <algorithm>
 
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 Item::Item(detail::ItemHost* host, const std::string& initial_text)
     : Object(nullptr),
-      GUI_PROPERTY_MEMBER(Item, std::string, text),
-      GUI_PROPERTY_MEMBER(Item, std::vector<std::string>, column_texts),
-      GUI_PROPERTY_MEMBER(Item, Image, icon),
-      GUI_PROPERTY_MEMBER(Item, bool, enabled),
-      GUI_PROPERTY_MEMBER(Item, bool, checkable),
-      GUI_PROPERTY_MEMBER(Item, bool, checked),
+      TOKOTACHI_PROPERTY_MEMBER(Item, std::string, text),
+      TOKOTACHI_PROPERTY_MEMBER(Item, std::vector<std::string>, column_texts),
+      TOKOTACHI_PROPERTY_MEMBER(Item, Image, icon),
+      TOKOTACHI_PROPERTY_MEMBER(Item, bool, enabled),
+      TOKOTACHI_PROPERTY_MEMBER(Item, bool, checkable),
+      TOKOTACHI_PROPERTY_MEMBER(Item, bool, checked),
       host_(host),
       row_(0),
       text_(initial_text),
@@ -99,7 +99,7 @@ void Item::set_checked(const bool& v)
 }
 
 ListModel::ListModel(Object* owner_object)
-    : ItemModel(owner_object), GUI_READONLY_PROPERTY(ListModel, std::vector<Item*>, items)
+    : ItemModel(owner_object), TOKOTACHI_READONLY_PROPERTY(ListModel, std::vector<Item*>, items)
 {
 }
 
@@ -276,4 +276,4 @@ ModelIndex ListModel::locate(const ModelIndex& i) const
 
 void ListModel::item_changed(Item* item) { notify_data_changed(make_index(item->row_, item)); }
 
-}  // namespace gui
+}  // namespace tokotachi

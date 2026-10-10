@@ -6,15 +6,15 @@
 #include <cmath>
 #include <cstdlib>
 
-#include <gui/graphics/image.hpp>
-#include <gui/graphics/text_layout.hpp>
+#include <tokotachi/graphics/image.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 
 #include "image_data.hpp"
 
 #include "font_cache.hpp"
 #include "text_layout_data.hpp"
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -568,7 +568,7 @@ void RasterCanvas::draw_image(const Image& image, const Rect& dst, float opacity
 
 // グリフの被覆率の補正(docs/adr/0020)。sRGB の値をそのまま線形に混ぜると、文字が細く見える(明るい文字では特に)。
 // 被覆率 c を c^(1/k) に持ち上げて補う。k は文字色の明るさで、暗い文字 TEXT_BOOST_DARK から明るい文字 TEXT_BOOST_LIGHT まで変える。
-// 環境変数 GUI_TEXT_BOOST で k を固定できる(見え方の確認用。1 で補正なし)。
+// 環境変数 TOKOTACHI_TEXT_BOOST で k を固定できる(見え方の確認用。1 で補正なし)。
 const float TEXT_BOOST_DARK = 1.25f;
 const float TEXT_BOOST_LIGHT = 1.6f;
 
@@ -576,7 +576,7 @@ void text_coverage_table(const Color& color, std::uint8_t* table)
 {
     const float luminance = (0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b) / 255.0f;
     float k = TEXT_BOOST_DARK + (TEXT_BOOST_LIGHT - TEXT_BOOST_DARK) * luminance;
-    if (const char* fixed = std::getenv("GUI_TEXT_BOOST"))
+    if (const char* fixed = std::getenv("TOKOTACHI_TEXT_BOOST"))
     {
         k = static_cast<float>(std::atof(fixed));
     }
@@ -717,4 +717,4 @@ void RasterCanvas::draw_text_outlines(const TextLayout& layout, const Point& pos
 }
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi

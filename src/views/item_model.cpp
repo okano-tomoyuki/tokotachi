@@ -1,10 +1,10 @@
-#include <gui/views/item_model.hpp>
+#include <tokotachi/views/item_model.hpp>
 
 #include <algorithm>
 
-#include <gui/views/item_view.hpp>
+#include <tokotachi/views/item_view.hpp>
 
-namespace gui
+namespace tokotachi
 {
 
 ItemModel::ItemModel(Object* owner_object) : Object(owner_object) {}
@@ -87,4 +87,4 @@ void ItemModel::notify_reset()
     for_each_view(views_, [](ItemView* v) { v->model_reset(); });
 }
 
-}  // namespace gui
+}  // namespace tokotachi

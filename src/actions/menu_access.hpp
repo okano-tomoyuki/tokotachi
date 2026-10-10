@@ -1,11 +1,11 @@
 // Menu・MenuBar の内部に触るためのヘルパー(内部)。
-#ifndef GUI_SRC_WIDGETS_MENU_ACCESS_HPP
-#define GUI_SRC_WIDGETS_MENU_ACCESS_HPP
+#ifndef TOKOTACHI_SRC_ACTIONS_MENU_ACCESS_HPP
+#define TOKOTACHI_SRC_ACTIONS_MENU_ACCESS_HPP
 
-#include <gui/actions/menu.hpp>
-#include <gui/windows/menu_bar.hpp>
+#include <tokotachi/actions/menu.hpp>
+#include <tokotachi/windows/menu_bar.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -26,6 +26,6 @@ struct MenuBarAccess
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

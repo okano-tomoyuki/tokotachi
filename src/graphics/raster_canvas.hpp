@@ -1,18 +1,18 @@
 // plutovg と自前のグリフの合成で、ARGB32(アルファ乗算済み)のバッファに描く Canvas(内部。docs/adr/0006、0032)。
 // 座標は呼び出し側で dp からピクセルに直し、plutovg には常にピクセルの座標を渡す(plutovg の変換の行列は使わない。
 // グラデーション・画像の模様の行列は除く)。
-#ifndef GUI_SRC_GFX_RASTER_CANVAS_HPP
-#define GUI_SRC_GFX_RASTER_CANVAS_HPP
+#ifndef TOKOTACHI_SRC_GRAPHICS_RASTER_CANVAS_HPP
+#define TOKOTACHI_SRC_GRAPHICS_RASTER_CANVAS_HPP
 
 #include <cstdint>
 #include <vector>
 
-#include <gui/graphics/canvas.hpp>
+#include <tokotachi/graphics/canvas.hpp>
 
 struct plutovg_surface;
 struct plutovg_canvas;
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -123,6 +123,6 @@ private:
 };
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif

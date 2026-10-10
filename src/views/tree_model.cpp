@@ -1,16 +1,16 @@
-#include <gui/views/tree_model.hpp>
+#include <tokotachi/views/tree_model.hpp>
 
 #include <algorithm>
 
 #include "../core/property_impl.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 TreeItem::TreeItem(TreeModel* model, TreeItem* parent, const std::string& initial_text)
     : Item(model, initial_text),
-      GUI_READONLY_PROPERTY(TreeItem, TreeItem*, parent_item),
-      GUI_READONLY_PROPERTY(TreeItem, std::vector<TreeItem*>, children),
+      TOKOTACHI_READONLY_PROPERTY(TreeItem, TreeItem*, parent_item),
+      TOKOTACHI_READONLY_PROPERTY(TreeItem, std::vector<TreeItem*>, children),
       model_(model),
       parent_(parent)
 {
@@ -29,7 +29,7 @@ TreeItem* TreeItem::insert_child(int index, const std::string& text_value)
 }
 
 TreeModel::TreeModel(Object* owner_object)
-    : ItemModel(owner_object), GUI_READONLY_PROPERTY(TreeModel, std::vector<TreeItem*>, items)
+    : ItemModel(owner_object), TOKOTACHI_READONLY_PROPERTY(TreeModel, std::vector<TreeItem*>, items)
 {
 }
 
@@ -265,4 +265,4 @@ void TreeModel::item_changed(Item* item)
     notify_data_changed(index_of(static_cast<TreeItem*>(item)));
 }
 
-}  // namespace gui
+}  // namespace tokotachi

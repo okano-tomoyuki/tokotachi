@@ -1,13 +1,13 @@
-#include <gui/actions/menu.hpp>
+#include <tokotachi/actions/menu.hpp>
 
 #include <algorithm>
 #include <cmath>
 
-#include <gui/graphics/canvas.hpp>
-#include <gui/windows/menu_bar.hpp>
-#include <gui/windows/popup.hpp>
-#include <gui/graphics/text_layout.hpp>
-#include <gui/widgets/widget.hpp>
+#include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/windows/menu_bar.hpp>
+#include <tokotachi/windows/popup.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
+#include <tokotachi/widgets/widget.hpp>
 
 #include "action_access.hpp"
 #include "../core/property_impl.hpp"
@@ -15,7 +15,7 @@
 #include "mnemonic.hpp"
 #include "../widgets/theme.hpp"
 
-namespace gui
+namespace tokotachi
 {
 
 namespace detail
@@ -413,8 +413,8 @@ void MenuAccess::forget_action(Menu* m, Action* a)
 
 Menu::Menu(Object* owner, const std::string& initial_title)
     : Object(owner),
-      GUI_PROPERTY_MEMBER(Menu, std::string, title),
-      GUI_READONLY_PROPERTY(Menu, std::vector<Action*>, actions),
+      TOKOTACHI_PROPERTY_MEMBER(Menu, std::string, title),
+      TOKOTACHI_READONLY_PROPERTY(Menu, std::vector<Action*>, actions),
       title_(initial_title),
       parent_menu_(nullptr),
       bar_(nullptr),
@@ -655,4 +655,4 @@ void Menu::activate(Action* action)
     }
 }
 
-}  // namespace gui
+}  // namespace tokotachi

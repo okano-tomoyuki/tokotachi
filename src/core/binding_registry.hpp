@@ -1,10 +1,10 @@
 // 結びつきの一覧(内部。docs/adr/0016)。
-#ifndef GUI_SRC_CORE_BINDING_REGISTRY_HPP
-#define GUI_SRC_CORE_BINDING_REGISTRY_HPP
+#ifndef TOKOTACHI_SRC_CORE_BINDING_REGISTRY_HPP
+#define TOKOTACHI_SRC_CORE_BINDING_REGISTRY_HPP
 
-#include <gui/core/binding.hpp>
+#include <tokotachi/core/binding.hpp>
 
-namespace gui
+namespace tokotachi
 {
 namespace detail
 {
@@ -16,6 +16,6 @@ void remove_bindings_of(Object* owner);
 std::size_t binding_count();
 
 }  // namespace detail
-}  // namespace gui
+}  // namespace tokotachi
 
 #endif
