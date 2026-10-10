@@ -3,9 +3,9 @@
 ///
 /// @code
 /// tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(&window);
-/// tokotachi::bind(edit->text, name->value);
-/// tokotachi::bind(label->text, name->value);
-/// name->value = "初期値";                             // edit と label の両方に伝わる
+/// tokotachi::bind(line_edit_name->text, name->value);
+/// tokotachi::bind(label_name->text, name->value);
+/// name->value = "初期値";                             // line_edit_name と label_name の両方に伝わる
 /// name->on_change = [](tokotachi::Object* sender) { ... };  // 値が変わったときに呼ぶ
 /// name->on_set = [](tokotachi::Object* sender) { ... };     // 値が設定されるたびに呼ぶ(同じ値の代入でも)
 /// @endcode

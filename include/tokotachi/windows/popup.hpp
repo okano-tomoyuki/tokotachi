@@ -3,9 +3,9 @@
 /// メニュー・ComboBox の一覧・ツールチップの土台。
 ///
 /// @code
-/// tokotachi::Popup* popup = new tokotachi::Popup(button);              // button と一緒に破棄される
+/// tokotachi::Popup* popup = new tokotachi::Popup(button_more);              // button_more と一緒に破棄される
 /// new tokotachi::Label(popup, "中身");                            // 中身は Popup を親にして作る(レイアウトも付けられる)
-/// popup->open(button->local_rect, tokotachi::Size(200, 120));    // button の下に開く
+/// popup->open(button_more->local_rect, tokotachi::Size(200, 120));    // button_more の下に開く
 /// @endcode
 ///
 /// Wayland では、ポップアップは親のウィンドウからの相対の位置でしか置けない(docs/adr/0002)。画面からはみ出すときの

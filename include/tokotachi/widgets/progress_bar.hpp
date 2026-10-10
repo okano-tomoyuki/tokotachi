@@ -2,10 +2,10 @@
 /// 進み具合を横の棒で見せる(docs/adr/0024)。利用者は操作できない。
 ///
 /// @code
-/// tokotachi::ProgressBar* progress = new tokotachi::ProgressBar(panel);
-/// progress->maximum = total;
-/// progress->value = done;
-/// progress->text_visible = true;  // 右に「40%」を出す
+/// tokotachi::ProgressBar* progress_bar_copy = new tokotachi::ProgressBar(panel);
+/// progress_bar_copy->maximum = total;
+/// progress_bar_copy->value = done;
+/// progress_bar_copy->text_visible = true;  // 右に「40%」を出す
 /// @endcode
 #ifndef TOKOTACHI_WIDGETS_PROGRESS_BAR_HPP
 #define TOKOTACHI_WIDGETS_PROGRESS_BAR_HPP

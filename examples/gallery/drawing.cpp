@@ -7,10 +7,10 @@ int main(int argc, char** argv)
     tokotachi::Window window("描画", 420, 220);
     tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
     box->margins = tokotachi::Margins(0);
-    tokotachi::PaintBox* canvas = new tokotachi::PaintBox(&window);
-    box->add(canvas, 1);
+    tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+    box->add(paint_box_chart, 1);
 
-    canvas->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
+    paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
     {
         // 棒グラフ。
         const float values[] = {40, 75, 55, 90, 65};

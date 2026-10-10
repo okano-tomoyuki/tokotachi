@@ -2,15 +2,15 @@
 /// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
 ///
 /// @code
-/// tokotachi::Menu* menu = new tokotachi::Menu(&window);                 // ウィンドウが所有する
-/// menu->add_item("コピー(&C)", [](tokotachi::Object*) { ... })->shortcut = "Ctrl+C";
-/// menu->add_action(save);                                   // 既にある Action を入れる
-/// menu->add_separator();
-/// tokotachi::Menu* sort = menu->add_submenu("並べ替え(&S)");
-/// sort->add_item("名前順");
-/// edit->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
+/// tokotachi::Menu* menu_edit = new tokotachi::Menu(&window);                 // ウィンドウが所有する
+/// menu_edit->add_item("コピー(&C)", [](tokotachi::Object*) { ... })->shortcut = "Ctrl+C";
+/// menu_edit->add_action(action_save);                                   // 既にある Action を入れる
+/// menu_edit->add_separator();
+/// tokotachi::Menu* menu_sort = menu_edit->add_submenu("並べ替え(&S)");
+/// menu_sort->add_item("名前順");
+/// text_edit_memo->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
 /// {
-///     if (e.button == tokotachi::MouseButton::RIGHT) { menu->popup(edit, e.pos); }
+///     if (e.button == tokotachi::MouseButton::RIGHT) { menu_edit->popup(text_edit_memo, e.pos); }
 /// };
 /// @endcode
 ///

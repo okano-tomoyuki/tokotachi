@@ -6,7 +6,7 @@
 /// list->add_item("りんご");
 /// tokotachi::Item* item = list->add_item("みかん");
 /// item->checkable = true;
-/// view->model = list;
+/// list_view_fruits->model = list;
 /// @endcode
 #ifndef TOKOTACHI_VIEWS_LIST_MODEL_HPP
 #define TOKOTACHI_VIEWS_LIST_MODEL_HPP

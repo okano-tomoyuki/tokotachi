@@ -2,10 +2,10 @@
 /// プロパティどうしの結びつけ(docs/adr/0016)。
 ///
 /// @code
-/// tokotachi::bind(edit->text, name->value);   // 双方向。結んだ時点で第 1 引数を第 2 引数の値にする
-/// tokotachi::bind(label->text, name->value);  // name を介して edit と label がそろう
-/// tokotachi::bind(label->text, edit->selected_text);  // 読み取り専用のプロパティからは一方向
-/// tokotachi::unbind(label->text);             // label->text の結びつきをすべて外す
+/// tokotachi::bind(line_edit_name->text, name->value);   // 双方向。結んだ時点で第 1 引数を第 2 引数の値にする
+/// tokotachi::bind(label_name->text, name->value);  // name を介して line_edit_name と label_name がそろう
+/// tokotachi::bind(label_name->text, line_edit_name->selected_text);  // 読み取り専用のプロパティからは一方向
+/// tokotachi::unbind(label_name->text);             // label_name->text の結びつきをすべて外す
 /// @endcode
 ///
 /// 結べるのは同じ型(== で比べられる型)のプロパティだけ。値が変わったときだけ相手へ伝える。

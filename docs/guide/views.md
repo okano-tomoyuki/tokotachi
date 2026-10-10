@@ -16,22 +16,22 @@ tokotachi::Item* item = files->add_item("報告書.txt");
 item->column_texts = std::vector<std::string>{"12 KB", "2026-10-01"};   // 2 列目以降
 item->checkable = true;
 
-tokotachi::ListView* view = new tokotachi::ListView(&window);
-view->add_column("名前", 200);
-view->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
-view->model = files;
-view->selection_mode = tokotachi::SelectionMode::MULTI;
-view->sorting_enabled = true;        // 見出しを押すと並べ替える
-view->on_activate = [=](tokotachi::Object*) { ... files->item_at(view->current) ... };
+tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
+list_view_files->add_column("名前", 200);
+list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
+list_view_files->model = files;
+list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+list_view_files->sorting_enabled = true;        // 見出しを押すと並べ替える
+list_view_files->on_activate = [=](tokotachi::Object*) { ... files->item_at(list_view_files->current) ... };
 ```
 
 ```cpp
 tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
 tokotachi::TreeItem* docs = tree->add_item("文書");
 docs->add_child("報告書.txt");
-tokotachi::TreeView* view = new tokotachi::TreeView(&window);
-view->model = tree;
-view->expand(tree->index_of(docs));
+tokotachi::TreeView* tree_view_docs = new tokotachi::TreeView(&window);
+tree_view_docs->model = tree;
+tree_view_docs->expand(tree->index_of(docs));
 ```
 
 ## 選択

@@ -4,10 +4,10 @@
 /// グループは、各ボタンの group_value を同じ IntVariable に結んで作る(型の変換は要らない):
 /// @code
 /// tokotachi::IntVariable* size = new tokotachi::IntVariable(&window, 2);
-/// tokotachi::RadioButton* small = new tokotachi::RadioButton(&window, "小", 1);
-/// tokotachi::RadioButton* large = new tokotachi::RadioButton(&window, "大", 2);
-/// tokotachi::bind(small->group_value, size->value);
-/// tokotachi::bind(large->group_value, size->value);   // large が選ばれた状態になる
+/// tokotachi::RadioButton* radio_button_small = new tokotachi::RadioButton(&window, "小", 1);
+/// tokotachi::RadioButton* radio_button_large = new tokotachi::RadioButton(&window, "大", 2);
+/// tokotachi::bind(radio_button_small->group_value, size->value);
+/// tokotachi::bind(radio_button_large->group_value, size->value);   // radio_button_large が選ばれた状態になる
 /// @endcode
 /// 押すと group_value に自分の value を入れ、結んだ変数を通じて他のボタンの選択が外れる。
 #ifndef TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP

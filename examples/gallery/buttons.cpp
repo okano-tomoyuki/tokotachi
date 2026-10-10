@@ -12,19 +12,19 @@ int main(int argc, char** argv)
     tokotachi::Widget* row = new tokotachi::Widget(&window);
     tokotachi::BoxLayout* buttons = new tokotachi::BoxLayout(row, tokotachi::Orientation::HORIZONTAL);
     buttons->spacing = 8;
-    tokotachi::Button* save = new tokotachi::Button(row, "保存");
-    tokotachi::Button* cancel = new tokotachi::Button(row, "キャンセル");
-    cancel->style = tokotachi::ButtonStyle::SECONDARY;  // 控えめな見た目
-    tokotachi::Button* disabled = new tokotachi::Button(row, "無効");
-    disabled->enabled = false;
-    buttons->add(save);
-    buttons->add(cancel);
-    buttons->add(disabled);
+    tokotachi::Button* button_save = new tokotachi::Button(row, "保存");
+    tokotachi::Button* button_cancel = new tokotachi::Button(row, "キャンセル");
+    button_cancel->style = tokotachi::ButtonStyle::SECONDARY;  // 控えめな見た目
+    tokotachi::Button* button_disabled = new tokotachi::Button(row, "無効");
+    button_disabled->enabled = false;
+    buttons->add(button_save);
+    buttons->add(button_cancel);
+    buttons->add(button_disabled);
     buttons->add_stretch();
-    save->on_click = [](tokotachi::Object*) { /* 押された */ };
+    button_save->on_click = [](tokotachi::Object*) { /* 押された */ };
 
-    tokotachi::CheckBox* agree = new tokotachi::CheckBox(&window, "規約に同意する");
-    agree->checked = true;
+    tokotachi::CheckBox* check_box_agree = new tokotachi::CheckBox(&window, "規約に同意する");
+    check_box_agree->checked = true;
 
     // ラジオボタンは、同じ変数に group_value を結んで 1 つのグループにする。
     tokotachi::Widget* sizes = new tokotachi::Widget(&window);
@@ -34,14 +34,14 @@ int main(int argc, char** argv)
     const char* const NAMES[] = {"小", "中", "大"};
     for (int i = 0; i < 3; ++i)
     {
-        tokotachi::RadioButton* radio = new tokotachi::RadioButton(sizes, NAMES[i], i + 1);
-        tokotachi::bind(radio->group_value, size->value);
-        size_box->add(radio);
+        tokotachi::RadioButton* radio_button = new tokotachi::RadioButton(sizes, NAMES[i], i + 1);
+        tokotachi::bind(radio_button->group_value, size->value);
+        size_box->add(radio_button);
     }
     size_box->add_stretch();
 
     column->add(row);
-    column->add(agree);
+    column->add(check_box_agree);
     column->add(sizes);
     column->add_stretch();
     return run_gallery(app, window, argc, argv);

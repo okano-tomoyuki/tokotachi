@@ -2,9 +2,9 @@
 /// キーの組み合わせ(ショートカット。docs/adr/0027)。
 ///
 /// @code
-/// action->shortcut = "Ctrl+S";                                        // 文字から作る
-/// action->shortcut = tokotachi::Shortcut(tokotachi::Key::F5);
-/// action->shortcut = tokotachi::Shortcut(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL | tokotachi::MODIFIER_SHIFT);
+/// action_save->shortcut = "Ctrl+S";                                        // 文字から作る
+/// action_save->shortcut = tokotachi::Shortcut(tokotachi::Key::F5);
+/// action_save->shortcut = tokotachi::Shortcut(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL | tokotachi::MODIFIER_SHIFT);
 /// @endcode
 ///
 /// 文字の書き方: 修飾キー(Ctrl・Shift・Alt・Meta)と 1 つのキーを + でつなぐ。大文字・小文字は問わない。

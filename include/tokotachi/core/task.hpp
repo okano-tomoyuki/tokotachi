@@ -3,12 +3,12 @@
 ///
 /// @code
 /// tokotachi::Task<std::size_t>* count = new tokotachi::Task<std::size_t>(&window);   // window が破棄されたら取り消し、結果は捨てる
-/// count->on_progress = [=](tokotachi::Object*) { bar->value = count->progress; };
+/// count->on_progress = [=](tokotachi::Object*) { progress_bar_count->value = count->progress; };
 /// count->on_finish = [=](tokotachi::Object*)
 /// {
 ///     if (!count->error.get().empty()) { ... }       // 仕事が例外を投げた
 ///     else if (count->cancelled) { ... }             // 取り消した
-///     else { label->text = std::to_string(count->result.get()); }
+///     else { label_result->text = std::to_string(count->result.get()); }
 /// };
 /// count->start([](tokotachi::TaskContext& ctx) -> std::size_t
 /// {

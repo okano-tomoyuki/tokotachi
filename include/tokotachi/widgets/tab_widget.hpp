@@ -2,11 +2,11 @@
 /// タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。
 ///
 /// @code
-/// tokotachi::TabWidget* tabs = new tokotachi::TabWidget(&window);
-/// tokotachi::Tab* general = tabs->add_tab(general_page, "一般");
-/// tokotachi::Tab* detail = tabs->add_tab(detail_page, "詳細");
-/// detail->enabled = false;
-/// tabs->on_change = [=](tokotachi::Object*) { ... tabs->current_index ... };
+/// tokotachi::TabWidget* tab_widget_settings = new tokotachi::TabWidget(&window);
+/// tokotachi::Tab* tab_general = tab_widget_settings->add_tab(page_general, "一般");
+/// tokotachi::Tab* tab_detail = tab_widget_settings->add_tab(page_detail, "詳細");
+/// tab_detail->enabled = false;
+/// tab_widget_settings->on_change = [=](tokotachi::Object*) { ... tab_widget_settings->current_index ... };
 /// @endcode
 ///
 /// ページは TabWidget の子になり、選んでいるページだけを見せる。ページを破棄する・別の親へ移すと、そのタブも消える。

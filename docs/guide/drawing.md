@@ -9,14 +9,14 @@
 自由に描くには `PaintBox`(または任意の部品の `on_paint`)の中で、渡される `Canvas` に描きます。
 
 ```cpp
-tokotachi::PaintBox* chart = new tokotachi::PaintBox(&window);
-chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
+tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
 {
     c.fill_rect(tokotachi::Rect(0, 0, 100, 50), tokotachi::Color::rgb(0xf3f4f6));
     c.draw_line(tokotachi::Point(0, 0), tokotachi::Point(100, 50), 2, tokotachi::Color::rgb(0x2563eb));
     c.draw_text("こんにちは", tokotachi::Point(8, 8), tokotachi::Color::rgb(0x111827));
 };
-chart->refresh();      // 描き直す(データが変わったとき)
+paint_box_chart->refresh();      // 描き直す(データが変わったとき)
 ```
 
 Canvas の決まり:
@@ -46,7 +46,7 @@ Canvas の決まり:
 
 ```cpp
 tokotachi::Task<tokotachi::Image>* render = new tokotachi::Task<tokotachi::Image>(&window);
-render->on_finish = [=](tokotachi::Object*) { image = render->result; chart->refresh(); };
+render->on_finish = [=](tokotachi::Object*) { image = render->result; paint_box_chart->refresh(); };
 render->start([](tokotachi::TaskContext&) -> tokotachi::Image
 {
     tokotachi::Bitmap b(800, 600);

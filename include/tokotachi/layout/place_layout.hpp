@@ -6,7 +6,7 @@
 /// p.relative_x = 0.5f;            // 親の幅の半分の位置
 /// p.relative_y = 0.5f;
 /// p.anchor = tokotachi::Anchor::CENTER; // 子の中央をその位置に合わせる
-/// place->add(button, p);
+/// place->add(button_center, p);
 /// @endcode
 ///
 /// 位置は (x + relative_x × 親の幅, y + relative_y × 親の高さ)、大きさは (width + relative_width × 親の幅, ...)。

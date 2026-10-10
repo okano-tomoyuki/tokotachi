@@ -3,9 +3,9 @@
 ///
 /// @code
 /// tokotachi::GridLayout* form = new tokotachi::GridLayout(&window);
-/// form->add(name_label, 0, 0);
-/// form->add(name_edit, 0, 1);
-/// form->add(buttons, 1, 0, 1, 2);      // 2 列にまたがる
+/// form->add(label_name, 0, 0);
+/// form->add(line_edit_name, 0, 1);
+/// form->add(row_buttons, 1, 0, 1, 2);      // 2 列にまたがる
 /// form->set_column_stretch(1, 1);      // 余った幅は 1 列目が受け取る
 /// @endcode
 ///

@@ -4,7 +4,7 @@
 /// 使い方: ウィジェットの on_paint、または Widget の派生クラスの paint(Canvas&) の中で描く。
 ///
 /// @code
-/// view->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
+/// paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
 /// {
 ///     c.fill_rect(tokotachi::Rect(0, 0, 100, 50), tokotachi::Color::rgb(0xf3f4f6));
 ///     c.draw_line(tokotachi::Point(0, 0), tokotachi::Point(100, 50), 2, tokotachi::Color::rgb(0x2563eb));

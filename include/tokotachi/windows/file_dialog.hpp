@@ -3,14 +3,14 @@
 /// Linux では xdg-desktop-portal(無ければ zenity など)を使う。
 ///
 /// @code
-/// tokotachi::FileDialog* chooser = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);   // window が所有する
-/// chooser->filters = std::vector<tokotachi::FileFilter>{tokotachi::FileFilter("画像", "png;jpg"), tokotachi::FileFilter("すべて", "*")};
-/// chooser->on_finish = [=](tokotachi::Object*)
+/// tokotachi::FileDialog* file_dialog_image = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);   // window が所有する
+/// file_dialog_image->filters = std::vector<tokotachi::FileFilter>{tokotachi::FileFilter("画像", "png;jpg"), tokotachi::FileFilter("すべて", "*")};
+/// file_dialog_image->on_finish = [=](tokotachi::Object*)
 /// {
-///     const std::vector<std::string> paths = chooser->paths;   // 取り消したら空
+///     const std::vector<std::string> paths = file_dialog_image->paths;   // 取り消したら空
 ///     ...
 /// };
-/// chooser->open();   // すぐに戻る
+/// file_dialog_image->open();   // すぐに戻る
 /// @endcode
 ///
 /// on_finish はメインスレッドで、イベントの処理の中で呼ぶ。開いている間に FileDialog を破棄したら、結果は捨てる。

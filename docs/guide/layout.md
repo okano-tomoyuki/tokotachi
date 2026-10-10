@@ -13,9 +13,9 @@
 tokotachi::BoxLayout* column = new tokotachi::BoxLayout(&window);                       // 縦
 column->margins = tokotachi::Margins(16);
 column->spacing = 8;
-column->add(title);                                   // 望む大きさで
-column->add(memo, 1);                                 // stretch 1: 余った高さを受け持つ
-column->add(ok, 0, tokotachi::Align::END);            // 横は右(終わり)に寄せる
+column->add(label_title);                                   // 望む大きさで
+column->add(text_edit_memo, 1);                                 // stretch 1: 余った高さを受け持つ
+column->add(button_ok, 0, tokotachi::Align::END);            // 横は右(終わり)に寄せる
 column->add_stretch();                                // 余白
 ```
 
@@ -28,8 +28,8 @@ column->add_stretch();                                // 余白
 ```cpp
 tokotachi::GridLayout* grid = new tokotachi::GridLayout(&window);
 grid->add(new tokotachi::Label(&window, "名前"), 0, 0);
-grid->add(name, 0, 1);
-grid->add(note, 1, 0, 1, 2);          // 1 行目から 1 行・2 列にまたがる
+grid->add(line_edit_name, 0, 1);
+grid->add(text_edit_note, 1, 0, 1, 2);          // 1 行目から 1 行・2 列にまたがる
 grid->set_column_stretch(1, 1);       // 2 列目が幅を受け持つ
 ```
 
@@ -44,10 +44,10 @@ grid->set_column_stretch(1, 1);       // 2 列目が幅を受け持つ
   変わっても大きさを保ちます。区画は端まで寄せるとたためます。`sizes` で大きさを保存・復元できます。
 
 ```cpp
-tokotachi::Splitter* split = new tokotachi::Splitter(&window);
-split->add_widget(tree, 0);
-split->add_widget(list, 1);
-split->sizes = std::vector<float>{200, 400};
+tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);
+splitter_main->add_widget(tree_view_folders, 0);
+splitter_main->add_widget(list_view_files, 1);
+splitter_main->sizes = std::vector<float>{200, 400};
 ```
 
 ## 大きさの指定

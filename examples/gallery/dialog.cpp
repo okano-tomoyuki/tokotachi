@@ -7,7 +7,7 @@ int main(int argc, char** argv)
     tokotachi::Window window("ダイアログ", 420, 240);
     window.visible = true;
 
-    tokotachi::MessageDialog* ask = tokotachi::MessageDialog::show(
+    tokotachi::MessageDialog* message_dialog_ask = tokotachi::MessageDialog::show(
         &window, "確認", "変更を保存しますか？ 保存しないと、編集した内容は失われる。",
         std::vector<tokotachi::DialogButton>{tokotachi::DialogButton::SAVE, tokotachi::DialogButton::DISCARD,
                                             tokotachi::DialogButton::CANCEL},
@@ -20,5 +20,5 @@ int main(int argc, char** argv)
             window.close();
         },
         tokotachi::MessageType::QUESTION);
-    return run_gallery(app, window, argc, argv, ask);
+    return run_gallery(app, window, argc, argv, message_dialog_ask);
 }

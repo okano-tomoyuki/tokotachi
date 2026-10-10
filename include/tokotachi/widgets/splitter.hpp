@@ -2,10 +2,10 @@
 /// 分割ウィンドウ: 区画を横(または縦)に並べ、間の境目をドラッグして大きさを変える(docs/adr/0031)。
 ///
 /// @code
-/// tokotachi::Splitter* split = new tokotachi::Splitter(&window);              // 既定は横に並べる
-/// split->add_widget(tree_view, 0);                                // 0: ウィンドウの大きさが変わっても幅を保つ
-/// split->add_widget(list_view, 1);                                // 1: 増えた・減った幅を受け持つ
-/// split->sizes = std::vector<float>{200, 400};                    // 区画の大きさ(保存・復元に使う)
+/// tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);              // 既定は横に並べる
+/// splitter_main->add_widget(tree_view_folders, 0);                                // 0: ウィンドウの大きさが変わっても幅を保つ
+/// splitter_main->add_widget(list_view_files, 1);                                // 1: 増えた・減った幅を受け持つ
+/// splitter_main->sizes = std::vector<float>{200, 400};                    // 区画の大きさ(保存・復元に使う)
 /// @endcode
 ///
 /// 区画を破棄する・別の親へ移すと、その区画は消える。区画の最小の大きさ(minimum_hint)より小さくはドラッグできず、

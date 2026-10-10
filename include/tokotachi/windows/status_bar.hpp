@@ -2,11 +2,11 @@
 /// ウィンドウの下端のステータスバー(docs/adr/0030)。
 ///
 /// @code
-/// tokotachi::StatusBar* status = new tokotachi::StatusBar();
-/// status->text = "準備完了";                      // 普段の文字(左)
-/// status->show_message("保存した", 3000);          // 3 秒だけ差し替える
-/// status->add_widget(new tokotachi::Label(0, "行 1, 列 1"));   // 右に並べる部品
-/// window.status_bar = status;
+/// tokotachi::StatusBar* status_bar = new tokotachi::StatusBar();
+/// status_bar->text = "準備完了";                      // 普段の文字(左)
+/// status_bar->show_message("保存した", 3000);          // 3 秒だけ差し替える
+/// status_bar->add_widget(new tokotachi::Label(0, "行 1, 列 1"));   // 右に並べる部品
+/// window.status_bar = status_bar;
 /// @endcode
 #ifndef TOKOTACHI_WINDOWS_STATUS_BAR_HPP
 #define TOKOTACHI_WINDOWS_STATUS_BAR_HPP

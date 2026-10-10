@@ -5,11 +5,11 @@
 /// 重い処理をしたら、結果を画面に出す処理を post でメインスレッドへ頼む:
 ///
 /// @code
-/// tokotachi::WeakRef<tokotachi::Label> status(label);           // メインスレッドで作る
+/// tokotachi::WeakRef<tokotachi::Label> status(label_status);           // メインスレッドで作る
 /// std::thread([status]()
 /// {
 ///     const std::string result = compute();          // 別のスレッド
-///     tokotachi::post(status, [result](tokotachi::Label* l) { l->text = result; });   // label が残っていれば呼ぶ
+///     tokotachi::post(status, [result](tokotachi::Label* l) { l->text = result; });   // label_status が残っていれば呼ぶ
 /// }).detach();
 /// @endcode
 ///

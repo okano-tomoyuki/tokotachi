@@ -15,9 +15,9 @@ int main(int argc, char** argv)
     documents->add_child("家計簿");
     folders->add_item("画像")->add_child("旅行");
     folders->add_item("音楽");
-    tokotachi::TreeView* tree = new tokotachi::TreeView();
-    tree->model = folders;
-    tree->expand_all();
+    tokotachi::TreeView* tree_view_folders = new tokotachi::TreeView();
+    tree_view_folders->model = folders;
+    tree_view_folders->expand_all();
 
     // 一覧: 列と見出し。見出しを押すと並べ替える。
     tokotachi::ListModel* files = new tokotachi::ListModel(&window);
@@ -32,19 +32,19 @@ int main(int argc, char** argv)
         item->checkable = true;
         item->checked = i == 1;
     }
-    tokotachi::ListView* list = new tokotachi::ListView();
-    list->add_column("名前", 150);
-    list->add_column("大きさ", 70)->alignment = tokotachi::Align::END;
-    list->add_column("更新日", 100);
-    list->sorting_enabled = true;
-    list->selection_mode = tokotachi::SelectionMode::MULTI;
-    list->model = files;
-    list->select(files->index(2));
+    tokotachi::ListView* list_view_files = new tokotachi::ListView();
+    list_view_files->add_column("名前", 150);
+    list_view_files->add_column("大きさ", 70)->alignment = tokotachi::Align::END;
+    list_view_files->add_column("更新日", 100);
+    list_view_files->sorting_enabled = true;
+    list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+    list_view_files->model = files;
+    list_view_files->select(files->index(2));
 
-    tokotachi::Splitter* split = new tokotachi::Splitter(&window);
-    split->add_widget(tree, 0);
-    split->add_widget(list, 1);
-    split->sizes = std::vector<float>{160, 360};
-    box->add(split, 1);
+    tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);
+    splitter_main->add_widget(tree_view_folders, 0);
+    splitter_main->add_widget(list_view_files, 1);
+    splitter_main->sizes = std::vector<float>{160, 360};
+    box->add(splitter_main, 1);
     return run_gallery(app, window, argc, argv);
 }

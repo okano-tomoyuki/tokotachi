@@ -8,8 +8,8 @@
 
 ```cpp
 tokotachi::Widget* panel = new tokotachi::Widget(&window);
-tokotachi::Button* ok = new tokotachi::Button(panel, "OK");   // panel が所有する
-delete panel;                                                // ok も一緒に破棄される
+tokotachi::Button* button_ok = new tokotachi::Button(panel, "OK");   // panel が所有する
+delete panel;                                                // button_ok も一緒に破棄される
 ```
 
 - `parent` プロパティに代入すると、親(と所有者)を付け替えられます。
@@ -22,10 +22,10 @@ delete panel;                                                // ok も一緒に�
 状態は getter・setter の組ではなく、**プロパティ**で読み書きします。
 
 ```cpp
-label->text = "こんにちは";               // 書き込み
-std::string s = label->text;             // 読み取り(暗黙の変換)
-label->text.get().size();                // 値のメソッドを呼ぶときは get()
-button->x += 10;                         // 複合代入
+label_name->text = "こんにちは";               // 書き込み
+std::string s = label_name->text;             // 読み取り(暗黙の変換)
+label_name->text.get().size();                // 値のメソッドを呼ぶときは get()
+button_ok->x += 10;                         // 複合代入
 ```
 
 読み取り専用のプロパティ(`ReadOnlyProperty`)は代入できません(例: `Widget::children`・`ListView::selection`)。
@@ -35,8 +35,8 @@ button->x += 10;                         // 複合代入
 イベントは、部品ごとに 1 つのハンドラ(`on_xxx` プロパティ)で受け取ります。**最初の引数はいつも発生元**です。
 
 ```cpp
-button->on_click = [](tokotachi::Object* sender) { ... };
-edit->on_key_down = [](tokotachi::Object* sender, tokotachi::KeyEvent& e) { ... };
+button_ok->on_click = [](tokotachi::Object* sender) { ... };
+line_edit_name->on_key_down = [](tokotachi::Object* sender, tokotachi::KeyEvent& e) { ... };
 ```
 
 1 つのハンドラを複数の部品で共有し、`sender` で区別できます。ハンドラを外すときは空の関数を代入します。
@@ -50,7 +50,7 @@ edit->on_key_down = [](tokotachi::Object* sender, tokotachi::KeyEvent& e) { ... 
 
 ```cpp
 tokotachi::StringVariable* name = new tokotachi::StringVariable(&window);
-tokotachi::bind(edit->text, name->value);          // 入力欄と変数を結ぶ
+tokotachi::bind(line_edit_name->text, name->value);          // 入力欄と変数を結ぶ
 name->on_change = [=](tokotachi::Object*) { ... }; // 変数が変わった(入力でも代入でも)
 name->value = "初期値";                             // 入力欄にも出る
 ```
@@ -65,8 +65,8 @@ name->value = "初期値";                             // 入力欄にも出る
 
 ```cpp
 app.color_scheme = tokotachi::ColorScheme::DARK;       // SYSTEM・LIGHT・DARK
-label->color = tokotachi::ColorRole::TEXT_SECONDARY;   // 役割で指定すると、テーマを替えたときに追従する
-label->color = tokotachi::Color::rgb(0xdc2626);        // 具体的な色も指定できる
+label_name->color = tokotachi::ColorRole::TEXT_SECONDARY;   // 役割で指定すると、テーマを替えたときに追従する
+label_name->color = tokotachi::Color::rgb(0xdc2626);        // 具体的な色も指定できる
 ```
 
 ## 座標

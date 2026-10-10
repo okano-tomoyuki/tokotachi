@@ -6,8 +6,8 @@
 ///                          {tokotachi::DialogButton::SAVE, tokotachi::DialogButton::DISCARD, tokotachi::DialogButton::CANCEL},
 ///                          [](tokotachi::Object* sender)
 ///                          {
-///                              tokotachi::MessageDialog* d = static_cast<tokotachi::MessageDialog*>(sender);
-///                              if (d->result == tokotachi::DialogButton::SAVE) { ... }
+///                              tokotachi::MessageDialog* message_dialog = static_cast<tokotachi::MessageDialog*>(sender);
+///                              if (message_dialog->result == tokotachi::DialogButton::SAVE) { ... }
 ///                          },
 ///                          tokotachi::MessageType::QUESTION);
 /// @endcode

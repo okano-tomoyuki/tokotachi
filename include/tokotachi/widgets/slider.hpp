@@ -2,9 +2,9 @@
 /// スライダー: つまみを動かして、範囲の中の値を選ぶ(docs/adr/0024)。縦のときは下が minimum。
 ///
 /// @code
-/// tokotachi::Slider* volume = new tokotachi::Slider(panel);
-/// volume->maximum = 100;
-/// volume->on_change = [=](tokotachi::Object*) { ... volume->value ... };
+/// tokotachi::Slider* slider_volume = new tokotachi::Slider(panel);
+/// slider_volume->maximum = 100;
+/// slider_volume->on_change = [=](tokotachi::Object*) { ... slider_volume->value ... };
 /// @endcode
 ///
 /// 溝を押すとその位置へ動き、そのままドラッグできる。矢印キー(single_step)・Page Up/Down(page_step)・Home/End で動かし、

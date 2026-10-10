@@ -5,9 +5,9 @@
 /// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
 /// tokotachi::TreeItem* docs = tree->add_item("文書");
 /// docs->add_child("報告書.txt");
-/// tokotachi::TreeView* view = new tokotachi::TreeView(&window);
-/// view->model = tree;
-/// view->expand(tree->index_of(docs));
+/// tokotachi::TreeView* tree_view_docs = new tokotachi::TreeView(&window);
+/// tree_view_docs->model = tree;
+/// tree_view_docs->expand(tree->index_of(docs));
 /// @endcode
 ///
 /// → は閉じた項目を開き、開いた項目では最初の子へ動く。← は開いた項目を閉じ、閉じた項目では親へ動く。

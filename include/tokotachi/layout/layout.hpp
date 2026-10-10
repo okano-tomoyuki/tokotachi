@@ -4,7 +4,7 @@
 /// レイアウトは親のウィジェットに 1 つだけ付き、子のウィジェットの bounds を決める(子は従う)。
 /// @code
 /// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(panel);  // panel に付く(panel が所有する)
-/// box->add(button);
+/// box->add(button_ok);
 /// @endcode
 /// 2 つ目のレイアウトを作ると、古いレイアウトは破棄される。レイアウトを delete すると外れ、自由配置(bounds を利用者が決める)に戻る。
 /// レイアウトが管理する子の bounds に代入しても、次の配置で上書きされる。

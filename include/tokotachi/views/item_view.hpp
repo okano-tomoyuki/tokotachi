@@ -5,12 +5,12 @@
 /// 列(Column)を加えると見出しを出す。列が無ければ 1 列で、ビューの幅いっぱいに描く。
 ///
 /// @code
-/// tokotachi::ListView* view = new tokotachi::ListView(&window);
-/// view->add_column("名前", 200);
-/// view->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
-/// view->model = files;
-/// view->selection_mode = tokotachi::SelectionMode::MULTI;
-/// view->on_activate = [=](tokotachi::Object*) { open(view->current); };
+/// tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
+/// list_view_files->add_column("名前", 200);
+/// list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
+/// list_view_files->model = files;
+/// list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+/// list_view_files->on_activate = [=](tokotachi::Object*) { open(list_view_files->current); };
 /// @endcode
 #ifndef TOKOTACHI_VIEWS_ITEM_VIEW_HPP
 #define TOKOTACHI_VIEWS_ITEM_VIEW_HPP

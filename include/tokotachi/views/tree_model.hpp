@@ -5,7 +5,7 @@
 /// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
 /// tokotachi::TreeItem* docs = tree->add_item("文書");
 /// docs->add_child("報告書.txt");
-/// view->model = tree;
+/// tree_view_docs->model = tree;
 /// @endcode
 #ifndef TOKOTACHI_VIEWS_TREE_MODEL_HPP
 #define TOKOTACHI_VIEWS_TREE_MODEL_HPP

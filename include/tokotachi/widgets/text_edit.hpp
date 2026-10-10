@@ -2,8 +2,8 @@
 /// 複数行のテキストの入力欄(docs/adr/0021)。
 ///
 /// @code
-/// tokotachi::TextEdit* memo = new tokotachi::TextEdit(&window);
-/// memo->text = "1 行目\n2 行目";
+/// tokotachi::TextEdit* text_edit_memo = new tokotachi::TextEdit(&window);
+/// text_edit_memo->text = "1 行目\n2 行目";
 /// @endcode
 ///
 /// Enter で改行を入れる。word_wrap(既定 true)なら幅で折り返す。文字が収まらなければ縦にスクロールし、右にスクロールバーを出す

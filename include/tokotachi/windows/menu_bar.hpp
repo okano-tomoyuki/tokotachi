@@ -2,11 +2,11 @@
 /// ウィンドウの上端のメニューバー(docs/adr/0027)。
 ///
 /// @code
-/// tokotachi::MenuBar* bar = new tokotachi::MenuBar();
-/// tokotachi::Menu* file = bar->add_menu("ファイル(&F)");
-/// file->add_action(save);
-/// file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
-/// window.menu_bar = bar;   // ウィンドウの上端に置く(レイアウトの領域はその下になる)
+/// tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
+/// tokotachi::Menu* menu_file = menu_bar->add_menu("ファイル(&F)");
+/// menu_file->add_action(action_save);
+/// menu_file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
+/// window.menu_bar = menu_bar;   // ウィンドウの上端に置く(レイアウトの領域はその下になる)
 /// @endcode
 ///
 /// メニューバーのメニューの Action のショートカットは、ウィンドウ全体で効く。

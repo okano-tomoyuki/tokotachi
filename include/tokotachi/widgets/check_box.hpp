@@ -2,8 +2,8 @@
 /// チェックボックス。押すと checked が切り替わる。
 ///
 /// @code
-/// tokotachi::CheckBox* check = new tokotachi::CheckBox(&window, "通知を受け取る");
-/// tokotachi::bind(check->checked, notify->value);   // BoolVariable と結ぶ
+/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(&window, "通知を受け取る");
+/// tokotachi::bind(check_box_notify->checked, notify->value);   // BoolVariable と結ぶ
 /// @endcode
 #ifndef TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 #define TOKOTACHI_WIDGETS_CHECK_BOX_HPP

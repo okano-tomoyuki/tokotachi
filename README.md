@@ -37,9 +37,9 @@ int main(int argc, char** argv)
     tokotachi::Application app(argc, argv);
     tokotachi::Window window("hello", 400, 200);
 
-    tokotachi::Button* button = new tokotachi::Button(&window, "クリック");  // 親(window)が所有する
-    button->bounds = tokotachi::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
-    button->on_click = [&](tokotachi::Object* sender)                   // イベントは単一のハンドラ
+    tokotachi::Button* button_close = new tokotachi::Button(&window, "クリック");  // 親(window)が所有する
+    button_close->bounds = tokotachi::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
+    button_close->on_click = [&](tokotachi::Object* sender)                   // イベントは単一のハンドラ
     {
         window.close();
     };

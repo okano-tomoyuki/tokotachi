@@ -5,9 +5,9 @@
 /// tokotachi::ListModel* fruits = new tokotachi::ListModel(&window);
 /// fruits->add_item("りんご");
 /// fruits->add_item("みかん");
-/// tokotachi::ListView* view = new tokotachi::ListView(&window);
-/// view->model = fruits;
-/// view->on_selection_change = [=](tokotachi::Object*) { ... view->current ... };
+/// tokotachi::ListView* list_view_fruits = new tokotachi::ListView(&window);
+/// list_view_fruits->model = fruits;
+/// list_view_fruits->on_selection_change = [=](tokotachi::Object*) { ... list_view_fruits->current ... };
 /// @endcode
 ///
 /// 選び方・列・見出し・キーの操作は ItemView(item_view.hpp)を参照。

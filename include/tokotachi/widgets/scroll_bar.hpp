@@ -2,10 +2,10 @@
 /// スクロールバー(docs/adr/0021)。value は 0 から maximum まで。
 ///
 /// @code
-/// tokotachi::ScrollBar* bar = new tokotachi::ScrollBar(panel, tokotachi::Orientation::VERTICAL);
-/// bar->maximum = content_height - view_height;  // 動かせる量
-/// bar->page_step = view_height;                  // 見えている長さ(つまみの大きさになる)
-/// bar->on_change = [](tokotachi::Object* sender) { ... };
+/// tokotachi::ScrollBar* scroll_bar = new tokotachi::ScrollBar(panel, tokotachi::Orientation::VERTICAL);
+/// scroll_bar->maximum = content_height - view_height;  // 動かせる量
+/// scroll_bar->page_step = view_height;                  // 見えている長さ(つまみの大きさになる)
+/// scroll_bar->on_change = [](tokotachi::Object* sender) { ... };
 /// @endcode
 ///
 /// つまみのドラッグ、溝のクリック(1 ページ分)、ホイール(single_step × 目盛り)で動かす。

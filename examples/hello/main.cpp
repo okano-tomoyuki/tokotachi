@@ -53,160 +53,160 @@ int main(int argc, char** argv)
     tokotachi::Application app(argc, argv);
     tokotachi::Window window("hello - Tokotachi", 560, 620);
     // 下端のステータスバー(docs/adr/0030)。操作の結果は show_message で一時的に出す。
-    tokotachi::StatusBar* status = new tokotachi::StatusBar();
-    status->text = "準備完了";
+    tokotachi::StatusBar* status_bar = new tokotachi::StatusBar();
+    status_bar->text = "準備完了";
 
     // 配置はレイアウトに任せる(docs/adr/0017)。ウィンドウは縦に並べ、横に並べる行は入れ物のウィジェットを介して入れ子にする。
     // 行の中のウィジェットは行を親にして作る(別の親で作っても、add が行の子に付け替える。docs/adr/0018)。
     // フォームはスクロール領域に入れる(ウィンドウを小さくすると縦にスクロールする。docs/adr/0021)。
     tokotachi::BoxLayout* window_box = new tokotachi::BoxLayout(&window);
     window_box->margins = tokotachi::Margins(0);
-    tokotachi::ScrollArea* scroll = new tokotachi::ScrollArea(&window);
-    window_box->add(scroll, 1);
+    tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(&window);
+    window_box->add(scroll_area_form, 1);
     tokotachi::Widget* form = new tokotachi::Widget();
-    scroll->content = form;
+    scroll_area_form->content = form;
     tokotachi::BoxLayout* column = new tokotachi::BoxLayout(form);
     column->margins = tokotachi::Margins(24);
     column->spacing = 12;
 
-    tokotachi::Label* title = new tokotachi::Label(&window, "Tokotachi のサンプル");
-    title->font = tokotachi::Font(22);
-    tokotachi::Label* description = new tokotachi::Label(
+    tokotachi::Label* label_title = new tokotachi::Label(&window, "Tokotachi のサンプル");
+    label_title->font = tokotachi::Font(22);
+    tokotachi::Label* label_description = new tokotachi::Label(
         &window, "このラベルは word_wrap で、ウィンドウの幅に合わせて折り返す。日本語の禁則(行の始めに「、」や「。」を置かない)にも従う。"
                  " English text wraps at spaces.");
-    description->word_wrap = true;
-    description->color = tokotachi::ColorRole::TEXT_SECONDARY;  // テーマの「控えめな文字」(ダークでも読める)
+    label_description->word_wrap = true;
+    label_description->color = tokotachi::ColorRole::TEXT_SECONDARY;  // テーマの「控えめな文字」(ダークでも読める)
 
     tokotachi::Widget* click_row = new tokotachi::Widget(&window);
     tokotachi::BoxLayout* click_box = new tokotachi::BoxLayout(click_row, tokotachi::Orientation::HORIZONTAL);
     click_box->spacing = 16;
-    tokotachi::Button* button = new tokotachi::Button(click_row, "クリック");
-    button->minimum_size = tokotachi::Size(140, 36);
-    tokotachi::Label* count = new tokotachi::Label(click_row, "クリック回数: 0");
-    click_box->add(button, 0, tokotachi::Align::CENTER);
-    click_box->add(count, 1);
+    tokotachi::Button* button_click = new tokotachi::Button(click_row, "クリック");
+    button_click->minimum_size = tokotachi::Size(140, 36);
+    tokotachi::Label* label_count = new tokotachi::Label(click_row, "クリック回数: 0");
+    click_box->add(button_click, 0, tokotachi::Align::CENTER);
+    click_box->add(label_count, 1);
 
-    tokotachi::Label* caption = new tokotachi::Label(&window, "名前(IME で日本語も入力できる。Tab でフォーカスを移す)");
-    caption->font = tokotachi::Font(12);
-    caption->color = tokotachi::ColorRole::TEXT_SECONDARY;
-    tokotachi::LineEdit* edit = new tokotachi::LineEdit(&window);
-    edit->placeholder_text = "ここに入力";
+    tokotachi::Label* label_caption = new tokotachi::Label(&window, "名前(IME で日本語も入力できる。Tab でフォーカスを移す)");
+    label_caption->font = tokotachi::Font(12);
+    label_caption->color = tokotachi::ColorRole::TEXT_SECONDARY;
+    tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(&window);
+    line_edit_name->placeholder_text = "ここに入力";
 
     // 敬称はラジオボタンのグループ。各ボタンの group_value を同じ変数に結ぶ。
     tokotachi::Widget* option_row = new tokotachi::Widget(&window);
     tokotachi::BoxLayout* option_box = new tokotachi::BoxLayout(option_row, tokotachi::Orientation::HORIZONTAL);
     option_box->spacing = 16;
-    tokotachi::RadioButton* san = new tokotachi::RadioButton(option_row, "さん", 1);
-    tokotachi::RadioButton* sama = new tokotachi::RadioButton(option_row, "様", 2);
-    tokotachi::RadioButton* kun = new tokotachi::RadioButton(option_row, "くん", 3);
-    tokotachi::CheckBox* big = new tokotachi::CheckBox(option_row, "大きい文字");
-    option_box->add(san);
-    option_box->add(sama);
-    option_box->add(kun);
+    tokotachi::RadioButton* radio_button_san = new tokotachi::RadioButton(option_row, "さん", 1);
+    tokotachi::RadioButton* radio_button_sama = new tokotachi::RadioButton(option_row, "様", 2);
+    tokotachi::RadioButton* radio_button_kun = new tokotachi::RadioButton(option_row, "くん", 3);
+    tokotachi::CheckBox* check_box_big = new tokotachi::CheckBox(option_row, "大きい文字");
+    option_box->add(radio_button_san);
+    option_box->add(radio_button_sama);
+    option_box->add(radio_button_kun);
     option_box->add_spacing(16);
-    option_box->add(big);
+    option_box->add(check_box_big);
     option_box->add_stretch();
 
-    tokotachi::Label* greeting = new tokotachi::Label(&window);
+    tokotachi::Label* label_greeting = new tokotachi::Label(&window);
 
-    tokotachi::Button* disabled = new tokotachi::Button(&window, "無効なボタン");
-    disabled->minimum_size = tokotachi::Size(140, 36);
-    disabled->enabled = false;
+    tokotachi::Button* button_disabled = new tokotachi::Button(&window, "無効なボタン");
+    button_disabled->minimum_size = tokotachi::Size(140, 36);
+    button_disabled->enabled = false;
 
-    column->add(title);
-    column->add(description);
+    column->add(label_title);
+    column->add(label_description);
     column->add(click_row);
-    column->add(caption);
-    column->add(edit);
+    column->add(label_caption);
+    column->add(line_edit_name);
     column->add(option_row);
     tokotachi::Widget* color_row = new tokotachi::Widget(&window);
     tokotachi::BoxLayout* color_box = new tokotachi::BoxLayout(color_row, tokotachi::Orientation::HORIZONTAL);
     color_box->add(new tokotachi::Label(color_row, "挨拶の色"), 0, tokotachi::Align::CENTER);
-    tokotachi::ComboBox* color = new tokotachi::ComboBox(color_row);
+    tokotachi::ComboBox* combo_box_color = new tokotachi::ComboBox(color_row);
     std::vector<std::string> colors;
     colors.push_back("黒");
     colors.push_back("青");
     colors.push_back("緑");
     colors.push_back("赤");
-    color->items = colors;
-    color->current_index = 0;
-    color_box->add(color);
+    combo_box_color->items = colors;
+    combo_box_color->current_index = 0;
+    color_box->add(combo_box_color);
     color_box->add_spacing(24);
     // テーマ(docs/adr/0023)。既定は OS の設定に従う。
     color_box->add(new tokotachi::Label(color_row, "テーマ"), 0, tokotachi::Align::CENTER);
-    tokotachi::ComboBox* scheme = new tokotachi::ComboBox(color_row);
+    tokotachi::ComboBox* combo_box_scheme = new tokotachi::ComboBox(color_row);
     std::vector<std::string> schemes;
     schemes.push_back("OS に従う");
     schemes.push_back("ライト");
     schemes.push_back("ダーク");
-    scheme->items = schemes;
-    scheme->current_index = 0;
-    scheme->on_change = [=](tokotachi::Object*)
+    combo_box_scheme->items = schemes;
+    combo_box_scheme->current_index = 0;
+    combo_box_scheme->on_change = [=](tokotachi::Object*)
     {
         static const tokotachi::ColorScheme SCHEMES[] = {tokotachi::ColorScheme::SYSTEM, tokotachi::ColorScheme::LIGHT,
                                                    tokotachi::ColorScheme::DARK};
-        const int i = scheme->current_index;
+        const int i = combo_box_scheme->current_index;
         tokotachi::Application::instance()->color_scheme = SCHEMES[i >= 0 ? i : 0];
     };
-    color_box->add(scheme);
+    color_box->add(combo_box_scheme);
     color_box->add_stretch();
     column->add(color_row);
-    column->add(greeting);
+    column->add(label_greeting);
 
     // タブ(docs/adr/0025)。ページごとにレイアウトを持たせ、TabWidget に加える。Ctrl+Tab で切り替えられる。
-    tokotachi::TabWidget* tabs = new tokotachi::TabWidget(&window);
+    tokotachi::TabWidget* tab_widget_main = new tokotachi::TabWidget(&window);
     tokotachi::Widget* memo_page = new tokotachi::Widget();
     tokotachi::BoxLayout* memo_box = new tokotachi::BoxLayout(memo_page);
     memo_box->margins = tokotachi::Margins(0, 12, 0, 0);
     memo_box->spacing = 8;
     memo_box->add(new tokotachi::Label(memo_page, "メモ(複数行。Enter で改行。右クリックでメニュー)"));
-    tokotachi::TextEdit* memo =
+    tokotachi::TextEdit* text_edit_memo =
         new tokotachi::TextEdit(memo_page, "TextEdit は複数行の入力欄。折り返し・縦のスクロール・IME に対応する。\n2 行目");
-    memo_box->add(memo, 1);
-    tabs->add_tab(memo_page, "メモ");
+    memo_box->add(text_edit_memo, 1);
+    tab_widget_main->add_tab(memo_page, "メモ");
 
     // 値の部品(docs/adr/0024)。Slider・SpinBox・ProgressBar を同じ変数に結び、どれを動かしても揃う。
     tokotachi::Widget* level_page = new tokotachi::Widget();
     tokotachi::BoxLayout* level_box = new tokotachi::BoxLayout(level_page, tokotachi::Orientation::HORIZONTAL);
     level_box->margins = tokotachi::Margins(0, 12, 0, 0);
     level_box->spacing = 12;
-    tokotachi::Slider* level_slider = new tokotachi::Slider(level_page);
-    tokotachi::SpinBox* level_spin = new tokotachi::SpinBox(level_page);
-    tokotachi::ProgressBar* level_bar = new tokotachi::ProgressBar(level_page);
-    level_bar->text_visible = true;
+    tokotachi::Slider* slider_level = new tokotachi::Slider(level_page);
+    tokotachi::SpinBox* spin_box_level = new tokotachi::SpinBox(level_page);
+    tokotachi::ProgressBar* progress_bar_level = new tokotachi::ProgressBar(level_page);
+    progress_bar_level->text_visible = true;
     level_box->add(new tokotachi::Label(level_page, "進み具合"), 0, tokotachi::Align::START);
-    level_box->add(level_slider, 1, tokotachi::Align::START);
-    level_box->add(level_spin, 0, tokotachi::Align::START);
-    level_box->add(level_bar, 1, tokotachi::Align::START);
+    level_box->add(slider_level, 1, tokotachi::Align::START);
+    level_box->add(spin_box_level, 0, tokotachi::Align::START);
+    level_box->add(progress_bar_level, 1, tokotachi::Align::START);
     tokotachi::DoubleVariable* level = new tokotachi::DoubleVariable(&window, 40);
-    tokotachi::bind(level_slider->value, level->value);
-    tokotachi::bind(level_spin->value, level->value);
-    level->on_change = [=](tokotachi::Object*) { level_bar->value = level->value.get(); };
-    level_bar->value = level->value.get();
-    level_slider->tooltip = "ドラッグ・矢印キーで動かす";
+    tokotachi::bind(slider_level->value, level->value);
+    tokotachi::bind(spin_box_level->value, level->value);
+    level->on_change = [=](tokotachi::Object*) { progress_bar_level->value = level->value.get(); };
+    progress_bar_level->value = level->value.get();
+    slider_level->tooltip = "ドラッグ・矢印キーで動かす";
     // 別のスレッドで数える(Task。docs/adr/0029)。仕事の関数は別のスレッドで動くので、ウィジェット・変数には触らず、
     // 進み具合を report_progress で知らせる。on_progress・on_finish はメインスレッドで呼ばれる。
     // (常駐するスレッドなら std::thread で作り、tokotachi::post と tokotachi::WeakRef で結果を返す。)
-    tokotachi::Button* count_button = new tokotachi::Button(level_page, "裏で数える");
-    count_button->tooltip = "Task で 0 から 100 まで数える。数えている間に押すと取り消す";
-    level_box->add(count_button, 0, tokotachi::Align::START);
+    tokotachi::Button* button_count = new tokotachi::Button(level_page, "裏で数える");
+    button_count->tooltip = "Task で 0 から 100 まで数える。数えている間に押すと取り消す";
+    level_box->add(button_count, 0, tokotachi::Align::START);
     tokotachi::Task<int>* counter = new tokotachi::Task<int>(&window);
     counter->on_progress = [=](tokotachi::Object*) { level->value = counter->progress.get(); };
     counter->on_finish = [=](tokotachi::Object*)
     {
-        count_button->text = "裏で数える";
-        status->show_message(counter->cancelled ? "数えるのを取り消した"
+        button_count->text = "裏で数える";
+        status_bar->show_message(counter->cancelled ? "数えるのを取り消した"
                                                 : "数え終えた: " + std::to_string(counter->result.get()),
                              4000);
     };
-    count_button->on_click = [=](tokotachi::Object*)
+    button_count->on_click = [=](tokotachi::Object*)
     {
         if (counter->running)
         {
             counter->cancel();
             return;
         }
-        count_button->text = "取り消す";
+        button_count->text = "取り消す";
         counter->start([](tokotachi::TaskContext& ctx) -> int
         {
             int i = 0;
@@ -218,7 +218,7 @@ int main(int argc, char** argv)
             return i - 1;
         });
     };
-    tabs->add_tab(level_page, "進み具合");
+    tab_widget_main->add_tab(level_page, "進み具合");
 
     // 一覧と木(docs/adr/0026)。項目はモデル(ListModel・TreeModel)に持たせ、ビューに表示させる。
     const tokotachi::Image folder_icon = make_icon(true);
@@ -239,22 +239,22 @@ int main(int argc, char** argv)
     tokotachi::BoxLayout* list_box = new tokotachi::BoxLayout(list_page);
     list_box->margins = tokotachi::Margins(0, 12, 0, 0);
     list_box->spacing = 8;
-    tokotachi::ListView* file_list = new tokotachi::ListView(list_page);
-    file_list->add_column("名前", 200);
-    file_list->add_column("大きさ", 90)->alignment = tokotachi::Align::END;
-    file_list->add_column("更新日", 110);
-    file_list->sorting_enabled = true;  // 見出しを押すと並べ替える
-    file_list->selection_mode = tokotachi::SelectionMode::MULTI;
-    file_list->model = files;
-    tokotachi::Label* list_status = new tokotachi::Label(list_page, "Ctrl・Shift+クリックで複数選べる。ダブルクリック・Enter で開く");
-    list_status->color = tokotachi::ColorRole::TEXT_SECONDARY;
-    file_list->on_selection_change = [=](tokotachi::Object*)
-    { list_status->text = std::to_string(file_list->selection.get().size()) + " 個を選んでいる"; };
-    file_list->on_activate = [=](tokotachi::Object*)
-    { list_status->text = "開く: " + files->text(file_list->current, 0); };
-    list_box->add(file_list, 1);
-    list_box->add(list_status);
-    tabs->add_tab(list_page, "一覧");
+    tokotachi::ListView* list_view_files = new tokotachi::ListView(list_page);
+    list_view_files->add_column("名前", 200);
+    list_view_files->add_column("大きさ", 90)->alignment = tokotachi::Align::END;
+    list_view_files->add_column("更新日", 110);
+    list_view_files->sorting_enabled = true;  // 見出しを押すと並べ替える
+    list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+    list_view_files->model = files;
+    tokotachi::Label* label_list_status = new tokotachi::Label(list_page, "Ctrl・Shift+クリックで複数選べる。ダブルクリック・Enter で開く");
+    label_list_status->color = tokotachi::ColorRole::TEXT_SECONDARY;
+    list_view_files->on_selection_change = [=](tokotachi::Object*)
+    { label_list_status->text = std::to_string(list_view_files->selection.get().size()) + " 個を選んでいる"; };
+    list_view_files->on_activate = [=](tokotachi::Object*)
+    { label_list_status->text = "開く: " + files->text(list_view_files->current, 0); };
+    list_box->add(list_view_files, 1);
+    list_box->add(label_list_status);
+    tab_widget_main->add_tab(list_page, "一覧");
 
     tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
     tokotachi::TreeItem* documents = tree->add_item("文書");
@@ -272,21 +272,21 @@ int main(int argc, char** argv)
     }
     tokotachi::TreeItem* empty = tree->add_item("空のフォルダー");
     empty->icon = folder_icon;
-    tokotachi::TreeView* tree_view = new tokotachi::TreeView();
-    tree_view->model = tree;
-    tree_view->expand(tree->index_of(documents));
+    tokotachi::TreeView* tree_view_folders = new tokotachi::TreeView();
+    tree_view_folders->model = tree;
+    tree_view_folders->expand(tree->index_of(documents));
 
     // 分割ウィンドウ(docs/adr/0031)。左に木、右に選んだ項目の中身。境目をドラッグして幅を変え、端まで寄せるとたためる。
     // 左は stretch 0(ウィンドウの幅が変わっても幅を保つ)、右は 1(増えた・減った幅を受け持つ)。
     tokotachi::ListModel* contents = new tokotachi::ListModel(&window);
-    tokotachi::ListView* contents_view = new tokotachi::ListView();
-    contents_view->add_column("名前", 160);
-    contents_view->add_column("種類", 80);
-    contents_view->model = contents;
-    tree_view->on_selection_change = [=](tokotachi::Object*)
+    tokotachi::ListView* list_view_contents = new tokotachi::ListView();
+    list_view_contents->add_column("名前", 160);
+    list_view_contents->add_column("種類", 80);
+    list_view_contents->model = contents;
+    tree_view_folders->on_selection_change = [=](tokotachi::Object*)
     {
         contents->clear();
-        const tokotachi::TreeItem* chosen = tree->item_at(tree_view->current);
+        const tokotachi::TreeItem* chosen = tree->item_at(tree_view_folders->current);
         if (!chosen)
         {
             return;
@@ -300,17 +300,17 @@ int main(int argc, char** argv)
             item->column_texts = std::vector<std::string>(1, folder ? "フォルダー" : "ファイル");
         }
     };
-    tokotachi::Splitter* split = new tokotachi::Splitter();
-    split->add_widget(tree_view, 0);
-    split->add_widget(contents_view, 1);
-    split->sizes = std::vector<float>{180, 300};
-    tabs->add_tab(split, "木");
+    tokotachi::Splitter* splitter_files = new tokotachi::Splitter();
+    splitter_files->add_widget(tree_view_folders, 0);
+    splitter_files->add_widget(list_view_contents, 1);
+    splitter_files->sizes = std::vector<float>{180, 300};
+    tab_widget_main->add_tab(splitter_files, "木");
 
     // 自由な描画(docs/adr/0032)。on_paint の中で Canvas に描く(Canvas は描画の呼び出しの間だけ有効)。
     // PaintBox(docs/adr/0033)は VCL の TPaintBox に当たる。cached にすると描いた結果を覚え、大きさ・テーマが変わるか
     // refresh を呼ぶまで on_paint を呼ばない(重い描画向け)。
-    tokotachi::PaintBox* drawing = new tokotachi::PaintBox();
-    drawing->cached = true;
+    tokotachi::PaintBox* paint_box_drawing = new tokotachi::PaintBox();
+    paint_box_drawing->cached = true;
     // Bitmap は書き換えられる画像。画素を直接書いて作り、Image にして貼る(ここでは色相の帯)。
     tokotachi::Bitmap hues(120, 24);
     for (int x = 0; x < hues.width(); ++x)
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
     fractal_task->on_finish = [=](tokotachi::Object*)
     {
         *fractal = fractal_task->result;
-        drawing->refresh();
+        paint_box_drawing->refresh();
     };
     fractal_task->start([](tokotachi::TaskContext& ctx) -> tokotachi::Image
     {
@@ -359,7 +359,7 @@ int main(int argc, char** argv)
         b.canvas().draw_text("別のスレッドで描いた", tokotachi::Point(6, 6), tokotachi::Color::rgb(0xffffff));
         return b.to_image();
     });
-    drawing->on_paint = [hue_image, fractal](tokotachi::Object* sender, tokotachi::Canvas& c)
+    paint_box_drawing->on_paint = [hue_image, fractal](tokotachi::Object* sender, tokotachi::Canvas& c)
     {
         const tokotachi::Rect r = static_cast<tokotachi::Widget*>(sender)->local_rect;
         const tokotachi::Color ink = tokotachi::Theme::light() == tokotachi::Application::instance()->theme.get()
@@ -452,81 +452,81 @@ int main(int argc, char** argv)
         }
         (void)r;
     };
-    tabs->add_tab(drawing, "描画");
+    tab_widget_main->add_tab(paint_box_drawing, "描画");
 
-    tabs->add_tab(new tokotachi::Widget(), "無効なタブ")->enabled = false;
-    tabs->minimum_size = tokotachi::Size(0, 400);
-    column->add(tabs, 1);
-    column->add(disabled, 0, tokotachi::Align::START);  // 横に広げない
+    tab_widget_main->add_tab(new tokotachi::Widget(), "無効なタブ")->enabled = false;
+    tab_widget_main->minimum_size = tokotachi::Size(0, 400);
+    column->add(tab_widget_main, 1);
+    column->add(button_disabled, 0, tokotachi::Align::START);  // 横に広げない
 
     // 画面の状態は変数に持ち、ウィジェットと結ぶ(docs/adr/0016)。
     tokotachi::StringVariable* name = new tokotachi::StringVariable(&window);
     tokotachi::IntVariable* honorific = new tokotachi::IntVariable(&window, 1);
     tokotachi::BoolVariable* large = new tokotachi::BoolVariable(&window, false);
-    tokotachi::bind(edit->text, name->value);
-    tokotachi::bind(san->group_value, honorific->value);
-    tokotachi::bind(sama->group_value, honorific->value);
-    tokotachi::bind(kun->group_value, honorific->value);
-    tokotachi::bind(big->checked, large->value);
+    tokotachi::bind(line_edit_name->text, name->value);
+    tokotachi::bind(radio_button_san->group_value, honorific->value);
+    tokotachi::bind(radio_button_sama->group_value, honorific->value);
+    tokotachi::bind(radio_button_kun->group_value, honorific->value);
+    tokotachi::bind(check_box_big->checked, large->value);
 
     // どの変数が変わっても挨拶を作り直す(1 つのハンドラを 3 つの変数で共有する)。
     const tokotachi::NotifyHandler update_greeting = [=](tokotachi::Object*)
     {
         static const char* const SUFFIX[] = {"", "さん", "様", "くん"};
         const std::string n = name->value;
-        greeting->text = n.empty() ? std::string() : "こんにちは、" + n + " " + SUFFIX[honorific->value.get()];
-        greeting->font = tokotachi::Font(large->value ? 20.0f : 14.0f);
+        label_greeting->text = n.empty() ? std::string() : "こんにちは、" + n + " " + SUFFIX[honorific->value.get()];
+        label_greeting->font = tokotachi::Font(large->value ? 20.0f : 14.0f);
         // 「黒」はテーマの文字の色にする(ダークでは明るい色になる)。他は固定の色。
-        const int c = color->current_index;
+        const int c = combo_box_color->current_index;
         static const std::uint32_t RGB[] = {0, 0x2563eb, 0x059669, 0xdc2626};
-        greeting->color = c <= 0 ? tokotachi::ThemeColor(tokotachi::ColorRole::TEXT) : tokotachi::ThemeColor(tokotachi::Color::rgb(RGB[c]));
+        label_greeting->color = c <= 0 ? tokotachi::ThemeColor(tokotachi::ColorRole::TEXT) : tokotachi::ThemeColor(tokotachi::Color::rgb(RGB[c]));
     };
     name->on_change = update_greeting;
     honorific->on_change = update_greeting;
     large->on_change = update_greeting;
-    color->on_change = update_greeting;
+    combo_box_color->on_change = update_greeting;
 
     int clicks = 0;
-    button->on_click = [&](tokotachi::Object*)
+    button_click->on_click = [&](tokotachi::Object*)
     {
         ++clicks;
-        count->text = "クリック回数: " + std::to_string(clicks);
+        label_count->text = "クリック回数: " + std::to_string(clicks);
     };
-    edit->on_submit = [=](tokotachi::Object*) { edit->select_all(); };
-    button->tooltip = "押した回数を数える";
-    disabled->tooltip = "無効なウィジェットにもツールチップは出る";
+    line_edit_name->on_submit = [=](tokotachi::Object*) { line_edit_name->select_all(); };
+    button_click->tooltip = "押した回数を数える";
+    button_disabled->tooltip = "無効なウィジェットにもツールチップは出る";
 
     // メモの右クリックのメニュー(docs/adr/0022)。メニューはウィンドウが所有する。
     // 右クリックのメニューのショートカットは表示だけ(キーは TextEdit 自身が扱う)。
-    tokotachi::Menu* memo_menu = new tokotachi::Menu(&window);
-    memo_menu->add_item("切り取り(&T)", [=](tokotachi::Object*) { memo->cut(); })->shortcut = "Ctrl+X";
-    memo_menu->add_item("コピー(&C)", [=](tokotachi::Object*) { memo->copy(); })->shortcut = "Ctrl+C";
-    memo_menu->add_item("貼り付け(&P)", [=](tokotachi::Object*) { memo->paste(); })->shortcut = "Ctrl+V";
-    memo_menu->add_separator();
-    memo_menu->add_item("すべて選択(&A)", [=](tokotachi::Object*) { memo->select_all(); })->shortcut = "Ctrl+A";
-    tokotachi::Menu* insert_menu = memo_menu->add_submenu("挿入(&I)");
-    insert_menu->add_item("挨拶", [=](tokotachi::Object*) { memo->insert(greeting->text.get()); });
-    insert_menu->add_item("クリック回数", [=](tokotachi::Object*) { memo->insert(count->text.get()); });
-    memo->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
+    tokotachi::Menu* menu_memo = new tokotachi::Menu(&window);
+    menu_memo->add_item("切り取り(&T)", [=](tokotachi::Object*) { text_edit_memo->cut(); })->shortcut = "Ctrl+X";
+    menu_memo->add_item("コピー(&C)", [=](tokotachi::Object*) { text_edit_memo->copy(); })->shortcut = "Ctrl+C";
+    menu_memo->add_item("貼り付け(&P)", [=](tokotachi::Object*) { text_edit_memo->paste(); })->shortcut = "Ctrl+V";
+    menu_memo->add_separator();
+    menu_memo->add_item("すべて選択(&A)", [=](tokotachi::Object*) { text_edit_memo->select_all(); })->shortcut = "Ctrl+A";
+    tokotachi::Menu* menu_insert = menu_memo->add_submenu("挿入(&I)");
+    menu_insert->add_item("挨拶", [=](tokotachi::Object*) { text_edit_memo->insert(label_greeting->text.get()); });
+    menu_insert->add_item("クリック回数", [=](tokotachi::Object*) { text_edit_memo->insert(label_count->text.get()); });
+    text_edit_memo->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
     {
         if (e.button == tokotachi::MouseButton::RIGHT)
         {
-            memo_menu->popup(memo, e.pos);
+            menu_memo->popup(text_edit_memo, e.pos);
         }
     };
 
     // メニューバーとショートカット(docs/adr/0027)。メニューバーのメニューの Action のキーは、ウィンドウ全体で効く。
-    tokotachi::MenuBar* bar = new tokotachi::MenuBar();
-    tokotachi::Menu* file_menu = bar->add_menu("ファイル(&F)");
-    tokotachi::Action* new_action = file_menu->add_item("新規(&N)", [=](tokotachi::Object*) { memo->text = ""; });
-    new_action->shortcut = "Ctrl+N";
+    tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
+    tokotachi::Menu* menu_file = menu_bar->add_menu("ファイル(&F)");
+    tokotachi::Action* action_new = menu_file->add_item("新規(&N)", [=](tokotachi::Object*) { text_edit_memo->text = ""; });
+    action_new->shortcut = "Ctrl+N";
 
     // OS のファイル選択(docs/adr/0028)。結果は on_finish で受け取る。メモの内容を読み書きする。
     std::vector<tokotachi::FileFilter> text_filters;
     text_filters.push_back(tokotachi::FileFilter("テキスト", "txt;md"));
     text_filters.push_back(tokotachi::FileFilter("すべてのファイル", "*"));
-    tokotachi::FileDialog* opener = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);
-    opener->filters = text_filters;
+    tokotachi::FileDialog* file_dialog_open = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);
+    file_dialog_open->filters = text_filters;
     // 失敗したとき(Linux で xdg-desktop-portal も zenity も無いときなど)は理由を見せる。
     const auto report_failure = [&window](tokotachi::FileDialog* d)
     {
@@ -534,12 +534,12 @@ int main(int argc, char** argv)
                                  "ファイルのダイアログを開けなかった: " + d->error.get(),
                                  std::vector<tokotachi::DialogButton>(), tokotachi::NotifyHandler(), tokotachi::MessageType::WARNING);
     };
-    opener->on_finish = [=](tokotachi::Object*)
+    file_dialog_open->on_finish = [=](tokotachi::Object*)
     {
-        const std::vector<std::string> paths = opener->paths;
-        if (!opener->error.get().empty())
+        const std::vector<std::string> paths = file_dialog_open->paths;
+        if (!file_dialog_open->error.get().empty())
         {
-            report_failure(opener);
+            report_failure(file_dialog_open);
             return;
         }
         if (paths.empty())
@@ -549,21 +549,21 @@ int main(int argc, char** argv)
         std::ifstream in(paths[0].c_str(), std::ios::binary);
         std::ostringstream content;
         content << in.rdbuf();
-        memo->text = content.str();
-        tabs->current_index = 0;
-        status->show_message("開いた: " + paths[0], 4000);
+        text_edit_memo->text = content.str();
+        tab_widget_main->current_index = 0;
+        status_bar->show_message("開いた: " + paths[0], 4000);
     };
-    tokotachi::Action* open_action = file_menu->add_item("開く(&O)...", [=](tokotachi::Object*) { opener->open(); });
-    open_action->shortcut = "Ctrl+O";
-    tokotachi::FileDialog* saver = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::SAVE);
-    saver->filters = text_filters;
-    saver->location = "メモ.txt";
-    saver->on_finish = [=](tokotachi::Object*)
+    tokotachi::Action* action_open = menu_file->add_item("開く(&O)...", [=](tokotachi::Object*) { file_dialog_open->open(); });
+    action_open->shortcut = "Ctrl+O";
+    tokotachi::FileDialog* file_dialog_save = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::SAVE);
+    file_dialog_save->filters = text_filters;
+    file_dialog_save->location = "メモ.txt";
+    file_dialog_save->on_finish = [=](tokotachi::Object*)
     {
-        const std::vector<std::string> paths = saver->paths;
-        if (!saver->error.get().empty())
+        const std::vector<std::string> paths = file_dialog_save->paths;
+        if (!file_dialog_save->error.get().empty())
         {
-            report_failure(saver);
+            report_failure(file_dialog_save);
             return;
         }
         if (paths.empty())
@@ -571,38 +571,38 @@ int main(int argc, char** argv)
             return;
         }
         std::ofstream out(paths[0].c_str(), std::ios::binary);
-        out << memo->text.get();
-        status->show_message(out ? "保存した: " + paths[0] : "保存できなかった: " + paths[0], 4000);
+        out << text_edit_memo->text.get();
+        status_bar->show_message(out ? "保存した: " + paths[0] : "保存できなかった: " + paths[0], 4000);
     };
-    tokotachi::Action* save_action = file_menu->add_item("名前を付けて保存(&S)...", [=](tokotachi::Object*) { saver->open(); });
-    save_action->shortcut = "Ctrl+S";
-    file_menu->add_separator();
+    tokotachi::Action* action_save = menu_file->add_item("名前を付けて保存(&S)...", [=](tokotachi::Object*) { file_dialog_save->open(); });
+    action_save->shortcut = "Ctrl+S";
+    menu_file->add_separator();
 
     // 自分で中身を作るダイアログ(docs/adr/0028)。ボタンは OS の慣習の順に並び、Enter で OK、Esc でキャンセル。
-    file_menu->add_item("名前を入力(&R)...", [&window, name](tokotachi::Object*)
+    menu_file->add_item("名前を入力(&R)...", [&window, name](tokotachi::Object*)
     {
-        tokotachi::Dialog* dialog = new tokotachi::Dialog(&window, "名前の入力");
-        tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog);
+        tokotachi::Dialog* dialog_name = new tokotachi::Dialog(&window, "名前の入力");
+        tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_name);
         box->margins = tokotachi::Margins(20, 20, 20, 12);
         box->spacing = 8;
-        box->add(new tokotachi::Label(dialog, "挨拶に使う名前"));
-        tokotachi::LineEdit* field = new tokotachi::LineEdit(dialog, name->value);
-        box->add(field);
-        dialog->add_button(tokotachi::DialogButton::OK);
-        dialog->add_button(tokotachi::DialogButton::CANCEL);
-        dialog->on_finish = [=](tokotachi::Object*)
+        box->add(new tokotachi::Label(dialog_name, "挨拶に使う名前"));
+        tokotachi::LineEdit* line_edit_field = new tokotachi::LineEdit(dialog_name, name->value);
+        box->add(line_edit_field);
+        dialog_name->add_button(tokotachi::DialogButton::OK);
+        dialog_name->add_button(tokotachi::DialogButton::CANCEL);
+        dialog_name->on_finish = [=](tokotachi::Object*)
         {
-            if (dialog->result == tokotachi::DialogButton::OK)
+            if (dialog_name->result == tokotachi::DialogButton::OK)
             {
-                name->value = field->text.get();
+                name->value = line_edit_field->text.get();
             }
-            dialog->delete_later();  // 自分のハンドラの中なので、後で破棄する
+            dialog_name->delete_later();  // 自分のハンドラの中なので、後で破棄する
         };
-        field->select_all();
-        field->focused = true;
-        dialog->open();
+        line_edit_field->select_all();
+        line_edit_field->focused = true;
+        dialog_name->open();
     })->shortcut = "Ctrl+R";
-    file_menu->add_separator();
+    menu_file->add_separator();
 
     // 閉じる前に確かめる(メッセージのダイアログ)。ウィンドウの閉じるボタンと Ctrl+Q の両方で。
     const auto confirm_quit = [&window]()
@@ -623,100 +623,100 @@ int main(int argc, char** argv)
         can_close = false;
         confirm_quit();
     };
-    file_menu->add_item("終了(&X)", [=](tokotachi::Object*) { confirm_quit(); })->shortcut = "Ctrl+Q";
-    tokotachi::Menu* view_menu = bar->add_menu("表示(&V)");
-    tokotachi::Action* large_action = view_menu->add_item("大きい文字(&L)");
-    large_action->checkable = true;
-    large_action->shortcut = "Ctrl+L";
-    tokotachi::bind(large_action->checked, large->value);  // チェックボックスと同じ変数に結ぶ
-    tokotachi::Menu* theme_menu = view_menu->add_submenu("テーマ(&T)");
-    theme_menu->add_item("OS に従う(&S)", [=](tokotachi::Object*) { scheme->current_index = 0; });
-    theme_menu->add_item("ライト(&L)", [=](tokotachi::Object*) { scheme->current_index = 1; });
-    theme_menu->add_item("ダーク(&D)", [=](tokotachi::Object*) { scheme->current_index = 2; });
-    view_menu->add_separator();
-    view_menu->add_item("次のタブ", [=](tokotachi::Object*)
-                        { tabs->current_index = (tabs->current_index + 1) % 5; })->shortcut = "F6";
-    tokotachi::Menu* help_menu = bar->add_menu("ヘルプ(&H)");
-    help_menu->add_item("バージョン情報(&A)", [&window](tokotachi::Object*)
+    menu_file->add_item("終了(&X)", [=](tokotachi::Object*) { confirm_quit(); })->shortcut = "Ctrl+Q";
+    tokotachi::Menu* menu_view = menu_bar->add_menu("表示(&V)");
+    tokotachi::Action* action_large = menu_view->add_item("大きい文字(&L)");
+    action_large->checkable = true;
+    action_large->shortcut = "Ctrl+L";
+    tokotachi::bind(action_large->checked, large->value);  // チェックボックスと同じ変数に結ぶ
+    tokotachi::Menu* menu_theme = menu_view->add_submenu("テーマ(&T)");
+    menu_theme->add_item("OS に従う(&S)", [=](tokotachi::Object*) { combo_box_scheme->current_index = 0; });
+    menu_theme->add_item("ライト(&L)", [=](tokotachi::Object*) { combo_box_scheme->current_index = 1; });
+    menu_theme->add_item("ダーク(&D)", [=](tokotachi::Object*) { combo_box_scheme->current_index = 2; });
+    menu_view->add_separator();
+    menu_view->add_item("次のタブ", [=](tokotachi::Object*)
+                        { tab_widget_main->current_index = (tab_widget_main->current_index + 1) % 5; })->shortcut = "F6";
+    tokotachi::Menu* menu_help = menu_bar->add_menu("ヘルプ(&H)");
+    menu_help->add_item("バージョン情報(&A)", [&window](tokotachi::Object*)
     {
         tokotachi::MessageDialog::show(&window, "バージョン情報",
                                  "Tokotachi のサンプル。SDL3 と plutovg の上に、C++11 で書いている。");
     });
-    help_menu->add_item("警告の例(&W)", [&window](tokotachi::Object*)
+    menu_help->add_item("警告の例(&W)", [&window](tokotachi::Object*)
     {
         tokotachi::MessageDialog::show(&window, "警告", "これは警告のダイアログの例。長い文はダイアログの幅で折り返す。"
                                  "ボタンが 1 つなら Enter でも Esc でも閉じられる。",
                                  std::vector<tokotachi::DialogButton>{tokotachi::DialogButton::CLOSE}, tokotachi::NotifyHandler(),
                                  tokotachi::MessageType::WARNING);
     });
-    window.menu_bar = bar;
+    window.menu_bar = menu_bar;
 
     // ツールバー(docs/adr/0030)。メニューと同じ Action を並べる(無効にすれば両方が無効になる)。
     // 画像のある Action は画像だけを出し、文字はツールチップに出す。画像が無ければ文字を出す。
-    tokotachi::ToolBar* tools = new tokotachi::ToolBar();
-    new_action->icon = file_icon;
-    open_action->icon = folder_icon;
-    tools->add_action(new_action);
-    tools->add_action(open_action);
-    tools->add_action(save_action);
-    tools->add_separator();
-    tools->add_action(large_action);  // チェックできる Action は押し込んだ見た目になる
-    tools->add_item("挨拶を青に", [=](tokotachi::Object*) { color->current_index = 1; })->tooltip = "挨拶の色を青にする";
-    tools->add_separator();
-    tokotachi::ComboBox* style_choice = new tokotachi::ComboBox();
+    tokotachi::ToolBar* tool_bar = new tokotachi::ToolBar();
+    action_new->icon = file_icon;
+    action_open->icon = folder_icon;
+    tool_bar->add_action(action_new);
+    tool_bar->add_action(action_open);
+    tool_bar->add_action(action_save);
+    tool_bar->add_separator();
+    tool_bar->add_action(action_large);  // チェックできる Action は押し込んだ見た目になる
+    tool_bar->add_item("挨拶を青に", [=](tokotachi::Object*) { combo_box_color->current_index = 1; })->tooltip = "挨拶の色を青にする";
+    tool_bar->add_separator();
+    tokotachi::ComboBox* combo_box_style = new tokotachi::ComboBox();
     std::vector<std::string> styles;
     styles.push_back("画像だけ");
     styles.push_back("画像の右に文字");
     styles.push_back("画像の下に文字");
-    style_choice->items = styles;
-    style_choice->current_index = 0;
-    style_choice->tooltip = "ツールバーのボタンの見た目";
-    style_choice->on_change = [=](tokotachi::Object*)
+    combo_box_style->items = styles;
+    combo_box_style->current_index = 0;
+    combo_box_style->tooltip = "ツールバーのボタンの見た目";
+    combo_box_style->on_change = [=](tokotachi::Object*)
     {
         static const tokotachi::ToolButtonStyle STYLES[] = {tokotachi::ToolButtonStyle::ICON_ONLY,
                                                       tokotachi::ToolButtonStyle::TEXT_BESIDE_ICON,
                                                       tokotachi::ToolButtonStyle::TEXT_UNDER_ICON};
-        tools->button_style = STYLES[style_choice->current_index >= 0 ? style_choice->current_index.get() : 0];
+        tool_bar->button_style = STYLES[combo_box_style->current_index >= 0 ? combo_box_style->current_index.get() : 0];
     };
-    tools->add_widget(style_choice);  // 任意の部品も置ける(幅が足りなければ隠れる)
-    window.tool_bar = tools;
+    tool_bar->add_widget(combo_box_style);  // 任意の部品も置ける(幅が足りなければ隠れる)
+    window.tool_bar = tool_bar;
 
     // ステータスバーの右には部品を並べられる。裏で数える進み具合を出す。
-    tokotachi::ProgressBar* status_progress = new tokotachi::ProgressBar();
-    status_progress->minimum_size = tokotachi::Size(120, 0);
-    status->add_widget(status_progress);
+    tokotachi::ProgressBar* progress_bar_status = new tokotachi::ProgressBar();
+    progress_bar_status->minimum_size = tokotachi::Size(120, 0);
+    status_bar->add_widget(progress_bar_status);
     level->on_change = [=](tokotachi::Object*)
     {
-        level_bar->value = level->value.get();
-        status_progress->value = level->value.get();
+        progress_bar_level->value = level->value.get();
+        progress_bar_status->value = level->value.get();
     };
-    status_progress->value = level->value.get();
-    window.status_bar = status;
+    progress_bar_status->value = level->value.get();
+    window.status_bar = status_bar;
 
     // ウィジェットに加えた Action のキーは、フォーカスがその中にあるときだけ効く。一覧の Delete で選んだ項目を除く。
-    tokotachi::Action* remove_files = new tokotachi::Action(&window, "削除(&D)");
-    remove_files->shortcut = "Delete";
-    remove_files->on_trigger = [=](tokotachi::Object*)
+    tokotachi::Action* action_remove_files = new tokotachi::Action(&window, "削除(&D)");
+    action_remove_files->shortcut = "Delete";
+    action_remove_files->on_trigger = [=](tokotachi::Object*)
     {
-        const std::vector<tokotachi::ModelIndex> chosen = file_list->selection;
+        const std::vector<tokotachi::ModelIndex> chosen = list_view_files->selection;
         for (std::size_t i = chosen.size(); i-- > 0;)
         {
             files->remove_item(files->item_at(chosen[i]));
         }
-        list_status->text = std::to_string(chosen.size()) + " 個を削除した";
+        label_list_status->text = std::to_string(chosen.size()) + " 個を削除した";
     };
-    file_list->add_action(remove_files);
-    tokotachi::Menu* list_menu = new tokotachi::Menu(&window);
-    list_menu->add_action(remove_files);
-    file_list->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
+    list_view_files->add_action(action_remove_files);
+    tokotachi::Menu* menu_list = new tokotachi::Menu(&window);
+    menu_list->add_action(action_remove_files);
+    list_view_files->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
     {
         if (e.button == tokotachi::MouseButton::RIGHT)
         {
-            list_menu->popup(file_list, e.pos);
+            menu_list->popup(list_view_files, e.pos);
         }
     };
 
-    edit->focused = true;
+    line_edit_name->focused = true;
     window.visible = true;
 
     for (int i = 1; i < argc; ++i)
@@ -724,19 +724,19 @@ int main(int argc, char** argv)
         if (std::string(argv[i]) == "--dark")
         {
             app.color_scheme = tokotachi::ColorScheme::DARK;
-            scheme->current_index = 2;
+            combo_box_scheme->current_index = 2;
         }
         else if (std::string(argv[i]) == "--tab" && i + 1 < argc)
         {
-            tabs->current_index = std::atoi(argv[++i]);
+            tab_widget_main->current_index = std::atoi(argv[++i]);
         }
         else if (std::string(argv[i]) == "--screenshot" && i + 1 < argc)
         {
             name->value = "Ünïcödé と日本語 AVA ffi";  // 変数への代入が入力欄と挨拶に伝わる
             honorific->value = 2;
             large->value = true;
-            edit->select_all();
-            color->current_index = 1;
+            line_edit_name->select_all();
+            combo_box_color->current_index = 1;
             return window.save_png(argv[i + 1]) ? 0 : 1;
         }
     }

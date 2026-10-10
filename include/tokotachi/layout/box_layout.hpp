@@ -3,8 +3,8 @@
 ///
 /// @code
 /// tokotachi::BoxLayout* row = new tokotachi::BoxLayout(panel, tokotachi::Orientation::HORIZONTAL);
-/// row->add(edit, 1);       // 伸びる割合 1(余った幅を受け取る)
-/// row->add(button);        // 望む大きさのまま
+/// row->add(line_edit_search, 1);       // 伸びる割合 1(余った幅を受け取る)
+/// row->add(button_search);        // 望む大きさのまま
 /// row->add_stretch();      // 空きを入れる
 /// @endcode
 ///

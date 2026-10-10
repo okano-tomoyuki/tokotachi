@@ -3,11 +3,11 @@
 ///
 /// プロパティは、所有者(Object*)と、値の読み取り・書き込みの関数ポインタを持つ軽量のプロキシ(ヒープの確保なし)。
 /// @code
-/// label->text = "abc";                  // 書き込み
-/// std::string s = label->text;          // 読み取り(T への暗黙の変換)
-/// label->text.get().size();             // 値のメソッドを呼ぶときは get()
-/// button->x += 10;                      // 複合代入
-/// label->text = "名前: " + edit->text;  // std::string のプロパティは + で直接つなげる
+/// label_name->text = "abc";                  // 書き込み
+/// std::string s = label_name->text;          // 読み取り(T への暗黙の変換)
+/// label_name->text.get().size();             // 値のメソッドを呼ぶときは get()
+/// button_ok->x += 10;                      // 複合代入
+/// label_name->text = "名前: " + line_edit_name->text;  // std::string のプロパティは + で直接つなげる
 /// @endcode
 ///
 /// プロパティの値が変わったら、所有者が知らせ(Object::notify_changed)、結びつけた相手のプロパティへ伝わる(binding.hpp)。

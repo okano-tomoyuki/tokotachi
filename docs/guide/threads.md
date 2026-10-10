@@ -13,12 +13,12 @@
 
 ```cpp
 tokotachi::Task<int>* count = new tokotachi::Task<int>(&window);   // window が破棄されたら取り消し、結果は捨てる
-count->on_progress = [=](tokotachi::Object*) { bar->value = count->progress; };
+count->on_progress = [=](tokotachi::Object*) { progress_bar_count->value = count->progress; };
 count->on_finish = [=](tokotachi::Object*)
 {
     if (!count->error.get().empty()) { ... }       // 仕事が例外を投げた
     else if (count->cancelled) { ... }             // 取り消した
-    else { label->text = std::to_string(count->result.get()); }
+    else { label_result->text = std::to_string(count->result.get()); }
 };
 count->start([](tokotachi::TaskContext& ctx) -> int
 {
@@ -39,7 +39,7 @@ count->cancel();       // 取り消しを頼む(待たない)
 **頼んだ処理が呼ばれる前に部品が破棄されることがある**ので、部品は `WeakRef` で渡します(メインスレッドで作り、別のスレッドへはコピーで渡す)。
 
 ```cpp
-tokotachi::WeakRef<tokotachi::Label> status(label);      // メインスレッドで作る
+tokotachi::WeakRef<tokotachi::Label> status(label_result);      // メインスレッドで作る
 std::thread([status]()
 {
     const std::string result = compute();               // 別のスレッド

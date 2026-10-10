@@ -2,11 +2,11 @@
 /// 自由に描くための部品(VCL の TPaintBox に当たる。docs/adr/0033)。on_paint の中で Canvas に描く。
 ///
 /// @code
-/// tokotachi::PaintBox* chart = new tokotachi::PaintBox(&window);
-/// chart->minimum_size = tokotachi::Size(300, 200);
-/// chart->cached = true;                     // 重い描画: 描いた結果を覚えておく
-/// chart->on_paint = [=](tokotachi::Object*, tokotachi::Canvas& c) { ... 重い描画 ... };
-/// chart->refresh();                         // データが変わったら描き直す
+/// tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+/// paint_box_chart->minimum_size = tokotachi::Size(300, 200);
+/// paint_box_chart->cached = true;                     // 重い描画: 描いた結果を覚えておく
+/// paint_box_chart->on_paint = [=](tokotachi::Object*, tokotachi::Canvas& c) { ... 重い描画 ... };
+/// paint_box_chart->refresh();                         // データが変わったら描き直す
 /// @endcode
 ///
 /// cached が true なら、描いた結果を Bitmap に覚えておき、refresh を呼ぶか、大きさ・倍率・テーマが変わるまで on_paint を

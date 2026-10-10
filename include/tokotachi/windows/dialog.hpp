@@ -2,17 +2,17 @@
 /// モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。
 ///
 /// @code
-/// tokotachi::Dialog* dialog = new tokotachi::Dialog(&window, "名前の変更");    // 親のウィンドウが所有する
-/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog);                 // 中身はレイアウトで並べる
-/// tokotachi::LineEdit* name = new tokotachi::LineEdit(dialog);
-/// box->add(name);
-/// dialog->add_button(tokotachi::DialogButton::OK);
-/// dialog->add_button(tokotachi::DialogButton::CANCEL);
-/// dialog->on_finish = [=](tokotachi::Object*)
+/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(&window, "名前の変更");    // 親のウィンドウが所有する
+/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_rename);                 // 中身はレイアウトで並べる
+/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(dialog_rename);
+/// box->add(line_edit_name);
+/// dialog_rename->add_button(tokotachi::DialogButton::OK);
+/// dialog_rename->add_button(tokotachi::DialogButton::CANCEL);
+/// dialog_rename->on_finish = [=](tokotachi::Object*)
 /// {
-///     if (dialog->result == tokotachi::DialogButton::OK) { ... name->text ... }
+///     if (dialog_rename->result == tokotachi::DialogButton::OK) { ... line_edit_name->text ... }
 /// };
-/// dialog->open();   // すぐに戻る。結果は on_finish で受け取る
+/// dialog_rename->open();   // すぐに戻る。結果は on_finish で受け取る
 /// @endcode
 ///
 /// ボタンは下端に、OS の慣習の順に並べる(Windows・KDE は「OK キャンセル」、GNOME などは「キャンセル OK」)。

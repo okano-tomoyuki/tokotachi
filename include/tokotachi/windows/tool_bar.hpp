@@ -2,12 +2,12 @@
 /// ツールバー: Action をボタンとして横に並べる(docs/adr/0030)。
 ///
 /// @code
-/// tokotachi::ToolBar* tools = new tokotachi::ToolBar();
-/// tools->add_action(open);                 // 既にある Action(メニューと共有できる)
-/// tools->add_item("保存", on_save)->icon = save_icon;
-/// tools->add_separator();
-/// tools->add_widget(new tokotachi::ComboBox());  // 任意の部品
-/// window.tool_bar = tools;                 // メニューバーの下に置く
+/// tokotachi::ToolBar* tool_bar = new tokotachi::ToolBar();
+/// tool_bar->add_action(action_open);                 // 既にある Action(メニューと共有できる)
+/// tool_bar->add_item("保存", on_save)->icon = save_icon;
+/// tool_bar->add_separator();
+/// tool_bar->add_widget(new tokotachi::ComboBox());  // 任意の部品
+/// window.tool_bar = tool_bar;                 // メニューバーの下に置く
 /// @endcode
 ///
 /// ボタンは Action の画像(無ければ文字)を出し、文字とショートカットはツールチップに出す(button_style で変えられる)。

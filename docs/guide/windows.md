@@ -10,10 +10,10 @@
 無効にすれば両方が無効になります。
 
 ```cpp
-tokotachi::Action* save = new tokotachi::Action(&window, "保存(&S)");
-save->shortcut = "Ctrl+S";
-save->on_trigger = [](tokotachi::Object*) { ... };
-save->enabled = false;      // メニューもボタンもキーも無効
+tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
+action_save->shortcut = "Ctrl+S";
+action_save->on_trigger = [](tokotachi::Object*) { ... };
+action_save->enabled = false;      // メニューもボタンもキーも無効
 ```
 
 - text の `&` の次の文字はニーモニックです(Alt+ニーモニック・メニューの中でそのキー)。
@@ -24,21 +24,21 @@ save->enabled = false;      // メニューもボタンもキーも無効
 ## メニューバー・ツールバー・ステータスバー
 
 ```cpp
-tokotachi::MenuBar* bar = new tokotachi::MenuBar();
-tokotachi::Menu* file = bar->add_menu("ファイル(&F)");
-file->add_action(save);
-file->add_separator();
-file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
-window.menu_bar = bar;                       // 上端に置く
+tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
+tokotachi::Menu* menu_file = menu_bar->add_menu("ファイル(&F)");
+menu_file->add_action(action_save);
+menu_file->add_separator();
+menu_file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
+window.menu_bar = menu_bar;                       // 上端に置く
 
-tokotachi::ToolBar* tools = new tokotachi::ToolBar();
-tools->add_action(save);                     // 画像(icon)があれば画像、無ければ文字
-window.tool_bar = tools;                     // メニューバーの下
+tokotachi::ToolBar* tool_bar = new tokotachi::ToolBar();
+tool_bar->add_action(action_save);                     // 画像(icon)があれば画像、無ければ文字
+window.tool_bar = tool_bar;                     // メニューバーの下
 
-tokotachi::StatusBar* status = new tokotachi::StatusBar();
-status->text = "準備完了";
-status->show_message("保存した", 3000);       // 3 秒だけ
-window.status_bar = status;                  // 下端
+tokotachi::StatusBar* status_bar = new tokotachi::StatusBar();
+status_bar->text = "準備完了";
+status_bar->show_message("保存した", 3000);       // 3 秒だけ
+window.status_bar = status_bar;                  // 下端
 ```
 
 レイアウトの領域は、これらの間になります。右クリックのメニューは `Menu::popup(部品, 位置)` で開きます。

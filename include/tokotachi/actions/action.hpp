@@ -2,11 +2,11 @@
 /// 利用者が実行できる操作(docs/adr/0027)。メニューの項目・ショートカットのキーが同じ Action を指す。
 ///
 /// @code
-/// tokotachi::Action* save = new tokotachi::Action(&window, "保存(&S)");
-/// save->shortcut = "Ctrl+S";
-/// save->on_trigger = [](tokotachi::Object*) { ... };
-/// file_menu->add_action(save);   // メニューバーのメニューに入れると、Ctrl+S もウィンドウ全体で効く
-/// save->enabled = false;         // メニューの項目もキーも無効になる
+/// tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
+/// action_save->shortcut = "Ctrl+S";
+/// action_save->on_trigger = [](tokotachi::Object*) { ... };
+/// menu_file->add_action(action_save);   // メニューバーのメニューに入れると、Ctrl+S もウィンドウ全体で効く
+/// action_save->enabled = false;         // メニューの項目もキーも無効になる
 /// @endcode
 ///
 /// ショートカットが効くのは、次のどちらかに入れた Action だけ:

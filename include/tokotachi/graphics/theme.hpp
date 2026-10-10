@@ -50,8 +50,8 @@ const int COLOR_ROLE_COUNT = static_cast<int>(ColorRole::ON_TOOLTIP) + 1;
 
 /// 色の指定: テーマの役割か、具体的な色のどちらか。役割で指定した色は、テーマを切り替えると変わる。
 /// @code
-/// label->color = ColorRole::TEXT_SECONDARY;   // テーマに従う
-/// label->color = Color::rgb(0xdc2626);        // 固定の色
+/// label_note->color = ColorRole::TEXT_SECONDARY;   // テーマに従う
+/// label_note->color = Color::rgb(0xdc2626);        // 固定の色
 /// @endcode
 class ThemeColor
 {

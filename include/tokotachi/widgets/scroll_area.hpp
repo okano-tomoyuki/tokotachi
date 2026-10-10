@@ -2,11 +2,11 @@
 /// 中身のウィジェットを、見えている範囲より大きくてもスクロールして見せる入れ物(docs/adr/0021)。
 ///
 /// @code
-/// tokotachi::ScrollArea* scroll = new tokotachi::ScrollArea(&window);
+/// tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(&window);
 /// tokotachi::Widget* form = new tokotachi::Widget();         // 中身(親は content への代入で決まる)
 /// tokotachi::GridLayout* grid = new tokotachi::GridLayout(form);
 /// ...
-/// scroll->content = form;
+/// scroll_area_form->content = form;
 /// @endcode
 ///
 /// 中身の大きさは、中身の preferred_size(fit_width なら幅は見えている幅)。見えている範囲に収まらない向きにだけ

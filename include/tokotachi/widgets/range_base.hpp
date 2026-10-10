@@ -2,10 +2,10 @@
 /// 範囲の中の値を持ち、利用者が動かせるウィジェットの共通の基底(Slider・SpinBox。docs/adr/0024)。
 ///
 /// @code
-/// slider->minimum = 0;
-/// slider->maximum = 100;
-/// slider->value = 25;
-/// tokotachi::bind(slider->value, volume->value);  // DoubleVariable と結ぶ
+/// slider_volume->minimum = 0;
+/// slider_volume->maximum = 100;
+/// slider_volume->value = 25;
+/// tokotachi::bind(slider_volume->value, volume->value);  // DoubleVariable と結ぶ
 /// @endcode
 #ifndef TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 #define TOKOTACHI_WIDGETS_RANGE_BASE_HPP

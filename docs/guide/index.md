@@ -23,15 +23,15 @@ int main(int argc, char** argv)
     tokotachi::Window window("hello", 320, 160);
 
     tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);   // 並べ方はレイアウトに任せる
-    tokotachi::Label* label = new tokotachi::Label(&window, "こんにちは");
-    tokotachi::Button* button = new tokotachi::Button(&window, "押す");  // 親(window)が所有する
-    box->add(label);
-    box->add(button);
+    tokotachi::Label* label_count = new tokotachi::Label(&window, "こんにちは");
+    tokotachi::Button* button_push = new tokotachi::Button(&window, "押す");  // 親(window)が所有する
+    box->add(label_count);
+    box->add(button_push);
 
     int count = 0;
-    button->on_click = [&](tokotachi::Object*)                         // イベントは 1 つのハンドラ
+    button_push->on_click = [&](tokotachi::Object*)                         // イベントは 1 つのハンドラ
     {
-        label->text = "押した回数: " + std::to_string(++count);           // 状態はプロパティで読み書きする
+        label_count->text = "押した回数: " + std::to_string(++count);           // 状態はプロパティで読み書きする
     };
 
     window.visible = true;

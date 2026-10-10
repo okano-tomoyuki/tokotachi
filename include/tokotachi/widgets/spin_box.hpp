@@ -2,10 +2,10 @@
 /// 数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。
 ///
 /// @code
-/// tokotachi::SpinBox* count = new tokotachi::SpinBox(panel);
-/// count->maximum = 10;
-/// count->decimals = 1;  // 小数 1 桁で表示・入力
-/// tokotachi::bind(count->value, amount->value);  // DoubleVariable と結ぶ
+/// tokotachi::SpinBox* spin_box_count = new tokotachi::SpinBox(panel);
+/// spin_box_count->maximum = 10;
+/// spin_box_count->decimals = 1;  // 小数 1 桁で表示・入力
+/// tokotachi::bind(spin_box_count->value, amount->value);  // DoubleVariable と結ぶ
 /// @endcode
 ///
 /// 打ち込んだ数値は、Enter・フォーカスが外れたときに value にする(数値として読めなければ元に戻す)。
