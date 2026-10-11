@@ -7,6 +7,7 @@
 #include "widgets/button_base.hpp"
 #include "widgets/check_box.hpp"
 #include "widgets/combo_box.hpp"
+#include "widgets/image_box.hpp"
 #include "widgets/label.hpp"
 #include "widgets/line_edit.hpp"
 #include "widgets/paint_box.hpp"

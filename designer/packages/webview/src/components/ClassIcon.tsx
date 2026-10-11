@@ -93,6 +93,13 @@ const ICONS: Readonly<Record<string, ReactNode>> = {
       <rect className="af" x="2.5" y="6.5" width="7" height="3" />
     </>
   ),
+  ImageBox: (
+    <>
+      <rect x="1.5" y="2.5" width="13" height="11" />
+      <circle className="af" cx="5" cy="6" r="1.5" />
+      <path className="a" d="M1.5 12.5l4-4 3 3 2-2 4 4" />
+    </>
+  ),
 
   // ---- 一覧 ----
   ListView: (

@@ -535,18 +535,31 @@ void RasterCanvas::draw_image(const Image& image, const Rect& dst, float opacity
     PixelRect area;
     if (axis_aligned())
     {
-        // ピクセルに揃えた dst へ写す。
+        // ピクセルに揃えた dst へ写す。大きさが違えば、先に滑らかに写した画像(覚えておく)を使う
+        // (plutovg の拡大・縮小は最も近い画素を取るだけで、ぎざぎざになるため)。
         area = snap(dst);
         if (area.empty())
         {
             return;
         }
-        const float sx = static_cast<float>(area.x1 - area.x0) / image.width();
-        const float sy = static_cast<float>(area.y1 - area.y0) / image.height();
-        plutovg_matrix_init(&m, sx, 0, 0, sy, static_cast<float>(area.x0), static_cast<float>(area.y0));
+        const int w = area.x1 - area.x0, h = area.y1 - area.y0;
         plutovg_canvas_new_path(canvas_);
-        plutovg_canvas_rect(canvas_, static_cast<float>(area.x0), static_cast<float>(area.y0),
-                            static_cast<float>(area.x1 - area.x0), static_cast<float>(area.y1 - area.y0));
+        plutovg_canvas_rect(canvas_, static_cast<float>(area.x0), static_cast<float>(area.y0), static_cast<float>(w),
+                            static_cast<float>(h));
+        if (w != image.width() || h != image.height())
+        {
+            plutovg_surface_t* s = image.data()->scaled(w, h);
+            if (s)
+            {
+                plutovg_matrix_init_translate(&m, static_cast<float>(area.x0), static_cast<float>(area.y0));
+                plutovg_canvas_set_texture(canvas_, s, PLUTOVG_TEXTURE_TYPE_PLAIN, std::min(opacity, 1.0f), &m);
+                plutovg_canvas_fill(canvas_);
+                plutovg_surface_destroy(s);
+                return;
+            }
+        }
+        plutovg_matrix_init(&m, static_cast<float>(w) / image.width(), 0, 0, static_cast<float>(h) / image.height(),
+                            static_cast<float>(area.x0), static_cast<float>(area.y0));
     }
     else
     {

@@ -472,6 +472,52 @@ Json to_json(tokotachi::FocusPolicy v)
     return Json();
 }
 
+bool from_json(const Json& j, tokotachi::ImageFit& out)
+{
+    if (!j.is_string())
+    {
+        return false;
+    }
+    const std::string& s = j.as_string();
+    if (s == "NONE")
+    {
+        out = tokotachi::ImageFit::NONE;
+        return true;
+    }
+    if (s == "CONTAIN")
+    {
+        out = tokotachi::ImageFit::CONTAIN;
+        return true;
+    }
+    if (s == "COVER")
+    {
+        out = tokotachi::ImageFit::COVER;
+        return true;
+    }
+    if (s == "STRETCH")
+    {
+        out = tokotachi::ImageFit::STRETCH;
+        return true;
+    }
+    return false;
+}
+
+Json to_json(tokotachi::ImageFit v)
+{
+    switch (v)
+    {
+    case tokotachi::ImageFit::NONE:
+        return Json(std::string("NONE"));
+    case tokotachi::ImageFit::CONTAIN:
+        return Json(std::string("CONTAIN"));
+    case tokotachi::ImageFit::COVER:
+        return Json(std::string("COVER"));
+    case tokotachi::ImageFit::STRETCH:
+        return Json(std::string("STRETCH"));
+    }
+    return Json();
+}
+
 bool from_json(const Json& j, tokotachi::MouseCursor& out)
 {
     if (!j.is_string())
@@ -1316,6 +1362,26 @@ bool set_Button(tokotachi::Button* o, const std::string& p, const Json& v)
         o->style = t;
         return true;
     }
+    if (p == "icon")
+    {
+        tokotachi::Image t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->icon = t;
+        return true;
+    }
+    if (p == "icon_size")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->icon_size = t;
+        return true;
+    }
     return false;
 }
 
@@ -1399,6 +1465,16 @@ bool get_Button(tokotachi::Button* o, const std::string& p, Json& out)
     if (p == "style")
     {
         out = to_json(o->style.get());
+        return true;
+    }
+    if (p == "icon")
+    {
+        out = to_json(o->icon.get());
+        return true;
+    }
+    if (p == "icon_size")
+    {
+        out = to_json(o->icon_size.get());
         return true;
     }
     return false;
@@ -3471,6 +3547,26 @@ bool set_Label(tokotachi::Label* o, const std::string& p, const Json& v)
         o->word_wrap = t;
         return true;
     }
+    if (p == "icon")
+    {
+        tokotachi::Image t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->icon = t;
+        return true;
+    }
+    if (p == "icon_size")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->icon_size = t;
+        return true;
+    }
     return false;
 }
 
@@ -3564,6 +3660,16 @@ bool get_Label(tokotachi::Label* o, const std::string& p, Json& out)
     if (p == "word_wrap")
     {
         out = to_json(o->word_wrap.get());
+        return true;
+    }
+    if (p == "icon")
+    {
+        out = to_json(o->icon.get());
+        return true;
+    }
+    if (p == "icon_size")
+    {
+        out = to_json(o->icon_size.get());
         return true;
     }
     return false;
@@ -3829,6 +3935,241 @@ bool get_ProgressBar(tokotachi::ProgressBar* o, const std::string& p, Json& out)
     if (p == "text_visible")
     {
         out = to_json(o->text_visible.get());
+        return true;
+    }
+    return false;
+}
+
+bool set_ImageBox(tokotachi::ImageBox* o, const std::string& p, const Json& v)
+{
+    if (p == "x")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->x = t;
+        return true;
+    }
+    if (p == "y")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->y = t;
+        return true;
+    }
+    if (p == "width")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->width = t;
+        return true;
+    }
+    if (p == "height")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->height = t;
+        return true;
+    }
+    if (p == "minimum_size")
+    {
+        tokotachi::Size t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->minimum_size = t;
+        return true;
+    }
+    if (p == "maximum_size")
+    {
+        tokotachi::Size t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->maximum_size = t;
+        return true;
+    }
+    if (p == "visible")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->visible = t;
+        return true;
+    }
+    if (p == "enabled")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->enabled = t;
+        return true;
+    }
+    if (p == "focus_policy")
+    {
+        tokotachi::FocusPolicy t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->focus_policy = t;
+        return true;
+    }
+    if (p == "cursor")
+    {
+        tokotachi::MouseCursor t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->cursor = t;
+        return true;
+    }
+    if (p == "tooltip")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->tooltip = t;
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
+    if (p == "accepts_drops")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->accepts_drops = t;
+        return true;
+    }
+    if (p == "image")
+    {
+        tokotachi::Image t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->image = t;
+        return true;
+    }
+    if (p == "fit")
+    {
+        tokotachi::ImageFit t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->fit = t;
+        return true;
+    }
+    return false;
+}
+
+bool get_ImageBox(tokotachi::ImageBox* o, const std::string& p, Json& out)
+{
+    if (p == "x")
+    {
+        out = to_json(o->x.get());
+        return true;
+    }
+    if (p == "y")
+    {
+        out = to_json(o->y.get());
+        return true;
+    }
+    if (p == "width")
+    {
+        out = to_json(o->width.get());
+        return true;
+    }
+    if (p == "height")
+    {
+        out = to_json(o->height.get());
+        return true;
+    }
+    if (p == "minimum_size")
+    {
+        out = to_json(o->minimum_size.get());
+        return true;
+    }
+    if (p == "maximum_size")
+    {
+        out = to_json(o->maximum_size.get());
+        return true;
+    }
+    if (p == "visible")
+    {
+        out = to_json(o->visible.get());
+        return true;
+    }
+    if (p == "enabled")
+    {
+        out = to_json(o->enabled.get());
+        return true;
+    }
+    if (p == "focus_policy")
+    {
+        out = to_json(o->focus_policy.get());
+        return true;
+    }
+    if (p == "cursor")
+    {
+        out = to_json(o->cursor.get());
+        return true;
+    }
+    if (p == "tooltip")
+    {
+        out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
+        return true;
+    }
+    if (p == "accepts_drops")
+    {
+        out = to_json(o->accepts_drops.get());
+        return true;
+    }
+    if (p == "image")
+    {
+        out = to_json(o->image.get());
+        return true;
+    }
+    if (p == "fit")
+    {
+        out = to_json(o->fit.get());
         return true;
     }
     return false;
@@ -6724,6 +7065,10 @@ tokotachi::Object* create(const std::string& cls, tokotachi::Object* parent)
     {
         return new tokotachi::ProgressBar(widget);
     }
+    if (cls == "ImageBox")
+    {
+        return new tokotachi::ImageBox(widget);
+    }
     if (cls == "ListView")
     {
         return new tokotachi::ListView(widget);
@@ -6836,6 +7181,10 @@ bool set_property(tokotachi::Object* object, const std::string& cls, const std::
     if (cls == "ProgressBar")
     {
         return set_ProgressBar(static_cast<tokotachi::ProgressBar*>(object), property, value);
+    }
+    if (cls == "ImageBox")
+    {
+        return set_ImageBox(static_cast<tokotachi::ImageBox*>(object), property, value);
     }
     if (cls == "ListView")
     {
@@ -6966,6 +7315,10 @@ bool get_property(tokotachi::Object* object, const std::string& cls, const std::
     {
         return get_ProgressBar(static_cast<tokotachi::ProgressBar*>(object), property, out);
     }
+    if (cls == "ImageBox")
+    {
+        return get_ImageBox(static_cast<tokotachi::ImageBox*>(object), property, out);
+    }
     if (cls == "ListView")
     {
         return get_ListView(static_cast<tokotachi::ListView*>(object), property, out);
@@ -7057,7 +7410,7 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "Button")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "text", "font", "style"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "text", "font", "style", "icon", "icon_size"};
     }
     if (cls == "CheckBox")
     {
@@ -7089,11 +7442,15 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "Label")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "text", "font", "color", "alignment", "word_wrap"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "text", "font", "color", "alignment", "word_wrap", "icon", "icon_size"};
     }
     if (cls == "ProgressBar")
     {
         return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "text_visible"};
+    }
+    if (cls == "ImageBox")
+    {
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "image", "fit"};
     }
     if (cls == "ListView")
     {
@@ -7176,7 +7533,7 @@ std::vector<std::string> property_names(const std::string& cls)
 
 std::vector<std::string> creatable_classes()
 {
-    return std::vector<std::string>{"Button", "CheckBox", "RadioButton", "LineEdit", "TextEdit", "SpinBox", "Slider", "ComboBox", "Label", "ProgressBar", "ListView", "TreeView", "Widget", "TabWidget", "Splitter", "ScrollArea", "PaintBox", "Timer", "BoxLayout", "GridLayout", "PlaceLayout", "Action", "MenuBar", "ToolBar", "StatusBar"};
+    return std::vector<std::string>{"Button", "CheckBox", "RadioButton", "LineEdit", "TextEdit", "SpinBox", "Slider", "ComboBox", "Label", "ProgressBar", "ImageBox", "ListView", "TreeView", "Widget", "TabWidget", "Splitter", "ScrollArea", "PaintBox", "Timer", "BoxLayout", "GridLayout", "PlaceLayout", "Action", "MenuBar", "ToolBar", "StatusBar"};
 }
 
 }  // namespace ttc

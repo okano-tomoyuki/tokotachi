@@ -14,6 +14,7 @@
     "ComboBox": { "kind": "widget", "category": "input" },
     "Label": { "kind": "widget", "category": "display" },
     "ProgressBar": { "kind": "widget", "category": "display" },
+    "ImageBox": { "kind": "widget", "category": "display" },
     "ListView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "TreeView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "Widget": { "kind": "widget", "category": "container", "accepts_children": true },

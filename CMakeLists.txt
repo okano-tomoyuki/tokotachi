@@ -126,6 +126,7 @@ add_library(tokotachi_objects OBJECT
     src/widgets/button_base.cpp
     src/widgets/check_box.cpp
     src/widgets/combo_box.cpp
+    src/widgets/image_box.cpp
     src/widgets/label.cpp
     src/widgets/line_edit.cpp
     src/widgets/paint_box.cpp
@@ -280,7 +281,7 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     tokotachi_copy_runtime(hello)
 
     # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
-    set(TOKOTACHI_GALLERY buttons inputs views window dialog drawing drop)
+    set(TOKOTACHI_GALLERY buttons inputs views window dialog drawing drop images)
     foreach(_name ${TOKOTACHI_GALLERY})
         add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
         target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)

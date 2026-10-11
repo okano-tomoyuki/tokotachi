@@ -21,6 +21,8 @@ bool from_json(const Json& j, tokotachi::DialogButton& out);
 Json to_json(tokotachi::DialogButton v);
 bool from_json(const Json& j, tokotachi::FocusPolicy& out);
 Json to_json(tokotachi::FocusPolicy v);
+bool from_json(const Json& j, tokotachi::ImageFit& out);
+Json to_json(tokotachi::ImageFit v);
 bool from_json(const Json& j, tokotachi::MouseCursor& out);
 Json to_json(tokotachi::MouseCursor v);
 bool from_json(const Json& j, tokotachi::Orientation& out);

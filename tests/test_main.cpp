@@ -1158,6 +1158,75 @@ TEST(label_alignment)
     CHECK(label->alignment == tokotachi::Align::END);
 }
 
+// 一色の画像。
+tokotachi::Image solid_image(int w, int h, const tokotachi::Color& c)
+{
+    return tokotachi::Image::from_pixels(w, h, std::vector<tokotachi::Color>(static_cast<std::size_t>(w * h), c));
+}
+
+TEST(image_box_fit)
+{
+    tokotachi::Window window("t", 100, 100);
+    window.background = tokotachi::Color(0, 0, 255);
+    tokotachi::ImageBox* image_box = new tokotachi::ImageBox(&window, solid_image(4, 2, tokotachi::Color(255, 0, 0)));
+    CHECK(image_box->preferred_size.get() == tokotachi::Size(4, 2));
+    image_box->bounds = tokotachi::Rect(0, 0, 40, 40);
+    window.visible = true;
+    const auto red_at = [&](float x, float y)
+    {
+        tokotachi::Bitmap b = window.capture();
+        const float s = static_cast<float>(b.width()) / 100;
+        const tokotachi::Color c = b.pixel(static_cast<int>(x * s), static_cast<int>(y * s));
+        return c.r == 255 && c.b == 0;
+    };
+    // NONE: 元の大きさで中ほど
+    CHECK(red_at(20, 20) && !red_at(10, 20));
+    // CONTAIN: 40×20 に広げて縦の中ほど
+    image_box->fit = tokotachi::ImageFit::CONTAIN;
+    CHECK(red_at(2, 20) && red_at(38, 12) && !red_at(20, 5));
+    // COVER: 隙間なく覆う(はみ出した部分は部品の外に描かない)
+    image_box->fit = tokotachi::ImageFit::COVER;
+    CHECK(red_at(20, 2) && red_at(20, 38) && !red_at(60, 20));
+    // STRETCH: 部品の大きさ
+    image_box->fit = tokotachi::ImageFit::STRETCH;
+    CHECK(red_at(2, 2) && red_at(38, 38));
+    // 空の画像なら何も描かず、望む大きさは 0
+    image_box->image = tokotachi::Image();
+    CHECK(!red_at(20, 20) && image_box->preferred_size.get() == tokotachi::Size(0, 0));
+}
+
+TEST(label_and_button_icons)
+{
+    tokotachi::Window window("t", 300, 200);
+    const tokotachi::Image icon = solid_image(32, 32, tokotachi::Color(255, 0, 0));
+    tokotachi::Label* label = new tokotachi::Label(&window, "abc");
+    const tokotachi::Size plain = label->preferred_size;
+    label->icon = icon;
+    // 画像(既定 16)と間(6)の分だけ広がる
+    CHECK(label->preferred_size.get().width == plain.width + 22);
+    label->icon_size = 40;
+    CHECK(label->preferred_size.get().width == plain.width + 46 && label->preferred_size.get().height == 40);
+    label->text = "";
+    CHECK(label->preferred_size.get() == tokotachi::Size(40, 40));
+
+    tokotachi::Button* button = new tokotachi::Button(&window, "OK");
+    const tokotachi::Size plain_button = button->preferred_size;
+    button->icon = icon;
+    CHECK(button->preferred_size.get().width == plain_button.width + 22);
+    // 文字が無ければ、画像だけの正方形に近いボタン
+    button->text = "";
+    const tokotachi::Size only = button->preferred_size;
+    CHECK(only.width == only.height && only.width < plain_button.width);
+    // 押したときに描く(画像の色が出る)
+    button->bounds = tokotachi::Rect(0, 0, only.width, only.height);
+    label->visible = false;
+    window.visible = true;
+    tokotachi::Bitmap b = window.capture();
+    const float s = static_cast<float>(b.width()) / 300;
+    const tokotachi::Color c = b.pixel(static_cast<int>(only.width / 2 * s), static_cast<int>(only.height / 2 * s));
+    CHECK(c.r == 255 && c.g == 0 && c.b == 0);
+}
+
 TEST(line_edit_word_navigation)
 {
     tokotachi::Window window("t", 300, 100);
@@ -3510,6 +3579,33 @@ TEST(canvas_layer_group_opacity)
     {
         window.save_png(std::string(dir) + "/layer.png");
     }
+}
+
+TEST(draw_image_scales_smoothly)
+{
+    // 白黒の市松 4×4 を 2×2 に縮めると灰色(面積の平均)。最も近い画素を取ると白か黒になる
+    std::vector<tokotachi::Color> pixels;
+    for (int i = 0; i < 16; ++i)
+    {
+        pixels.push_back(((i % 4) + (i / 4)) % 2 ? tokotachi::Color(255, 255, 255) : tokotachi::Color(0, 0, 0));
+    }
+    const tokotachi::Image checker = tokotachi::Image::from_pixels(4, 4, pixels);
+    tokotachi::Bitmap small(2, 2);
+    small.canvas().draw_image(checker, tokotachi::Rect(0, 0, 2, 2));
+    const tokotachi::Color c = small.pixel(1, 1);
+    CHECK(c.r > 100 && c.r < 155 && c.a == 255);
+    // 黒・白の 2×1 を 8×1 に広げると、間は灰色の段階になる(端は元の色)
+    std::vector<tokotachi::Color> two;
+    two.push_back(tokotachi::Color(0, 0, 0));
+    two.push_back(tokotachi::Color(255, 255, 255));
+    tokotachi::Bitmap wide(8, 1);
+    wide.canvas().draw_image(tokotachi::Image::from_pixels(2, 1, two), tokotachi::Rect(0, 0, 8, 1));
+    CHECK(wide.pixel(0, 0).r == 0 && wide.pixel(7, 0).r == 255);
+    CHECK(wide.pixel(3, 0).r > 60 && wide.pixel(3, 0).r < 128 && wide.pixel(4, 0).r > 128 && wide.pixel(4, 0).r < 200);
+    // 同じ大きさなら写さずにそのまま
+    tokotachi::Bitmap same(4, 4);
+    same.canvas().draw_image(checker, tokotachi::Rect(0, 0, 4, 4));
+    CHECK(same.pixel(0, 0).r == 0 && same.pixel(1, 0).r == 255);
 }
 
 TEST(bitmap_canvas_pixels_and_image)

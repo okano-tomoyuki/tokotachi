@@ -39,6 +39,7 @@ public:
     static const float GAP;
     static const float ARROW;
     static const float CHECK;
+    static const float ICON;
     static const float SEPARATOR;
 
     float item_height() const { return std::ceil(TextLayout("", Font(), display_scale).height()) + 10; }
@@ -60,16 +61,23 @@ public:
         return e.action ? ActionAccess::shortcut(e.action).to_string() : std::string();
     }
 
-    bool has_checks() const
+    // 文字の前の、チェックの印・画像の列の幅(どの項目にも無ければ 0)。
+    float mark_width() const
     {
+        float w = 0;
         for (std::size_t i = 0; i < menu->entries_.size(); ++i)
         {
-            if (menu->entries_[i].action && ActionAccess::checkable(menu->entries_[i].action))
+            const Action* a = menu->entries_[i].action;
+            if (a && !ActionAccess::icon(a).is_null())
             {
-                return true;
+                return ICON + 8;
+            }
+            if (a && ActionAccess::checkable(a))
+            {
+                w = CHECK;
             }
         }
-        return false;
+        return w;
     }
 
     Rect row_rect(std::size_t i) const
@@ -228,7 +236,7 @@ protected:
             shortcut_w = std::max(shortcut_w, TextLayout(shortcut_of(i), Font(), scale).width());
             has_submenu = has_submenu || menu->entries_[i].submenu;
         }
-        const float w = PADDING * 2 + (has_checks() ? CHECK : 0) + text_w + (shortcut_w > 0 ? GAP + shortcut_w : 0) +
+        const float w = PADDING * 2 + mark_width() + text_w + (shortcut_w > 0 ? GAP + shortcut_w : 0) +
                         (has_submenu ? ARROW : 0);
         return Size(std::ceil(std::max(w, 120.0f)), std::ceil(h));
     }
@@ -237,7 +245,7 @@ protected:
     {
         const float scale = display_scale;
         const float w = width;
-        const float text_x = PADDING + (has_checks() ? CHECK : 0);
+        const float text_x = PADDING + mark_width();
         const bool cues = menu->root()->cues_;
         for (std::size_t i = 0; i < menu->entries_.size(); ++i)
         {
@@ -255,7 +263,20 @@ protected:
                 canvas.fill_round_rect(row.adjusted(4, 0, 4, 0), 4, theme::selection());
             }
             const Color fg = !enabled_now ? theme::text_disabled() : hot ? theme::on_selection() : theme::text();
-            if (e.action && ActionAccess::checkable(e.action) && ActionAccess::checked(e.action))
+            const bool checked = e.action && ActionAccess::checkable(e.action) && ActionAccess::checked(e.action);
+            if (e.action && !ActionAccess::icon(e.action).is_null())
+            {
+                // 画像(チェックしているなら、画像を枠で囲む)
+                const Rect icon_rect(PADDING, row.y + std::floor((row.height - ICON) / 2), ICON, ICON);
+                if (checked)
+                {
+                    const Rect box = icon_rect.adjusted(-3, -3, -3, -3);
+                    canvas.fill_round_rect(box, 3, hot ? theme::on_selection().with_alpha(48) : theme::selection_inactive());
+                    canvas.stroke_round_rect(box, 3, 1, hot ? theme::on_selection() : theme::accent());
+                }
+                canvas.draw_image(ActionAccess::icon(e.action), icon_rect, enabled_now ? 1.0f : 0.4f);
+            }
+            else if (checked)
             {
                 // チェックの印
                 const float cx = PADDING + CHECK / 2 - 2, cy = row.y + row.height / 2;
@@ -392,6 +413,7 @@ const float MenuView::PADDING = 14;
 const float MenuView::GAP = 32;
 const float MenuView::ARROW = 16;
 const float MenuView::CHECK = 20;
+const float MenuView::ICON = 16;
 const float MenuView::SEPARATOR = 9;
 
 void MenuAccess::forget_action(Menu* m, Action* a)

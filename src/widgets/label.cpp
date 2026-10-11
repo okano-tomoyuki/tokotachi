@@ -18,10 +18,13 @@ Label::Label(Widget* parent_widget, const std::string& initial_text)
       TOKOTACHI_PROPERTY_MEMBER(Label, ThemeColor, color),
       TOKOTACHI_PROPERTY_MEMBER(Label, Align, alignment),
       TOKOTACHI_PROPERTY_MEMBER(Label, bool, word_wrap),
+      TOKOTACHI_PROPERTY_MEMBER(Label, Image, icon),
+      TOKOTACHI_PROPERTY_MEMBER(Label, float, icon_size),
       text_(initial_text),
       color_(ColorRole::TEXT),
       alignment_(Align::START),
       word_wrap_(false),
+      icon_size_(16),
       layout_wrap_(0)
 {
 }
@@ -71,11 +74,53 @@ void Label::set_word_wrap(const bool& v)
     request_layout();
 }
 
+void Label::set_icon(const Image& v)
+{
+    if (v == icon_)
+    {
+        return;
+    }
+    const bool shown = !icon_.is_null();
+    icon_ = v;
+    invalidate();
+    if (shown != !icon_.is_null())
+    {
+        layout_ = TextLayout();
+        request_layout();
+    }
+}
+
+void Label::set_icon_size(const float& v)
+{
+    if (v == icon_size_)
+    {
+        return;
+    }
+    icon_size_ = std::max(0.0f, v);
+    layout_ = TextLayout();
+    invalidate();
+    request_layout();
+}
+
+namespace
+{
+const float ICON_TEXT_GAP = 6;  // 画像と文字の間
+}  // namespace
+
+float Label::icon_extent() const
+{
+    if (icon_.is_null())
+    {
+        return 0;
+    }
+    return text_.empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
+}
+
 const TextLayout& Label::layout() const
 {
-    // 折り返すときは今の幅で作る。幅・倍率が変わったら作り直す。
+    // 折り返すときは今の幅(画像の分を除く)で作る。幅・倍率が変わったら作り直す。
     const float scale = display_scale;
-    const float wrap = word_wrap_ ? std::max(1.0f, width.get()) : 0;
+    const float wrap = word_wrap_ ? std::max(1.0f, width.get() - icon_extent()) : 0;
     if (layout_.is_null() || layout_.scale() != scale || layout_wrap_ != wrap)
     {
         layout_ = TextLayout(text_, font_, scale, wrap, alignment_);
@@ -89,7 +134,8 @@ Size Label::compute_preferred_size() const
     // 幅は折り返さないときの幅、高さは今の幅で折り返したときの高さ。
     const TextLayout& l = layout();
     const float natural = word_wrap_ ? TextLayout(text_, font_, l.scale()).width() : l.width();
-    return Size(std::ceil(natural), std::ceil(l.height()));
+    const float icon_h = icon_.is_null() ? 0 : icon_size_;
+    return Size(std::ceil(icon_extent() + natural), std::ceil(std::max(l.height(), icon_h)));
 }
 
 Size Label::compute_minimum_size() const
@@ -100,7 +146,8 @@ Size Label::compute_minimum_size() const
     }
     // 最も長い単語の幅(幅 1 で折り返すと、1 行に 1 語ずつ並ぶ)と、今の幅での高さ。
     const TextLayout narrow(text_, font_, layout().scale(), 1);
-    return Size(std::ceil(narrow.width()), std::ceil(layout().height()));
+    const float icon_h = icon_.is_null() ? 0 : icon_size_;
+    return Size(std::ceil(icon_extent() + narrow.width()), std::ceil(std::max(layout().height(), icon_h)));
 }
 
 void Label::resized()
@@ -116,24 +163,34 @@ void Label::paint(Canvas& canvas)
 {
     const TextLayout& l = layout();
     const float w = width;
+    const bool rtl = l.line_is_rtl(0);
     // START・END は段落の向きの始め・終わり(右から左の段落では START が右。docs/adr/0020)。
     Align a = alignment_ == Align::FILL ? Align::START : alignment_;
-    if (l.line_is_rtl(0) && a != Align::CENTER)
+    if (rtl && a != Align::CENTER)
     {
         a = a == Align::START ? Align::END : Align::START;
     }
-    float tx = 0;
-    if (word_wrap_)
-    {
-        a = Align::START;  // 折り返すときは、行のそろえ方を TextLayout が折り返しの幅(= 自分の幅)に対して行う
-    }
+    // 画像と文字をひとまとまりとしてそろえる。画像は段落の向きの始め(左から右なら左)に置く
+    const float extent = icon_extent();
+    const float content_w = extent + (word_wrap_ ? std::max(0.0f, w - extent) : l.width());
+    float x = 0;
     if (a == Align::CENTER)
     {
-        tx = (w - l.width()) / 2;
+        x = (w - content_w) / 2;
     }
     else if (a == Align::END)
     {
-        tx = w - l.width();
+        x = w - content_w;
+    }
+    if (word_wrap_)
+    {
+        x = 0;  // 折り返すときは、行のそろえ方を TextLayout が折り返しの幅(= 自分の幅から画像を除いた幅)に対して行う
+    }
+    const float tx = rtl ? x : x + extent;
+    if (!icon_.is_null())
+    {
+        const float ix = rtl ? x + content_w - icon_size_ : x;
+        canvas.draw_image(icon_, Rect(ix, (height - icon_size_) / 2, icon_size_, icon_size_), effectively_enabled ? 1.0f : 0.4f);
     }
     canvas.draw_text(l, Point(tx, (height - l.height()) / 2), effectively_enabled ? color_.resolve() : theme::text_disabled());
     Widget::paint(canvas);

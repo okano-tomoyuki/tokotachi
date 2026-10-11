@@ -38,6 +38,23 @@ Canvas の決まり:
 | 変換・クリップ | `translate`・`scale_by`・`rotate`・`clip_rect`・`clip_path`(`save`・`restore` で戻す) |
 | グループの透過 | `begin_layer(opacity)`〜`end_layer()`(重なった所も同じ濃さ) |
 
+## 画像
+
+`Image` はファイル・メモリ上のデータ(PNG・JPEG・BMP・GIF)から読みます。描くときの大きさは dp で、画像の 1 ピクセルを 1 dp とします
+(倍率 2 の画面でにじませたくないときは、2 倍の大きさの画像を用意し、半分の大きさで描きます)。大きさを変えて描くと、滑らかに写します。
+
+```cpp
+const tokotachi::Image image_logo = tokotachi::Image::load("logo.png");
+// 画像を表示する部品
+tokotachi::ImageBox* image_box_logo = new tokotachi::ImageBox(&window, image_logo);
+image_box_logo->fit = tokotachi::ImageFit::CONTAIN;  // NONE(元の大きさ)・CONTAIN・COVER・STRETCH
+// ラベル・ボタンの文字の前(icon_size で大きさ。既定 16)。ボタンは文字が空なら画像だけ
+label_status->icon = tokotachi::Image::load("info.png");
+button_open->icon = tokotachi::Image::load("open.png");
+// メニュー・ツールバーには Action の icon を出す
+action_open->icon = tokotachi::Image::load("open.png");
+```
+
 ## 重い描画
 
 - `PaintBox::cached` を true にすると、描いた結果を覚え、`refresh()`・大きさ・倍率・テーマが変わるまで `on_paint` を呼びません。

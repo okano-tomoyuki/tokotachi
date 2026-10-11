@@ -483,7 +483,7 @@
       ],
       "kind": "widget",
       "category": "input",
-      "doc": "押しボタン。",
+      "doc": "押しボタン。icon を与えると、文字の前に画像を出す(text が空なら画像だけのボタン。docs/adr/0048)。",
       "properties": {
         "x": {
           "type": "float",
@@ -604,6 +604,19 @@
           "declared_in": "Button",
           "doc": "既定は PRIMARY。",
           "default": "PRIMARY"
+        },
+        "icon": {
+          "type": {
+            "value": "Image"
+          },
+          "declared_in": "Button",
+          "doc": "文字の前に出す画像(既定は空で、出さない)。"
+        },
+        "icon_size": {
+          "type": "float",
+          "declared_in": "Button",
+          "doc": "icon を描く大きさ(論理座標の幅・高さ。既定 16)。",
+          "default": 16
         }
       },
       "handlers": {
@@ -2271,7 +2284,7 @@
       ],
       "kind": "widget",
       "category": "display",
-      "doc": "テキストを表示する。改行文字で行を分け、word_wrap なら幅で折り返す(docs/adr/0019)。",
+      "doc": "テキストを表示する。改行文字で行を分け、word_wrap なら幅で折り返す(docs/adr/0019)。 icon を与えると、文字の前(段落の向きの始め)に画像を出す(docs/adr/0048)。",
       "properties": {
         "x": {
           "type": "float",
@@ -2407,6 +2420,19 @@
           "declared_in": "Label",
           "doc": "幅で折り返すか(既定 false)。折り返すと、望む高さは今の幅で折り返したときの高さになり、最小の幅は最も長い単語の幅になる。",
           "default": false
+        },
+        "icon": {
+          "type": {
+            "value": "Image"
+          },
+          "declared_in": "Label",
+          "doc": "文字の前に出す画像(既定は空で、出さない)。"
+        },
+        "icon_size": {
+          "type": "float",
+          "declared_in": "Label",
+          "doc": "icon を描く大きさ(論理座標の幅・高さ。既定 16)。",
+          "default": 16
         }
       },
       "handlers": {
@@ -2698,6 +2724,203 @@
       "preferred_size": {
         "width": 160,
         "height": 8
+      }
+    },
+    "ImageBox": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "display",
+      "doc": "画像を表示する部品(docs/adr/0048)。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
+          "default": true
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "default": true
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget",
+          "default": "NONE"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget",
+          "default": "ARROW"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
+        "image": {
+          "type": {
+            "value": "Image"
+          },
+          "declared_in": "ImageBox"
+        },
+        "fit": {
+          "type": {
+            "enum": "ImageFit"
+          },
+          "declared_in": "ImageBox",
+          "doc": "既定は NONE。",
+          "default": "NONE"
+        }
+      },
+      "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        }
+      },
+      "preferred_size": {
+        "width": 0,
+        "height": 0
       }
     },
     "ListView": {
@@ -4347,7 +4570,7 @@
             "value": "Image"
           },
           "declared_in": "Action",
-          "doc": "ツールバーのボタンに出す画像(メニューには出さない)。"
+          "doc": "ツールバーのボタン・メニューの項目に出す画像(メニューでは文字の前。checkable でチェックしているなら画像を枠で囲む)。"
         },
         "tooltip": {
           "type": "string",
@@ -5233,6 +5456,21 @@
         "CLICK": "クリックでだけフォーカスを得る",
         "TAB_AND_CLICK": "Tab キーとクリックの両方"
       }
+    },
+    "ImageFit": {
+      "values": [
+        "NONE",
+        "CONTAIN",
+        "COVER",
+        "STRETCH"
+      ],
+      "docs": {
+        "NONE": "元の大きさのまま",
+        "CONTAIN": "縦横の比を保ち、全体が収まる大きさにする",
+        "COVER": "縦横の比を保ち、隙間なく覆う大きさにする(はみ出した部分は切れる)",
+        "STRETCH": "縦横の比を変えて、部品の大きさにする"
+      },
+      "doc": "画像を部品の大きさにどう合わせるか。どれも部品の中ほどに置き、はみ出した部分は描かない。"
     },
     "MouseCursor": {
       "values": [

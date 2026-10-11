@@ -59,3 +59,11 @@ PaintBox の Canvas に、棒グラフ・円グラフ・回転とグラデーシ
 ![ドラッグ&ドロップ](drop.png)
 
 @include drop.cpp
+
+## 画像
+
+`ImageBox` の合わせ方(`fit`)を並べ、ラベル・ボタン・メニュー・ツールバーに画像を出します。
+
+![画像](images.png)
+
+@include images.cpp

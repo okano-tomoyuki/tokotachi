@@ -46,7 +46,7 @@ public:
 
     Property<std::string> text;
     Property<Shortcut> shortcut;
-    /// ツールバーのボタンに出す画像(メニューには出さない)。
+    /// ツールバーのボタン・メニューの項目に出す画像(メニューでは文字の前。checkable でチェックしているなら画像を枠で囲む)。
     Property<Image> icon;
     /// ツールバーのボタンのツールチップ(空なら、text とショートカットから作る)。
     Property<std::string> tooltip;
