@@ -135,6 +135,12 @@ const ICONS: Readonly<Record<string, ReactNode>> = {
       <path className="a" d="M3.5 11V5.5h9" />
     </>
   ),
+  GroupBox: (
+    <>
+      <path d="M3.5 4.5h-2v9h13v-9h-5" />
+      <path className="a" d="M4.5 4.5h4" />
+    </>
+  ),
   TabWidget: (
     <>
       <rect x="1.5" y="5.5" width="13" height="9" />

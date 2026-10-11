@@ -27,6 +27,8 @@ struct WidgetAccess
     static const std::vector<Widget*>& children(const Widget* w) { return w->children_; }
     static const Rect& bounds(const Widget* w) { return w->bounds_; }
     static Window* window_of(const Widget* w) { return w->get_window(); }
+    static Key mnemonic_key(const Widget* w) { return w->mnemonic_key(); }
+    static void mnemonic_activated(Widget* w) { w->mnemonic_activated(); }
     // bounds への代入と違い、親への描き直しの依頼と resized を行わない。
     static void set_bounds_raw(Widget* w, const Rect& r) { w->bounds_ = r; }
     static void notify_bounds(Widget* w, const Rect& old) { w->notify_bounds(old); }

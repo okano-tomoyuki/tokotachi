@@ -3443,6 +3443,185 @@ TEST(splitter_hidden_pane_takes_no_space)
     CHECK(b->showing && near(b->x, 156) && near(b->width, 100) && near(c->x, 262) && near(c->width, 144));
 }
 
+TEST(mnemonics_move_focus_and_click)
+{
+    tokotachi::Window window("t", 400, 400);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    new tokotachi::Label(&window, "名前(&N)");
+    tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(&window);
+    int saves = 0;
+    tokotachi::Button* button_save = new tokotachi::Button(&window, "保存(&S)");
+    button_save->on_click = [&](tokotachi::Object*) { ++saves; };
+    tokotachi::CheckBox* check_box_over = new tokotachi::CheckBox(&window, "上書き(&O)");
+    tokotachi::GroupBox* group_box_out = new tokotachi::GroupBox(&window, "出力(&U)");
+    tokotachi::BoxLayout* box_out = new tokotachi::BoxLayout(group_box_out);
+    tokotachi::LineEdit* line_edit_inner = new tokotachi::LineEdit(group_box_out);
+    box_out->add(line_edit_inner);
+    tokotachi::Label* label_memo = new tokotachi::Label(&window, "メモ(&M)");
+    label_memo->buddy = line_edit_inner;
+    tokotachi::Label* label_amp = new tokotachi::Label(&window, "A && B");
+    // 同じキーが 2 つ: 押すたびに順に移る
+    new tokotachi::Label(&window, "一(&D)");
+    tokotachi::LineEdit* line_edit_d1 = new tokotachi::LineEdit(&window);
+    new tokotachi::Label(&window, "二(&D)");
+    tokotachi::LineEdit* line_edit_d2 = new tokotachi::LineEdit(&window);
+    const std::vector<tokotachi::Widget*> children = window.children;
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        box->add(children[i]);
+    }
+    window.visible = true;
+    window.apply_layout();
+
+    // Alt を押している間は下線を出す
+    dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
+    CHECK(window.impl()->cues);
+    dispatch_key(window, SDLK_N, true, SDL_KMOD_LALT);
+    CHECK(line_edit_name->focused);  // ラベルの次の部品
+    dispatch_key(window, SDLK_LALT, false);
+    CHECK(!window.impl()->cues);
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LALT);
+    CHECK(saves == 1 && button_save->focused);
+    dispatch_key(window, SDLK_O, true, SDL_KMOD_LALT);
+    CHECK(check_box_over->checked);
+    dispatch_key(window, SDLK_U, true, SDL_KMOD_LALT);
+    CHECK(line_edit_inner->focused);  // 枠の中の最初の部品
+    line_edit_name->focused = true;
+    dispatch_key(window, SDLK_M, true, SDL_KMOD_LALT);
+    CHECK(line_edit_inner->focused);  // buddy
+    dispatch_key(window, SDLK_D, true, SDL_KMOD_LALT);
+    CHECK(line_edit_d1->focused);
+    dispatch_key(window, SDLK_D, true, SDL_KMOD_LALT);
+    CHECK(line_edit_d2->focused);
+    dispatch_key(window, SDLK_D, true, SDL_KMOD_LALT);
+    CHECK(line_edit_d1->focused);
+    // Ctrl と一緒・無効な部品・当てはまらないキーは何もしない
+    dispatch_key(window, SDLK_S, true, static_cast<SDL_Keymod>(SDL_KMOD_LALT | SDL_KMOD_LCTRL));
+    button_save->enabled = false;
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LALT);
+    CHECK(saves == 1);
+    // 「&&」は「&」を出す(ニーモニックではない)
+    CHECK(label_amp->text == "A && B");
+    const tokotachi::TextLayout amp("A & B", tokotachi::Font(), label_amp->display_scale);
+    CHECK(label_amp->preferred_size.get().width == std::ceil(amp.width()));
+}
+
+TEST(group_box_content)
+{
+    tokotachi::Window window("t", 300, 300);
+    tokotachi::GroupBox* group_box_out = new tokotachi::GroupBox(&window, "出力");
+    tokotachi::BoxLayout* box_out = new tokotachi::BoxLayout(group_box_out);
+    tokotachi::Button* button_go = new tokotachi::Button(group_box_out, "実行");
+    box_out->add(button_go);
+    const tokotachi::Size inner = button_go->preferred_size;
+    const tokotachi::Size outer = group_box_out->preferred_size;
+    CHECK(outer.width >= inner.width + 24 && outer.height > inner.height + 24);
+    group_box_out->bounds = tokotachi::Rect(10, 10, 200, 120);
+    window.visible = true;
+    window.apply_layout();
+    // 中の部品は、枠と見出しの内側に並ぶ
+    const tokotachi::Rect content = group_box_out->content_rect;
+    CHECK(content.y > 12 && near(content.x, 12) && near(content.right(), 188) && near(content.bottom(), 108));
+    CHECK(near(button_go->x, content.x) && near(button_go->y, content.y) && near(button_go->width, content.width));
+    // 見出しが無ければ、上も同じ余白
+    group_box_out->title = "";
+    window.apply_layout();
+    CHECK(near(group_box_out->content_rect.get().y, 12));
+}
+
+TEST(progress_bar_indeterminate)
+{
+    tokotachi::Window window("t", 300, 100);
+    tokotachi::ProgressBar* progress_bar_busy = new tokotachi::ProgressBar(&window);
+    progress_bar_busy->text_visible = true;
+    const float with_text = progress_bar_busy->preferred_size.get().width;
+    progress_bar_busy->indeterminate = true;
+    CHECK(progress_bar_busy->preferred_size.get().width < with_text);  // 割合の文字は出さない
+    progress_bar_busy->bounds = tokotachi::Rect(0, 0, 200, 20);
+    window.visible = true;
+    // 動く部分(棒の 3 割)は、動き始めに棒の左寄りにある
+    tokotachi::Bitmap b = window.capture();
+    const float s = static_cast<float>(b.width()) / 300;
+    const tokotachi::Color on = b.pixel(static_cast<int>(60 * s), static_cast<int>(10 * s));
+    const tokotachi::Color off = b.pixel(static_cast<int>(150 * s), static_cast<int>(10 * s));
+    CHECK(on != off);
+    progress_bar_busy->indeterminate = false;
+    CHECK(progress_bar_busy->preferred_size.get().width == with_text);
+}
+
+TEST(spin_box_prefix_suffix_and_slider_ticks)
+{
+    tokotachi::Window window("t", 300, 100);
+    window.visible = true;
+    tokotachi::SpinBox* spin_box_weight = new tokotachi::SpinBox(&window);
+    spin_box_weight->bounds = tokotachi::Rect(10, 10, 140, 32);
+    spin_box_weight->maximum = 1000000;  // 幅が数値で決まるように(短い数値なら最小の幅)
+    const float plain = spin_box_weight->preferred_size.get().width;
+    spin_box_weight->suffix = " kg";
+    spin_box_weight->value = 5;
+    CHECK(spin_box_weight->text == "5 kg" && spin_box_weight->preferred_size.get().width > plain);
+    // 単位は付けても付けなくてもよい
+    const char* inputs[] = {"7", "8kg", " 9 kg ", "x kg"};
+    const double expected[] = {7, 8, 9, 9};
+    const char* shown[] = {"7 kg", "8 kg", "9 kg", "9 kg"};
+    for (int i = 0; i < 4; ++i)
+    {
+        dispatch_click(window, tokotachi::Point(30, 26));
+        dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+        dispatch_text(window, inputs[i]);
+        dispatch_key(window, SDLK_RETURN);
+        CHECK(spin_box_weight->value == expected[i] && spin_box_weight->text == shown[i]);
+    }
+    spin_box_weight->prefix = "約";
+    CHECK(spin_box_weight->text == "約9 kg");
+
+    tokotachi::Slider* slider_level = new tokotachi::Slider(&window);
+    const float thin = slider_level->preferred_size.get().height;
+    slider_level->tick_interval = 10;
+    CHECK(slider_level->preferred_size.get().height > thin);
+    slider_level->tick_interval = -1;  // 0 以下は目盛り無し
+    CHECK(slider_level->tick_interval == 0 && slider_level->preferred_size.get().height == thin);
+}
+
+TEST(splitter_double_click_and_keys)
+{
+    tokotachi::Window window("t", 600, 200);
+    tokotachi::Splitter* split = new tokotachi::Splitter(&window);
+    split->bounds = tokotachi::Rect(0, 0, 400, 200);
+    tokotachi::Widget* left = new tokotachi::Widget();
+    tokotachi::Widget* right = new tokotachi::Widget();
+    left->minimum_size = tokotachi::Size(50, 0);
+    right->minimum_size = tokotachi::Size(50, 0);
+    tokotachi::SplitterPane* left_pane = split->add_widget(left, 0);
+    split->add_widget(right, 1);
+    window.visible = true;
+    window.apply_layout();
+    split->sizes = std::vector<float>{150, 244};
+    window.apply_layout();
+    int changes = 0;
+    split->on_change = [&](tokotachi::Object*) { ++changes; };
+    // ダブルクリック: stretch の小さい左をたたみ、もう一度で元の大きさに戻す
+    click_with(window, tokotachi::Point(153, 100), SDL_KMOD_NONE, 1);
+    click_with(window, tokotachi::Point(153, 100), SDL_KMOD_NONE, 2);
+    window.apply_layout();
+    CHECK(left_pane->collapsed && near(split->sizes.get()[1], 394) && changes == 1);
+    click_with(window, tokotachi::Point(3, 100), SDL_KMOD_NONE, 2);
+    window.apply_layout();
+    CHECK(!left_pane->collapsed && near(split->sizes.get()[0], 150) && near(split->sizes.get()[1], 244) && changes == 2);
+    // 境目を押した後は、矢印キーで動かし、Enter でたたむ
+    CHECK(split->focused);
+    dispatch_key(window, SDLK_RIGHT);
+    window.apply_layout();
+    CHECK(near(split->sizes.get()[0], 160) && changes == 3);
+    dispatch_key(window, SDLK_RETURN);
+    window.apply_layout();
+    CHECK(left_pane->collapsed);
+    // プログラムからも戻せる(on_change は呼ばない)
+    left_pane->collapsed = false;
+    window.apply_layout();
+    CHECK(!left_pane->collapsed && near(split->sizes.get()[0], 160) && changes == 4);
+}
+
 TEST(splitter_vertical_and_nested)
 {
     tokotachi::Window window("t", 300, 400);

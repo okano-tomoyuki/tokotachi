@@ -1,5 +1,6 @@
 #include <tokotachi/widgets/button_base.hpp>
 
+#include "../actions/mnemonic.hpp"
 #include "../core/property_impl.hpp"
 
 namespace tokotachi
@@ -11,12 +12,18 @@ ButtonBase::ButtonBase(Widget* parent_widget, const std::string& initial_text)
       TOKOTACHI_PROPERTY_MEMBER(ButtonBase, Font, font),
       TOKOTACHI_HANDLER_PROPERTY(ButtonBase, NotifyHandler, on_click),
       text_(initial_text),
+      mnemonic_offset_(std::string::npos),
+      mnemonic_(Key::UNKNOWN),
       hovered_(false),
       pressed_(false),
       pressed_in_(false)
 {
     focus_policy = FocusPolicy::TAB_AND_CLICK;
     cursor = MouseCursor::POINTING_HAND;
+    const detail::Mnemonic m = detail::parse_mnemonic(text_);
+    display_ = m.text;
+    mnemonic_offset_ = m.offset;
+    mnemonic_ = m.key;
 }
 
 void ButtonBase::set_text(const std::string& v)
@@ -26,6 +33,10 @@ void ButtonBase::set_text(const std::string& v)
         return;
     }
     text_ = v;
+    const detail::Mnemonic m = detail::parse_mnemonic(text_);
+    display_ = m.text;
+    mnemonic_offset_ = m.offset;
+    mnemonic_ = m.key;
     layout_ = TextLayout();
     invalidate();
     request_layout();
@@ -48,9 +59,25 @@ const TextLayout& ButtonBase::text_layout() const
     const float scale = display_scale;
     if (layout_.is_null() || layout_.scale() != scale)
     {
-        layout_ = TextLayout(text_, font_, scale);
+        layout_ = TextLayout(display_, font_, scale);
     }
     return layout_;
+}
+
+void ButtonBase::paint_mnemonic(Canvas& canvas, const Point& at, const Color& color) const
+{
+    if (mnemonic_cues())
+    {
+        detail::paint_mnemonic_underline(canvas, text_layout(), at, mnemonic_offset_, color);
+    }
+}
+
+Key ButtonBase::mnemonic_key() const { return mnemonic_; }
+
+void ButtonBase::mnemonic_activated()
+{
+    focused = true;
+    click();
 }
 
 void ButtonBase::click()

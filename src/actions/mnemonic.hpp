@@ -70,9 +70,10 @@ inline void paint_mnemonic_underline(Canvas& canvas, const TextLayout& layout, c
     {
         return;
     }
-    const float x0 = layout.caret_position(offset).x;
+    const Point caret = layout.caret_position(offset);
+    const float x0 = caret.x;
     const float x1 = layout.caret_position(layout.next_offset(offset)).x;
-    const float y = pos.y + layout.ascent() + 2;
+    const float y = pos.y + caret.y + layout.ascent() + 2;  // 折り返した行でも、その文字の行に引く
     canvas.fill_rect(Rect(pos.x + std::min(x0, x1), y, std::fabs(x1 - x0), 1), color);
 }
 

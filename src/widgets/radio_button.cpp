@@ -94,7 +94,8 @@ void RadioButton::paint(Canvas& canvas)
         ring.add_ellipse(c, radius - 0.5f, radius - 0.5f);
         canvas.stroke_path(ring, 1, enabled_now && is_hovered() ? theme::accent() : theme::border());
     }
-    detail::paint_toggle_text(canvas, text_layout(), r, focused, enabled_now);
+    const Point at = detail::paint_toggle_text(canvas, text_layout(), r, focused, enabled_now);
+    paint_mnemonic(canvas, at, enabled_now ? theme::text() : theme::text_disabled());
     Widget::paint(canvas);
 }
 

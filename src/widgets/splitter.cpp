@@ -17,6 +17,7 @@ const float Splitter::HANDLE = 6;
 namespace
 {
 const float GRAB_MARGIN = 2;  // 境目の外側でもつかめる幅(dp)
+const float KEY_STEP = 10;    // 矢印キーで境目を動かす幅(dp)
 }  // namespace
 
 // ---- SplitterPane ----
@@ -25,7 +26,7 @@ SplitterPane::SplitterPane(Splitter* splitter, Widget* pane_widget, int initial_
     : Object(splitter),
       TOKOTACHI_PROPERTY_MEMBER(SplitterPane, int, stretch),
       TOKOTACHI_PROPERTY_MEMBER(SplitterPane, bool, collapsible),
-      TOKOTACHI_READONLY_PROPERTY(SplitterPane, bool, collapsed),
+      TOKOTACHI_PROPERTY_GETTER(SplitterPane, bool, collapsed),
       TOKOTACHI_READONLY_PROPERTY(SplitterPane, Widget*, widget),
       splitter_(splitter),
       widget_(pane_widget),
@@ -45,6 +46,8 @@ void SplitterPane::set_stretch(const int& v)
 
 void SplitterPane::set_collapsible(const bool& v) { collapsible_ = v; }
 
+void SplitterPane::set_collapsed(const bool& v) { splitter_->collapse_pane(this, v); }
+
 // ---- Splitter ----
 
 Splitter::Splitter(Widget* parent_widget, Orientation initial_orientation)
@@ -57,6 +60,7 @@ Splitter::Splitter(Widget* parent_widget, Orientation initial_orientation)
       hover_handle_(-1),
       drag_handle_(-1),
       drag_offset_(0),
+      key_handle_(-1),
       destroying_(false)
 {
 }
@@ -194,6 +198,83 @@ namespace
 // 区画の、並ぶ向きの今の大きさ(たたんでいれば 0)。
 float extent_of(float size, bool collapsed) { return collapsed ? 0.0f : std::max(0.0f, size); }
 }  // namespace
+
+bool Splitter::collapse_pane(SplitterPane* pane, bool collapse)
+{
+    if (collapse == pane->collapsed_ || (collapse && !pane->collapsible_))
+    {
+        return false;
+    }
+    // 隣(後ろ、無ければ前)のたたんでいない区画が、大きさを受け持つ
+    const std::vector<SplitterPane*> shown = shown_panes();
+    const std::vector<SplitterPane*>::const_iterator at = std::find(shown.begin(), shown.end(), pane);
+    SplitterPane* neighbor = nullptr;
+    if (at != shown.end())
+    {
+        for (std::vector<SplitterPane*>::const_iterator it = at + 1; it != shown.end() && !neighbor; ++it)
+        {
+            neighbor = (*it)->collapsed_ ? nullptr : *it;
+        }
+        for (std::vector<SplitterPane*>::const_iterator it = at; it != shown.begin() && !neighbor;)
+        {
+            --it;
+            neighbor = (*it)->collapsed_ ? nullptr : *it;
+        }
+    }
+    if (collapse)
+    {
+        // 大きさは覚えておく(戻すときに使う)
+        if (neighbor)
+        {
+            neighbor->size_ = extent_of(neighbor->size_, false) + extent_of(pane->size_, false);
+        }
+    }
+    else
+    {
+        // 覚えている大きさ(最小・望む大きさ以上)で戻し、隣から最小を超える分だけもらう(足りない分は stretch で配り直す)
+        const float want = std::max(pane->size_, std::max(minimum_of(pane), along(pane->widget_->preferred_size.get())));
+        pane->size_ = want;
+        if (neighbor)
+        {
+            const float give = std::max(0.0f, std::min(want, neighbor->size_ - minimum_of(neighbor)));
+            neighbor->size_ -= give;
+        }
+    }
+    pane->collapsed_ = collapse;
+    pane->notify_changed(pane->collapsed);
+    mark_layout_dirty();
+    invalidate();
+    notify_changed(sizes);
+    return true;
+}
+
+void Splitter::toggle_handle(int i)
+{
+    const std::vector<SplitterPane*> shown = shown_panes();
+    if (i < 0 || i + 1 >= static_cast<int>(shown.size()))
+    {
+        return;
+    }
+    SplitterPane* a = shown[static_cast<std::size_t>(i)];
+    SplitterPane* b = shown[static_cast<std::size_t>(i + 1)];
+    bool changed = false;
+    if (a->collapsed_ || b->collapsed_)
+    {
+        changed = collapse_pane(a->collapsed_ ? a : b, false);
+    }
+    else
+    {
+        // stretch の小さい方(同じなら前)をたたむ。たためなければ、もう一方
+        SplitterPane* first = a->stretch_ <= b->stretch_ ? a : b;
+        SplitterPane* second = first == a ? b : a;
+        changed = collapse_pane(first->collapsible_ ? first : second, true);
+    }
+    if (changed)
+    {
+        Object* self = this;
+        detail::fire(on_change_, self);
+    }
+}
 
 void Splitter::fit(float available)
 {
@@ -388,13 +469,17 @@ int Splitter::handle_at(const Point& p) const
     return -1;
 }
 
-void Splitter::drag_to(float position)
+void Splitter::drag_to(int handle, float position)
 {
     const std::vector<SplitterPane*> shown = shown_panes();
-    SplitterPane* a = shown[static_cast<std::size_t>(drag_handle_)];
-    SplitterPane* b = shown[static_cast<std::size_t>(drag_handle_ + 1)];
+    if (handle < 0 || handle + 1 >= static_cast<int>(shown.size()))
+    {
+        return;
+    }
+    SplitterPane* a = shown[static_cast<std::size_t>(handle)];
+    SplitterPane* b = shown[static_cast<std::size_t>(handle + 1)];
     const float ea = extent_of(a->size_, a->collapsed_), eb = extent_of(b->size_, b->collapsed_);
-    const float start = handle_position(drag_handle_) - ea;
+    const float start = handle_position(handle) - ea;
     const float combined = ea + eb;
     const float min_a = std::min(minimum_of(a), combined), min_b = std::min(minimum_of(b), combined);
     // 前の区画の大きさを決め、最小より小さければたたむ(たためなければ最小)。後ろの区画も同じ。
@@ -456,9 +541,12 @@ void Splitter::paint(Canvas& canvas)
         {
             canvas.fill_rect(band, theme::selection_inactive());
         }
-        const Rect line = horizontal ? Rect(std::floor(h + HANDLE / 2), 0, 1, r.height)
-                                     : Rect(0, std::floor(h + HANDLE / 2), r.width, 1);
-        canvas.fill_rect(line, theme::border());
+        // キーで動かす境目は、フォーカスの色で太く示す
+        const bool keyed = i == key_handle_ && focused;
+        const float thick = keyed ? 2 : 1;
+        const Rect line = horizontal ? Rect(std::floor(h + (HANDLE - thick) / 2), 0, thick, r.height)
+                                     : Rect(0, std::floor(h + (HANDLE - thick) / 2), r.width, thick);
+        canvas.fill_rect(line, keyed ? theme::focus_ring() : theme::border());
     }
     Widget::paint(canvas);
 }
@@ -476,6 +564,16 @@ void Splitter::mouse_down(MouseEvent& e)
         return;
     }
     e.accepted = true;
+    // 境目を押したときだけフォーカスを得る(キーで動かすため)。区画の中を押したときには得ないよう、普段は NONE にしておく
+    key_handle_ = i;
+    focus_policy = FocusPolicy::CLICK;
+    focused = true;
+    invalidate();
+    if (e.clicks == 2)
+    {
+        toggle_handle(i);
+        return;
+    }
     drag_handle_ = i;
     drag_offset_ = along(e.pos) - handle_position(i);
     invalidate();
@@ -486,7 +584,7 @@ void Splitter::mouse_move(MouseEvent& e)
     Widget::mouse_move(e);
     if (drag_handle_ >= 0)
     {
-        drag_to(along(e.pos) - drag_offset_);
+        drag_to(drag_handle_, along(e.pos) - drag_offset_);
         return;
     }
     const int i = handle_at(e.pos);
@@ -514,6 +612,45 @@ void Splitter::mouse_up(MouseEvent& e)
         }
         invalidate();
     }
+}
+
+void Splitter::key_down(KeyEvent& e)
+{
+    Widget::key_down(e);
+    if (key_handle_ < 0 || key_handle_ + 1 >= static_cast<int>(shown_panes().size()) || e.modifiers != MODIFIER_NONE)
+    {
+        return;
+    }
+    const bool horizontal = orientation_ == Orientation::HORIZONTAL;
+    float step = 0;
+    if (e.key == (horizontal ? Key::LEFT : Key::UP))
+    {
+        step = -KEY_STEP;
+    }
+    else if (e.key == (horizontal ? Key::RIGHT : Key::DOWN))
+    {
+        step = KEY_STEP;
+    }
+    else if (e.key == Key::RETURN && !e.repeat)
+    {
+        e.accepted = true;
+        toggle_handle(key_handle_);
+        return;
+    }
+    else
+    {
+        return;
+    }
+    e.accepted = true;
+    drag_to(key_handle_, handle_position(key_handle_) + step);
+}
+
+void Splitter::focus_out()
+{
+    key_handle_ = -1;
+    focus_policy = FocusPolicy::NONE;
+    invalidate();
+    Widget::focus_out();
 }
 
 void Splitter::mouse_leave()

@@ -37,11 +37,22 @@ grid->set_column_stretch(1, 1);       // 2 列目が幅を受け持つ
 
 親の大きさに対する割合や、端からの距離で置きます(重ねる・隅に置く)。
 
+## 見出しの付いた枠
+
+`GroupBox` は、関係する部品を見出しの付いた枠でまとめます。付けたレイアウトは、枠と見出しの内側(`content_rect`)に並べます。
+
+```cpp
+tokotachi::GroupBox* group_box_output = new tokotachi::GroupBox(&window, "出力(&O)");
+tokotachi::BoxLayout* box_output = new tokotachi::BoxLayout(group_box_output);
+box_output->add(new tokotachi::CheckBox(group_box_output, "上書きする"));
+```
+
 ## スクロールと分割
 
 - `ScrollArea`: 中身が見える範囲より大きいとき、スクロールして見せます(`content` に中身を代入)。
 - `Splitter`: 区画を並べ、境目をドラッグして大きさを変えます。`add_widget(部品, stretch)` の stretch 0 の区画は、ウィンドウの大きさが
   変わっても大きさを保ちます。区画は端まで寄せるとたためます。`sizes` で大きさを保存・復元できます。
+  境目をダブルクリックすると、隣の区画をたたむ・戻します(`SplitterPane::collapsed` でも)。境目を押した後は、矢印キーで動かせます。
 
 ```cpp
 tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);

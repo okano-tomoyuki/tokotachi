@@ -151,6 +151,34 @@ bool takes_click_focus(const Widget* w)
     return p == FocusPolicy::CLICK || p == FocusPolicy::TAB_AND_CLICK;
 }
 
+// w が root か、その子孫か。
+bool within(const Widget* w, const Widget* root)
+{
+    for (; w; w = WidgetAccess::parent_of(w))
+    {
+        if (w == root)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// 表示されている部品を木の前順に並べる。
+void collect_displayed(Widget* w, std::vector<Widget*>& out)
+{
+    if (!WidgetAccess::displayed(w))
+    {
+        return;
+    }
+    out.push_back(w);
+    const std::vector<Widget*>& children = WidgetAccess::children(w);
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        collect_displayed(children[i], out);
+    }
+}
+
 void collect_focusable(Widget* w, std::vector<Widget*>& out)
 {
     if (!WidgetAccess::displayed(w))
@@ -174,7 +202,8 @@ WindowImpl::WindowImpl(Window* q_)
     : q(q_), window(nullptr), modal_parent(nullptr), renderer(nullptr), texture(nullptr), pixel_width(0), pixel_height(0), scale(1),
       density(1), shown(false), popup(false), popup_parent(nullptr), tooltip_timer(nullptr), tooltip(nullptr), layout_pending(true),
       hover(nullptr), grab(nullptr), focus(nullptr), text_input_active(false),
-      ime_dirty(false)
+      ime_dirty(false),
+      cues(false)
 {
     dirty.x0 = dirty.y0 = dirty.x1 = dirty.y1 = 0;
     drag.active = false;
@@ -713,6 +742,85 @@ void WindowImpl::focus_next(bool forward)
     set_focus(list[index]);
 }
 
+bool WindowImpl::focus_after(Widget* w)
+{
+    // 表示されている部品をタブの順(木の前順)に並べ、w の子孫の後ろから、フォーカスを受ける部品を探す
+    std::vector<Widget*> all;
+    collect_displayed(q, all);
+    std::vector<Widget*>::iterator it = std::find(all.begin(), all.end(), w);
+    if (it == all.end())
+    {
+        return false;
+    }
+    for (++it; it != all.end(); ++it)
+    {
+        if (!within(w, *it) && !within(*it, w) && takes_tab_focus(*it))
+        {
+            set_focus(*it);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WindowImpl::focus_first_in(Widget* w)
+{
+    std::vector<Widget*> list;
+    collect_focusable(w, list);
+    if (list.empty())
+    {
+        return false;
+    }
+    set_focus(list[0]);
+    return true;
+}
+
+bool WindowImpl::activate_mnemonic(Key key)
+{
+    if (key == Key::UNKNOWN)
+    {
+        return false;
+    }
+    std::vector<Widget*> all, hits;
+    collect_displayed(q, all);
+    for (std::size_t i = 0; i < all.size(); ++i)
+    {
+        if (all[i]->effectively_enabled && WidgetAccess::mnemonic_key(all[i]) == key)
+        {
+            hits.push_back(all[i]);
+        }
+    }
+    if (hits.empty())
+    {
+        return false;
+    }
+    // 同じキーの部品が複数あれば、フォーカスのある部品(またはその祖先)の次の部品へ
+    Widget* target = hits[0];
+    if (focus && hits.size() > 1)
+    {
+        const std::vector<Widget*>::iterator at = std::find(all.begin(), all.end(), focus);
+        for (std::size_t i = 0; i < hits.size(); ++i)
+        {
+            if (std::find(all.begin(), at, hits[i]) == at && !within(focus, hits[i]))
+            {
+                target = hits[i];
+                break;
+            }
+        }
+    }
+    WidgetAccess::mnemonic_activated(target);
+    return true;
+}
+
+void WindowImpl::set_cues(bool on)
+{
+    if (on != cues)
+    {
+        cues = on;
+        q->invalidate();
+    }
+}
+
 void WindowImpl::update_text_input()
 {
     const bool want = focus && focus->accepts_text_input && focus->showing && focus->effectively_enabled;
@@ -795,6 +903,7 @@ void WindowImpl::widget_hidden(Widget* w)
 void WindowImpl::mouse_down(const Point& p, MouseButton button, int clicks)
 {
     hide_tooltip();
+    set_cues(false);
     Widget* target = widget_at(p);
     if (!target->effectively_enabled)
     {
@@ -884,6 +993,11 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
         }
         return;
     }
+    // Alt を押している間は、部品のニーモニックの下線を出す(docs/adr/0049)
+    if (k == Key::ALT)
+    {
+        set_cues(e.down);
+    }
     // メニューバーのキーボードの操作(Alt・F10・Alt+ニーモニック)を先に(docs/adr/0027)。
     if (MenuBar* bar = q->menu_bar)
     {
@@ -892,6 +1006,12 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
         {
             return;
         }
+    }
+    // 部品のニーモニック(Alt+文字)。メニューバーのものが優先
+    if (e.down && k != Key::ALT && (mods & MODIFIER_ALT) && !(mods & (MODIFIER_CONTROL | MODIFIER_SHIFT | MODIFIER_META)) &&
+        activate_mnemonic(k))
+    {
+        return;
     }
     if (e.down && k == Key::TAB && !(mods & (MODIFIER_CONTROL | MODIFIER_ALT)))
     {
@@ -1163,6 +1283,7 @@ void WindowImpl::handle(const SDL_Event& e)
         break;
     }
     case SDL_EVENT_WINDOW_FOCUS_LOST:
+        set_cues(false);
         if (MenuBar* bar = q->menu_bar)
         {
             MenuBarAccess::cancel(bar);

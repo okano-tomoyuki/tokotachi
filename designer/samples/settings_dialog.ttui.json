@@ -82,22 +82,24 @@
         },
         {
           "widget": {
-            "name": "area_free",
-            "class": "Widget",
+            "name": "group_box_zoom",
+            "class": "GroupBox",
             "properties": {
-              "minimum_size": { "height": 48 }
+              "minimum_size": { "height": 76 },
+              "title": "拡大率(&Z)"
             },
             "children": [
               {
                 "name": "slider_zoom",
                 "class": "Slider",
                 "properties": {
-                  "x": 0,
-                  "y": 8,
+                  "x": 12,
+                  "y": 28,
                   "width": 200,
-                  "height": 32,
+                  "height": 38,
                   "maximum": 200,
-                  "value": 100
+                  "value": 100,
+                  "tick_interval": 50
                 },
                 "events": { "on_change": "slider_zoom_change" }
               },
@@ -105,9 +107,9 @@
                 "name": "level_bar_zoom",
                 "class": "LevelBar",
                 "properties": {
-                  "x": 216,
-                  "y": 16,
-                  "width": 160,
+                  "x": 224,
+                  "y": 36,
+                  "width": 128,
                   "height": 16,
                   "maximum": 200,
                   "value": 100,

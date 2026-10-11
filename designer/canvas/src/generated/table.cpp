@@ -2702,6 +2702,26 @@ bool set_SpinBox(tokotachi::SpinBox* o, const std::string& p, const Json& v)
         o->decimals = t;
         return true;
     }
+    if (p == "prefix")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->prefix = t;
+        return true;
+    }
+    if (p == "suffix")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->suffix = t;
+        return true;
+    }
     return false;
 }
 
@@ -2800,6 +2820,16 @@ bool get_SpinBox(tokotachi::SpinBox* o, const std::string& p, Json& out)
     if (p == "decimals")
     {
         out = to_json(o->decimals.get());
+        return true;
+    }
+    if (p == "prefix")
+    {
+        out = to_json(o->prefix.get());
+        return true;
+    }
+    if (p == "suffix")
+    {
+        out = to_json(o->suffix.get());
         return true;
     }
     return false;
@@ -2997,6 +3027,16 @@ bool set_Slider(tokotachi::Slider* o, const std::string& p, const Json& v)
         o->orientation = t;
         return true;
     }
+    if (p == "tick_interval")
+    {
+        double t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->tick_interval = t;
+        return true;
+    }
     return false;
 }
 
@@ -3095,6 +3135,11 @@ bool get_Slider(tokotachi::Slider* o, const std::string& p, Json& out)
     if (p == "orientation")
     {
         out = to_json(o->orientation.get());
+        return true;
+    }
+    if (p == "tick_interval")
+    {
+        out = to_json(o->tick_interval.get());
         return true;
     }
     return false;
@@ -3847,6 +3892,16 @@ bool set_ProgressBar(tokotachi::ProgressBar* o, const std::string& p, const Json
         o->text_visible = t;
         return true;
     }
+    if (p == "indeterminate")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->indeterminate = t;
+        return true;
+    }
     return false;
 }
 
@@ -3935,6 +3990,11 @@ bool get_ProgressBar(tokotachi::ProgressBar* o, const std::string& p, Json& out)
     if (p == "text_visible")
     {
         out = to_json(o->text_visible.get());
+        return true;
+    }
+    if (p == "indeterminate")
+    {
+        out = to_json(o->indeterminate.get());
         return true;
     }
     return false;
@@ -5010,6 +5070,226 @@ bool get_Widget(tokotachi::Widget* o, const std::string& p, Json& out)
     if (p == "accepts_drops")
     {
         out = to_json(o->accepts_drops.get());
+        return true;
+    }
+    return false;
+}
+
+bool set_GroupBox(tokotachi::GroupBox* o, const std::string& p, const Json& v)
+{
+    if (p == "x")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->x = t;
+        return true;
+    }
+    if (p == "y")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->y = t;
+        return true;
+    }
+    if (p == "width")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->width = t;
+        return true;
+    }
+    if (p == "height")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->height = t;
+        return true;
+    }
+    if (p == "minimum_size")
+    {
+        tokotachi::Size t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->minimum_size = t;
+        return true;
+    }
+    if (p == "maximum_size")
+    {
+        tokotachi::Size t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->maximum_size = t;
+        return true;
+    }
+    if (p == "visible")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->visible = t;
+        return true;
+    }
+    if (p == "enabled")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->enabled = t;
+        return true;
+    }
+    if (p == "focus_policy")
+    {
+        tokotachi::FocusPolicy t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->focus_policy = t;
+        return true;
+    }
+    if (p == "cursor")
+    {
+        tokotachi::MouseCursor t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->cursor = t;
+        return true;
+    }
+    if (p == "tooltip")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->tooltip = t;
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
+    if (p == "accepts_drops")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->accepts_drops = t;
+        return true;
+    }
+    if (p == "title")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->title = t;
+        return true;
+    }
+    return false;
+}
+
+bool get_GroupBox(tokotachi::GroupBox* o, const std::string& p, Json& out)
+{
+    if (p == "x")
+    {
+        out = to_json(o->x.get());
+        return true;
+    }
+    if (p == "y")
+    {
+        out = to_json(o->y.get());
+        return true;
+    }
+    if (p == "width")
+    {
+        out = to_json(o->width.get());
+        return true;
+    }
+    if (p == "height")
+    {
+        out = to_json(o->height.get());
+        return true;
+    }
+    if (p == "minimum_size")
+    {
+        out = to_json(o->minimum_size.get());
+        return true;
+    }
+    if (p == "maximum_size")
+    {
+        out = to_json(o->maximum_size.get());
+        return true;
+    }
+    if (p == "visible")
+    {
+        out = to_json(o->visible.get());
+        return true;
+    }
+    if (p == "enabled")
+    {
+        out = to_json(o->enabled.get());
+        return true;
+    }
+    if (p == "focus_policy")
+    {
+        out = to_json(o->focus_policy.get());
+        return true;
+    }
+    if (p == "cursor")
+    {
+        out = to_json(o->cursor.get());
+        return true;
+    }
+    if (p == "tooltip")
+    {
+        out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
+        return true;
+    }
+    if (p == "accepts_drops")
+    {
+        out = to_json(o->accepts_drops.get());
+        return true;
+    }
+    if (p == "title")
+    {
+        out = to_json(o->title.get());
         return true;
     }
     return false;
@@ -6947,6 +7227,16 @@ bool set_SplitterPane(tokotachi::SplitterPane* o, const std::string& p, const Js
         o->collapsible = t;
         return true;
     }
+    if (p == "collapsed")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->collapsed = t;
+        return true;
+    }
     return false;
 }
 
@@ -6960,6 +7250,11 @@ bool get_SplitterPane(tokotachi::SplitterPane* o, const std::string& p, Json& ou
     if (p == "collapsible")
     {
         out = to_json(o->collapsible.get());
+        return true;
+    }
+    if (p == "collapsed")
+    {
+        out = to_json(o->collapsed.get());
         return true;
     }
     return false;
@@ -7081,6 +7376,10 @@ tokotachi::Object* create(const std::string& cls, tokotachi::Object* parent)
     {
         return new tokotachi::Widget(widget);
     }
+    if (cls == "GroupBox")
+    {
+        return new tokotachi::GroupBox(widget);
+    }
     if (cls == "TabWidget")
     {
         return new tokotachi::TabWidget(widget);
@@ -7197,6 +7496,10 @@ bool set_property(tokotachi::Object* object, const std::string& cls, const std::
     if (cls == "Widget")
     {
         return set_Widget(static_cast<tokotachi::Widget*>(object), property, value);
+    }
+    if (cls == "GroupBox")
+    {
+        return set_GroupBox(static_cast<tokotachi::GroupBox*>(object), property, value);
     }
     if (cls == "TabWidget")
     {
@@ -7331,6 +7634,10 @@ bool get_property(tokotachi::Object* object, const std::string& cls, const std::
     {
         return get_Widget(static_cast<tokotachi::Widget*>(object), property, out);
     }
+    if (cls == "GroupBox")
+    {
+        return get_GroupBox(static_cast<tokotachi::GroupBox*>(object), property, out);
+    }
     if (cls == "TabWidget")
     {
         return get_TabWidget(static_cast<tokotachi::TabWidget*>(object), property, out);
@@ -7430,11 +7737,11 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "SpinBox")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "single_step", "page_step", "decimals"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "single_step", "page_step", "decimals", "prefix", "suffix"};
     }
     if (cls == "Slider")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "single_step", "page_step", "orientation"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "single_step", "page_step", "orientation", "tick_interval"};
     }
     if (cls == "ComboBox")
     {
@@ -7446,7 +7753,7 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "ProgressBar")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "text_visible"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "minimum", "maximum", "value", "text_visible", "indeterminate"};
     }
     if (cls == "ImageBox")
     {
@@ -7463,6 +7770,10 @@ std::vector<std::string> property_names(const std::string& cls)
     if (cls == "Widget")
     {
         return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops"};
+    }
+    if (cls == "GroupBox")
+    {
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "title"};
     }
     if (cls == "TabWidget")
     {
@@ -7522,7 +7833,7 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "SplitterPane")
     {
-        return std::vector<std::string>{"stretch", "collapsible"};
+        return std::vector<std::string>{"stretch", "collapsible", "collapsed"};
     }
     if (cls == "Column")
     {
@@ -7533,7 +7844,7 @@ std::vector<std::string> property_names(const std::string& cls)
 
 std::vector<std::string> creatable_classes()
 {
-    return std::vector<std::string>{"Button", "CheckBox", "RadioButton", "LineEdit", "TextEdit", "SpinBox", "Slider", "ComboBox", "Label", "ProgressBar", "ImageBox", "ListView", "TreeView", "Widget", "TabWidget", "Splitter", "ScrollArea", "PaintBox", "Timer", "BoxLayout", "GridLayout", "PlaceLayout", "Action", "MenuBar", "ToolBar", "StatusBar"};
+    return std::vector<std::string>{"Button", "CheckBox", "RadioButton", "LineEdit", "TextEdit", "SpinBox", "Slider", "ComboBox", "Label", "ProgressBar", "ImageBox", "ListView", "TreeView", "Widget", "GroupBox", "TabWidget", "Splitter", "ScrollArea", "PaintBox", "Timer", "BoxLayout", "GridLayout", "PlaceLayout", "Action", "MenuBar", "ToolBar", "StatusBar"};
 }
 
 }  // namespace ttc

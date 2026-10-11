@@ -58,7 +58,7 @@ float Button::icon_extent() const
     {
         return 0;
     }
-    return text.get().empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
+    return text_layout().text().empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
 }
 
 void Button::set_style(const ButtonStyle& v)
@@ -71,7 +71,7 @@ Size Button::compute_preferred_size() const
 {
     const TextLayout& l = text_layout();
     const float h = std::ceil(std::max(l.height(), icon_.is_null() ? 0.0f : icon_size_)) + 16;
-    if (!icon_.is_null() && text.get().empty())
+    if (!icon_.is_null() && l.text().empty())
     {
         return Size(std::max(h, icon_size_ + 16), h);  // 画像だけ: 正方形に近く
     }
@@ -123,12 +123,14 @@ void Button::paint(Canvas& canvas)
     // 画像と文字をひとまとまりとして中ほどに置く
     const TextLayout& l = text_layout();
     const float extent = icon_extent();
-    const float x = (r.width - extent - (text.get().empty() ? 0 : l.width())) / 2;
+    const float x = (r.width - extent - (l.text().empty() ? 0 : l.width())) / 2;
     if (!icon_.is_null())
     {
         canvas.draw_image(icon_, Rect(x, (r.height - icon_size_) / 2, icon_size_, icon_size_), enabled_now ? 1.0f : 0.4f);
     }
-    canvas.draw_text(l, Point(x + extent, (r.height - l.height()) / 2), fg);
+    const Point at(x + extent, (r.height - l.height()) / 2);
+    canvas.draw_text(l, at, fg);
+    paint_mnemonic(canvas, at, fg);
     Widget::paint(canvas);
 }
 

@@ -56,6 +56,13 @@ struct WindowImpl
 
     void set_focus(Widget* w);
     void focus_next(bool forward);
+    /// タブの順で w の後ろ(子孫を除く)・w か子孫の最初の部品へフォーカスを移す(docs/adr/0049)。
+    bool focus_after(Widget* w);
+    bool focus_first_in(Widget* w);
+    /// Alt+key のニーモニックを持つ部品を探して知らせる。見つかれば true。
+    bool activate_mnemonic(Key key);
+    /// ニーモニックの下線を出すか(Alt を押している間)。変われば全体を描き直す。
+    void set_cues(bool on);
     void update_text_input();
     void update_input_method_area();
     void widget_destroyed(Widget* w);
@@ -103,6 +110,7 @@ struct WindowImpl
     Widget* focus;
     bool text_input_active;
     bool ime_dirty;
+    bool cues;  ///< ニーモニックの下線を出す(Alt を押している間)
     SDL_Cursor* cursors[7];
 
     // w の cursor が変わった(w がポインタの下・捕捉中なら、OS のカーソルを変える)。

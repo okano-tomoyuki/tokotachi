@@ -16,6 +16,10 @@ namespace
 {
 const float BAR_HEIGHT = 8;  // 棒の太さ(dp)
 const float TEXT_GAP = 8;    // 棒と割合の文字の間(dp)
+const int FRAME = 16;              // 動かす間隔(ミリ秒)
+const float PERIOD = 1500;         // 動く部分が端から端まで動く時間(ミリ秒)
+const float SEGMENT = 0.3f;        // 動く部分の長さ(棒の長さとの比)
+const float START_PHASE = 0.35f;   // 動き始めの位置(最初に描いたときにも見えるように)
 }  // namespace
 
 ProgressBar::ProgressBar(Widget* parent_widget)
@@ -24,12 +28,47 @@ ProgressBar::ProgressBar(Widget* parent_widget)
       TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ProgressBar, double, maximum),
       TOKOTACHI_PROPERTY_GETTER(ProgressBar, double, value),
       TOKOTACHI_PROPERTY_GETTER(ProgressBar, bool, text_visible),
+      TOKOTACHI_PROPERTY_GETTER(ProgressBar, bool, indeterminate),
       minimum_(0),
       maximum_(100),
       value_(0),
       text_visible_(false),
+      indeterminate_(false),
+      phase_(START_PHASE),
+      animation_(this),
       layout_percent_(-1)
 {
+    animation_.interval = FRAME;
+    animation_.on_timer = [this](Object*)
+    {
+        if (!indeterminate_ || !showing)
+        {
+            animation_.enabled = false;  // 隠れている間は止める(また描くときに動かし始める)
+            return;
+        }
+        phase_ += FRAME / PERIOD;
+        if (phase_ >= 1)
+        {
+            phase_ -= 1;
+        }
+        invalidate();
+    };
+}
+
+void ProgressBar::set_indeterminate(const bool& v)
+{
+    if (v == indeterminate_)
+    {
+        return;
+    }
+    indeterminate_ = v;
+    phase_ = START_PHASE;
+    if (!v)
+    {
+        animation_.enabled = false;
+    }
+    invalidate();
+    request_layout();
 }
 
 void ProgressBar::set_minimum(const double& v)
@@ -111,7 +150,7 @@ void ProgressBar::scale_changed() { layout_ = TextLayout(); }
 
 Size ProgressBar::compute_preferred_size() const
 {
-    if (!text_visible_)
+    if (!shows_text())
     {
         return Size(160, BAR_HEIGHT);
     }
@@ -121,16 +160,32 @@ Size ProgressBar::compute_preferred_size() const
 Size ProgressBar::compute_minimum_size() const
 {
     const Size p = compute_preferred_size();
-    return Size(text_visible_ ? 48 + TEXT_GAP + text_width() : 48, p.height);
+    return Size(shows_text() ? 48 + TEXT_GAP + text_width() : 48, p.height);
 }
 
 void ProgressBar::paint(Canvas& canvas)
 {
     const Rect r = local_rect;
     const bool enabled_now = effectively_enabled;
-    const float text_room = text_visible_ ? TEXT_GAP + text_width() : 0;
+    const float text_room = shows_text() ? TEXT_GAP + text_width() : 0;
     const Rect bar(0, (r.height - BAR_HEIGHT) / 2, std::max(0.0f, r.width - text_room), BAR_HEIGHT);
     canvas.fill_round_rect(bar, BAR_HEIGHT / 2, enabled_now ? theme::scroll_track() : theme::field_disabled());
+    if (indeterminate_)
+    {
+        // 棒の一部(SEGMENT)が左の外から右の外へ動く。棒の外は描かない
+        if (!animation_.enabled.get())
+        {
+            animation_.enabled = true;
+        }
+        const float x = bar.x + (phase_ * (1 + SEGMENT) - SEGMENT) * bar.width;
+        canvas.save();
+        canvas.clip_rect(bar);
+        canvas.fill_round_rect(Rect(x, bar.y, SEGMENT * bar.width, BAR_HEIGHT), BAR_HEIGHT / 2,
+                               enabled_now ? theme::accent() : theme::accent_disabled());
+        canvas.restore();
+        Widget::paint(canvas);
+        return;
+    }
     const float done = static_cast<float>(ratio()) * bar.width;
     if (done > 0)
     {
@@ -138,7 +193,7 @@ void ProgressBar::paint(Canvas& canvas)
         const Rect fill(bar.x, bar.y, std::max(done, std::min(BAR_HEIGHT, bar.width)), BAR_HEIGHT);
         canvas.fill_round_rect(fill, BAR_HEIGHT / 2, enabled_now ? theme::accent() : theme::accent_disabled());
     }
-    if (text_visible_)
+    if (shows_text())
     {
         const TextLayout& l = text_layout();
         // 右寄せにして、桁が変わっても棒の端の位置が動かないようにする。

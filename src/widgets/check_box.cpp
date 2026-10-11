@@ -61,7 +61,8 @@ void CheckBox::paint(Canvas& canvas)
         canvas.fill_round_rect(box, 3, enabled_now ? theme::field() : theme::field_disabled());
         canvas.stroke_round_rect(box, 3, 1, enabled_now && is_hovered() ? theme::accent() : theme::border());
     }
-    detail::paint_toggle_text(canvas, text_layout(), r, focused, enabled_now);
+    const Point at = detail::paint_toggle_text(canvas, text_layout(), r, focused, enabled_now);
+    paint_mnemonic(canvas, at, enabled_now ? theme::text() : theme::text_disabled());
     Widget::paint(canvas);
 }
 

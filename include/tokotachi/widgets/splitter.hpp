@@ -10,6 +10,8 @@
 ///
 /// 区画を破棄する・別の親へ移すと、その区画は消える。区画の最小の大きさ(minimum_hint)より小さくはドラッグできず、
 /// collapsible な区画は、最小の半分より小さくドラッグするとたたむ(大きさ 0。隠す)。たたんだ区画は境目をドラッグして戻す。
+/// 境目をダブルクリックすると、隣のたたんだ区画を戻す(どちらもたたんでいなければ、stretch の小さい方をたたむ)。
+/// 境目を押した後は、矢印キーで境目を動かし、Enter でダブルクリックと同じことをする(docs/adr/0049)。
 /// 区画の部品を visible = false にすると、その区画は場所も境目も取らない(大きさは覚えていて、戻すと元の大きさで出る)。
 /// たたんだ区画の部品の visible は変えない(showing が false になる)。
 #ifndef TOKOTACHI_WIDGETS_SPLITTER_HPP
@@ -33,8 +35,8 @@ public:
     Property<int> stretch;
     /// たためるか(既定 true)。
     Property<bool> collapsible;
-    /// たたんでいるか。
-    ReadOnlyProperty<bool> collapsed;
+    /// たたんでいるか。代入するとたたむ・戻す(collapsible でなければたためない)。その分は隣の区画が受け持つ。
+    Property<bool> collapsed;
     ReadOnlyProperty<Widget*> widget;
 
 private:
@@ -46,6 +48,7 @@ private:
     void set_stretch(const int& v);
     void set_collapsible(const bool& v);
     bool get_collapsed() const { return collapsed_; }
+    void set_collapsed(const bool& v);
     Widget* get_widget() const { return widget_; }
 
     Splitter* splitter_;
@@ -85,6 +88,8 @@ protected:
     void mouse_move(MouseEvent& e) override;
     void mouse_up(MouseEvent& e) override;
     void mouse_leave() override;
+    void key_down(KeyEvent& e) override;
+    void focus_out() override;
     void arrange_children() override;
     void child_removed(Widget* child) override;
     Size compute_preferred_size() const override;
@@ -110,7 +115,12 @@ private:
     /// 位置 p にある境目(i 番目の区画の後ろ。無ければ -1)。
     int handle_at(const Point& p) const;
     float handle_position(int i) const;
-    void drag_to(float position);
+    /// i 番目の境目を position(並ぶ向きの位置)へ動かす。利用者の操作なので on_change を呼ぶ。
+    void drag_to(int i, float position);
+    /// i 番目の境目のダブルクリック(隣のたたんだ区画を戻す・どちらかをたたむ)。
+    void toggle_handle(int i);
+    /// 区画をたたむ・戻す(その分は隣の区画が受け持つ)。変えたら true。
+    bool collapse_pane(SplitterPane* pane, bool collapse);
 
     Orientation orientation_;
     std::vector<SplitterPane*> panes_;
@@ -118,6 +128,7 @@ private:
     int hover_handle_;
     int drag_handle_;
     float drag_offset_;  ///< 押した位置と境目の始まりの差
+    int key_handle_;     ///< キーで動かす境目(境目を押してフォーカスを得たとき。無ければ -1)
     bool destroying_;
 };
 

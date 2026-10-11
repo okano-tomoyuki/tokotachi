@@ -5,6 +5,7 @@
 /// tokotachi::SpinBox* spin_box_count = new tokotachi::SpinBox(panel);
 /// spin_box_count->maximum = 10;
 /// spin_box_count->decimals = 1;  // 小数 1 桁で表示・入力
+/// spin_box_count->suffix = " kg";  // 数値の後ろに単位を出す
 /// tokotachi::bind(spin_box_count->value, amount->value);  // DoubleVariable と結ぶ
 /// @endcode
 ///
@@ -34,6 +35,9 @@ public:
 
     /// 小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。
     Property<int> decimals;
+    /// 数値の前・後ろに出す文字(既定は空。「¥」「 kg」「%」など。docs/adr/0049)。打ち込むときは、付けても付けなくてもよい。
+    Property<std::string> prefix;
+    Property<std::string> suffix;
     /// 入力欄に出している文字列(打ち込み中は、まだ value になっていないことがある)。
     ReadOnlyProperty<std::string> text;
 
@@ -56,6 +60,10 @@ private:
 
     int get_decimals() const { return decimals_; }
     void set_decimals(const int& v);
+    std::string get_prefix() const { return prefix_; }
+    void set_prefix(const std::string& v);
+    std::string get_suffix() const { return suffix_; }
+    void set_suffix(const std::string& v);
     std::string get_text() const;
 
     std::string format(double v) const;
@@ -68,6 +76,8 @@ private:
 
     detail::SpinEdit* edit_;
     int decimals_;
+    std::string prefix_;
+    std::string suffix_;
     int pressed_;  ///< 押しているボタン(1 は上、-1 は下、0 は無し)
     Timer repeat_;
 };

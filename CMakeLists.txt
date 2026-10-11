@@ -126,6 +126,7 @@ add_library(tokotachi_objects OBJECT
     src/widgets/button_base.cpp
     src/widgets/check_box.cpp
     src/widgets/combo_box.cpp
+    src/widgets/group_box.cpp
     src/widgets/image_box.cpp
     src/widgets/label.cpp
     src/widgets/line_edit.cpp

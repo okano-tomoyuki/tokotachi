@@ -164,6 +164,10 @@ public:
     Point map_from_window(const Point& p) const;
     /// p(自分の座標系)にある、表示されている最も深い子孫。無ければ nullptr。
     Widget* child_at(const Point& p) const;
+    /// フォーカスを、タブの順で自分の後ろにある最初の部品へ移す(自分の子孫は除く)。移せたら true。
+    bool focus_next_after();
+    /// フォーカスを、自分か子孫のうちタブの順で最初の部品へ移す。移せたら true。
+    bool focus_first_within();
 
 protected:
     virtual void paint(Canvas& canvas);
@@ -204,6 +208,14 @@ protected:
     virtual void action_changed(Action* action);
     /// 自分の配置だけをやり直す印を付ける(子の配置が変わるが、自分の望む大きさは変わらないとき)。
     void mark_layout_dirty();
+
+    /// ニーモニック(「名前(&N)」の & の次の文字。docs/adr/0049)。Alt と一緒に押すと mnemonic_activated を呼ぶキー
+    /// (既定は Key::UNKNOWN: 無し)。表示されていて有効な部品だけが受ける。同じキーの部品が複数あれば、押すたびに順に移る。
+    virtual Key mnemonic_key() const;
+    /// ニーモニックのキーが押された(既定は何もしない)。
+    virtual void mnemonic_activated();
+    /// ニーモニックの下線を出すか(ウィンドウで Alt を押している間 true)。変わるとウィンドウ全体を描き直す。
+    bool mnemonic_cues() const;
 
     /// 望む大きさ・ウィジェットが決める最小の大きさ。既定の実装は、レイアウトがあればその大きさ、無ければ 0。
     virtual Size compute_preferred_size() const;

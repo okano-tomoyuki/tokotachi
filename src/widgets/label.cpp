@@ -5,6 +5,7 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
+#include "../actions/mnemonic.hpp"
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
 
@@ -20,13 +21,20 @@ Label::Label(Widget* parent_widget, const std::string& initial_text)
       TOKOTACHI_PROPERTY_MEMBER(Label, bool, word_wrap),
       TOKOTACHI_PROPERTY_MEMBER(Label, Image, icon),
       TOKOTACHI_PROPERTY_MEMBER(Label, float, icon_size),
+      TOKOTACHI_PROPERTY_GETTER(Label, Widget*, buddy),
       text_(initial_text),
+      mnemonic_offset_(std::string::npos),
+      mnemonic_(Key::UNKNOWN),
       color_(ColorRole::TEXT),
       alignment_(Align::START),
       word_wrap_(false),
       icon_size_(16),
       layout_wrap_(0)
 {
+    const detail::Mnemonic m = detail::parse_mnemonic(text_);
+    display_ = m.text;
+    mnemonic_offset_ = m.offset;
+    mnemonic_ = m.key;
 }
 
 void Label::set_text(const std::string& v)
@@ -36,9 +44,29 @@ void Label::set_text(const std::string& v)
         return;
     }
     text_ = v;
+    const detail::Mnemonic m = detail::parse_mnemonic(text_);
+    display_ = m.text;
+    mnemonic_offset_ = m.offset;
+    mnemonic_ = m.key;
     layout_ = TextLayout();
     invalidate();
     request_layout();
+}
+
+void Label::set_buddy(Widget* const& v) { buddy_ = WeakRef<Widget>(v); }
+
+Key Label::mnemonic_key() const { return mnemonic_; }
+
+void Label::mnemonic_activated()
+{
+    if (Widget* b = buddy_.get())
+    {
+        b->focus_first_within();
+    }
+    else
+    {
+        focus_next_after();
+    }
 }
 
 void Label::set_font(const Font& v)
@@ -113,7 +141,7 @@ float Label::icon_extent() const
     {
         return 0;
     }
-    return text_.empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
+    return display_.empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
 }
 
 const TextLayout& Label::layout() const
@@ -123,7 +151,7 @@ const TextLayout& Label::layout() const
     const float wrap = word_wrap_ ? std::max(1.0f, width.get() - icon_extent()) : 0;
     if (layout_.is_null() || layout_.scale() != scale || layout_wrap_ != wrap)
     {
-        layout_ = TextLayout(text_, font_, scale, wrap, alignment_);
+        layout_ = TextLayout(display_, font_, scale, wrap, alignment_);
         layout_wrap_ = wrap;
     }
     return layout_;
@@ -133,7 +161,7 @@ Size Label::compute_preferred_size() const
 {
     // 幅は折り返さないときの幅、高さは今の幅で折り返したときの高さ。
     const TextLayout& l = layout();
-    const float natural = word_wrap_ ? TextLayout(text_, font_, l.scale()).width() : l.width();
+    const float natural = word_wrap_ ? TextLayout(display_, font_, l.scale()).width() : l.width();
     const float icon_h = icon_.is_null() ? 0 : icon_size_;
     return Size(std::ceil(icon_extent() + natural), std::ceil(std::max(l.height(), icon_h)));
 }
@@ -145,7 +173,7 @@ Size Label::compute_minimum_size() const
         return compute_preferred_size();  // 文字が切れないよう、望む大きさを最小とする
     }
     // 最も長い単語の幅(幅 1 で折り返すと、1 行に 1 語ずつ並ぶ)と、今の幅での高さ。
-    const TextLayout narrow(text_, font_, layout().scale(), 1);
+    const TextLayout narrow(display_, font_, layout().scale(), 1);
     const float icon_h = icon_.is_null() ? 0 : icon_size_;
     return Size(std::ceil(icon_extent() + narrow.width()), std::ceil(std::max(layout().height(), icon_h)));
 }
@@ -192,7 +220,13 @@ void Label::paint(Canvas& canvas)
         const float ix = rtl ? x + content_w - icon_size_ : x;
         canvas.draw_image(icon_, Rect(ix, (height - icon_size_) / 2, icon_size_, icon_size_), effectively_enabled ? 1.0f : 0.4f);
     }
-    canvas.draw_text(l, Point(tx, (height - l.height()) / 2), effectively_enabled ? color_.resolve() : theme::text_disabled());
+    const Point at(tx, (height - l.height()) / 2);
+    const Color fg = effectively_enabled ? color_.resolve() : theme::text_disabled();
+    canvas.draw_text(l, at, fg);
+    if (mnemonic_cues())
+    {
+        detail::paint_mnemonic_underline(canvas, l, at, mnemonic_offset_, fg);
+    }
     Widget::paint(canvas);
 }
 

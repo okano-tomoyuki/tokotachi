@@ -152,7 +152,9 @@ int main(int argc, char** argv)
     check(corner.x + corner.width > area.width - 9 && corner.x + corner.width < area.width - 7 && corner.y == 8,
           "place layout (top right)");
     const tokotachi::Rect slider = dialog->slider_zoom->bounds;
-    check(slider.x == 0 && slider.y == 8 && slider.width == 200 && slider.height == 32, "free placement");
+    check(slider.x == 12 && slider.y == 28 && slider.width == 200 && slider.height == 38 &&
+              dialog->slider_zoom->parent.get() == dialog->group_box_zoom,
+          "free placement (group box)");
     check(dialog->slider_zoom->maximum.get() == 200 && dialog->slider_zoom->value.get() == 100, "slider range");
     dialog->slider_zoom->on_change.get()(dialog->slider_zoom);
     check(called("slider_zoom_change"), "dialog widget handler");

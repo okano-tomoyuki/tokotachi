@@ -23,13 +23,13 @@ public:
     tokotachi::Widget* area_badges;
     tokotachi::Label* label_badge;
     tokotachi::CheckBox* check_box_corner;
-    tokotachi::Widget* area_free;
+    tokotachi::GroupBox* group_box_zoom;
     tokotachi::Slider* slider_zoom;
     samples::LevelBar* level_bar_zoom;
 
     void settings_finish(tokotachi::Object* sender);
     void slider_zoom_change(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="f46ec986">
+    // <tokotachi-designer:end id="declarations" hash="dd09b565">
 
 private:
     void tokotachi_setup_ui();

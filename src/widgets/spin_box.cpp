@@ -60,6 +60,8 @@ private:
 SpinBox::SpinBox(Widget* parent_widget)
     : RangeBase(parent_widget),
       TOKOTACHI_PROPERTY_GETTER(SpinBox, int, decimals),
+      TOKOTACHI_PROPERTY_GETTER(SpinBox, std::string, prefix),
+      TOKOTACHI_PROPERTY_GETTER(SpinBox, std::string, suffix),
       TOKOTACHI_READONLY_PROPERTY(SpinBox, std::string, text),
       edit_(nullptr),
       decimals_(0),
@@ -86,6 +88,33 @@ void SpinBox::set_decimals(const int& v)
     request_layout();
 }
 
+namespace
+{
+
+// 前後の空白を除く。
+std::string trim(const std::string& s)
+{
+    const char* space = " \t";
+    const std::size_t first = s.find_first_not_of(space);
+    return first == std::string::npos ? std::string() : s.substr(first, s.find_last_not_of(space) - first + 1);
+}
+
+}  // namespace
+
+void SpinBox::set_prefix(const std::string& v)
+{
+    prefix_ = v;
+    edit_->text = format(value);
+    request_layout();
+}
+
+void SpinBox::set_suffix(const std::string& v)
+{
+    suffix_ = v;
+    edit_->text = format(value);
+    request_layout();
+}
+
 std::string SpinBox::get_text() const { return edit_->text; }
 
 std::string SpinBox::format(double v) const
@@ -98,12 +127,22 @@ std::string SpinBox::format(double v) const
     {
         s.erase(0, 1);
     }
-    return s;
+    return prefix_ + s + suffix_;
 }
 
 void SpinBox::commit()
 {
-    const std::string s = edit_->text;
+    // 前・後ろの文字(付いていれば。周りの空白は問わない)を除いて読む
+    std::string s = trim(edit_->text);
+    const std::string head = trim(prefix_), tail = trim(suffix_);
+    if (!head.empty() && s.compare(0, head.size(), head) == 0)
+    {
+        s = trim(s.substr(head.size()));
+    }
+    if (!tail.empty() && s.size() >= tail.size() && s.compare(s.size() - tail.size(), tail.size(), tail) == 0)
+    {
+        s = trim(s.substr(0, s.size() - tail.size()));
+    }
     const char* begin = s.c_str();
     char* end = nullptr;
     const double parsed = std::strtod(begin, &end);

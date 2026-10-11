@@ -8,6 +8,7 @@
 #include <tokotachi/windows/window.hpp>
 
 #include "../layout/layout_access.hpp"
+#include "../windows/window_impl.hpp"
 #include "../actions/action_access.hpp"
 #include "../core/property_impl.hpp"
 #include "theme.hpp"
@@ -810,6 +811,28 @@ void Widget::action_removed(Action*) {}
 void Widget::action_changed(Action*) {}
 
 Rect Widget::input_method_rect() const { return get_local_rect(); }
+
+Key Widget::mnemonic_key() const { return Key::UNKNOWN; }
+
+void Widget::mnemonic_activated() {}
+
+bool Widget::mnemonic_cues() const
+{
+    const Window* w = get_window();
+    return w && w->impl()->cues;
+}
+
+bool Widget::focus_next_after()
+{
+    Window* w = get_window();
+    return w && w->impl()->focus_after(this);
+}
+
+bool Widget::focus_first_within()
+{
+    Window* w = get_window();
+    return w && w->impl()->focus_first_in(this);
+}
 
 Size Widget::compute_preferred_size() const
 {

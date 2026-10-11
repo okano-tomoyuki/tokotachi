@@ -70,30 +70,32 @@ void SettingsDialog::tokotachi_setup_ui()
 
     window_layout->add(scroll_area_badges, 1);
 
-    area_free = new tokotachi::Widget(this);
-    area_free->minimum_size = tokotachi::Size(0, 48);
+    group_box_zoom = new tokotachi::GroupBox(this);
+    group_box_zoom->minimum_size = tokotachi::Size(0, 76);
+    group_box_zoom->title = "拡大率(&Z)";
 
-    slider_zoom = new tokotachi::Slider(area_free);
-    slider_zoom->x = 0;
-    slider_zoom->y = 8;
+    slider_zoom = new tokotachi::Slider(group_box_zoom);
+    slider_zoom->x = 12;
+    slider_zoom->y = 28;
     slider_zoom->width = 200;
-    slider_zoom->height = 32;
+    slider_zoom->height = 38;
     slider_zoom->maximum = 200;
     slider_zoom->value = 100;
+    slider_zoom->tick_interval = 50;
     slider_zoom->on_change = [this](tokotachi::Object* sender) { slider_zoom_change(sender); };
 
-    level_bar_zoom = new samples::LevelBar(area_free);
-    level_bar_zoom->x = 216;
-    level_bar_zoom->y = 16;
-    level_bar_zoom->width = 160;
+    level_bar_zoom = new samples::LevelBar(group_box_zoom);
+    level_bar_zoom->x = 224;
+    level_bar_zoom->y = 36;
+    level_bar_zoom->width = 128;
     level_bar_zoom->height = 16;
     level_bar_zoom->maximum = 200;
     level_bar_zoom->value = 100;
     level_bar_zoom->warning_level = 150;
 
-    window_layout->add(area_free);
+    window_layout->add(group_box_zoom);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="2579aaa3">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="dd7f483d">
 
 // <tokotachi-designer:handler-stubs>
 void SettingsDialog::settings_finish(tokotachi::Object* sender)

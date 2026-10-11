@@ -17,12 +17,17 @@ const float THUMB_RADIUS = 8;   // つまみの半径(dp)
 const float TRACK_WIDTH = 4;    // 溝の太さ(dp)
 const float LENGTH = 160;       // 望む長さ(dp)
 const float MIN_LENGTH = 48;    // 最小の長さ(dp)
+const float TICK_ROOM = 6;      // 目盛りのために、溝の下(縦なら右)に足す幅(dp)
+const float TICK_LENGTH = 4;    // 目盛りの線の長さ(dp)
+const float TICK_MIN_GAP = 4;   // これより詰まる目盛りは出さない(dp)
 }  // namespace
 
 Slider::Slider(Widget* parent_widget, Orientation initial_orientation)
     : RangeBase(parent_widget),
       TOKOTACHI_PROPERTY_GETTER(Slider, Orientation, orientation),
+      TOKOTACHI_PROPERTY_GETTER(Slider, double, tick_interval),
       orientation_(initial_orientation),
+      tick_interval_(0),
       hovered_(false),
       dragging_(false)
 {
@@ -35,6 +40,24 @@ void Slider::set_orientation(const Orientation& v)
     invalidate();
     request_layout();
 }
+
+void Slider::set_tick_interval(const double& v)
+{
+    const double interval = v > 0 && std::isfinite(v) ? v : 0;
+    if (interval == tick_interval_)
+    {
+        return;
+    }
+    const bool room_changed = (interval > 0) != (tick_interval_ > 0);
+    tick_interval_ = interval;
+    invalidate();
+    if (room_changed)
+    {
+        request_layout();
+    }
+}
+
+float Slider::tick_room() const { return tick_interval_ > 0 ? TICK_ROOM : 0; }
 
 float Slider::travel() const
 {
@@ -49,9 +72,9 @@ Point Slider::thumb_center() const
     const float t = static_cast<float>(ratio()) * travel();
     if (orientation_ == Orientation::HORIZONTAL)
     {
-        return Point(THUMB_RADIUS + t, r.height / 2);
+        return Point(THUMB_RADIUS + t, (r.height - tick_room()) / 2);
     }
-    return Point(r.width / 2, r.height - THUMB_RADIUS - t);  // 縦は下が minimum
+    return Point((r.width - tick_room()) / 2, r.height - THUMB_RADIUS - t);  // 縦は下が minimum
 }
 
 double Slider::value_at(const Point& p) const
@@ -69,7 +92,7 @@ double Slider::value_at(const Point& p) const
 
 Size Slider::compute_preferred_size() const
 {
-    const float thickness = THUMB_RADIUS * 2 + 8;  // フォーカスの輪の分を含める
+    const float thickness = THUMB_RADIUS * 2 + 8 + tick_room();  // フォーカスの輪・目盛りの分を含める
     return orientation_ == Orientation::HORIZONTAL ? Size(LENGTH, thickness) : Size(thickness, LENGTH);
 }
 
@@ -89,12 +112,12 @@ void Slider::paint(Canvas& canvas)
     Rect filled;
     if (orientation_ == Orientation::HORIZONTAL)
     {
-        track = Rect(THUMB_RADIUS, (r.height - TRACK_WIDTH) / 2, travel(), TRACK_WIDTH);
+        track = Rect(THUMB_RADIUS, c.y - TRACK_WIDTH / 2, travel(), TRACK_WIDTH);
         filled = Rect(track.x, track.y, c.x - track.x, TRACK_WIDTH);
     }
     else
     {
-        track = Rect((r.width - TRACK_WIDTH) / 2, THUMB_RADIUS, TRACK_WIDTH, travel());
+        track = Rect(c.x - TRACK_WIDTH / 2, THUMB_RADIUS, TRACK_WIDTH, travel());
         filled = Rect(track.x, c.y, TRACK_WIDTH, track.bottom() - c.y);
     }
     canvas.fill_round_rect(track, TRACK_WIDTH / 2, enabled_now ? theme::scroll_track() : theme::field_disabled());
@@ -102,6 +125,27 @@ void Slider::paint(Canvas& canvas)
     if (!filled.is_empty())
     {
         canvas.fill_round_rect(filled, TRACK_WIDTH / 2, enabled_now ? theme::accent() : theme::accent_disabled());
+    }
+    // 目盛り: minimum から tick_interval ごとと maximum。詰まりすぎるなら出さない
+    const double span = maximum.get() - minimum.get();
+    if (tick_interval_ > 0 && span > 0 && travel() * tick_interval_ / span >= TICK_MIN_GAP)
+    {
+        const Color tick = enabled_now ? theme::placeholder() : theme::border();
+        const float ty = THUMB_RADIUS + 5;  // つまみの中心から目盛りの始まりまで
+        const int n = static_cast<int>(std::floor(span / tick_interval_ + 1e-9));
+        for (int k = 0; k <= n + 1; ++k)
+        {
+            const double v = k <= n ? k * tick_interval_ : span;
+            if (k == n + 1 && std::fabs(n * tick_interval_ - span) < 1e-9 * std::max(1.0, span))
+            {
+                break;  // maximum は最後の目盛りと重なる
+            }
+            const float t = std::floor(static_cast<float>(v / span) * travel());
+            const Rect line = orientation_ == Orientation::HORIZONTAL
+                                  ? Rect(THUMB_RADIUS + t, c.y + ty, 1, TICK_LENGTH)
+                                  : Rect(c.x + ty, r.height - THUMB_RADIUS - t - 1, TICK_LENGTH, 1);
+            canvas.fill_rect(line, tick);
+        }
     }
     // つまみ
     const Rect thumb(c.x - THUMB_RADIUS, c.y - THUMB_RADIUS, THUMB_RADIUS * 2, THUMB_RADIUS * 2);

@@ -7,7 +7,8 @@
 
 ## ボタン
 
-Button(PRIMARY・SECONDARY・無効)、CheckBox、RadioButton(変数に結んだグループ)。
+Button(PRIMARY・SECONDARY・無効)、CheckBox、RadioButton(変数に結んだグループ)を GroupBox(見出しの付いた枠)にまとめています。
+「(&S)」などは Alt と一緒に押すキー(ニーモニック)です。
 
 ![ボタン](buttons.png)
 
@@ -15,7 +16,8 @@ Button(PRIMARY・SECONDARY・無効)、CheckBox、RadioButton(変数に結んだ
 
 ## 入力
 
-LineEdit、ComboBox、SpinBox、TextEdit、Slider と ProgressBar(同じ変数に結ぶ)。GridLayout で項目名と並べています。
+LineEdit、ComboBox、SpinBox(単位)、TextEdit、Slider(目盛り)と ProgressBar(同じ変数に結ぶ)、進み具合の分からない ProgressBar。
+GridLayout で項目名と並べ、項目名のニーモニック(Alt+N など)で入力欄へ移ります。
 
 ![入力](inputs.png)
 

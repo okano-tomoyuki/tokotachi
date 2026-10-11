@@ -1,5 +1,6 @@
 /// @file
 /// 押して使うウィジェット(Button・CheckBox・RadioButton)の共通の部分: 文字、マウス・キーでの押下、ホバー。
+/// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、フォーカスを得て押したことになる(「&」は「&&」)。
 #ifndef TOKOTACHI_WIDGETS_BUTTON_BASE_HPP
 #define TOKOTACHI_WIDGETS_BUTTON_BASE_HPP
 
@@ -35,19 +36,27 @@ protected:
     void focus_in() override;
     void focus_out() override;
     void scale_changed() override;
+    Key mnemonic_key() const override;
+    void mnemonic_activated() override;
     /// 文字が切れないよう、望む大きさを最小とする(派生クラスの compute_preferred_size を使う)。
     Size compute_minimum_size() const override;
 
     /// 描画のための状態。
     bool is_hovered() const { return hovered_; }
     bool is_pressed() const { return pressed_in_; }
+    /// 表示する文字(text から & を除いたもの)のレイアウト。
     const TextLayout& text_layout() const;
+    /// text_layout() を at に描いたときの、ニーモニックの下線(Alt を押している間だけ)。
+    void paint_mnemonic(Canvas& canvas, const Point& at, const Color& color) const;
 
 private:
     void set_text(const std::string& v);
     void set_font(const Font& v);
 
     std::string text_;
+    std::string display_;          ///< text_ から & を除いた、表示する文字
+    std::size_t mnemonic_offset_;  ///< display_ の中のニーモニックの文字の位置(無ければ npos)
+    Key mnemonic_;
     Font font_;
     NotifyHandler on_click_;
     bool hovered_;
