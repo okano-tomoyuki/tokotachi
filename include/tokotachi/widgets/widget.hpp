@@ -214,6 +214,9 @@ protected:
     virtual Key mnemonic_key() const;
     /// ニーモニックのキーが押された(既定は何もしない)。
     virtual void mnemonic_activated();
+    /// Tab・Shift+Tab を自分で使うか(既定 false)。true なら、フォーカスが自分か子孫にあるときに Tab を key_down で受け、
+    /// 受け取らなかった(accepted が false の)ときだけ次の部品へフォーカスを移す(表のセルの移動など)。
+    virtual bool handles_tab_key() const;
     /// ニーモニックの下線を出すか(ウィンドウで Alt を押している間 true)。変わるとウィンドウ全体を描き直す。
     bool mnemonic_cues() const;
 

@@ -3455,6 +3455,275 @@
         "height": 226
       }
     },
+    "TableView": {
+      "bases": [
+        "ItemView",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "view",
+      "child_keys": [
+        "columns"
+      ],
+      "doc": "表: 行と列のセルを表示し、セルを選んで編集するビュー(docs/adr/0050)。モデルの一番上の行を、列(Column)ごとに表示する。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
+          "default": true
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "default": true
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget",
+          "default": "ARROW"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
+        "header_visible": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "列があるときに見出しを出すか(既定 true)。",
+          "default": true
+        },
+        "sorting_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "見出しを押して並べ替えられるか(既定 false)。押すたびに昇順・降順を切り替え、モデルの sort を呼ぶ。",
+          "default": false
+        },
+        "sort_column": {
+          "type": "int",
+          "declared_in": "ItemView",
+          "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。",
+          "range": {
+            "min": -1,
+            "max": {
+              "count": "columns",
+              "offset": -1
+            }
+          },
+          "default": -1
+        },
+        "sort_order": {
+          "type": {
+            "enum": "SortOrder"
+          },
+          "declared_in": "ItemView",
+          "default": "ASCENDING"
+        },
+        "selection_mode": {
+          "type": {
+            "enum": "SelectionMode"
+          },
+          "declared_in": "ItemView",
+          "doc": "選び方(既定 SINGLE)。",
+          "default": "SINGLE"
+        },
+        "drag_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "選んでいる項目をドラッグできるか(既定 false。docs/adr/0047)。文字は 1 列目を改行でつないだもの。",
+          "default": false
+        },
+        "drop_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。",
+          "default": false
+        },
+        "selection_behavior": {
+          "type": {
+            "enum": "SelectionBehavior"
+          },
+          "declared_in": "TableView",
+          "doc": "セルを選ぶか行を選ぶか(既定 CELLS)。",
+          "default": "CELLS"
+        },
+        "grid_visible": {
+          "type": "bool",
+          "declared_in": "TableView",
+          "doc": "セルの間に線を引くか(既定 true)。",
+          "default": true
+        },
+        "row_header_visible": {
+          "type": "bool",
+          "declared_in": "TableView",
+          "doc": "左に行の番号(行の見出し)を出すか(既定 true)。",
+          "default": true
+        }
+      },
+      "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_selection_change": {
+          "type": "NotifyHandler",
+          "declared_in": "ItemView",
+          "doc": "selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。"
+        },
+        "on_activate": {
+          "type": "NotifyHandler",
+          "declared_in": "ItemView",
+          "doc": "項目をダブルクリックした・Enter を押した(対象は current)。"
+        }
+      },
+      "preferred_size": {
+        "width": 234,
+        "height": 226
+      }
+    },
     "Widget": {
       "bases": [
         "Object"
@@ -5709,6 +5978,17 @@
         "HORIZONTAL",
         "VERTICAL"
       ]
+    },
+    "SelectionBehavior": {
+      "values": [
+        "CELLS",
+        "ROWS"
+      ],
+      "docs": {
+        "CELLS": "セル(矩形の範囲)を選ぶ",
+        "ROWS": "行を選ぶ(一覧と同じ。キーで動かすセルは current_column)"
+      },
+      "doc": "表(TableView)で選ぶ単位(docs/adr/0050)。"
     },
     "SelectionMode": {
       "values": [

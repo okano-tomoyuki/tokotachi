@@ -31,6 +31,14 @@ TreeView と ListView(列・並べ替え・チェック・複数選択)を Split
 
 @include views.cpp
 
+## 表
+
+TableView(セルの矩形の選択・その場での編集・写す・貼る)。点を書き換えると、モデルが合計を計算し直します。
+
+![表](table.png)
+
+@include table.cpp
+
 ## ウィンドウの部品
 
 メニューバー・ツールバー・ステータスバー・タブ。メニューとツールバーは同じ Action を共有しています。

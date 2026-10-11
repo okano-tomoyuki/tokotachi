@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 | @ref basics | 親子と所有・プロパティ・ハンドラ・変数と結びつけ・テーマ |
 | @ref layout_guide | BoxLayout・GridLayout・PlaceLayout・スクロール・分割 |
 | @ref windows_guide | メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
-| @ref views_guide | ListView・TreeView とモデル |
+| @ref views_guide | ListView・TreeView・TableView とモデル |
 | @ref drawing_guide | Canvas・PaintBox・Bitmap・変換・透過 |
 | @ref threads_guide | メインスレッドの決まり・post・WeakRef・Task |
 | @ref gallery | 部品ごとのサンプルと画面 |

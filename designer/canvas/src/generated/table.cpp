@@ -617,6 +617,38 @@ Json to_json(tokotachi::Orientation v)
     return Json();
 }
 
+bool from_json(const Json& j, tokotachi::SelectionBehavior& out)
+{
+    if (!j.is_string())
+    {
+        return false;
+    }
+    const std::string& s = j.as_string();
+    if (s == "CELLS")
+    {
+        out = tokotachi::SelectionBehavior::CELLS;
+        return true;
+    }
+    if (s == "ROWS")
+    {
+        out = tokotachi::SelectionBehavior::ROWS;
+        return true;
+    }
+    return false;
+}
+
+Json to_json(tokotachi::SelectionBehavior v)
+{
+    switch (v)
+    {
+    case tokotachi::SelectionBehavior::CELLS:
+        return Json(std::string("CELLS"));
+    case tokotachi::SelectionBehavior::ROWS:
+        return Json(std::string("ROWS"));
+    }
+    return Json();
+}
+
 bool from_json(const Json& j, tokotachi::SelectionMode& out)
 {
     if (!j.is_string())
@@ -4870,6 +4902,361 @@ bool get_TreeView(tokotachi::TreeView* o, const std::string& p, Json& out)
     return false;
 }
 
+bool set_TableView(tokotachi::TableView* o, const std::string& p, const Json& v)
+{
+    if (p == "x")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->x = t;
+        return true;
+    }
+    if (p == "y")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->y = t;
+        return true;
+    }
+    if (p == "width")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->width = t;
+        return true;
+    }
+    if (p == "height")
+    {
+        float t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->height = t;
+        return true;
+    }
+    if (p == "minimum_size")
+    {
+        tokotachi::Size t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->minimum_size = t;
+        return true;
+    }
+    if (p == "maximum_size")
+    {
+        tokotachi::Size t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->maximum_size = t;
+        return true;
+    }
+    if (p == "visible")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->visible = t;
+        return true;
+    }
+    if (p == "enabled")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->enabled = t;
+        return true;
+    }
+    if (p == "focus_policy")
+    {
+        tokotachi::FocusPolicy t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->focus_policy = t;
+        return true;
+    }
+    if (p == "cursor")
+    {
+        tokotachi::MouseCursor t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->cursor = t;
+        return true;
+    }
+    if (p == "tooltip")
+    {
+        std::string t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->tooltip = t;
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
+    if (p == "accepts_drops")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->accepts_drops = t;
+        return true;
+    }
+    if (p == "header_visible")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->header_visible = t;
+        return true;
+    }
+    if (p == "sorting_enabled")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->sorting_enabled = t;
+        return true;
+    }
+    if (p == "sort_column")
+    {
+        int t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->sort_column = t;
+        return true;
+    }
+    if (p == "sort_order")
+    {
+        tokotachi::SortOrder t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->sort_order = t;
+        return true;
+    }
+    if (p == "selection_mode")
+    {
+        tokotachi::SelectionMode t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->selection_mode = t;
+        return true;
+    }
+    if (p == "drag_enabled")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->drag_enabled = t;
+        return true;
+    }
+    if (p == "drop_enabled")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->drop_enabled = t;
+        return true;
+    }
+    if (p == "selection_behavior")
+    {
+        tokotachi::SelectionBehavior t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->selection_behavior = t;
+        return true;
+    }
+    if (p == "grid_visible")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->grid_visible = t;
+        return true;
+    }
+    if (p == "row_header_visible")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->row_header_visible = t;
+        return true;
+    }
+    return false;
+}
+
+bool get_TableView(tokotachi::TableView* o, const std::string& p, Json& out)
+{
+    if (p == "x")
+    {
+        out = to_json(o->x.get());
+        return true;
+    }
+    if (p == "y")
+    {
+        out = to_json(o->y.get());
+        return true;
+    }
+    if (p == "width")
+    {
+        out = to_json(o->width.get());
+        return true;
+    }
+    if (p == "height")
+    {
+        out = to_json(o->height.get());
+        return true;
+    }
+    if (p == "minimum_size")
+    {
+        out = to_json(o->minimum_size.get());
+        return true;
+    }
+    if (p == "maximum_size")
+    {
+        out = to_json(o->maximum_size.get());
+        return true;
+    }
+    if (p == "visible")
+    {
+        out = to_json(o->visible.get());
+        return true;
+    }
+    if (p == "enabled")
+    {
+        out = to_json(o->enabled.get());
+        return true;
+    }
+    if (p == "focus_policy")
+    {
+        out = to_json(o->focus_policy.get());
+        return true;
+    }
+    if (p == "cursor")
+    {
+        out = to_json(o->cursor.get());
+        return true;
+    }
+    if (p == "tooltip")
+    {
+        out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
+        return true;
+    }
+    if (p == "accepts_drops")
+    {
+        out = to_json(o->accepts_drops.get());
+        return true;
+    }
+    if (p == "header_visible")
+    {
+        out = to_json(o->header_visible.get());
+        return true;
+    }
+    if (p == "sorting_enabled")
+    {
+        out = to_json(o->sorting_enabled.get());
+        return true;
+    }
+    if (p == "sort_column")
+    {
+        out = to_json(o->sort_column.get());
+        return true;
+    }
+    if (p == "sort_order")
+    {
+        out = to_json(o->sort_order.get());
+        return true;
+    }
+    if (p == "selection_mode")
+    {
+        out = to_json(o->selection_mode.get());
+        return true;
+    }
+    if (p == "drag_enabled")
+    {
+        out = to_json(o->drag_enabled.get());
+        return true;
+    }
+    if (p == "drop_enabled")
+    {
+        out = to_json(o->drop_enabled.get());
+        return true;
+    }
+    if (p == "selection_behavior")
+    {
+        out = to_json(o->selection_behavior.get());
+        return true;
+    }
+    if (p == "grid_visible")
+    {
+        out = to_json(o->grid_visible.get());
+        return true;
+    }
+    if (p == "row_header_visible")
+    {
+        out = to_json(o->row_header_visible.get());
+        return true;
+    }
+    return false;
+}
+
 bool set_Widget(tokotachi::Widget* o, const std::string& p, const Json& v)
 {
     if (p == "x")
@@ -7372,6 +7759,10 @@ tokotachi::Object* create(const std::string& cls, tokotachi::Object* parent)
     {
         return new tokotachi::TreeView(widget);
     }
+    if (cls == "TableView")
+    {
+        return new tokotachi::TableView(widget);
+    }
     if (cls == "Widget")
     {
         return new tokotachi::Widget(widget);
@@ -7492,6 +7883,10 @@ bool set_property(tokotachi::Object* object, const std::string& cls, const std::
     if (cls == "TreeView")
     {
         return set_TreeView(static_cast<tokotachi::TreeView*>(object), property, value);
+    }
+    if (cls == "TableView")
+    {
+        return set_TableView(static_cast<tokotachi::TableView*>(object), property, value);
     }
     if (cls == "Widget")
     {
@@ -7630,6 +8025,10 @@ bool get_property(tokotachi::Object* object, const std::string& cls, const std::
     {
         return get_TreeView(static_cast<tokotachi::TreeView*>(object), property, out);
     }
+    if (cls == "TableView")
+    {
+        return get_TableView(static_cast<tokotachi::TableView*>(object), property, out);
+    }
     if (cls == "Widget")
     {
         return get_Widget(static_cast<tokotachi::Widget*>(object), property, out);
@@ -7767,6 +8166,10 @@ std::vector<std::string> property_names(const std::string& cls)
     {
         return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "header_visible", "sorting_enabled", "sort_column", "sort_order", "selection_mode", "drag_enabled", "drop_enabled", "indentation"};
     }
+    if (cls == "TableView")
+    {
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "header_visible", "sorting_enabled", "sort_column", "sort_order", "selection_mode", "drag_enabled", "drop_enabled", "selection_behavior", "grid_visible", "row_header_visible"};
+    }
     if (cls == "Widget")
     {
         return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops"};
@@ -7844,7 +8247,7 @@ std::vector<std::string> property_names(const std::string& cls)
 
 std::vector<std::string> creatable_classes()
 {
-    return std::vector<std::string>{"Button", "CheckBox", "RadioButton", "LineEdit", "TextEdit", "SpinBox", "Slider", "ComboBox", "Label", "ProgressBar", "ImageBox", "ListView", "TreeView", "Widget", "GroupBox", "TabWidget", "Splitter", "ScrollArea", "PaintBox", "Timer", "BoxLayout", "GridLayout", "PlaceLayout", "Action", "MenuBar", "ToolBar", "StatusBar"};
+    return std::vector<std::string>{"Button", "CheckBox", "RadioButton", "LineEdit", "TextEdit", "SpinBox", "Slider", "ComboBox", "Label", "ProgressBar", "ImageBox", "ListView", "TreeView", "TableView", "Widget", "GroupBox", "TabWidget", "Splitter", "ScrollArea", "PaintBox", "Timer", "BoxLayout", "GridLayout", "PlaceLayout", "Action", "MenuBar", "ToolBar", "StatusBar"};
 }
 
 }  // namespace ttc

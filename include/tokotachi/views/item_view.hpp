@@ -1,5 +1,5 @@
 /// @file
-/// 項目の一覧・木を表示するビューの共通の部分(ListView・TreeView の基底。docs/adr/0026)。
+/// 項目の一覧・木・表を表示するビューの共通の部分(ListView・TreeView・TableView の基底。docs/adr/0026)。
 ///
 /// 表示するのは見えている行だけで、そのときにモデル(item_model.hpp)へ文字などを問い合わせる。行の高さはすべて同じ。
 /// 列(Column)を加えると見出しを出す。列が無ければ 1 列で、ビューの幅いっぱいに描く。
@@ -38,6 +38,38 @@ enum class SelectionMode
     NONE,    ///< 選ばない(current だけが動く)
     SINGLE,  ///< 1 つだけ選ぶ(current と同じ項目)
     MULTI    ///< Ctrl+クリック・Shift+クリック・Shift+矢印・Ctrl+A で複数を選ぶ
+};
+
+/// 表(TableView)で選ぶ単位(docs/adr/0050)。
+enum class SelectionBehavior
+{
+    CELLS,  ///< セル(矩形の範囲)を選ぶ
+    ROWS    ///< 行を選ぶ(一覧と同じ。キーで動かすセルは current_column)
+};
+
+/// 表のセルの矩形の範囲(行・列の番号。両端を含む)。
+struct CellRange
+{
+    int first_row;
+    int first_column;
+    int last_row;
+    int last_column;
+
+    CellRange() : first_row(0), first_column(0), last_row(-1), last_column(-1) {}
+    /// 2 つの隅から作る(どちらの隅が先でもよい)。
+    CellRange(int row_a, int column_a, int row_b, int column_b);
+
+    bool is_empty() const { return last_row < first_row || last_column < first_column; }
+    bool contains(int row, int column) const
+    {
+        return row >= first_row && row <= last_row && column >= first_column && column <= last_column;
+    }
+    bool operator==(const CellRange& o) const
+    {
+        return first_row == o.first_row && first_column == o.first_column && last_row == o.last_row &&
+               last_column == o.last_column;
+    }
+    bool operator!=(const CellRange& o) const { return !(*this == o); }
 };
 
 /// ビューの 1 つの列。ItemView が作り、所有する。
@@ -127,8 +159,8 @@ public:
     Property<NotifyHandler> on_activate;
 
 protected:
-    /// tree が true なら木として(子を開いて)表示する。
-    ItemView(Widget* parent, bool tree);
+    /// tree が true なら木として(子を開いて)表示する。table が true なら表として(セルを選んで)表示する。
+    ItemView(Widget* parent, bool tree, bool table = false);
 
     void paint(Canvas& canvas) override;
     void mouse_down(MouseEvent& e) override;
@@ -137,6 +169,9 @@ protected:
     void mouse_leave() override;
     void mouse_wheel(WheelEvent& e) override;
     void key_down(KeyEvent& e) override;
+    void text_input(TextInputEvent& e) override;
+    void text_editing(TextEditingEvent& e) override;
+    bool handles_tab_key() const override { return table_; }
     void focus_in() override;
     void focus_out() override;
     void drag_move(DragEvent& e) override;
@@ -156,6 +191,26 @@ protected:
     void collapse_all();
     float get_indentation() const { return indentation_; }
     void set_indentation(const float& v);
+
+    /// TableView のための操作(docs/adr/0050)。
+    SelectionBehavior get_selection_behavior() const { return behavior_; }
+    void set_selection_behavior(const SelectionBehavior& v);
+    int get_current_column() const { return current_column_; }
+    void set_current_column(const int& v);
+    std::vector<CellRange> get_selected_ranges() const { return ranges_; }
+    bool cell_selected(int row, int column) const;
+    void select_cells(const CellRange& range, bool add);
+    bool get_grid_visible() const { return grid_visible_; }
+    void set_grid_visible(const bool& v);
+    bool get_row_header_visible() const { return row_header_visible_; }
+    void set_row_header_visible(const bool& v);
+    /// 選んでいるセルの文字(行は改行、列はタブで区切る)。
+    std::string selected_cells_text() const;
+    void copy_cells();
+    void paste_cells();
+    void clear_cells();
+    /// current_column・選んでいるセルの範囲が変わった(TableView がプロパティの変化を知らせる)。
+    virtual void cells_changed(bool current_column_changed, bool ranges_changed);
 
 private:
     friend class ItemModel;
@@ -251,6 +306,25 @@ private:
     /// index の、編集できる最初の列(無ければ -1)。
     int first_editable_column(const ModelIndex& index) const;
 
+    // ---- 表(table_view.cpp) ----
+    float row_header_width() const;
+    void paint_row_header(Canvas& canvas, const Rect& view);
+    void paint_grid(Canvas& canvas, const Rect& view);
+    void table_mouse_down(MouseEvent& e);
+    void table_mouse_move(MouseEvent& e);
+    void table_key_down(KeyEvent& e);
+    /// 行 row・列 column のセルへ動く(shift なら起点からの矩形に広げ、add なら新しい範囲として加える)。
+    void move_to_cell(int row, int column, bool shift, bool add);
+    void set_ranges(const std::vector<CellRange>& ranges);
+    void change_current_column(int column);
+    void reveal_column(int column);
+    /// 位置 p(ビューの座標)のセル。行の見出しの上なら column は -1。
+    bool cell_at_point(const Point& p, int& row, int& column) const;
+    /// 行の数が変わった・並びが変わった: セルの範囲を current のセルだけにする。
+    void reset_ranges();
+    /// current のセルを編集し始め、text を打ち込んだことにする(文字のキーで始めたとき)。
+    void start_typing_edit();
+
     /// 落とす位置(docs/adr/0047)。BEFORE は row 行の前、ONTO は row 行の項目の子の終わり、END は一番上の終わり。
     enum class DropPlace
     {
@@ -312,6 +386,14 @@ private:
     DropTarget drop_target_;   ///< 今の落とす位置(描く)
 
     const bool tree_;
+    const bool table_;
+    SelectionBehavior behavior_;
+    int current_column_;
+    int anchor_column_;              ///< Shift で範囲を選ぶときの起点の列
+    std::vector<CellRange> ranges_;  ///< 選んでいるセルの範囲(CELLS)
+    bool grid_visible_;
+    bool row_header_visible_;
+    int selecting_;                  ///< マウスで範囲を選んでいる(0: していない、1: セル、2: 行の見出し)
     float indentation_;
     std::set<void*> expanded_;  ///< 開いている項目の識別子
     mutable std::vector<Row> rows_;

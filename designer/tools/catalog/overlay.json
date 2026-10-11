@@ -17,6 +17,7 @@
     "ImageBox": { "kind": "widget", "category": "display" },
     "ListView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "TreeView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
+    "TableView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "Widget": { "kind": "widget", "category": "container", "accepts_children": true },
     "GroupBox": { "kind": "widget", "category": "container", "accepts_children": true },
     "TabWidget": { "kind": "widget", "category": "container", "child_keys": ["tabs"] },
@@ -52,6 +53,7 @@
     "ScrollArea": ["content", "scroll_position"],
     "ItemView": ["model", "current"],
     "Label": ["buddy"],
+    "TableView": ["current_column"],
     "Window": ["menu_bar", "tool_bar", "status_bar"]
   },
   "designable": {},

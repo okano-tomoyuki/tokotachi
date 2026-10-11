@@ -120,6 +120,7 @@ add_library(tokotachi_objects OBJECT
     src/views/item_model.cpp
     src/views/item_view.cpp
     src/views/list_model.cpp
+    src/views/table_view.cpp
     src/views/tree_model.cpp
     src/views/tree_view.cpp
     src/widgets/button.cpp
@@ -282,7 +283,7 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     tokotachi_copy_runtime(hello)
 
     # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
-    set(TOKOTACHI_GALLERY buttons inputs views window dialog drawing drop images)
+    set(TOKOTACHI_GALLERY buttons inputs views table window dialog drawing drop images)
     foreach(_name ${TOKOTACHI_GALLERY})
         add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
         target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)

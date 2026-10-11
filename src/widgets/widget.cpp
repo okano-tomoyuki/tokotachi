@@ -816,6 +816,8 @@ Key Widget::mnemonic_key() const { return Key::UNKNOWN; }
 
 void Widget::mnemonic_activated() {}
 
+bool Widget::handles_tab_key() const { return false; }
+
 bool Widget::mnemonic_cues() const
 {
     const Window* w = get_window();

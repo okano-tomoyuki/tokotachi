@@ -119,6 +119,13 @@ const ICONS: Readonly<Record<string, ReactNode>> = {
       <rect x="7.5" y="11" width="6" height="3" />
     </>
   ),
+  TableView: (
+    <>
+      <rect x="1.5" y="2.5" width="13" height="11" />
+      <path d="M1.5 6h13M1.5 9.75h13M5.5 2.5v11M10 2.5v11" />
+      <rect className="af" x="6" y="6.5" width="3.5" height="2.75" />
+    </>
+  ),
   Column: (
     <>
       <path d="M1.5 2.5h13M1.5 5.5h13M1.5 2.5v12M14.5 2.5v12" />

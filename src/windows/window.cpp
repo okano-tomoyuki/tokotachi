@@ -1013,7 +1013,13 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
     {
         return;
     }
-    if (e.down && k == Key::TAB && !(mods & (MODIFIER_CONTROL | MODIFIER_ALT)))
+    const bool tab = e.down && k == Key::TAB && !(mods & (MODIFIER_CONTROL | MODIFIER_ALT));
+    bool tab_to_widget = false;  // フォーカスのある部品か祖先が Tab を自分で使う(docs/adr/0050)
+    for (Widget* w = focus; tab && w && !tab_to_widget; w = WidgetAccess::parent_of(w))
+    {
+        tab_to_widget = WidgetAccess::handles_tab_key(w);
+    }
+    if (tab && !tab_to_widget)
     {
         focus_next(!(mods & MODIFIER_SHIFT));
         return;
@@ -1033,6 +1039,11 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
         {
             return;
         }
+    }
+    if (tab)
+    {
+        focus_next(!(mods & MODIFIER_SHIFT));  // 部品が受け取らなかった Tab
+        return;
     }
     if (e.down)
     {

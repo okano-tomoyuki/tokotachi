@@ -1,5 +1,6 @@
 // Tokotachi のテスト。SDL の offscreen のビデオドライバで、画面なしで動かす(CMake が環境変数を設定する)。
 #include <tokotachi/tokotachi.hpp>
+#include <tokotachi/core/clipboard.hpp>
 
 #include "../src/core/binding_registry.hpp"
 #include "../src/core/application_impl.hpp"
@@ -2496,6 +2497,149 @@ TEST(item_view_drag_to_reorder)
     tokotachi::DragData data;
     data.text = "x";
     CHECK(!list->can_drop(data, tokotachi::ModelIndex(), 0));
+}
+
+// 3 列 × 4 行の表(すべて編集できる)。セル (r, c) の文字は「r,c」。
+struct TableFixture
+{
+    tokotachi::Window window;
+    tokotachi::ListModel* model;
+    tokotachi::TableView* table;
+
+    TableFixture() : window("t", 400, 300), model(nullptr), table(nullptr)
+    {
+        window.visible = true;
+        model = new tokotachi::ListModel(&window);
+        for (int r = 0; r < 4; ++r)
+        {
+            tokotachi::Item* item = model->add_item(std::to_string(r) + ",0");
+            std::vector<std::string> texts;  // 2 列目以降
+            for (int c = 1; c < 3; ++c)
+            {
+                texts.push_back(std::to_string(r) + "," + std::to_string(c));
+            }
+            item->column_texts = texts;
+            item->editable = true;
+        }
+        table = new tokotachi::TableView(&window);
+        table->bounds = tokotachi::Rect(0, 0, 360, 260);
+        for (int c = 0; c < 3; ++c)
+        {
+            table->add_column("列" + std::to_string(c), 80);
+        }
+        table->model = model;
+        table->selection_mode = tokotachi::SelectionMode::MULTI;
+        window.apply_layout();
+    }
+
+    // セル (r, c) の中ほど(行の見出しは 32、見出しの高さは行の高さ)。
+    tokotachi::Point cell(int r, int c) const
+    {
+        const float h = view_row_height();
+        return tokotachi::Point(1 + 32 + c * 80 + 40, 1 + h + r * h + h / 2);
+    }
+
+    std::string text(int r, int c) const { return model->text(model->index(r), c); }
+};
+
+TEST(table_view_select_cells)
+{
+    TableFixture f;
+    tokotachi::TableView* table = f.table;
+    // クリックで 1 セル
+    dispatch_click(f.window, f.cell(1, 1));
+    CHECK(table->current == f.model->index(1) && table->current_column == 1);
+    CHECK(table->selected_ranges.get().size() == 1 && table->is_cell_selected(1, 1) && !table->is_cell_selected(1, 0));
+    // Shift+クリックで矩形に広げる
+    click_with(f.window, f.cell(2, 2), SDL_KMOD_LSHIFT);
+    CHECK(table->selected_ranges.get().size() == 1 && table->selected_ranges.get()[0] == tokotachi::CellRange(1, 1, 2, 2));
+    // Ctrl+クリックで範囲を加える
+    click_with(f.window, f.cell(0, 0), SDL_KMOD_LCTRL);
+    CHECK(table->selected_ranges.get().size() == 2 && table->is_cell_selected(0, 0) && table->is_cell_selected(2, 2));
+    // selection は選んでいるセルのある行
+    CHECK(table->selection.get().size() == 3);
+    // ドラッグで矩形
+    dispatch_mouse(f.window, SDL_EVENT_MOUSE_BUTTON_DOWN, f.cell(3, 0));
+    dispatch_mouse(f.window, SDL_EVENT_MOUSE_MOTION, f.cell(2, 1));
+    dispatch_mouse(f.window, SDL_EVENT_MOUSE_BUTTON_UP, f.cell(2, 1));
+    CHECK(table->selected_ranges.get().size() == 1 && table->selected_ranges.get()[0] == tokotachi::CellRange(2, 0, 3, 1));
+    // 行の見出しで行を選ぶ
+    dispatch_click(f.window, tokotachi::Point(10, f.cell(1, 0).y));
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(1, 0, 1, 2));
+    // キー: 矢印で動き、Shift+矢印で広げる。Ctrl+A ですべて
+    dispatch_click(f.window, f.cell(0, 0));
+    dispatch_key(f.window, SDLK_RIGHT);
+    dispatch_key(f.window, SDLK_DOWN, true, SDL_KMOD_LSHIFT);
+    CHECK(table->current == f.model->index(1) && table->current_column == 1);
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(0, 1, 1, 1));
+    dispatch_key(f.window, SDLK_END, true, SDL_KMOD_LCTRL);
+    CHECK(table->current == f.model->index(3) && table->current_column == 2 && table->selected_ranges.get().size() == 1);
+    dispatch_key(f.window, SDLK_A, true, SDL_KMOD_LCTRL);
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(0, 0, 3, 2));
+    // Tab は右へ、行の終わりなら次の行の始めへ
+    table->select_range(tokotachi::CellRange(0, 2, 0, 2));
+    dispatch_key(f.window, SDLK_TAB);
+    CHECK(table->current == f.model->index(1) && table->current_column == 0);
+    // 行を選ぶ使い方
+    table->selection_behavior = tokotachi::SelectionBehavior::ROWS;
+    dispatch_click(f.window, f.cell(2, 1));
+    CHECK(table->is_cell_selected(2, 0) && table->is_cell_selected(2, 2) && table->current_column == 1);
+}
+
+TEST(table_view_edit_and_clipboard)
+{
+    TableFixture f;
+    tokotachi::TableView* table = f.table;
+    dispatch_click(f.window, f.cell(0, 1));
+    // 文字を打つと上書きで編集を始め、Enter で確定して下へ
+    dispatch_text(f.window, "x");
+    CHECK(table->is_editing());
+    dispatch_text(f.window, "y");
+    dispatch_key(f.window, SDLK_RETURN);
+    CHECK(!table->is_editing() && f.text(0, 1) == "xy" && table->current == f.model->index(1) && table->current_column == 1);
+    // F2 は続きから、Tab で確定して右へ
+    dispatch_key(f.window, SDLK_F2);
+    dispatch_text(f.window, "!");
+    dispatch_key(f.window, SDLK_TAB);
+    CHECK(f.text(1, 1) == "1,1!" && table->current_column == 2 && table->focused);
+    // Esc でやめる
+    dispatch_text(f.window, "z");
+    dispatch_key(f.window, SDLK_ESCAPE);
+    CHECK(f.text(1, 2) == "1,2" && !table->is_editing());
+    // Enter は(編集していなくても)下へ
+    dispatch_key(f.window, SDLK_RETURN);
+    CHECK(table->current == f.model->index(2));
+    // 写す: 行は改行、列はタブ
+    table->select_range(tokotachi::CellRange(2, 0, 3, 1));
+    CHECK(table->selected_text() == "2,0\t2,1\n3,0\t3,1");
+    dispatch_key(f.window, SDLK_C, true, SDL_KMOD_LCTRL);
+    std::string copied = tokotachi::clipboard::text();
+    copied.erase(std::remove(copied.begin(), copied.end(), '\r'), copied.end());  // Windows のクリップボードは改行を CR LF にする
+    CHECK(copied == "2,0\t2,1\n3,0\t3,1");
+    // 貼る: current(範囲の左上)から
+    table->select_range(tokotachi::CellRange(0, 1, 0, 1));
+    dispatch_key(f.window, SDLK_V, true, SDL_KMOD_LCTRL);
+    CHECK(f.text(0, 1) == "2,0" && f.text(0, 2) == "2,1" && f.text(1, 1) == "3,0" && f.text(1, 2) == "3,1");
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(0, 1, 1, 2));
+    // 1 つの値は、選んでいるすべてのセルへ
+    tokotachi::clipboard::set_text("v\n");
+    table->select_range(tokotachi::CellRange(2, 0, 3, 0));
+    table->paste();
+    CHECK(f.text(2, 0) == "v" && f.text(3, 0) == "v" && f.text(2, 1) == "2,1");
+    // Delete で空に。編集できないセルは変えない
+    f.model->items.get()[3]->editable = false;
+    table->select_range(tokotachi::CellRange(2, 1, 3, 1));
+    dispatch_key(f.window, SDLK_DELETE);
+    CHECK(f.text(2, 1).empty() && f.text(3, 1) == "3,1");
+    // 編集できないセルのダブルクリックは on_activate
+    int activated = 0;
+    table->on_activate = [&](tokotachi::Object*) { ++activated; };
+    click_with(f.window, f.cell(3, 2), SDL_KMOD_NONE, 2);
+    CHECK(activated == 1 && !table->is_editing());
+    // 並べ替えると、範囲は current のセルだけになる
+    table->select_range(tokotachi::CellRange(0, 0, 1, 1));
+    f.model->sort(0, tokotachi::SortOrder::DESCENDING);
+    CHECK(table->selected_ranges.get().size() == 1);
 }
 
 TEST(list_view_follows_model_changes)

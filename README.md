@@ -27,7 +27,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | `widgets/` | Widget とボタン・入力欄・値の部品・スクロール・タブ・分割・PaintBox・ImageBox・GroupBox |
 | `windows/` | Window・ポップアップ・ダイアログ・メニューバー・ツールバー・ステータスバー |
 | `actions/` | Action・ショートカット・メニュー |
-| `views/` | 一覧と木のモデルとビュー |
+| `views/` | 一覧・木・表のモデルとビュー |
 
 ```cpp
 #include <tokotachi/tokotachi.hpp>

@@ -27,6 +27,8 @@ bool from_json(const Json& j, tokotachi::MouseCursor& out);
 Json to_json(tokotachi::MouseCursor v);
 bool from_json(const Json& j, tokotachi::Orientation& out);
 Json to_json(tokotachi::Orientation v);
+bool from_json(const Json& j, tokotachi::SelectionBehavior& out);
+Json to_json(tokotachi::SelectionBehavior v);
 bool from_json(const Json& j, tokotachi::SelectionMode& out);
 Json to_json(tokotachi::SelectionMode v);
 bool from_json(const Json& j, tokotachi::SortOrder& out);

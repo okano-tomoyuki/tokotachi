@@ -50,10 +50,10 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 |---|---|---|
 | `classes` | パレットに出す、利用者が置けるクラスの一覧(抽象的なクラス・内部で使うクラスは書かない)。無いクラス・余分なクラスがあれば取り出しの道具がエラーにする | `Button`・`LineEdit`・`TabWidget`。`ButtonBase`・`RangeBase`・`ItemView`・`Popup` は書かない |
 | `classes` のテンプレート | `Variable<T>` は `part` として書き、ハンドラ(`on_set`・`on_change`)だけをカタログに載せる。テンプレートであることは Doxygen の XML から取り出し(`template: true`)、キャンバスの対応表には載せない(型の引数は定義ファイルの `type`。dsl-spec.md §4.8) | `Variable` |
-| `classes` の `kind` / `category` | 種類(window・widget・layout・part・object)とパレットの分類。`classes` の順がパレットの順 | 入力(`Button`・`CheckBox`…)・表示(`Label`・`ProgressBar`・`ImageBox`)・一覧(`ListView`・`TreeView`)・入れ物(`Widget`・`GroupBox`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
+| `classes` の `kind` / `category` | 種類(window・widget・layout・part・object)とパレットの分類。`classes` の順がパレットの順 | 入力(`Button`・`CheckBox`…)・表示(`Label`・`ProgressBar`・`ImageBox`)・一覧(`ListView`・`TreeView`・`TableView`)・入れ物(`Widget`・`GroupBox`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
 | `designable` / `not_designable` | デザイン時に設定できるか。まず型で決め(読み書きできて、値の型・列挙型・文字列・配列・参照のいずれか)、そのうえでクラスごとに除く・戻す | `parent`・`bounds`・`focused` は除く(位置と大きさは `geometry` の印で表す) |
 | `accepts_children` | `layout`・`children` を書けるか | `Widget`・`Window`・`Dialog` は可、`Button` は不可 |
-| `child_keys` | 専用の子のキー | `TabWidget` は `tabs`、`Splitter` は `panes`、`ScrollArea` は `content`、`ListView`・`TreeView` は `columns` |
+| `child_keys` | 専用の子のキー | `TabWidget` は `tabs`、`Splitter` は `panes`、`ScrollArea` は `content`、`ListView`・`TreeView`・`TableView` は `columns` |
 | `editor` | インスペクタの編集の種類(型から決まらないもの) | `TextEdit` の `text` は複数行、`Action` の `text` は `&` を含む文字列、`Label` の `color` は色 |
 | `excluded` | Widget の派生で親を渡して作れるが、パレットに出さないクラス(理由を書く)。classes にも excluded にも無い部品があれば、取り出しの道具がエラーにする(新しい部品の書き忘れを防ぐ) | `ButtonBase`・`ScrollBar` |
 | `geometry` | 位置と大きさのプロパティ(ウィンドウと自由な配置の子だけに書ける) | `Widget` の `x`・`y`・`width`・`height` |

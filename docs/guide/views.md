@@ -1,4 +1,4 @@
-# 一覧と木 {#views_guide}
+# 一覧・木・表 {#views_guide}
 
 [TOC]
 
@@ -67,6 +67,25 @@ item->editable = true;                                                          
 tree_view_folders->drag_enabled = true;
 tree_view_folders->drop_enabled = true;
 ```
+
+## 表: TableView
+
+`TableView` は、行と列のセルを表示し、セルを選んで編集します(表計算の流儀)。モデルは一覧と同じです
+(`ListModel` なら `text` が 1 列目、`column_texts` が 2 列目以降)。
+
+```cpp
+tokotachi::TableView* table_view_scores = new tokotachi::TableView(&window);
+table_view_scores->add_column("名前", 100);
+table_view_scores->add_column("点", 70)->alignment = tokotachi::Align::END;
+table_view_scores->model = scores;
+table_view_scores->selection_mode = tokotachi::SelectionMode::MULTI;  // セルの矩形を複数選べる
+```
+
+- クリックでセルを選び、Shift+クリック・Shift+矢印・ドラッグで矩形に広げ、Ctrl+クリックで範囲を加えます。行の見出しで行を、
+  左上の隅ですべてを選びます。選んでいるセルは `selected_ranges`、キーで動かすセルは `current` と `current_column` です。
+- 編集できるセル(モデルの `editable`)は、文字を打つと上書きで、F2・ダブルクリックで続きから編集します。Enter で下へ、Tab で右へ動きます。
+- Ctrl+C・Ctrl+X・Ctrl+V で写す・切り取る・貼る(行は改行、列はタブ)、Delete で空にします。
+- 行を選ぶ使い方は `selection_behavior = SelectionBehavior::ROWS`。線は `grid_visible`、行の番号は `row_header_visible` で消せます。
 
 ## 大量のデータ: ItemModel を派生する
 
