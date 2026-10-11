@@ -33,9 +33,14 @@ export {
   checkThemeOverride,
   colorRoles,
   parseThemeOverride,
+  resolveThemeOverride,
+  resolveThemePresets,
   THEME_DIMENSIONS,
+  themePresetReferences,
   type ParsedThemeOverride,
   type ThemeDimension,
+  type ThemePresetReference,
+  type ThemePresets,
 } from './dsl/themeOverride.ts';
 export * from './dsl/outline.ts';
 export { bindingOf, isBindable, variableTypeOf } from './dsl/bindings.ts';

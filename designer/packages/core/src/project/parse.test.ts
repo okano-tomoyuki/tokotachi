@@ -87,4 +87,17 @@ describe('parseProject', () => {
 }
 `);
   });
+
+  it('登録したテーマの名前と中身を調べる', () => {
+    expect(
+      parseProject(JSON.stringify({ ...valid, theme: { presets: { danger: { radius: 0 } } } }))
+        .diagnostics,
+    ).toEqual([]);
+    expect(codes({ ...valid, theme: { presets: { '1bad': { radius: 0 } } } })).toEqual([
+      'theme.presets.1bad',
+    ]);
+    expect(
+      codes({ ...valid, theme: { presets: { danger: { preset: 'x' } } } }).length,
+    ).toBeGreaterThan(0);
+  });
 });

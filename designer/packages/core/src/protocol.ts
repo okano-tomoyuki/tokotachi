@@ -37,6 +37,8 @@ export type ExtensionToWebviewMessage =
     }
   /** キャンバスの描画の結果。document の後に届く(検証のエラーがあれば描かない)。 */
   | { readonly type: 'canvas'; readonly frame: CanvasFrame }
+  /** ウィンドウが属するプロジェクトに登録したテーマの名前(属さなければ空)。描くたびに送る。 */
+  | { readonly type: 'themePresets'; readonly names: readonly string[] }
   /** キャンバスを描けなかった理由(WebAssembly のモジュールが無い等)。 */
   | { readonly type: 'canvasError'; readonly message: string }
   /** edit の処理の結果。document の送信より後に届く。 */

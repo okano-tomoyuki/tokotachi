@@ -12,6 +12,7 @@ import {
   isImageType,
   namedNodes,
   normalizePath,
+  themePresetReferences,
   variableClass,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
@@ -118,11 +119,11 @@ function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): stri
 }
 
 /** 名前空間の始まり(C++11 でも通るよう、入れ子は 1 つずつ書く)。 */
-function namespaceBegin(namespace: readonly string[]): string {
+export function namespaceBegin(namespace: readonly string[]): string {
   return namespace.map((n) => `namespace ${n}\n{`).join('\n');
 }
 
-function namespaceEnd(namespace: readonly string[]): string {
+export function namespaceEnd(namespace: readonly string[]): string {
   return [...namespace]
     .reverse()
     .map((n) => `}  // namespace ${n}`)
@@ -231,7 +232,13 @@ export function emitCpp(
   const sourceBegin: Region = {
     id: 'tokotachi_source_begin',
     indent: 0,
-    content: `#include "${target.headerInclude}"`,
+    content: [
+      `#include "${target.headerInclude}"`,
+      // プロジェクトに登録したテーマを参照していれば、その関数のヘッダ
+      ...(target.themesInclude !== undefined && themePresetReferences(doc).length > 0
+        ? [`#include "${target.themesInclude}"`]
+        : []),
+    ].join('\n'),
   };
   const init =
     base === 'Dialog'

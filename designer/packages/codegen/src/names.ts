@@ -2,7 +2,10 @@
  * 出力先・クラス名・名前空間・インクルードガード(docs/designer/codegen-design.md §1・§8)。
  * プロジェクトファイル(*.ttproj.json)を作るまでは、設定は CLI・拡張が CppOptions で渡す。
  */
-import { DOCUMENT_EXTENSION, type TtuiDocument } from '@tokotachi-designer/core';
+import { DOCUMENT_EXTENSION, type ThemePresets, type TtuiDocument } from '@tokotachi-designer/core';
+
+/** プロジェクトに登録したテーマの関数を置く共通のヘッダの名前(project-spec.md §4.2)。 */
+export const THEMES_HEADER = 'tokotachi_themes.hpp';
 
 /** 生成するコードのコメントの言語。 */
 export type CommentLocale = 'en' | 'ja';
@@ -18,6 +21,8 @@ export interface CppOptions {
   readonly headerDir: string | undefined;
   readonly sourceDir: string | undefined;
   readonly commentLocale: CommentLocale;
+  /** プロジェクトに登録したテーマと、その関数を置くヘッダ(定義ファイルのフォルダからの相対パス)。プロジェクトに属さなければ無い。 */
+  readonly themes?: { readonly presets: ThemePresets; readonly header: string } | undefined;
 }
 
 export const DEFAULT_CPP_OPTIONS: CppOptions = {
@@ -40,6 +45,8 @@ export interface CppTarget {
   readonly namespace: readonly string[];
   /** インクルードガードのマクロの名前。 */
   readonly includeGuard: string;
+  /** ソースから、登録したテーマのヘッダを include するパス(プロジェクトに属するときだけ)。 */
+  readonly themesInclude?: string;
 }
 
 /** パスの最後の要素(ファイル名)。 */
@@ -94,5 +101,8 @@ export function resolveCppTarget(
     includeGuard: `${options.includeGuardPrefix}${headerFile}`
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, '_'),
+    ...(options.themes
+      ? { themesInclude: relative(options.sourceDir, options.themes.header) }
+      : {}),
   };
 }

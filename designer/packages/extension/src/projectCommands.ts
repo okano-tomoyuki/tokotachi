@@ -176,6 +176,7 @@ export async function chooseColorScheme(project: vscode.Uri): Promise<void> {
     const theme: ProjectTheme = {
       ...(picked.value !== 'SYSTEM' ? { color_scheme: picked.value } : {}),
       ...(doc.theme?.override !== undefined ? { override: doc.theme.override } : {}),
+      ...(doc.theme?.presets !== undefined ? { presets: doc.theme.presets } : {}),
     };
     const rest = { ...doc };
     Reflect.deleteProperty(rest, 'theme');

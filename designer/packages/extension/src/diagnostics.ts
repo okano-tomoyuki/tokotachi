@@ -9,13 +9,15 @@ import {
   parseDocument,
   parseProject,
   PROJECT_EXTENSION,
+  themePresetReferences,
   type Diagnostic,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { projectOf } from './projects.ts';
 
 export function registerDiagnostics(): vscode.Disposable {
   const collection = vscode.languages.createDiagnosticCollection('tokotachiDesigner');
-  const update = (document: vscode.TextDocument): void => {
+  const update = async (document: vscode.TextDocument): Promise<void> => {
     const isProject = document.uri.path.endsWith(PROJECT_EXTENSION);
     if (!isProject && !document.uri.path.endsWith(DOCUMENT_EXTENSION)) {
       return;
@@ -37,6 +39,30 @@ export function registerDiagnostics(): vscode.Disposable {
         }
       }
     }
+    // プロジェクトに登録したテーマの参照(プロジェクトに属するウィンドウだけが使え、登録した名前でなければならない)
+    const references = parsed?.document ? themePresetReferences(parsed.document) : [];
+    if (references.length > 0) {
+      const project = await projectOf(document.uri);
+      const presets = project?.project.doc.theme?.presets ?? {};
+      for (const ref of references) {
+        if (!project || !Object.hasOwn(presets, ref.name)) {
+          diagnostics.push({
+            severity: 'error',
+            code: 'unknown-theme',
+            message: project
+              ? vscode.l10n.t('The theme "{0}" is not registered in the project', ref.name)
+              : vscode.l10n.t(
+                  'The theme "{0}" can be used only in a window of a project',
+                  ref.name,
+                ),
+            path: ref.at,
+          });
+        }
+      }
+      if (document.isClosed || document.getText() !== text) {
+        return; // 調べている間に変わった: 新しい内容で調べ直す
+      }
+    }
     collection.set(
       document.uri,
       diagnostics.map((d) => {
@@ -54,14 +80,23 @@ export function registerDiagnostics(): vscode.Disposable {
       }),
     );
   };
+  const run = (document: vscode.TextDocument): void => {
+    void update(document);
+  };
   for (const document of vscode.workspace.textDocuments) {
-    update(document);
+    run(document);
   }
   return vscode.Disposable.from(
     collection,
-    vscode.workspace.onDidOpenTextDocument(update),
+    vscode.workspace.onDidOpenTextDocument(run),
     vscode.workspace.onDidChangeTextDocument((e) => {
-      update(e.document);
+      run(e.document);
+      // プロジェクトのテーマが変わったら、開いているウィンドウの参照を調べ直す
+      if (e.document.uri.path.endsWith(PROJECT_EXTENSION)) {
+        vscode.workspace.textDocuments
+          .filter((d) => d.uri.path.endsWith(DOCUMENT_EXTENSION))
+          .forEach(run);
+      }
     }),
     vscode.workspace.onDidCloseTextDocument((d) => {
       collection.delete(d.uri);

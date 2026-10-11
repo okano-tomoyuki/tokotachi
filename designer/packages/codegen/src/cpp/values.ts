@@ -80,6 +80,11 @@ function color(hex: string): string {
   return `tokotachi::Color(${parts.join(', ')})`;
 }
 
+/** プロジェクトに登録したテーマの関数の呼び出し(project-spec.md §4.2)。 */
+export function themeFunction(preset: string): string {
+  return `${preset}_theme()`;
+}
+
 /** テーマの上書きを 1 つの式に(`tokotachi::ThemeOverride().set(...).set_radius(0)`。docs/adr/0042)。 */
 export function themeOverrideValue(value: unknown): string {
   const parsed = parseThemeOverride(value);
@@ -91,7 +96,10 @@ export function themeOverrideValue(value: unknown): string {
     ),
     ...parsed.dimensions.map(({ name, value: v }) => `.set_${name}(${number(v, 'float')})`),
   ];
-  return `tokotachi::ThemeOverride()${calls.join('')}`;
+  // プロジェクトに登録したテーマは、共通のヘッダの関数(<名前>_theme())から始める
+  const base =
+    parsed.preset === undefined ? 'tokotachi::ThemeOverride()' : themeFunction(parsed.preset);
+  return `${base}${calls.join('')}`;
 }
 
 /** 値の型(Margins・Size 等)。 */

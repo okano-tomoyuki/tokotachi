@@ -47,6 +47,8 @@ export const ProjectTheme = z.strictObject({
   color_scheme: z.enum(['SYSTEM', 'LIGHT', 'DARK']).optional(),
   /** 標準のテーマ(ライト・ダーク)に重ねる上書き(部品の theme_override と同じ書き方。dsl-spec.md §5)。 */
   override: ThemeOverrideSchema.optional(),
+  /** 名前を付けて登録したテーマ(部品の theme_override から { "preset": "名前" } で参照する。名前は識別子)。 */
+  presets: z.record(z.string(), ThemeOverrideSchema).optional(),
 });
 export type ProjectTheme = z.infer<typeof ProjectTheme>;
 

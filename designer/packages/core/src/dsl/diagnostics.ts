@@ -38,7 +38,8 @@ export type DiagnosticCode =
   | 'invalid-tool-item'
   | 'invalid-dialog-button'
   // ファイル(core では調べず、拡張が調べて出す)
-  | 'missing-image';
+  | 'missing-image'
+  | 'unknown-theme';
 
 export interface Diagnostic {
   readonly severity: Severity;

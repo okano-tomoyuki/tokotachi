@@ -31,7 +31,11 @@ function write(path: string, text: string): void {
 const doc: TtprojDocument = {
   format_version: 1,
   codegen: { comment_locale: 'ja', namespace: 'app', header_dir: 'include', source_dir: 'src' },
-  theme: { color_scheme: 'LIGHT', override: { colors: { ACCENT: '#7C3AED' }, field_radius: 2 } },
+  theme: {
+    color_scheme: 'LIGHT',
+    override: { colors: { ACCENT: '#7C3AED' }, field_radius: 2 },
+    presets: { danger: { colors: { ACCENT: '#DC2626' }, radius: 0 } },
+  },
   main_window: 'ui/main_window.ttui.json',
   windows: ['ui/main_window.ttui.json', 'ui/settings_dialog.ttui.json'],
 };
@@ -39,7 +43,12 @@ const doc: TtprojDocument = {
 rmSync(project, { recursive: true, force: true });
 write(join(project, 'sample_app.ttproj.json'), serializeProject(doc));
 const windows = (doc.windows ?? []).map((path) => {
-  const text = readFileSync(join(designer, 'samples', path.replace('ui/', '')), 'utf8');
+  let text = readFileSync(join(designer, 'samples', path.replace('ui/', '')), 'utf8');
+  // 登録したテーマの参照を試す(見本はプロジェクトに属さないので、ここで足す)
+  text = text.replace(
+    '"style": "SECONDARY"',
+    '"style": "SECONDARY", "theme_override": { "preset": "danger", "field_padding": 4 }',
+  );
   write(join(project, path), text);
   return { path, doc: TtuiDocument.parse(JSON.parse(text)) };
 });

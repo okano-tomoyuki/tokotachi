@@ -2,7 +2,13 @@
  * コード生成(docs/designer/codegen-design.md)。
  * 文字列を受け取り文字列を返すだけで、ファイルの入出力は呼び出し側(拡張・CLI)が行う。
  */
-import { imageReferences, l10n, normalizePath, type TtuiDocument } from '@tokotachi-designer/core';
+import {
+  imageReferences,
+  l10n,
+  normalizePath,
+  themePresetReferences,
+  type TtuiDocument,
+} from '@tokotachi-designer/core';
 import { emitCpp } from './cpp/emit.ts';
 import { embedImages } from './cpp/images.ts';
 import { CPP_NAMES, cppSyntax } from './cpp/syntax.ts';
@@ -60,19 +66,28 @@ export function generateCpp(
   readImage: (path: string) => Uint8Array | undefined = () => undefined,
 ): GenerateResult {
   const target = resolveCppTarget(doc, dslFileName, options);
+  const fail = (error: string): GenerateResult => ({
+    files: [
+      { path: target.header, result: { ok: false, error } },
+      { path: target.source, result: { ok: false, error } },
+    ],
+    warnings: [],
+  });
+  // プロジェクトに登録したテーマの参照は、プロジェクトに属するウィンドウだけが使え、登録した名前でなければならない
+  for (const ref of themePresetReferences(doc)) {
+    if (!options.themes) {
+      return fail(l10n.t('The theme "{0}" can be used only in a window of a project', ref.name));
+    }
+    if (!Object.hasOwn(options.themes.presets, ref.name)) {
+      return fail(l10n.t('The theme "{0}" is not registered in the project', ref.name));
+    }
+  }
   const paths = imageReferences(doc).map((r) => normalizePath(r.path));
   const data = new Map<string, Uint8Array>();
   for (const path of paths) {
     const bytes = data.has(path) ? data.get(path) : readImage(path);
     if (bytes === undefined) {
-      const error = l10n.t('Cannot read the image file "{0}"', path);
-      return {
-        files: [
-          { path: target.header, result: { ok: false, error } },
-          { path: target.source, result: { ok: false, error } },
-        ],
-        warnings: [],
-      };
+      return fail(l10n.t('Cannot read the image file "{0}"', path));
     }
     data.set(path, bytes);
   }

@@ -1,6 +1,7 @@
 /**
  * テーマの上書き(theme_override。docs/adr/0042)の入力欄(docs/designer/editor-design.md §5)。
- * 上書きする役割ごとに、ライト・ダークの色を選ぶ(同じなら 1 つの色として書く)。寸法は数値で、空なら継ぐ。
+ * プロジェクトに登録したテーマ(preset)を選び、その上に、役割ごとのライト・ダークの色(同じなら 1 つの色として書く)と
+ * 寸法(空なら継ぐ)を重ねる。
  */
 import {
   colorRoles,
@@ -9,6 +10,7 @@ import {
   THEME_DIMENSIONS,
   type PropertyValue,
 } from '@tokotachi-designer/core';
+import { useDesigner } from '../store.ts';
 
 interface Props {
   /** 書いた値(無ければ undefined)。 */
@@ -27,10 +29,14 @@ interface Entry {
 const INITIAL_COLOR = '#808080';
 
 function build(
+  preset: string | undefined,
   colors: readonly Entry[],
   dimensions: Readonly<Record<string, number>>,
 ): PropertyValue | null {
   const out: Record<string, PropertyValue> = {};
+  if (preset !== undefined) {
+    out['preset'] = preset;
+  }
   if (colors.length > 0) {
     out['colors'] = Object.fromEntries(
       colors.map((c) => [c.role, c.light === c.dark ? c.light : { light: c.light, dark: c.dark }]),
@@ -46,14 +52,20 @@ function build(
 }
 
 export function ThemeOverrideField({ value, onCommit }: Props) {
+  const presets = useDesigner((s) => s.themePresets);
   const parsed = parseThemeOverride(value);
+  const preset = parsed.preset;
   const colors: Entry[] = parsed.colors.map((c) => ({ ...c }));
   const dimensions: Record<string, number> = Object.fromEntries(
     parsed.dimensions.map((d) => [d.name, d.value]),
   );
   const unused = colorRoles().filter((r) => !colors.some((c) => c.role === r));
-  const commit = (nextColors: readonly Entry[], nextDimensions: Record<string, number>): void => {
-    onCommit(build(nextColors, nextDimensions));
+  const commit = (
+    nextColors: readonly Entry[],
+    nextDimensions: Record<string, number>,
+    nextPreset: string | undefined = preset,
+  ): void => {
+    onCommit(build(nextPreset, nextColors, nextDimensions));
   };
   const setColor = (role: string, kind: 'light' | 'dark', color: string): void => {
     commit(
@@ -63,6 +75,28 @@ export function ThemeOverrideField({ value, onCommit }: Props) {
   };
   return (
     <div className="theme-override">
+      {(presets.length > 0 || preset !== undefined) && (
+        <label className="theme-override-row">
+          <span className="theme-override-role">{l10n.t('Theme')}</span>
+          <select
+            value={preset ?? ''}
+            onChange={(e) => {
+              commit(colors, dimensions, e.target.value === '' ? undefined : e.target.value);
+            }}
+          >
+            <option value="">{l10n.t('(none)')}</option>
+            {/* 登録していない名前を参照していても、選んでいることが分かるようにする(問題パネルにエラーが出る) */}
+            {[
+              ...presets,
+              ...(preset !== undefined && !presets.includes(preset) ? [preset] : []),
+            ].map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {colors.map((c) => (
         <div key={c.role} className="theme-override-row">
           <span className="theme-override-role">{c.role}</span>

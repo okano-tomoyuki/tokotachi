@@ -303,7 +303,9 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 - `colors` は役割(`ColorRole` の値)から色へ。色は `"#RRGGBB"`・`"#RRGGBBAA"`(ライト・ダークで同じ)か、`{ "light": ..., "dark": ... }`。
 - 寸法は 0 以上の数(dp)。書いていない役割・寸法は親から継ぐ。
 - 生成するコードは 1 つの式にする(`tokotachi::ThemeOverride().set(...).set_radius(0)`)。キャンバスも同じ値を設定して描く。
-- プロジェクトのテーマの上書き(project-spec.md §4.1)も同じ書き方。
+- `"preset": "名前"` で、プロジェクトに登録したテーマ(project-spec.md §4.2)を参照できる。`colors`・寸法を一緒に書くと、テーマの上に重なる
+  (`{ "preset": "danger", "radius": 0 }`)。プロジェクトに属するウィンドウだけが使える。
+- プロジェクトのテーマの上書き(project-spec.md §4.1)も同じ書き方(`preset` は書けない)。
 
 ## 6. ハンドラ
 

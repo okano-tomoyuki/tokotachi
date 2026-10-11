@@ -63,9 +63,21 @@ export function validateProject(project: TtprojDocument): Diagnostic[] {
   }
   const override = project.theme?.override;
   if (override !== undefined) {
-    const problem = checkThemeOverride(override);
+    const problem = checkThemeOverride(override, false);
     if (problem !== null) {
       error(problem, ['theme', 'override']);
+    }
+  }
+  for (const [name, preset] of Object.entries(project.theme?.presets ?? {})) {
+    // 名前は生成する関数の名前(<名前>_theme)にもなる
+    const invalid = isValidIdentifier(name);
+    if (invalid !== null) {
+      error(invalid, ['theme', 'presets', name]);
+      continue;
+    }
+    const problem = checkThemeOverride(preset, false);
+    if (problem !== null) {
+      error(problem, ['theme', 'presets', name]);
     }
   }
   // ヘッダ・ソースのフォルダを 1 つにまとめるとき、同じ名前のウィンドウがあると出力先が重なる
@@ -172,6 +184,7 @@ export function serializeProject(project: TtprojDocument): string {
         ? { color_scheme: project.theme.color_scheme }
         : {}),
       ...(project.theme.override !== undefined ? { override: project.theme.override } : {}),
+      ...(project.theme.presets !== undefined ? { presets: project.theme.presets } : {}),
     };
     entries.push(`  "theme": ${indented(theme, 1)}`);
   }

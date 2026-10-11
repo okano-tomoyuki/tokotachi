@@ -80,6 +80,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
         const images = await readImages(vscode.Uri.joinPath(document.uri, '..'), parsed.document);
         // プロジェクトに属していれば、そのテーマで描く(project-spec.md §4.1)
         const theme = (await projectOf(document.uri))?.project.doc.theme;
+        await post({ type: 'themePresets', names: Object.keys(theme?.presets ?? {}) });
         const override =
           theme?.override !== undefined && checkThemeOverride(theme.override) === null
             ? theme.override
@@ -92,6 +93,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
           tabs,
           images,
           override,
+          theme?.presets,
         );
         await post({ type: 'canvas', frame });
       } catch (e) {

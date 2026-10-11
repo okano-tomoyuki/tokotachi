@@ -50,6 +50,8 @@ export interface DesignerState {
   readonly pointer: { readonly x: number; readonly y: number } | undefined;
   /** キャンバスの倍率(1 = 100%)。 */
   readonly zoom: number;
+  /** プロジェクトに登録したテーマの名前(theme_override の preset で選べるもの)。 */
+  readonly themePresets: readonly string[];
   readonly select: (id: string | undefined) => void;
 }
 
@@ -68,6 +70,7 @@ export const useDesigner = create<DesignerState>()((set) => ({
   ghost: undefined,
   pointer: undefined,
   zoom: 1,
+  themePresets: [],
   select: (id) => {
     set({ selection: id });
   },
@@ -131,6 +134,9 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
       break;
     case 'canvasError':
       useDesigner.setState({ canvasError: message.message });
+      break;
+    case 'themePresets':
+      useDesigner.setState({ themePresets: message.names });
       break;
     case 'editResult':
       if (!message.ok) {

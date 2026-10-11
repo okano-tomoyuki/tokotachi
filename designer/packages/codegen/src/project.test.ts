@@ -125,4 +125,53 @@ describe('project', () => {
     expect(plain).not.toContain('color_scheme');
     expect(plain).not.toContain('ThemeOverride');
   });
+
+  it('登録したテーマを共通のヘッダの関数にし、参照するウィンドウはそれを include して呼ぶ', () => {
+    const project: TtprojDocument = {
+      ...PROJECT,
+      theme: { presets: { danger: { colors: { ACCENT: '#DC2626' } } } },
+    };
+    const header = text(
+      generateProject(project, 'my_app.ttproj.json', WINDOWS, () => undefined),
+      'include/tokotachi_themes.hpp',
+    );
+    expect(header).toContain('inline tokotachi::ThemeOverride danger_theme()');
+    expect(header).toContain('namespace app');
+    // 参照するウィンドウ
+    const doc = JSON.parse(JSON.stringify(SETTINGS_DIALOG)) as typeof SETTINGS_DIALOG;
+    (doc.window as { properties?: Record<string, unknown> }).properties = {
+      ...doc.window.properties,
+      theme_override: { preset: 'danger', radius: 0 },
+    };
+    const path = 'ui/dialogs/settings_dialog.ttui.json';
+    const r = generateCpp(
+      doc,
+      'settings_dialog.ttui.json',
+      () => undefined,
+      windowCppOptions(project, path),
+    );
+    const source = r.files.find((f) => f.path.endsWith('.cpp'));
+    expect(source?.result.ok && source.result.text).toContain(
+      '#include "../include/tokotachi_themes.hpp"',
+    );
+    expect(source?.result.ok && source.result.text).toContain(
+      'theme_override = danger_theme().set_radius(0);',
+    );
+    // 登録していない名前・プロジェクトに属さないウィンドウはエラー
+    const unknown = generateCpp(
+      doc,
+      'settings_dialog.ttui.json',
+      () => undefined,
+      windowCppOptions(PROJECT, path),
+    );
+    expect(unknown.files.every((f) => !f.result.ok)).toBe(true);
+    const loose = generateCpp(doc, 'settings_dialog.ttui.json', () => undefined);
+    expect(loose.files.every((f) => !f.result.ok)).toBe(true);
+    // テーマを登録していなければ、ヘッダは作らない
+    const files = generateProject(PROJECT, 'my_app.ttproj.json', WINDOWS, () => undefined);
+    expect('error' in files ? [] : files.files.map((f) => f.path)).toEqual([
+      'main.cpp',
+      'CMakeLists.txt',
+    ]);
+  });
 });

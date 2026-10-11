@@ -74,7 +74,11 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 ```json
 "theme": {
   "color_scheme": "DARK",
-  "override": { "colors": { "ACCENT": "#7C3AED" }, "field_radius": 2 }
+  "override": { "colors": { "ACCENT": "#7C3AED" }, "field_radius": 2 },
+  "presets": {
+    "danger": { "colors": { "ACCENT": "#DC2626", "FIELD": { "light": "#FEF2F2", "dark": "#450A0A" } } },
+    "compact": { "radius": 0, "field_padding": 4 }
+  }
 }
 ```
 
@@ -82,11 +86,24 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 |---|---|---|
 | `color_scheme` | `SYSTEM` | ライト・ダークの選び方(`SYSTEM`: OS の設定に従う・`LIGHT`・`DARK`) |
 | `override` | なし | 標準のテーマ(ライト・ダーク)に重ねる上書き(部品の `theme_override` と同じ書き方。dsl-spec.md §5.3) |
+| `presets` | なし | 名前を付けて登録したテーマ(名前 → 上書き)。部品の `theme_override` から `{ "preset": "名前" }` で参照する(§4.2) |
 
 - 生成する main.cpp で、`app.color_scheme` を設定し、`Theme::light()`・`Theme::dark()` に上書きを重ねて `app.light_theme`・`app.dark_theme` にする。
 - デザイナーのキャンバスは、プロジェクトに属するウィンドウをこのテーマで描く。`color_scheme` が `SYSTEM`(か、プロジェクトに属さない)なら、
   実行するまで OS の設定は分からないので、拡張の設定 `tokotachiDesigner.canvas.colorScheme`(既定は VS Code の配色テーマに合わせる)で決める。
-- `override` の役割・色・寸法の誤りはエラーにする(JSON Schema でも補完する)。
+- `override`・`presets` の役割・色・寸法の誤りはエラーにする(JSON Schema でも補完する)。`override`・`presets` には `preset` を書けない。
+
+### 4.2 登録したテーマ(`presets`)
+
+共通の自作テーマを、名前を付けてプロジェクトに登録し、部品から参照する(部品の種類によらず、入れ物に設定すれば中の部品すべてに効く)。
+
+- 名前は識別子(生成する関数の名前 `<名前>_theme` にもなる)。
+- プロジェクトの生成で、`header_dir`(無ければプロジェクトのフォルダ)に `tokotachi_themes.hpp` を作り、テーマごとに
+  `inline tokotachi::ThemeOverride <名前>_theme()` を置く(名前空間は `codegen.namespace`)。テーマを登録していなければ作らない。
+- 参照する部品は `<名前>_theme()` から始めて、部品に書いた色・寸法をつなげる(`danger_theme().set_radius(0)`)。
+  そのウィンドウのソースは `tokotachi_themes.hpp` を include する。テーマの中身を変えても、ウィンドウのコードは変わらない。
+- 参照できるのはプロジェクトに属するウィンドウだけ。登録していない名前・プロジェクトに属さないウィンドウでの参照はエラー
+  (問題パネル。コードは生成しない)。キャンバスは、参照を登録した中身に展開して描く。
 
 ## 5. 起動部分と CMakeLists.txt
 

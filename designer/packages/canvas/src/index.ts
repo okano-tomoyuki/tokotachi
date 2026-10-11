@@ -9,7 +9,13 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildSetup, type Op } from '@tokotachi-designer/codegen';
-import { isImageType, normalizePath, type TtuiDocument } from '@tokotachi-designer/core';
+import {
+  isImageType,
+  normalizePath,
+  resolveThemePresets,
+  type ThemePresets,
+  type TtuiDocument,
+} from '@tokotachi-designer/core';
 import { systemFonts } from './fonts.ts';
 import { withPlaceholders } from './placeholders.ts';
 
@@ -105,6 +111,7 @@ export class Canvas {
    * @param options.tabs 表示するタブ(TabWidget の名前 → 位置。デザイナーで、選んだ部品が入っているタブを出す)
    * @param options.images 定義ファイルが参照する画像の中身(正規化したパス → 中身)。無い画像は描かない
    * @param options.themeOverride アプリケーションのテーマに重ねる上書き(プロジェクトの theme.override。検証済みのもの)
+   * @param options.themePresets プロジェクトに登録したテーマ(theme.presets)。部品の theme_override の preset を展開する
    */
   render(
     doc: TtuiDocument,
@@ -114,9 +121,12 @@ export class Canvas {
       tabs?: Readonly<Record<string, number>>;
       images?: ReadonlyMap<string, Uint8Array>;
       themeOverride?: Readonly<Record<string, unknown>> | undefined;
+      themePresets?: ThemePresets | undefined;
     } = {},
   ): RenderResult {
-    const target = options.placeholders === true ? withPlaceholders(doc) : doc;
+    // プロジェクトに登録したテーマの参照は、その中身に展開して描く(生成するコードの <名前>_theme() と同じ)
+    const resolved = resolveThemePresets(doc, options.themePresets);
+    const target = options.placeholders === true ? withPlaceholders(resolved) : resolved;
     // タブは、すべての部品を組んだ後に選ぶ(タブが無いと効かない)
     const show = Object.entries(options.tabs ?? {}).map(([name, index]): Op => ({
       op: 'set',
