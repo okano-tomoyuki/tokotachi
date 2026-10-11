@@ -166,9 +166,18 @@
       ],
       "view/item/context": [
         {
+          "command": "tokotachiDesigner.newWindow",
+          "when": "view == tokotachiDesigner.projects && viewItem == project",
+          "group": "inline@1"
+        },
+        {
           "command": "tokotachiDesigner.generateProject",
           "when": "view == tokotachiDesigner.projects && viewItem == project",
-          "group": "inline"
+          "group": "inline@2"
+        },
+        {
+          "command": "tokotachiDesigner.newWindow",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
         },
         {
           "command": "tokotachiDesigner.generateProject",

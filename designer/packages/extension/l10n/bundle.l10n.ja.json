@@ -246,5 +246,7 @@
   "The project file cannot be shown because its content is invalid.": "内容が正しくないため、プロジェクトファイルを表示できません。",
   "Project Settings: {0}": "プロジェクトの設定: {0}",
   "Generate the code of all windows and the startup code": "すべてのウィンドウのコードと起動部分を生成する",
-  "Generate Project Code": "プロジェクトのコードを生成"
+  "Generate Project Code": "プロジェクトのコードを生成",
+  "Not in a project": "プロジェクトに属さない",
+  "Add the new window to which project?": "新しいウィンドウをどのプロジェクトに加えますか?"
 }

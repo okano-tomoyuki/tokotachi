@@ -5,11 +5,13 @@
 import {
   DOCUMENT_EXTENSION,
   isValidIdentifier,
+  PROJECT_EXTENSION,
   serializeDocument,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 import { addToNearestProject } from './projectCommands.ts';
+import { addWindowToProject, findProjects } from './projects.ts';
 
 /** snake_case から PascalCase(main_window → MainWindow)。 */
 function className(name: string): string {
@@ -54,12 +56,77 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
   }
 }
 
-export async function newWindow(folder?: vscode.Uri): Promise<void> {
-  const base = folder ?? vscode.workspace.workspaceFolders?.[0]?.uri;
-  if (!base) {
+/**
+ * 新しいウィンドウを作るフォルダと、加えるプロジェクト。project が 'nearest' なら、同じか上のフォルダのいちばん近いプロジェクトに加え、
+ * undefined ならどのプロジェクトにも加えない。
+ */
+interface Destination {
+  readonly folder: vscode.Uri;
+  readonly project: vscode.Uri | 'nearest' | undefined;
+}
+
+/**
+ * コマンドの引数から、作る場所を決める。引数は呼ばれた場所で違う: エクスプローラーはフォルダの URI、プロジェクトのビューの項目は
+ * その項目、「新しいファイル」のメニューなどは別のオブジェクトか無し。URI・項目でなければ、プロジェクトを選んでもらう。
+ * @returns 選ぶのをやめたら undefined
+ */
+async function destinationOf(arg: unknown): Promise<Destination | undefined> {
+  if (arg instanceof vscode.Uri) {
+    const isFolder = await vscode.workspace.fs.stat(arg).then(
+      (s) => (s.type & vscode.FileType.Directory) !== 0,
+      () => false,
+    );
+    return { folder: isFolder ? arg : vscode.Uri.joinPath(arg, '..'), project: 'nearest' };
+  }
+  const node = arg as { kind?: unknown; uri?: unknown; project?: { uri?: unknown } } | undefined;
+  const projectUri = node?.project?.uri instanceof vscode.Uri ? node.project.uri : undefined;
+  if (node?.kind === 'project' && projectUri) {
+    return { folder: vscode.Uri.joinPath(projectUri, '..'), project: projectUri };
+  }
+  if (node?.kind === 'window' && node.uri instanceof vscode.Uri) {
+    return { folder: vscode.Uri.joinPath(node.uri, '..'), project: projectUri };
+  }
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri;
+  const projects = (await findProjects()).filter((p) => p.doc !== undefined);
+  const first = projects[0];
+  if (projects.length === 0 || !first) {
+    return root ? { folder: root, project: undefined } : undefined;
+  }
+  if (projects.length === 1) {
+    return { folder: vscode.Uri.joinPath(first.uri, '..'), project: first.uri };
+  }
+  const picked = await vscode.window.showQuickPick(
+    [
+      ...projects.map((p) => ({
+        label: (p.uri.path.split('/').pop() ?? '').replace(PROJECT_EXTENSION, ''),
+        description: vscode.workspace.asRelativePath(vscode.Uri.joinPath(p.uri, '..')),
+        destination: { folder: vscode.Uri.joinPath(p.uri, '..'), project: p.uri },
+      })),
+      ...(root
+        ? [
+            {
+              label: vscode.l10n.t('Not in a project'),
+              description: vscode.workspace.asRelativePath(root),
+              destination: { folder: root, project: undefined } as Destination,
+            },
+          ]
+        : []),
+    ],
+    { title: vscode.l10n.t('Add the new window to which project?') },
+  );
+  return picked?.destination;
+}
+
+export async function newWindow(arg?: unknown): Promise<void> {
+  if (!vscode.workspace.workspaceFolders?.length && !(arg instanceof vscode.Uri)) {
     void vscode.window.showErrorMessage(vscode.l10n.t('Open a folder first.'));
     return;
   }
+  const destination = await destinationOf(arg);
+  if (!destination) {
+    return;
+  }
+  const base = destination.folder;
   let initial = 'main_window';
   for (let i = 2; await exists(vscode.Uri.joinPath(base, `${initial}${DOCUMENT_EXTENSION}`)); i++) {
     initial = `window${String(i)}`;
@@ -88,7 +155,11 @@ export async function newWindow(folder?: vscode.Uri): Promise<void> {
     uri,
     new TextEncoder().encode(serializeDocument(newWindowDocument(name))),
   );
-  // 同じフォルダか上のフォルダにプロジェクトがあれば、そこに加える
-  await addToNearestProject(uri);
+  if (destination.project === 'nearest') {
+    // 同じフォルダか上のフォルダにプロジェクトがあれば、そこに加える
+    await addToNearestProject(uri);
+  } else if (destination.project) {
+    await addWindowToProject(destination.project, uri);
+  }
   await vscode.commands.executeCommand('vscode.openWith', uri, 'tokotachiDesigner.designer');
 }
