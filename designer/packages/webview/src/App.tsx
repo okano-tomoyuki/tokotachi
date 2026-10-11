@@ -1,5 +1,6 @@
 import { hasErrors, l10n } from '@tokotachi-designer/core';
 import { useEffect } from 'react';
+import { duplicateSelection, installClipboard } from './clipboard.ts';
 import { CanvasView } from './components/CanvasView.tsx';
 import { ContextMenu } from './components/ContextMenu.tsx';
 import { GhostView } from './components/GhostView.tsx';
@@ -22,14 +23,24 @@ export function App() {
       }
       if (e.key === 'Delete') {
         removeSelected();
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        e.key.toLowerCase() === 'd'
+      ) {
+        e.preventDefault();
+        duplicateSelection();
       } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         e.preventDefault();
         moveSelected(e.key === 'ArrowUp' ? -1 : 1);
       }
     };
     window.addEventListener('keydown', key);
+    const uninstall = installClipboard();
     return () => {
       window.removeEventListener('keydown', key);
+      uninstall();
     };
   }, []);
   const document = useDesigner((s) => s.document);

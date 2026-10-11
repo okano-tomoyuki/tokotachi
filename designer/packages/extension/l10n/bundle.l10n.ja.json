@@ -256,5 +256,10 @@
   "{0} or more": "{0} 以上",
   "{0} or less": "{0} 以下",
   "Range: {0}": "範囲: {0}",
-  "{0} is out of the range of \"{1}\" ({2})": "{0} は \"{1}\" の範囲({2})の外です"
+  "{0} is out of the range of \"{1}\" ({2})": "{0} は \"{1}\" の範囲({2})の外です",
+  "Cut": "切り取り",
+  "Copy": "コピー",
+  "Paste": "貼り付け",
+  "Duplicate": "複製",
+  "Select where to paste the widgets": "部品を貼り付ける場所を選んでください"
 }

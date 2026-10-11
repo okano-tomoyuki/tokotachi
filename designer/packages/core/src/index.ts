@@ -66,6 +66,16 @@ export {
   type CommandResult,
   type EditCommand,
 } from './edit/commands.ts';
+export {
+  canCopy,
+  CLIPBOARD_FORMAT,
+  copyNodes,
+  parseClipboard,
+  preparePaste,
+  serializeClipboard,
+  type ClipboardData,
+  type ClipboardItem,
+} from './edit/clipboard.ts';
 export { minimalTextEdit, type TextEdit } from './edit/textEdit.ts';
 export { variableValue } from './edit/variables.ts';
 export type * from './protocol.ts';

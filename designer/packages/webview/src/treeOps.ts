@@ -3,6 +3,7 @@
  * 足す・並べ替える・消す操作を出す。
  */
 import {
+  canCopy,
   findClass,
   getCatalog,
   l10n,
@@ -12,6 +13,7 @@ import {
   type JsonPath,
   type OutlineNode,
 } from '@tokotachi-designer/core';
+import { copySelection, duplicateSelection, pasteFromClipboard } from './clipboard.ts';
 import { selectedNode, sendEdit, useDesigner, type MenuItem } from './store.ts';
 
 interface Json {
@@ -220,6 +222,38 @@ export function moveSelected(delta: -1 | 1): void {
 /** ノードの右クリックのメニュー(足す操作、並べ替え、削除)。 */
 export function nodeMenu(node: OutlineNode): MenuItem[] {
   const items = addOps(node);
+  const doc = useDesigner.getState().document;
+  const copyable = doc !== undefined && canCopy(doc, node.path);
+  items.push(
+    {
+      label: l10n.t('Cut'),
+      shortcut: 'Ctrl+X',
+      separator: items.length > 0,
+      disabled: !copyable || !canRemove(node),
+      run: () => {
+        copySelection(true);
+      },
+    },
+    {
+      label: l10n.t('Copy'),
+      shortcut: 'Ctrl+C',
+      disabled: !copyable,
+      run: () => {
+        copySelection(false);
+      },
+    },
+    {
+      label: l10n.t('Paste'),
+      shortcut: 'Ctrl+V',
+      run: pasteFromClipboard,
+    },
+    {
+      label: l10n.t('Duplicate'),
+      shortcut: 'Ctrl+D',
+      disabled: !copyable,
+      run: duplicateSelection,
+    },
+  );
   if (movable(node)) {
     items.push(
       {

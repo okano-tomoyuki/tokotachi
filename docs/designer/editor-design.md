@@ -111,6 +111,18 @@ Bethany と同じ。
 - 列の削除・並べ替えは `remove`・`moveSibling`、プロパティ(title・width・alignment)は `setProperties`。
 - 構造の木では列を一覧の部品の子に出し、一覧の部品か列を選んでいるときに「+ 列」を出す。列を選ぶと、キャンバスには一覧の部品の枠を出す。
 
+### 3.6 コピー・貼り付け・複製([clipboard.ts](../../designer/packages/core/src/edit/clipboard.ts))
+
+- コピーできるのは部品(子孫ごと)・Action・オブジェクト・Variable。目印(`"format": "tokotachi-designer/nodes"`)を付けた JSON を
+  システムのクリップボードに置くので、ほかの定義ファイルにも貼り付けられる。
+- 貼り付け(`paste` のコマンド)は、名前が重なるものを子孫まで改名する(末尾の数字を進める: `button_ok` → `button_ok_2`)。
+  文字(text)が元の名前と同じなら文字も改名する。部品はパレットのクリックと同じ場所に入れ、Action・オブジェクト・Variable は一覧の終わりに足す。
+- 貼り付けたものが、貼り付け先に無い Variable・Action・部品を参照していれば、その参照を外す(ほかのファイルからの貼り付けで、
+  検証のエラーにならないように)。ハンドラの名前はそのまま残す(同じハンドラを共有する)。
+- 複製(Ctrl+D)は、コピーしてすぐ後ろに貼り付ける(BoxLayout は次の項目、自由な配置は 16dp ずらす。クリップボードは変えない)。
+- 操作: Ctrl+C・X・V(VS Code が Webview の copy・cut・paste のイベントにする)、Ctrl+D、構造の木の右クリックのメニュー
+  (Clipboard API で読み書きし、読めなければこの画面で最後にコピーしたものを使う)。入力欄の中では文字のコピー・貼り付けになる。
+
 ## 4. キャンバス
 
 - 拡張は、TextDocument が変わるたびに(続けて変わったときは最後の内容だけを)、WebAssembly の Tokotachi で描き直し、

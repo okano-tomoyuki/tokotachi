@@ -40,6 +40,7 @@ import {
   setMenuTitle,
   type Bar,
 } from './menus.ts';
+import { pasteNodes, type ClipboardItem } from './clipboard.ts';
 import {
   addVariable,
   removeBindings,
@@ -138,6 +139,12 @@ export type EditCommand =
     }
   /** 同じ並びの中で前(-1)・後ろ(1)へ動かす。 */
   | { readonly kind: 'moveSibling'; readonly target: JsonPath; readonly delta: number }
+  /** コピーしたものを貼り付ける(clipboard.ts)。部品は slot に入れ、名前が重なるものは改名する。 */
+  | {
+      readonly kind: 'paste';
+      readonly items: readonly ClipboardItem[];
+      readonly slot?: Slot | undefined;
+    }
   | { readonly kind: 'batch'; readonly commands: readonly EditCommand[] };
 
 export type CommandResult =
@@ -395,6 +402,9 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
       return;
     case 'moveWidget':
       moveWidget(doc, command.target, command.slot);
+      return;
+    case 'paste':
+      pasteNodes(doc, command.items, command.slot);
       return;
     case 'remove': {
       // Action を消すときは、その Action を参照する項目も消す
