@@ -138,6 +138,21 @@ TEST(text_layout_caret_stops)
     CHECK(l.line_count() == 1);
 }
 
+TEST(text_layout_bold_and_italic)
+{
+    // 太字は字の送りが広くなり(本物の太字の書体か、合成した太字)、斜体は同じ文字の並びを描ける(docs/adr/0045)
+    const std::string s = "Tokotachi å¸¸ç«";  // Tokotachi 常立
+    const tokotachi::TextLayout regular(s, tokotachi::Font(14), 1.0f);
+    const tokotachi::TextLayout bold(s, tokotachi::Font(14, true), 1.0f);
+    const tokotachi::TextLayout italic(s, tokotachi::Font(14, false, true), 1.0f);
+    const tokotachi::TextLayout both(s, tokotachi::Font(14, true, true), 1.0f);
+    CHECK(bold.width() > regular.width());
+    CHECK(italic.width() > 0 && both.width() > 0);
+    CHECK(bold.font().bold && !bold.font().italic);
+    CHECK(tokotachi::Font(14, true) != tokotachi::Font(14));
+    CHECK(tokotachi::Font(14, false, true) != tokotachi::Font(14));
+}
+
 TEST(text_layout_hard_line_breaks)
 {
     const std::string s = "ab\ncd\r\nef";  // \n と \r\n

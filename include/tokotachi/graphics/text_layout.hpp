@@ -18,14 +18,24 @@
 namespace tokotachi
 {
 
+/// 文字の大きさと太さ・傾き(docs/adr/0045)。
+/// 太字・斜体は、OS にその書体のファイル(Segoe UI Bold・游ゴシック Bold 等)があれば使い、無ければ標準の書体を太らせる・傾ける。
+/// @code
+/// label_title->font = tokotachi::Font(18, true);  // 18dp の太字
+/// @endcode
 struct Font
 {
     float size;  ///< dp
+    bool bold;
+    bool italic;
 
-    Font() : size(14) {}
-    explicit Font(float size_dp) : size(size_dp) {}
+    Font() : size(14), bold(false), italic(false) {}
+    explicit Font(float size_dp, bool bold_ = false, bool italic_ = false)
+        : size(size_dp), bold(bold_), italic(italic_)
+    {
+    }
 
-    bool operator==(const Font& o) const { return size == o.size; }
+    bool operator==(const Font& o) const { return size == o.size && bold == o.bold && italic == o.italic; }
     bool operator!=(const Font& o) const { return !(*this == o); }
 };
 

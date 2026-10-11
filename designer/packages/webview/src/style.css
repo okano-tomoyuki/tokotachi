@@ -436,6 +436,46 @@ textarea.invalid {
   opacity: 0.9;
 }
 
+.font-field {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.font-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.font-toggle {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+.font-toggle:hover {
+  border-color: var(--vscode-panel-border);
+}
+
+.font-toggle.on {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.font-italic {
+  font-style: italic;
+  font-family: serif;
+}
+
 .custom-placeholder {
   position: absolute;
   box-sizing: border-box;

@@ -25,10 +25,17 @@ namespace detail
 // 消さないので、受け取った参照はロックの外で読んでよい。
 std::recursive_mutex& font_mutex();
 
+// 書体の太さ・傾き(docs/adr/0045)。標準・太字・斜体・太字の斜体の 4 つ。
+const int FONT_STYLE_COUNT = 4;
+inline int font_style(bool bold, bool italic) { return (bold ? 1 : 0) | (italic ? 2 : 0); }
+
 struct FaceSource
 {
     std::string path;
     int index;
+    // 太字・斜体の書体のファイルが無いので、標準の書体を太らせる・傾ける。
+    bool synthetic_bold;
+    bool synthetic_italic;
 };
 
 struct GlyphBitmap
@@ -66,6 +73,7 @@ private:
     FT_FaceRec_* face_;
     hb_font_t* hb_;
     float ascent_, descent_, line_gap_;
+    bool synthetic_bold_;
     std::map<std::uint64_t, GlyphBitmap> glyphs_;  // キーはグリフの番号 * SUBPIXEL_STEPS + 横のずれ
     std::map<std::uint32_t, Path> outlines_;
 };
@@ -79,18 +87,19 @@ public:
     FontCache(const FontCache&) = delete;
     FontCache& operator=(const FontCache&) = delete;
 
-    // フォールバックの順に並んだフォントの数。先頭が主のフォント(行の高さを決める)。
-    std::size_t face_count() const { return sources_.size(); }
-    // face 番目のフォントを pixel_size で開いたもの(開けなければ nullptr)。
-    FontInstance* get(std::size_t face, int pixel_size);
+    // style(font_style)の、フォールバックの順に並んだフォントの数。先頭が主のフォント(行の高さを決める)。
+    std::size_t face_count(int style = 0) const { return sources_[style].size(); }
+    // style の face 番目のフォントを pixel_size で開いたもの(開けなければ nullptr)。
+    FontInstance* get(std::size_t face, int pixel_size, int style = 0);
 
 private:
     FontCache();
     ~FontCache();
 
     FT_LibraryRec_* lib_;
-    std::vector<FaceSource> sources_;
-    std::map<std::pair<std::size_t, int>, FontInstance*> instances_;
+    std::vector<FaceSource> sources_[FONT_STYLE_COUNT];
+    // キーは (style, face) と大きさ
+    std::map<std::pair<std::pair<int, std::size_t>, int>, FontInstance*> instances_;
 };
 
 }  // namespace detail

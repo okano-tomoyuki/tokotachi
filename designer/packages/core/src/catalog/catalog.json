@@ -528,7 +528,9 @@
           },
           "declared_in": "ButtonBase",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         },
         "style": {
@@ -713,7 +715,9 @@
           },
           "declared_in": "ButtonBase",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         },
         "checked": {
@@ -900,7 +904,9 @@
           },
           "declared_in": "ButtonBase",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         },
         "value": {
@@ -1100,7 +1106,9 @@
           },
           "declared_in": "TextInputBase",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         }
       },
@@ -1289,7 +1297,9 @@
           },
           "declared_in": "TextInputBase",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         },
         "word_wrap": {
@@ -1920,7 +1930,9 @@
           },
           "declared_in": "ComboBox",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         }
       },
@@ -2097,7 +2109,9 @@
           },
           "declared_in": "Label",
           "default": {
-            "size": 14
+            "size": 14,
+            "bold": false,
+            "italic": false
           }
         },
         "color": {
@@ -4441,8 +4455,11 @@
     },
     "Font": {
       "members": {
-        "size": "float"
-      }
+        "size": "float",
+        "bold": "bool",
+        "italic": "bool"
+      },
+      "doc": "文字の大きさと太さ・傾き(docs/adr/0045)。 太字・斜体は、OS にその書体のファイル(Segoe UI Bold・游ゴシック Bold 等)があれば使い、無ければ標準の書体を太らせる・傾ける。"
     },
     "Image": {
       "special": true

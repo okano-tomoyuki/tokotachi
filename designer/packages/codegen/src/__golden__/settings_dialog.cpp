@@ -27,7 +27,7 @@ void SettingsDialog::tokotachi_setup_ui()
 
     label_heading = new tokotachi::Label(this);
     label_heading->text = "表示の設定";
-    label_heading->font = tokotachi::Font(18);
+    label_heading->font = tokotachi::Font(18, true);
     label_heading->color = tokotachi::Color(0x33, 0x66, 0xCC);
     window_layout->add(label_heading);
 
@@ -93,7 +93,7 @@ void SettingsDialog::tokotachi_setup_ui()
 
     window_layout->add(area_free);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="8c7f196f">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="2579aaa3">
 
 // <tokotachi-designer:handler-stubs>
 void SettingsDialog::settings_finish(tokotachi::Object* sender)

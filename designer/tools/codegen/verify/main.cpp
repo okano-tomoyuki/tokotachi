@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     dialog->save_png(argc > 2 ? argv[2] : "settings_dialog.png");
     check(dialog->title.get() == "設定", "dialog title");
     check(dialog->minimum_size.get().width == 400, "size value");
-    check(dialog->label_heading->font.get().size == 18, "font value");
+    check(dialog->label_heading->font.get().size == 18 && dialog->label_heading->font.get().bold, "font value");
     check(!dialog->label_heading->color.get().is_role() &&
               dialog->label_heading->color.get().color().r == 0x33 && dialog->label_heading->color.get().color().b == 0xCC,
           "color value");

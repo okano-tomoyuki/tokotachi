@@ -299,5 +299,7 @@
   "Write a relative path of a C++ header (.h, .hpp, .hh or .hxx; separator: /)": "C++ のヘッダ(.h・.hpp・.hh・.hxx)の相対パスを書きます(区切りは /)",
   "Custom widgets can be used only in a window of a project": "自作部品はプロジェクトに属するウィンドウでだけ使えます",
   "The header \"{0}\" is not found": "ヘッダ \"{0}\" が見つかりません",
-  "Custom widgets": "自作部品"
+  "Custom widgets": "自作部品",
+  "Bold": "太字",
+  "Italic": "斜体"
 }

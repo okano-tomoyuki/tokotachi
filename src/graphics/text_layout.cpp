@@ -37,11 +37,11 @@ bool attaches_to_previous(std::uint32_t cp)
 }
 
 // フォールバックの順に、文字を持つ最初のフォント。どれも持たなければ主のフォント(豆腐を出す)。
-std::size_t pick_face(detail::FontCache& cache, int px, std::uint32_t cp)
+std::size_t pick_face(detail::FontCache& cache, int px, int style, std::uint32_t cp)
 {
-    for (std::size_t i = 0; i < cache.face_count(); ++i)
+    for (std::size_t i = 0; i < cache.face_count(style); ++i)
     {
-        detail::FontInstance* f = cache.get(i, px);
+        detail::FontInstance* f = cache.get(i, px, style);
         if (f && f->has_char(cp))
         {
             return i;
@@ -74,6 +74,7 @@ struct Builder
     const std::string& text;
     detail::FontCache& cache;
     int px;
+    int style;
     std::vector<char> graphemes;  // graphemes[i] はバイト i の後ろで書記素が分かれるか
     hb_buffer_t* buf;
     // 今の段落の双方向の情報(段落が無い・左から右だけなら levels は空)。
@@ -81,8 +82,8 @@ struct Builder
     std::size_t paragraph_offset;
     const SBLevel* levels;
 
-    Builder(const std::string& t, detail::FontCache& c, int p)
-        : text(t), cache(c), px(p), buf(hb_buffer_create()), paragraph(nullptr), paragraph_offset(0), levels(nullptr)
+    Builder(const std::string& t, detail::FontCache& c, int p, int s)
+        : text(t), cache(c), px(p), style(s), buf(hb_buffer_create()), paragraph(nullptr), paragraph_offset(0), levels(nullptr)
     {
     }
     ~Builder() { hb_buffer_destroy(buf); }
@@ -108,7 +109,7 @@ struct Builder
             const std::uint32_t cp = detail::utf8_decode(text, pos);
             const unsigned char level = level_at(s);
             const bool attach = !out.empty() && attaches_to_previous(cp);
-            const std::size_t face = attach ? out.back().face : pick_face(cache, px, cp);
+            const std::size_t face = attach ? out.back().face : pick_face(cache, px, style, cp);
             if (!out.empty() && out.back().face == face && (attach || out.back().level == level))
             {
                 out.back().end = pos;
@@ -125,7 +126,7 @@ struct Builder
     // 1 つの連続をシェーピングし、pen から見た目の順にグリフを並べる。クラスタの見た目の範囲を clusters に足す。
     void shape_item(const Item& item, float& pen, detail::GlyphRun* run, std::vector<ClusterBox>& clusters)
     {
-        detail::FontInstance* f = cache.get(item.face, px);
+        detail::FontInstance* f = cache.get(item.face, px, style);
         if (!f)
         {
             return;
@@ -392,10 +393,11 @@ std::shared_ptr<detail::TextLayoutData> build(const std::string& text, const Fon
     detail::FontCache& cache = detail::FontCache::instance();
     const int px = std::max(1, static_cast<int>(std::floor(font.size * scale + 0.5f)));
     // 行の高さは主のフォントで決める(フォールバックしたフォントでベースラインが動かないように)。
+    const int style = detail::font_style(font.bold, font.italic);
     detail::FontInstance* primary = nullptr;
-    for (std::size_t i = 0; i < cache.face_count() && !primary; ++i)
+    for (std::size_t i = 0; i < cache.face_count(style) && !primary; ++i)
     {
-        primary = cache.get(i, px);
+        primary = cache.get(i, px, style);
     }
     d->ascent = primary ? primary->ascent() : px * 0.8f;
     d->descent = primary ? primary->descent() : px * 0.2f;
@@ -403,7 +405,7 @@ std::shared_ptr<detail::TextLayoutData> build(const std::string& text, const Fon
 
     const utf8_t* s = reinterpret_cast<const utf8_t*>(text.data());
     std::vector<char> line_breaks(text.size());
-    Builder b(text, cache, px);
+    Builder b(text, cache, px, style);
     b.graphemes.resize(text.size());
     d->word_breaks.resize(text.size());
     if (!text.empty())

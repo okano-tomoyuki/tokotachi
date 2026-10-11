@@ -8,8 +8,17 @@ namespace ttc
 namespace
 {
 
-/// オブジェクトのメンバの数値(無ければ fallback のまま)。数値でなければ false。
+/// オブジェクトのメンバの値(無ければ out のまま)。型が違えば false。
 bool member(const Json& j, const char* name, float& out)
+{
+    if (!j.has(name))
+    {
+        return true;
+    }
+    return from_json(j[name], out);
+}
+
+bool member(const Json& j, const char* name, bool& out)
 {
     if (!j.has(name))
     {
@@ -164,7 +173,8 @@ bool from_json(const Json& j, tokotachi::Rect& out)
 bool from_json(const Json& j, tokotachi::Font& out)
 {
     out = tokotachi::Font();
-    return j.is_object() && member(j, "size", out.size);
+    return j.is_object() && member(j, "size", out.size) && member(j, "bold", out.bold) &&
+           member(j, "italic", out.italic);
 }
 
 bool from_json(const Json& j, tokotachi::Color& out)
@@ -411,6 +421,8 @@ Json to_json(const tokotachi::Font& v)
 {
     Json o = Json::object();
     o.set("size", to_json(v.size));
+    o.set("bold", to_json(v.bold));
+    o.set("italic", to_json(v.italic));
     return o;
 }
 

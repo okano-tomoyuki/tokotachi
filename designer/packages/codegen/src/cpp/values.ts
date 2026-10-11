@@ -127,10 +127,22 @@ function valueType(name: string, value: PropertyValue): string {
       return `tokotachi::Point(${floats([member(o, 'x', 0), member(o, 'y', 0)])})`;
     case 'Rect':
       return `tokotachi::Rect(${floats(['x', 'y', 'width', 'height'].map((m) => member(o, m, 0)))})`;
-    case 'Font':
-      return 'size' in o
-        ? `tokotachi::Font(${floats([member(o, 'size', 0)])})`
-        : 'tokotachi::Font()';
+    case 'Font': {
+      // 後ろの既定値(太字・斜体でない)は省く: Font(18)・Font(18, true)・Font(18, false, true)
+      const bold = o['bold'] === true;
+      const italic = o['italic'] === true;
+      if (!('size' in o) && !bold && !italic) {
+        return 'tokotachi::Font()';
+      }
+      const args = [floats([member(o, 'size', 14)])];
+      if (bold || italic) {
+        args.push(String(bold));
+      }
+      if (italic) {
+        args.push('true');
+      }
+      return `tokotachi::Font(${args.join(', ')})`;
+    }
     default:
       throw new Error(`unsupported value type: ${name}`);
   }
