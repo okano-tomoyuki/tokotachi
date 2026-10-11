@@ -12,6 +12,8 @@ import {
   parseDocument,
   relativePath,
   DOCUMENT_EXTENSION,
+  withCustomClasses,
+  type ClassInfo,
   type Diagnostic,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
@@ -41,13 +43,15 @@ type Problem = { kind: 'missing' } | { kind: 'invalid' } | { kind: 'cycle'; chai
 /**
  * 定義ファイルが置いている部品ファイルを読む。
  * @param uri 定義ファイル
+ * @param classes 自作部品(docs/adr/0044。定義ファイルが属するプロジェクトのもの)
  */
 export async function loadComponents(
   uri: vscode.Uri,
   doc: TtuiDocument,
+  classes: Readonly<Record<string, ClassInfo>> = {},
 ): Promise<LoadedComponents> {
   const diagnostics: Diagnostic[] = [];
-  const components = await loadChildren(uri, doc, [uri.toString()], (ref, problem) => {
+  const components = await loadChildren(uri, doc, classes, [uri.toString()], (ref, problem) => {
     diagnostics.push({
       severity: 'error',
       code: problem.kind === 'missing' ? 'missing-component' : 'invalid-component',
@@ -73,6 +77,7 @@ export async function loadComponents(
 async function loadChildren(
   uri: vscode.Uri,
   doc: TtuiDocument,
+  classes: Readonly<Record<string, ClassInfo>>,
   stack: readonly string[],
   report: (ref: { path: string; at: readonly (string | number)[] }, problem: Problem) => void,
 ): Promise<Map<string, LoadedComponent>> {
@@ -92,7 +97,7 @@ async function loadChildren(
       report(ref, { kind: 'missing' });
       continue;
     }
-    const parsed = parseDocument(text);
+    const parsed = withCustomClasses(classes, () => parseDocument(text));
     if (
       !parsed.document ||
       hasErrors(parsed.diagnostics) ||
@@ -105,6 +110,7 @@ async function loadChildren(
     const children = await loadChildren(
       target,
       parsed.document,
+      classes,
       [...stack, target.toString()],
       (_, p) => {
         problem ??= p.kind === 'cycle' ? { kind: 'cycle', chain: `${name} → ${p.chain}` } : p;
@@ -174,6 +180,7 @@ export async function readComponentImages(
  */
 export async function listComponents(
   uri: vscode.Uri,
+  classes: Readonly<Record<string, ClassInfo>> = {},
 ): Promise<{ path: string; className: string }[]> {
   const files = await vscode.workspace.findFiles(
     `**/*${DOCUMENT_EXTENSION}`,
@@ -189,7 +196,7 @@ export async function listComponents(
     if (!parsed?.document || !isComponentDocument(parsed.document)) {
       continue;
     }
-    const { components } = await loadComponents(file, parsed.document);
+    const { components } = await loadComponents(file, parsed.document, classes);
     if (refers(components, uri)) {
       continue;
     }

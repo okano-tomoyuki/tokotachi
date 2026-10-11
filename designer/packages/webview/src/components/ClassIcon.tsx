@@ -5,7 +5,7 @@
  *
  * クラス名 a: 強調色の線、af: 強調色の塗り、sf: 薄い塗り
  */
-import type { OutlineNode } from '@tokotachi-designer/core';
+import { getCatalog, type OutlineNode } from '@tokotachi-designer/core';
 import type { ReactNode } from 'react';
 
 /** カタログのクラスの名前、またはクラスを持たない木のノードの種類(spacer は stretch・spacing に分ける)。 */
@@ -211,6 +211,13 @@ const ICONS: Readonly<Record<string, ReactNode>> = {
       <path className="a" d="M3 8h10M5 6.5L3.5 8 5 9.5M11 6.5l1.5 1.5-1.5 1.5" />
     </>
   ),
+  // 自作部品(docs/adr/0044): パズルのピース
+  custom: (
+    <>
+      <path d="M2.5 5.5h3.5v-1a1.5 1.5 0 0 1 3 0v1h3.5v3h-1a1.5 1.5 0 0 0 0 3h1v2h-10z" />
+      <path className="a" d="M5 9.5h3" />
+    </>
+  ),
 
   // ---- メニュー・バー・Action ----
   MenuBar: (
@@ -309,7 +316,8 @@ export function hasClassIcon(key: string): boolean {
 /** 木のノードのアイコンの名前。 */
 export function nodeIconKey(node: OutlineNode): string {
   if (node.class !== undefined) {
-    return node.class;
+    // ライブラリに無いクラスは自作部品(docs/adr/0044)
+    return Object.hasOwn(getCatalog().classes, node.class) ? node.class : 'custom';
   }
   switch (node.kind) {
     case 'group':

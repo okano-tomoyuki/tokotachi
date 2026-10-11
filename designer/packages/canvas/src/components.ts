@@ -9,6 +9,7 @@ import {
   type ComponentResolver,
   type Op,
 } from '@tokotachi-designer/codegen';
+import { substituteCustomClasses } from './custom.ts';
 import {
   isComponentDocument,
   resolveThemePresets,
@@ -54,7 +55,7 @@ export function canvasSetup(
   presets: ThemePresets | undefined,
 ): CanvasSetup {
   const options = { resolve: withPresets(resolve, presets), inline: true };
-  const ops = buildSetup(doc, options).ops;
+  const ops = substituteCustomClasses(buildSetup(doc, options).ops);
   if (!isComponentDocument(doc)) {
     return { windowClass: doc.window.class, ops };
   }

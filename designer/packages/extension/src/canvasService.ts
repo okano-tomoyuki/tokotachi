@@ -4,7 +4,13 @@
  */
 import { Canvas } from '@tokotachi-designer/canvas';
 import type { ComponentResolver } from '@tokotachi-designer/codegen';
-import type { CanvasFrame, ThemePresets, TtuiDocument } from '@tokotachi-designer/core';
+import {
+  withCustomClasses,
+  type CanvasFrame,
+  type ClassInfo,
+  type ThemePresets,
+  type TtuiDocument,
+} from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 
 let loading: Promise<Canvas> | undefined;
@@ -16,7 +22,11 @@ function load(context: vscode.ExtensionContext): Promise<Canvas> {
   return loading;
 }
 
+/**
+ * @param classes 自作部品(docs/adr/0044)。描く間だけカタログに足す
+ */
 export async function renderCanvas(
+  classes: Readonly<Record<string, ClassInfo>>,
   context: vscode.ExtensionContext,
   doc: TtuiDocument,
   version: number,
@@ -28,15 +38,17 @@ export async function renderCanvas(
   components?: ComponentResolver,
 ): Promise<CanvasFrame> {
   const canvas = await load(context);
-  const r = canvas.render(doc, {
-    colorScheme,
-    placeholders: true,
-    tabs,
-    images,
-    themeOverride,
-    themePresets,
-    components,
-  });
+  const r = withCustomClasses(classes, () =>
+    canvas.render(doc, {
+      colorScheme,
+      placeholders: true,
+      tabs,
+      images,
+      themeOverride,
+      themePresets,
+      components,
+    }),
+  );
   if (r.errors.length > 0) {
     console.warn(`Tokotachi Designer: ${r.errors.join(', ')}`);
   }

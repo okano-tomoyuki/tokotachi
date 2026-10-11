@@ -13,6 +13,7 @@ import {
   parseDocument,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
+import { useSampleCustomClasses } from '../samples.mts';
 import { decodePng, encodePng } from './png.mts';
 
 const designer = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -39,6 +40,8 @@ function sampleImages(doc: TtuiDocument): Map<string, Uint8Array> {
 
 async function main(): Promise<void> {
   mkdirSync(work, { recursive: true });
+  // 自作部品(docs/adr/0044)は基底(ProgressBar)として描く。見本の自作部品は描画を変えないので、ネイティブと同じになる
+  useSampleCustomClasses();
   let t = performance.now();
   const canvas = await Canvas.load();
   console.log(`読み込み: ${(performance.now() - t).toFixed(0)} ms`);

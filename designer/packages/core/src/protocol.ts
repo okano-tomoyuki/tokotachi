@@ -2,6 +2,7 @@
  * 拡張と Webview の間で交わすメッセージの型(docs/designer/editor-design.md §2。Bethany と同じ考え方)。
  * 両者はこの型を介してだけ通信し、互いのコードを直接 import しない。
  */
+import type { ClassInfo } from './catalog/types.ts';
 import type { EditCommand } from './edit/commands.ts';
 import type { TtprojDocument } from './project/schema.ts';
 
@@ -38,6 +39,11 @@ export type ExtensionToWebviewMessage =
     }
   /** キャンバスの描画の結果。document の後に届く(検証のエラーがあれば描かない)。 */
   | { readonly type: 'canvas'; readonly frame: CanvasFrame }
+  /**
+   * 開いている定義ファイルが属するプロジェクトの自作部品(docs/adr/0044。カタログに足す)。変わったときに送る。
+   * Webview は受け取ったら、今の内容を検証し直す。
+   */
+  | { readonly type: 'customClasses'; readonly classes: Readonly<Record<string, ClassInfo>> }
   /**
    * パレットに出す部品ファイル(docs/adr/0043。ワークスペースの、根が Widget の定義ファイル。開いているものは除く)。
    * path は定義ファイルのフォルダからの相対パス。

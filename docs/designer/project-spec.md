@@ -42,6 +42,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | `theme` | | アプリケーションのテーマ(§4.1) |
 | `main_window` | | 起動したときに開くウィンドウ。`windows` のどれか(class が `Window` のもの) |
 | `windows` | | プロジェクトに属するウィンドウの定義ファイル。部品ファイル([ADR 0043](../adr/0043-designer-component-files.md))も入れ、同じ規則で生成して CMakeLists.txt のソースに加える |
+| `custom_widgets` | | 自作部品のヘッダ([ADR 0044](../adr/0044-designer-custom-widgets.md)。catalog.md §4.1)。`.h`・`.hpp`・`.hh`・`.hxx` |
 
 - パスは、**プロジェクトファイルのあるフォルダからの相対パス**で、区切りは `/`。`../` で上のフォルダも指せる。絶対パス・`\`・ドライブ名は使えない。
 
@@ -50,6 +51,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | 内容 | 重大度 |
 |---|---|
 | `windows` の各要素が `.ttui.json` で終わる相対パスであること | エラー |
+| `custom_widgets` の各要素が C++ のヘッダの相対パスで、重ならず、ファイルが有ること(ヘッダの中の読めないクラス・プロパティは警告) | エラー |
 | `windows` に同じウィンドウが 2 回ないこと | エラー |
 | `main_window` が `windows` のどれかであること | エラー |
 | `codegen.namespace` の `::` で区切った各部分が識別子であること | エラー |
@@ -57,7 +59,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | `codegen.header_dir`・`source_dir` が相対パスであること | エラー |
 | `header_dir`・`source_dir` を使うとき、同じファイル名のウィンドウがないこと(出力先が重なる) | エラー |
 
-書き出しの形: キーの順は `$schema`・`format_version`・`codegen`・`theme`・`main_window`・`windows`。一覧は 1 行に 1 つ。インデントは 2 文字、改行は LF、末尾に改行。
+書き出しの形: キーの順は `$schema`・`format_version`・`codegen`・`theme`・`main_window`・`windows`・`custom_widgets`。一覧は 1 行に 1 つ。インデントは 2 文字、改行は LF、末尾に改行。
 
 ## 4. コード生成の設定(`codegen`)
 
@@ -114,7 +116,8 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 - **CMakeLists.txt**: 最初に雛形を作る(`find_package(tokotachi)`・`add_executable`・`target_link_libraries`)。その後は**ソースの一覧の区間
   (`tokotachi_sources`。`TOKOTACHI_DESIGNER_SOURCES` と `TOKOTACHI_DESIGNER_INCLUDE_DIRS`)だけを置き換え**、利用者が書いた部分は変えない。
   ターゲットの名前はプロジェクトの名前(ファイルの名前。`my_app.ttproj.json` → `my_app`)。
-- 生成した main.cpp・CMakeLists.txt でビルドできることを、`pnpm codegen:verify-project` で確かめる(見本の 2 つのウィンドウを `ui/` に置き、
+  自作部品のソース(`.cpp`)は区間の外に利用者が足す(`target_sources(my_app PRIVATE widgets/gauge.cpp)`)。
+- 生成した main.cpp・CMakeLists.txt でビルドできることを、`pnpm codegen:verify-project` で確かめる(見本のウィンドウ・部品ファイルを `ui/` に、自作部品を `widgets/` に置き、
   ヘッダを `include/`、ソースを `src/`、名前空間を `app` にしたプロジェクトを作り、インストールした Tokotachi でビルドする)。
 
 ## 6. デザイナーでの扱い

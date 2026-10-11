@@ -82,17 +82,18 @@ void SettingsDialog::tokotachi_setup_ui()
     slider_zoom->value = 100;
     slider_zoom->on_change = [this](tokotachi::Object* sender) { slider_zoom_change(sender); };
 
-    progress_bar_zoom = new tokotachi::ProgressBar(area_free);
-    progress_bar_zoom->x = 216;
-    progress_bar_zoom->y = 16;
-    progress_bar_zoom->width = 160;
-    progress_bar_zoom->height = 16;
-    progress_bar_zoom->maximum = 200;
-    progress_bar_zoom->value = 100;
+    level_bar_zoom = new samples::LevelBar(area_free);
+    level_bar_zoom->x = 216;
+    level_bar_zoom->y = 16;
+    level_bar_zoom->width = 160;
+    level_bar_zoom->height = 16;
+    level_bar_zoom->maximum = 200;
+    level_bar_zoom->value = 100;
+    level_bar_zoom->warning_level = 150;
 
     window_layout->add(area_free);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="0a248f3e">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="8c7f196f">
 
 // <tokotachi-designer:handler-stubs>
 void SettingsDialog::settings_finish(tokotachi::Object* sender)

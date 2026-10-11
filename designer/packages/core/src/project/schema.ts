@@ -61,5 +61,7 @@ export const TtprojDocument = z.strictObject({
   main_window: z.string().optional(),
   /** プロジェクトに属するウィンドウの定義ファイル(プロジェクトファイルのフォルダからの相対パス)。 */
   windows: z.array(z.string()).optional(),
+  /** 自作部品のヘッダ(プロジェクトファイルのフォルダからの相対パス。docs/adr/0044)。 */
+  custom_widgets: z.array(z.string()).optional(),
 });
 export type TtprojDocument = z.infer<typeof TtprojDocument>;

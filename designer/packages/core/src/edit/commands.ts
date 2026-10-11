@@ -6,7 +6,7 @@
  * ノードは JSON 上の位置(パス)で指す。レイアウト・タブ・区画のように名前の無いノードもあるため。
  * パスが指すノードの種類が合わなければ、コマンドは失敗する(テキストエディタでの変更とすれ違ったとき)。
  */
-import { findClass, getCatalog } from '../catalog/catalog.ts';
+import { findClass } from '../catalog/catalog.ts';
 import { memberNameProblem, isValidIdentifier, describeIdentifierProblem } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { JsonPath } from '../dsl/diagnostics.ts';
@@ -311,7 +311,6 @@ function setEvent(doc: TtuiDocument, path: JsonPath, event: string, handler: str
 
 /** 名前の参照(メニュー・ツールバーの action、部品の actions、参照のプロパティ)を書き換える。 */
 function renameReferences(doc: Json, from: string, to: string): void {
-  const catalog = getCatalog();
   const visit = (node: unknown, path: JsonPath): void => {
     if (Array.isArray(node)) {
       node.forEach((v, i) => {
@@ -338,7 +337,7 @@ function renameReferences(doc: Json, from: string, to: string): void {
       } catch {
         cls = undefined;
       }
-      const info = cls === undefined ? undefined : catalog.classes[cls];
+      const info = cls === undefined ? undefined : findClass(cls);
       for (const [name, value] of Object.entries(props)) {
         const type = info?.properties[name]?.type;
         if (value === from && typeof type === 'object' && 'ref' in type) {

@@ -23,6 +23,11 @@ export interface CppOptions {
   readonly commentLocale: CommentLocale;
   /** プロジェクトに登録したテーマと、その関数を置くヘッダ(定義ファイルのフォルダからの相対パス)。プロジェクトに属さなければ無い。 */
   readonly themes?: { readonly presets: ThemePresets; readonly header: string } | undefined;
+  /**
+   * 定義ファイルのフォルダからプロジェクトのフォルダへの相対パス(同じなら '')。自作部品(docs/adr/0044)のヘッダは
+   * プロジェクトのフォルダからのパスなので、これでたどる。プロジェクトに属さなければ無い(自作部品は使えない)。
+   */
+  readonly projectDir?: string | undefined;
 }
 
 export const DEFAULT_CPP_OPTIONS: CppOptions = {

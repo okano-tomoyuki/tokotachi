@@ -11,10 +11,12 @@ import {
   parseProject,
   PROJECT_EXTENSION,
   themePresetReferences,
+  withCustomClasses,
   type Diagnostic,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 import { loadComponents } from './components.ts';
+import { customClassesOf, isHeaderFile, readProjectCustomClasses } from './customWidgets.ts';
 import { projectOf } from './projects.ts';
 
 export function registerDiagnostics(): vscode.Disposable {
@@ -25,8 +27,40 @@ export function registerDiagnostics(): vscode.Disposable {
       return;
     }
     const text = document.getText();
-    const parsed = isProject ? undefined : parseDocument(text);
-    const diagnostics: Diagnostic[] = [...(parsed?.diagnostics ?? parseProject(text).diagnostics)];
+    // 調べている間に変わったか(変わったら、新しい内容で調べ直す)
+    const stale = (): boolean => document.isClosed || document.getText() !== text;
+    // 自作部品(docs/adr/0044)をカタログに足して検証する
+    const classes = isProject ? {} : await customClassesOf(document.uri);
+    if (stale()) {
+      return; // 調べている間に変わった: 新しい内容で調べ直す
+    }
+    const parsed = isProject ? undefined : withCustomClasses(classes, () => parseDocument(text));
+    const project = isProject ? parseProject(text) : undefined;
+    const diagnostics: Diagnostic[] = [...(parsed?.diagnostics ?? project?.diagnostics ?? [])];
+    // プロジェクト: 自作部品のヘッダが有るか・読めないクラス・プロパティ
+    if (project?.project) {
+      const custom = await readProjectCustomClasses(document.uri, project.project);
+      if (stale()) {
+        return;
+      }
+      const headers = project.project.custom_widgets ?? [];
+      for (const i of custom.missing) {
+        diagnostics.push({
+          severity: 'error',
+          code: 'schema',
+          message: vscode.l10n.t('The header "{0}" is not found', headers[i] ?? ''),
+          path: ['custom_widgets', i],
+        });
+      }
+      for (const p of custom.problems) {
+        diagnostics.push({
+          severity: 'warning',
+          code: 'schema',
+          message: `${p.header}:${String(p.line)}: ${p.message}`,
+          path: ['custom_widgets', headers.indexOf(p.header)],
+        });
+      }
+    }
     // 画像のファイルがあるか(無ければコードを生成できない)
     if (parsed?.document && document.uri.scheme === 'file') {
       const directory = vscode.Uri.joinPath(document.uri, '..');
@@ -43,8 +77,12 @@ export function registerDiagnostics(): vscode.Disposable {
     }
     // 置いた部品ファイル(docs/adr/0043)が有るか・根が Widget か・循環していないか
     if (parsed?.document && componentReferences(parsed.document).length > 0) {
-      const { diagnostics: problems } = await loadComponents(document.uri, parsed.document);
-      if (document.isClosed || document.getText() !== text) {
+      const { diagnostics: problems } = await loadComponents(
+        document.uri,
+        parsed.document,
+        classes,
+      );
+      if (stale()) {
         return; // 調べている間に変わった: 新しい内容で調べ直す
       }
       diagnostics.push(...problems);
@@ -69,7 +107,7 @@ export function registerDiagnostics(): vscode.Disposable {
           });
         }
       }
-      if (document.isClosed || document.getText() !== text) {
+      if (stale()) {
         return; // 調べている間に変わった: 新しい内容で調べ直す
       }
     }
@@ -101,13 +139,18 @@ export function registerDiagnostics(): vscode.Disposable {
     vscode.workspace.onDidOpenTextDocument(run),
     vscode.workspace.onDidChangeTextDocument((e) => {
       run(e.document);
-      // プロジェクトのテーマ・部品ファイルが変わったら、開いているウィンドウの参照を調べ直す
+      // プロジェクトのテーマ・部品ファイル・自作部品のヘッダが変わったら、開いているウィンドウ・プロジェクトを調べ直す
       if (
         e.document.uri.path.endsWith(PROJECT_EXTENSION) ||
-        e.document.uri.path.endsWith(DOCUMENT_EXTENSION)
+        e.document.uri.path.endsWith(DOCUMENT_EXTENSION) ||
+        isHeaderFile(e.document.uri)
       ) {
         vscode.workspace.textDocuments
-          .filter((d) => d !== e.document && d.uri.path.endsWith(DOCUMENT_EXTENSION))
+          .filter(
+            (d) =>
+              d !== e.document &&
+              (d.uri.path.endsWith(DOCUMENT_EXTENSION) || d.uri.path.endsWith(PROJECT_EXTENSION)),
+          )
           .forEach(run);
       }
     }),

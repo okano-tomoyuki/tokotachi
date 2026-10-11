@@ -217,6 +217,12 @@
       "items": {
         "type": "string"
       }
+    },
+    "custom_widgets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

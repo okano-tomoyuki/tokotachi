@@ -76,6 +76,7 @@ export class ProjectEditorProvider implements vscode.CustomTextEditorProvider {
         const [light, dark] = await Promise.all(
           (['LIGHT', 'DARK'] as const).map((scheme) =>
             renderCanvas(
+              {},
               this.context,
               doc,
               document.version,

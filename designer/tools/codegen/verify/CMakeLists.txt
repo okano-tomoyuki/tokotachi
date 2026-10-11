@@ -7,7 +7,8 @@ set(TOKOTACHI_SHARED OFF CACHE BOOL "" FORCE)
 add_subdirectory(${TOKOTACHI_ROOT} tokotachi)
 
 add_executable(verify_cpp ${CMAKE_CURRENT_LIST_DIR}/main.cpp ${GENERATED_DIR}/main_window.cpp
-                          ${GENERATED_DIR}/settings_dialog.cpp ${GENERATED_DIR}/parts/labeled_edit.cpp)
+                          ${GENERATED_DIR}/settings_dialog.cpp ${GENERATED_DIR}/parts/labeled_edit.cpp
+                          ${GENERATED_DIR}/widgets/level_bar.cpp)
 target_include_directories(verify_cpp PRIVATE ${GENERATED_DIR})
 target_link_libraries(verify_cpp PRIVATE tokotachi::tokotachi)
 set_target_properties(verify_cpp PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)

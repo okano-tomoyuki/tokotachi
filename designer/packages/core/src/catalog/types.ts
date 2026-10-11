@@ -30,7 +30,15 @@ export type ClassKind =
   | 'object';
 
 /** パレットの分類。 */
-export type Category = 'input' | 'display' | 'view' | 'container' | 'drawing' | 'non_visual';
+export type Category =
+  | 'input'
+  | 'display'
+  | 'view'
+  | 'container'
+  | 'drawing'
+  | 'non_visual'
+  /** 自作部品(docs/adr/0044)。 */
+  | 'custom';
 
 /** インスペクタの編集の種類(型から決まらないもの)。 */
 export type EditorKind = 'multiline' | 'mnemonic';
@@ -84,11 +92,22 @@ export interface ClassInfo {
   child_keys?: string[];
   /** テンプレート(`Variable<T>`)。型の引数は定義ファイルに書く(Variable は `variables` の `type`)。 */
   template?: true;
+  /** 自作部品(docs/adr/0044)。プロジェクトに登録したヘッダから読んだもの。 */
+  custom?: CustomClassInfo;
   doc?: string;
   /** デザイン時に設定できるプロパティ(継承したものを含む。宣言の順)。 */
   properties: Record<string, PropertyInfo>;
   /** ハンドラ(継承したものを含む)。 */
   handlers: Record<string, HandlerInfo>;
+}
+
+export interface CustomClassInfo {
+  /** ヘッダ(プロジェクトのフォルダからの相対パス)。 */
+  header: string;
+  /** 名前空間を付けた C++ のクラスの名前(`app::Gauge`)。 */
+  qualified: string;
+  /** キャンバスで代わりに作る、カタログの部品(派生をたどって最初に当たるもの)。 */
+  base: string;
 }
 
 export interface ValueTypeInfo {

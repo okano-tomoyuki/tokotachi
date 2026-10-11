@@ -248,6 +248,15 @@ int main(int argc, char** argv)
   変数の名前に `置いた部品の名前.` を付けて続ける(ハンドラはつながない。画像のパスは置いた側のフォルダからにする)。
   順は生成したコードと同じなので、描いた画面は同じになる(見本の settings_dialog が置く parts/labeled_edit で確かめている)。
 
+### 4.2 自作部品([ADR 0044](../adr/0044-designer-custom-widgets.md))
+
+- 自作部品は名前空間を付けた名前で作る(`level_bar_zoom = new samples::LevelBar(area_free);`。メンバの型も `samples::LevelBar*`)。
+  プロパティ・ハンドラはライブラリの部品と同じ書き方(ヘッダから読んだ型で値を書く)。
+- ヘッダから自作部品のヘッダを include する(ヘッダのフォルダからの相対パス。登録したヘッダはプロジェクトのフォルダからのパスなので、
+  `CppOptions.projectDir` でたどる)。プロジェクトに属さないウィンドウで使えばエラーにする。
+- 見本(`designer/samples` はプロジェクト `samples.ttproj.json`)の settings_dialog が `widgets/level_bar.hpp` の LevelBar を置き、
+  `pnpm codegen:verify-cpp`・`codegen:verify-project` でビルド・実行し、`canvas:verify` でキャンバス(基底の ProgressBar で描く)と画素まで同じことを確かめる。
+
 ## 5. 書き出しの決まり
 
 | # | 論点 | 案 |

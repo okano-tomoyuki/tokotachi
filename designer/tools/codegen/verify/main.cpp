@@ -158,6 +158,10 @@ int main(int argc, char** argv)
     check(dialog->panel_user->bounds.get().width > 300, "component in layout");
     dialog->panel_user->line_edit_value->on_change.get()(dialog->panel_user->line_edit_value);
     check(called("value_change"), "component handler");
+    // 自作部品(docs/adr/0044): 自作のクラスを作り、基底と自作のプロパティを設定する
+    samples::LevelBar* level_bar = dialog->level_bar_zoom;
+    check(level_bar->maximum.get() == 200 && level_bar->warning_level.get() == 150 && !level_bar->is_warning(),
+          "custom widget");
     std::printf("\n  ],\n  \"rects\": [\n");
     bool first = true;
     print_rects(&window, 0, 0, first);

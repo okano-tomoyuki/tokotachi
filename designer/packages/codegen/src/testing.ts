@@ -1,9 +1,17 @@
 /** テスト用の見本(designer/samples。tools/codegen/verify-cpp.mts でビルド・実行して確かめているもの)。 */
-import { TtuiDocument } from '@tokotachi-designer/core';
+import { readCustomClasses, setCustomClasses, TtuiDocument } from '@tokotachi-designer/core';
+import { DEFAULT_CPP_OPTIONS, type CppOptions } from './names.ts';
+import levelBarHpp from '../../../samples/widgets/level_bar.hpp?raw';
 import mainWindow from '../../../samples/main_window.ttui.json' with { type: 'json' };
 import settingsDialog from '../../../samples/settings_dialog.ttui.json' with { type: 'json' };
 import labeledEdit from '../../../samples/parts/labeled_edit.ttui.json' with { type: 'json' };
 import openPng from '../../../samples/icons/open.png?inline';
+
+// 見本はプロジェクト(samples.ttproj.json)で、自作部品(docs/adr/0044)を登録している。テストでもカタログに足す
+setCustomClasses(readCustomClasses([{ path: 'widgets/level_bar.hpp', text: levelBarHpp }]).classes);
+
+/** 見本(プロジェクトのフォルダにある定義ファイル)のコード生成の設定。 */
+export const SAMPLE_OPTIONS: CppOptions = { ...DEFAULT_CPP_OPTIONS, projectDir: '' };
 
 export const MAIN_WINDOW: TtuiDocument = TtuiDocument.parse(mainWindow);
 export const SETTINGS_DIALOG: TtuiDocument = TtuiDocument.parse(settingsDialog);

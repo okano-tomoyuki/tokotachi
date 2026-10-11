@@ -1,4 +1,4 @@
-import { TtuiDocument } from '@tokotachi-designer/core';
+import { readCustomClasses, TtuiDocument, withCustomClasses } from '@tokotachi-designer/core';
 import { describe, expect, it } from 'vitest';
 import goldenDialogCpp from './__golden__/settings_dialog.cpp?raw';
 import goldenDialogHpp from './__golden__/settings_dialog.hpp?raw';
@@ -14,6 +14,7 @@ import {
   mainWindowCopy,
   readSampleComponent,
   readSampleImage,
+  SAMPLE_OPTIONS,
   SETTINGS_DIALOG,
 } from './testing.ts';
 
@@ -24,7 +25,7 @@ function gen(
   doc: TtuiDocument,
   dslFileName: string,
   readExisting: (path: string) => string | undefined,
-  options: CppOptions = DEFAULT_CPP_OPTIONS,
+  options: CppOptions = SAMPLE_OPTIONS,
 ): GenerateResult {
   return generateCpp(doc, dslFileName, readExisting, options, readSampleImage, (path) => {
     const document = readSampleComponent(path);
@@ -59,7 +60,7 @@ describe('generateCpp', () => {
   });
 
   it('部品ファイルのヘッダは、置いた定義ファイルのヘッダからのパスで include する', () => {
-    const options = { ...DEFAULT_CPP_OPTIONS, headerDir: 'include', sourceDir: 'src' };
+    const options = { ...SAMPLE_OPTIONS, headerDir: 'include', sourceDir: 'src' };
     const d = gen(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined, options);
     // 部品ファイルのヘッダは parts/include/labeled_edit.hpp
     expect(text(d, 'include/settings_dialog.hpp')).toContain(
@@ -71,6 +72,41 @@ describe('generateCpp', () => {
     );
     const missing = generateCpp(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
     expect(missing.files[0]?.result).toMatchObject({ ok: false });
+  });
+
+  it('自作部品は名前空間を付けたクラスで作り、プロジェクトのフォルダからたどってヘッダを include する', () => {
+    const { classes } = readCustomClasses([
+      {
+        path: 'src/widgets/gauge.hpp',
+        text: 'namespace app { class Gauge : public tokotachi::PaintBox { public: tokotachi::Property<double> level; }; }',
+      },
+    ]);
+    const doc = TtuiDocument.parse({
+      format_version: 1,
+      window: {
+        name: 'MainWindow',
+        class: 'Window',
+        layout: {
+          class: 'BoxLayout',
+          items: [{ widget: { name: 'gauge_1', class: 'Gauge', properties: { level: 40 } } }],
+        },
+      },
+    });
+    const options = { ...DEFAULT_CPP_OPTIONS, headerDir: 'include', projectDir: '..' };
+    const r = withCustomClasses(classes, () =>
+      generateCpp(doc, 'main_window.ttui.json', () => undefined, options),
+    );
+    const header = text(r, 'include/main_window.hpp');
+    expect(header).toContain('#include "../../src/widgets/gauge.hpp"');
+    expect(header).toContain('    app::Gauge* gauge_1;');
+    expect(text(r, 'main_window.cpp')).toContain(
+      '    gauge_1 = new app::Gauge(this);\n    gauge_1->level = 40;',
+    );
+    // プロジェクトに属さなければ使えない
+    const loose = withCustomClasses(classes, () =>
+      generateCpp(doc, 'main_window.ttui.json', () => undefined),
+    );
+    expect(loose.files[0]?.result).toMatchObject({ ok: false });
   });
 
   it('生成し直しても変わらない', () => {

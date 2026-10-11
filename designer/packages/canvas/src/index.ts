@@ -21,7 +21,8 @@ import { systemFonts } from './fonts.ts';
 import { withPlaceholders } from './placeholders.ts';
 
 export { systemFonts } from './fonts.ts';
-export { PLACEHOLDER_SIZE, withPlaceholders } from './placeholders.ts';
+export { CUSTOM_PLACEHOLDER_SIZE, PLACEHOLDER_SIZE, withPlaceholders } from './placeholders.ts';
+export { CUSTOM_PLACEHOLDER_BASES, substituteCustomClasses } from './custom.ts';
 
 /** 部品の位置と大きさ(ウィンドウの座標。dp)。 */
 export interface WidgetRect {

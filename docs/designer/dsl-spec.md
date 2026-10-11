@@ -132,7 +132,7 @@
 | キー | 必須 | 型 | 説明 |
 |---|---|---|---|
 | `name` | ○ | 識別子 | |
-| `class` | ○ | クラス名 | カタログにある、利用者が作れる Widget の派生(`Button`・`Widget` 等) |
+| `class` | ○ | クラス名 | カタログにある、利用者が作れる Widget の派生(`Button`・`Widget` 等)。プロジェクトに登録した自作部品(`Gauge`。[ADR 0044](../adr/0044-designer-custom-widgets.md))も書ける |
 | `component` | | 相対パス | 部品ファイル(§4.9)を置く。`class` は `Widget` にし、`layout`・`children` 等の子は書けない |
 | `properties` | | 名前 → 値 | §5 |
 | `events` | | 名前 → ハンドラ名 | §6 |

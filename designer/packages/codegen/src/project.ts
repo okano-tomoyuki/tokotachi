@@ -53,6 +53,7 @@ export function windowCppOptions(project: TtprojDocument, windowPath: string): C
     headerDir: fromWindow(windowPath, c.header_dir),
     sourceDir: fromWindow(windowPath, c.source_dir),
     commentLocale: c.comment_locale ?? 'en',
+    projectDir: relativePath(dirname(resolvePath(ROOT, windowPath)), ROOT),
     themes: {
       presets: project.theme?.presets ?? {},
       header: relativePath(

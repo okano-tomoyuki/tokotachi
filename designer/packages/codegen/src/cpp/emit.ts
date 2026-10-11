@@ -8,6 +8,7 @@
  * - 生成したコードは tokotachi:: を省かずに書き、using namespace を書かない(N2)。
  */
 import {
+  findClass,
   getCatalog,
   isImageType,
   namedNodes,
@@ -68,9 +69,14 @@ function argText(arg: Arg): string {
   }
 }
 
+/** C++ のクラスの名前(ライブラリのクラスは `tokotachi::Button`、自作部品は名前空間を付けた名前。docs/adr/0044)。 */
+export function cppClass(cls: string): string {
+  return findClass(cls)?.custom?.qualified ?? `tokotachi::${cls}`;
+}
+
 /** 名前があればメンバへの代入、無ければ一時的な変数の宣言。 */
 function assignee(variable: string, cls: string, declare: boolean): string {
-  return declare ? `tokotachi::${cls}* ${variable}` : variable;
+  return declare ? `${cppClass(cls)}* ${variable}` : variable;
 }
 
 /**
@@ -84,7 +90,7 @@ function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): stri
         return [
           op.component !== undefined
             ? `${op.variable} = new ${op.component}(${op.parent ?? ''});`
-            : `${assignee(op.variable, op.class, op.declare)} = new tokotachi::${op.class}(${op.parent ?? ''});`,
+            : `${assignee(op.variable, op.class, op.declare)} = new ${cppClass(op.class)}(${op.parent ?? ''});`,
         ];
       case 'set': {
         const image =
@@ -166,6 +172,7 @@ function baseInitializer(base: string): string {
  * @param sourceName 定義ファイルの名前(生成物の説明に使う)
  * @param images 埋め込む画像(定義ファイルが参照するもの。cpp/images.ts の embedImages)
  * @param components 置いた部品ファイル(パスは定義ファイルに書いたまま)と、そのクラス・ヘッダを include するパス
+ * @param customIncludes 置いた自作部品(docs/adr/0044)のヘッダを include するパス
  */
 export function emitCpp(
   doc: TtuiDocument,
@@ -174,6 +181,7 @@ export function emitCpp(
   locale: CommentLocale,
   images: readonly EmbeddedImage[] = [],
   components: ReadonlyMap<string, EmittedComponent> = new Map(),
+  customIncludes: readonly string[] = [],
 ): CppFiles {
   const comments = generatedComments(locale);
   const { className, includeGuard, namespace } = target;
@@ -192,14 +200,16 @@ export function emitCpp(
       op.op === 'new' && op.component !== undefined ? [[op.variable, op.component] as const] : [],
     ),
   );
-  const includes = [...new Set([...components.values()].map((c) => c.include))];
+  const includes = [
+    ...new Set([...customIncludes, ...[...components.values()].map((c) => c.include)]),
+  ];
 
   const declarations: Region = {
     id: 'declarations',
     indent: 1,
     content: [
       ...members.map(
-        (m) => `${INDENT}${componentClasses.get(m.name) ?? `tokotachi::${m.class}`}* ${m.name};`,
+        (m) => `${INDENT}${componentClasses.get(m.name) ?? cppClass(m.class)}* ${m.name};`,
       ),
       ...(members.length > 0 && setup.handlers.length > 0 ? [''] : []),
       ...setup.handlers.map((h) => `${INDENT}void ${h.name}(${paramList(h.type)});`),

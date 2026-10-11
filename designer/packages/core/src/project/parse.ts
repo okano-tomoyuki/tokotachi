@@ -18,6 +18,11 @@ function isValidDirectory(path: string): boolean {
   return !path.startsWith('/') && !path.includes('\\') && !/^[A-Za-z]:/.test(path);
 }
 
+/** 自作部品のヘッダのパスとして書けるか(相対パス・区切りは /・C++ のヘッダの拡張子)。 */
+function isValidHeaderPath(path: string): boolean {
+  return isValidDirectory(path) && /[^/]\.(h|hpp|hh|hxx)$/.test(path);
+}
+
 export function validateProject(project: TtprojDocument): Diagnostic[] {
   const out: Diagnostic[] = [];
   const error = (message: string, path: (string | number)[]): void => {
@@ -32,6 +37,17 @@ export function validateProject(project: TtprojDocument): Diagnostic[] {
       ]);
     } else if (windows.slice(0, i).some((x) => sameWindowPath(x, w))) {
       error(l10n.t('"{0}" is listed twice', w), ['windows', i]);
+    }
+  });
+  const headers = project.custom_widgets ?? [];
+  headers.forEach((h, i) => {
+    if (!isValidHeaderPath(h)) {
+      error(l10n.t('Write a relative path of a C++ header (.h, .hpp, .hh or .hxx; separator: /)'), [
+        'custom_widgets',
+        i,
+      ]);
+    } else if (headers.slice(0, i).some((x) => normalizePath(x) === normalizePath(h))) {
+      error(l10n.t('"{0}" is listed twice', h), ['custom_widgets', i]);
     }
   });
   if (
@@ -152,7 +168,10 @@ function indented(value: unknown, depth: number): string {
     .join(`\n${' '.repeat(depth * 2)}`);
 }
 
-/** 決まった形で書き出す(キーの順は $schema・format_version・codegen・theme・main_window・windows。一覧は 1 行に 1 つ)。 */
+/**
+ * 決まった形で書き出す(キーの順は $schema・format_version・codegen・theme・main_window・windows・custom_widgets。
+ * 一覧は 1 行に 1 つ)。
+ */
 export function serializeProject(project: TtprojDocument): string {
   const lines: string[] = ['{'];
   const entries: string[] = [];
@@ -196,6 +215,13 @@ export function serializeProject(project: TtprojDocument): string {
       project.windows.length === 0
         ? '  "windows": []'
         : `  "windows": [\n${project.windows.map((w) => `    ${JSON.stringify(w)}`).join(',\n')}\n  ]`,
+    );
+  }
+  if (project.custom_widgets !== undefined) {
+    entries.push(
+      project.custom_widgets.length === 0
+        ? '  "custom_widgets": []'
+        : `  "custom_widgets": [\n${project.custom_widgets.map((w) => `    ${JSON.stringify(w)}`).join(',\n')}\n  ]`,
     );
   }
   lines.push(entries.join(',\n'), '}');

@@ -8,6 +8,7 @@ import {
   hiddenOutlineNodes,
   outline,
   parseDocument,
+  setCustomClasses,
   type CanvasFrame,
   type Diagnostic,
   type EditCommand,
@@ -98,6 +99,8 @@ export interface DesignerState {
   readonly themePresets: readonly string[];
   /** パレットに出す部品ファイル(パスは定義ファイルのフォルダからの相対パス)。 */
   readonly components: readonly { readonly path: string; readonly className: string }[];
+  /** 自作部品が変わるたびに増える(パレットを作り直す)。 */
+  readonly customVersion: number;
   readonly sidebar: SidebarLayout;
   /** 開いている右クリックのメニュー(画面の座標と項目)。 */
   readonly contextMenu:
@@ -129,6 +132,7 @@ export const useDesigner = create<DesignerState>()((set) => ({
   zoom: 1,
   themePresets: [],
   components: [],
+  customVersion: 0,
   sidebar: DEFAULT_SIDEBAR,
   contextMenu: undefined,
   select: (id) => {
@@ -202,9 +206,21 @@ export function selectedNode(state: DesignerState): OutlineNode | undefined {
 
 let errorTimer: ReturnType<typeof setTimeout> | undefined;
 
+/** 最後に受け取った内容(自作部品が変わったら、検証し直す)。 */
+let lastDocument: Extract<ExtensionToWebviewMessage, { type: 'document' }> | undefined;
+
 export function handleMessage(message: ExtensionToWebviewMessage): void {
   switch (message.type) {
+    case 'customClasses':
+      // 自作部品(docs/adr/0044)をカタログに足し、今の内容を検証し直す
+      setCustomClasses(message.classes);
+      useDesigner.setState((s) => ({ customVersion: s.customVersion + 1 }));
+      if (lastDocument) {
+        handleMessage(lastDocument);
+      }
+      break;
     case 'document': {
+      lastDocument = message;
       const { document, diagnostics } = parseDocument(message.text);
       useDesigner.setState((s) => {
         const tree = document ? outline(document) : [];

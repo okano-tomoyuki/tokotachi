@@ -36,6 +36,24 @@ describe('parseProject', () => {
     ]);
   });
 
+  it('自作部品のヘッダ: C++ のヘッダの相対パス・重複', () => {
+    expect(
+      codes({
+        format_version: 1,
+        custom_widgets: ['src/gauge.hpp', './src/gauge.hpp', 'C:/x.hpp', 'src/gauge.cpp', 'dial.h'],
+      }),
+    ).toEqual(['custom_widgets.1', 'custom_widgets.2', 'custom_widgets.3']);
+    expect(serializeProject({ format_version: 1, windows: [], custom_widgets: ['src/gauge.hpp'] }))
+      .toBe(`{
+  "format_version": 1,
+  "windows": [],
+  "custom_widgets": [
+    "src/gauge.hpp"
+  ]
+}
+`);
+  });
+
   it('決まった形で書き出す', () => {
     const text = serializeProject({ ...valid, format_version: 1 } as never);
     expect(text).toBe(`{

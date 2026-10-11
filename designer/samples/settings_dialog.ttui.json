@@ -102,15 +102,16 @@
                 "events": { "on_change": "slider_zoom_change" }
               },
               {
-                "name": "progress_bar_zoom",
-                "class": "ProgressBar",
+                "name": "level_bar_zoom",
+                "class": "LevelBar",
                 "properties": {
                   "x": 216,
                   "y": 16,
                   "width": 160,
                   "height": 16,
                   "maximum": 200,
-                  "value": 100
+                  "value": 100,
+                  "warning_level": 150
                 }
               }
             ]

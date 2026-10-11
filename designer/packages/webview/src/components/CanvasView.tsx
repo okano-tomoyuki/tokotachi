@@ -5,6 +5,7 @@
 import {
   defaultEventOf,
   defaultHandlerName,
+  findClass,
   findOutlineNode,
   flattenOutline,
   l10n,
@@ -140,6 +141,14 @@ export function CanvasView() {
     return r ? [r] : [];
   });
   const document = useDesigner.getState().document;
+  // 自作部品(docs/adr/0044)のうち、キャンバスが基底(Widget・PaintBox)で描いて中身が見えないものに、枠とクラスの名前を重ねる
+  const customs = widgets.flatMap((n) => {
+    const base = n.class === undefined ? undefined : findClass(n.class)?.custom?.base;
+    const r = n.variable === undefined ? undefined : frame.rects[n.variable];
+    return base !== undefined && (base === 'Widget' || base === 'PaintBox') && r?.showing
+      ? [{ id: n.id, name: n.class ?? '', r }]
+      : [];
+  });
   return (
     <div className="canvas-scroll" ref={scrollRef}>
       <div className="window-frame" style={{ width: width * zoom }}>
@@ -236,6 +245,15 @@ export function CanvasView() {
             }}
           >
             <canvas ref={ref} style={{ width, height }} />
+            {customs.map(({ id, name, r }) => (
+              <div
+                key={id}
+                className="custom-placeholder"
+                style={{ left: r.x, top: r.y, width: r.width, height: r.height }}
+              >
+                {name}
+              </div>
+            ))}
             {!drag &&
               selectedRects.map((r, i) => (
                 <div

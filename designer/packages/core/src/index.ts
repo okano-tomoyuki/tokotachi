@@ -4,8 +4,17 @@ export {
   findHandler,
   findProperty,
   getCatalog,
+  getCustomClasses,
   isSubclassOf,
+  setCustomClasses,
+  withCustomClasses,
 } from './catalog/catalog.ts';
+export {
+  readCustomClasses,
+  type CustomClasses,
+  type CustomHeader,
+  type CustomHeaderProblem,
+} from './catalog/customHeader.ts';
 export {
   describeIdentifierProblem,
   isValidIdentifier,

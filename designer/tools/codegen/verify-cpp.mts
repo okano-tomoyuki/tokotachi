@@ -3,11 +3,12 @@
 // C++ のコンパイラ・CMake・Ninja と、ビルド済みの依存ライブラリ(deps/install/<プラットフォーム>)が要る。
 // 作業フォルダは designer/.cache/verify-cpp(2 回目からは差分だけビルドする)。
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hasErrors, parseDocument, type TtuiDocument } from '@tokotachi-designer/core';
 import { DEFAULT_CPP_OPTIONS, generateCpp } from '@tokotachi-designer/codegen';
+import { sampleProjectDir, useSampleCustomClasses } from '../samples.mts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const designer = resolve(here, '../..');
@@ -45,7 +46,9 @@ function recordHandlers(source: string, className: string): string {
   );
 }
 
-const OPTIONS = { ...DEFAULT_CPP_OPTIONS, commentLocale: 'ja' } as const;
+/** 見本はプロジェクト(samples.ttproj.json)なので、自作部品のヘッダをプロジェクトのフォルダからたどる。 */
+const optionsOf = (file: string) =>
+  ({ ...DEFAULT_CPP_OPTIONS, commentLocale: 'ja', projectDir: sampleProjectDir(file) }) as const;
 
 /** 見本の定義ファイルを読む(samples/ からの相対パス)。 */
 function read(file: string): TtuiDocument {
@@ -67,9 +70,12 @@ function generate(file: string): void {
     document,
     file.split('/').pop() ?? file,
     () => undefined,
-    OPTIONS,
+    optionsOf(file),
     (path) => readFileSync(join(designer, 'samples', dir, path)),
-    (path) => ({ document: read(join(dir, path).replace(/\\/g, '/')), options: OPTIONS }),
+    (path) => {
+      const component = join(dir, path).replace(/\\/g, '/');
+      return { document: read(component), options: optionsOf(component) };
+    },
   );
   mkdirSync(join(generatedDir, dir), { recursive: true });
   for (const f of generated.files) {
@@ -85,6 +91,9 @@ function generate(file: string): void {
 
 function main(): void {
   mkdirSync(generatedDir, { recursive: true });
+  // 自作部品(docs/adr/0044)のヘッダ・ソースは、見本と同じ位置に写す
+  useSampleCustomClasses();
+  cpSync(join(designer, 'samples', 'widgets'), join(generatedDir, 'widgets'), { recursive: true });
   for (const file of SAMPLES) {
     generate(file);
   }

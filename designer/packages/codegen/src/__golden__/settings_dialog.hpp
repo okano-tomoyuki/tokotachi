@@ -3,8 +3,9 @@
 #define SETTINGS_DIALOG_HPP
 
 #include <tokotachi/tokotachi.hpp>
+#include "widgets/level_bar.hpp"
 #include "parts/labeled_edit.hpp"
-// <tokotachi-designer:end id="tokotachi_header_begin" hash="dc13bb56">
+// <tokotachi-designer:end id="tokotachi_header_begin" hash="df0d5c1f">
 
 // <tokotachi-designer:begin id="tokotachi_namespace_begin">
 // <tokotachi-designer:end id="tokotachi_namespace_begin" hash="811c9dc5">
@@ -24,11 +25,11 @@ public:
     tokotachi::CheckBox* check_box_corner;
     tokotachi::Widget* area_free;
     tokotachi::Slider* slider_zoom;
-    tokotachi::ProgressBar* progress_bar_zoom;
+    samples::LevelBar* level_bar_zoom;
 
     void settings_finish(tokotachi::Object* sender);
     void slider_zoom_change(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="c22c8a8b">
+    // <tokotachi-designer:end id="declarations" hash="f46ec986">
 
 private:
     void tokotachi_setup_ui();

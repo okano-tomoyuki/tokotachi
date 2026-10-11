@@ -9,6 +9,8 @@ import type {
 } from '@tokotachi-designer/core';
 import {
   checkThemeOverride,
+  withCustomClasses,
+  type ClassInfo,
   DOCUMENT_EXTENSION,
   hasErrors,
   IMAGE_EXTENSIONS,
@@ -20,6 +22,7 @@ import {
 import * as vscode from 'vscode';
 import { applyEditCommand } from './applyEditCommand.ts';
 import { renderCanvas } from './canvasService.ts';
+import { customClassesOf, isHeaderFile } from './customWidgets.ts';
 import {
   componentResolver,
   listComponents,
@@ -65,6 +68,19 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       scheduleRender();
     };
 
+    // 自作部品(docs/adr/0044)。プロジェクト・ヘッダが変わったら読み直し、変わっていれば Webview に送る
+    let customClasses: Record<string, ClassInfo> = {};
+    let customJson = '{}';
+    const refreshCustomClasses = async (): Promise<void> => {
+      const classes = await customClassesOf(document.uri);
+      const json = JSON.stringify(classes);
+      if (json !== customJson) {
+        customJson = json;
+        customClasses = classes;
+        await post({ type: 'customClasses', classes });
+      }
+    };
+
     // キャンバスで表示するタブ(Webview の選択に合わせる。定義ファイルは変えない)
     let tabs: Readonly<Record<string, number>> = {};
     // 描き直しは、変更が続いたときは最後の内容だけにする
@@ -79,14 +95,16 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       }, 30);
     };
     const render = async (): Promise<void> => {
-      const parsed = parseDocument(document.getText());
+      await refreshCustomClasses();
+      const classes = customClasses;
+      const parsed = withCustomClasses(classes, () => parseDocument(document.getText()));
       if (!parsed.document || hasErrors(parsed.diagnostics)) {
         return;
       }
       try {
         const images = await readImages(vscode.Uri.joinPath(document.uri, '..'), parsed.document);
         // 置いた部品ファイル(docs/adr/0043)は、その中身を展開して描く
-        const { components } = await loadComponents(document.uri, parsed.document);
+        const { components } = await loadComponents(document.uri, parsed.document, classes);
         await readComponentImages(components, images);
         // プロジェクトに属していれば、そのテーマで描く(project-spec.md §4.1)
         const theme = (await projectOf(document.uri))?.project.doc.theme;
@@ -96,6 +114,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
             ? theme.override
             : undefined;
         const frame = await renderCanvas(
+          classes,
           this.context,
           parsed.document,
           document.version,
@@ -154,6 +173,8 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       `**/*.{${IMAGE_EXTENSIONS.join(',')}}`,
     );
 
+    // 自作部品のヘッダが変わったら、読み直して描き直す
+    const headerWatcher = vscode.workspace.createFileSystemWatcher('**/*.{h,hpp,hh,hxx}');
     // 置いた部品ファイルが作られた・消えたときも描き直す
     const componentWatcher = vscode.workspace.createFileSystemWatcher(`**/*${DOCUMENT_EXTENSION}`);
     // パレットの部品ファイルの一覧(ほかの定義ファイルが変わったら作り直す。続いたときは最後だけ)
@@ -164,7 +185,9 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       }
       componentsTimer = setTimeout(() => {
         componentsTimer = undefined;
-        void listComponents(document.uri).then((items) => post({ type: 'components', items }));
+        void listComponents(document.uri, customClasses).then((items) =>
+          post({ type: 'components', items }),
+        );
       }, 300);
     };
 
@@ -176,7 +199,8 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       panel.webview.onDidReceiveMessage((message: WebviewToExtensionMessage) => {
         switch (message.type) {
           case 'ready':
-            postDocument();
+            // 自作部品を先に送ってから、内容を送る(Webview は自作部品をカタログに足して検証する)
+            void refreshCustomClasses().then(postDocument);
             scheduleComponents();
             break;
           case 'edit':
@@ -233,6 +257,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
         const path = e.document.uri.path;
         if (
           path.endsWith(PROJECT_EXTENSION) ||
+          isHeaderFile(e.document.uri) ||
           (path.endsWith(DOCUMENT_EXTENSION) &&
             e.document.uri.toString() !== document.uri.toString())
         ) {
@@ -243,6 +268,10 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
         }
       }),
       componentWatcher,
+      headerWatcher,
+      headerWatcher.onDidChange(scheduleRender),
+      headerWatcher.onDidCreate(scheduleRender),
+      headerWatcher.onDidDelete(scheduleRender),
       ...[
         componentWatcher.onDidChange,
         componentWatcher.onDidCreate,

@@ -291,5 +291,13 @@
   "Component file": "部品ファイル",
   "Open the component file to edit its content": "部品ファイルを開いて中身を編集します",
   "Component files": "部品ファイル",
-  "A component file cannot be the main window": "部品ファイルはメインのウィンドウにできません"
+  "A component file cannot be the main window": "部品ファイルはメインのウィンドウにできません",
+  "\"{0}\" is the name of a class of the library": "\"{0}\" はライブラリのクラスの名前です",
+  "The class \"{0}\" is declared in more than one header": "クラス \"{0}\" が複数のヘッダで宣言されています",
+  "The property \"{0}\" of {1} is not shown in the designer (unsupported type: {2})": "{1} のプロパティ \"{0}\" はデザイナーに出しません(扱えない型: {2})",
+  "The base class \"{0}\" of {1} is not a widget": "{1} の基底クラス \"{0}\" は部品ではありません",
+  "Write a relative path of a C++ header (.h, .hpp, .hh or .hxx; separator: /)": "C++ のヘッダ(.h・.hpp・.hh・.hxx)の相対パスを書きます(区切りは /)",
+  "Custom widgets can be used only in a window of a project": "自作部品はプロジェクトに属するウィンドウでだけ使えます",
+  "The header \"{0}\" is not found": "ヘッダ \"{0}\" が見つかりません",
+  "Custom widgets": "自作部品"
 }

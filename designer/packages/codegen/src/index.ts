@@ -4,6 +4,8 @@
  */
 import {
   componentReferences,
+  findClass,
+  namedNodes,
   imageReferences,
   l10n,
   normalizePath,
@@ -77,6 +79,18 @@ export interface ComponentSource {
 /** 仮の絶対パスの根(core のパスの計算は絶対パスを扱う。`..` をたどれるよう深くする)。 */
 const ROOT = '/r/r/r/r/r/r/r/r/r/r/r/r/r/r/r/r';
 
+/** ドキュメントが使う自作部品のヘッダ(プロジェクトのフォルダからのパス。最初に現れた順)。 */
+function customHeaders(doc: TtuiDocument): string[] {
+  const headers = new Set<string>();
+  for (const n of namedNodes(doc)) {
+    const header = findClass(n.class)?.custom?.header;
+    if (header !== undefined) {
+      headers.add(header);
+    }
+  }
+  return [...headers];
+}
+
 /** 部品ファイルのヘッダの、置いた定義ファイルのフォルダからのパス。 */
 function componentHeader(path: string, options: CppOptions): string {
   const dir = resolvePath(ROOT, `${normalizePath(path)}/..`);
@@ -133,6 +147,19 @@ export function generateCpp(
     data.set(path, bytes);
   }
   const images = embedImages(paths, data);
+  // 置いた自作部品(docs/adr/0044)のヘッダ。自作部品はプロジェクトに登録したもので、プロジェクトに属するウィンドウでだけ使える
+  const customIncludes: string[] = [];
+  for (const header of customHeaders(doc)) {
+    if (options.projectDir === undefined) {
+      return fail(l10n.t('Custom widgets can be used only in a window of a project'));
+    }
+    customIncludes.push(
+      relativePath(
+        resolvePath(ROOT, `${target.header}/..`),
+        resolvePath(ROOT, `${options.projectDir}/${header}`),
+      ),
+    );
+  }
   const components = new Map<string, EmittedComponent>();
   for (const ref of componentReferences(doc)) {
     if (components.has(ref.path)) {
@@ -159,6 +186,7 @@ export function generateCpp(
     options.commentLocale,
     images,
     components,
+    customIncludes,
   );
   const syntax = cppSyntax(target.className);
   const generate = (generated: GeneratedCode, existing: string | undefined): MergeResult =>

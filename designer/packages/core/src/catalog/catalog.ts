@@ -8,8 +8,37 @@ export function getCatalog(): Catalog {
   return CATALOG;
 }
 
+/** 自作部品(docs/adr/0044)。開いている定義ファイルが属するプロジェクトのもの。 */
+let custom: Readonly<Record<string, ClassInfo>> = {};
+
+/** 自作部品を設定する(Webview: 開いている定義ファイルのプロジェクトのもの)。 */
+export function setCustomClasses(classes: Readonly<Record<string, ClassInfo>>): void {
+  custom = classes;
+}
+
+export function getCustomClasses(): Readonly<Record<string, ClassInfo>> {
+  return custom;
+}
+
+/**
+ * 自作部品を設定して fn を呼ぶ(拡張: いくつもの定義ファイルを扱うので、検証・コード生成・描画の間だけ設定する)。
+ * fn は同期的に終わること。
+ */
+export function withCustomClasses<T>(classes: Readonly<Record<string, ClassInfo>>, fn: () => T): T {
+  const previous = custom;
+  custom = classes;
+  try {
+    return fn();
+  } finally {
+    custom = previous;
+  }
+}
+
 export function findClass(name: string): ClassInfo | undefined {
-  return Object.hasOwn(CATALOG.classes, name) ? CATALOG.classes[name] : undefined;
+  if (Object.hasOwn(CATALOG.classes, name)) {
+    return CATALOG.classes[name];
+  }
+  return Object.hasOwn(custom, name) ? custom[name] : undefined;
 }
 
 /** クラス name が base そのものか、その派生か(カタログに無いクラスは false)。 */

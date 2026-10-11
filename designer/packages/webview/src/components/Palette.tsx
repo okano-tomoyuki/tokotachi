@@ -4,7 +4,7 @@
  * 「部品」と「非ビジュアル」の 2 つのタブに分け、非ビジュアルのタブには画面に出ないもの(Action・オブジェクト・Variable)を並べて、
  * 行の「+」で足す。部品のタブの終わりには、ワークスペースの部品ファイル(docs/adr/0043)を並べる。
  */
-import { getCatalog, l10n, type Category } from '@tokotachi-designer/core';
+import { getCatalog, getCustomClasses, l10n, type Category } from '@tokotachi-designer/core';
 import { Fragment, useState, type ReactNode } from 'react';
 import { beginDrag, clickAdd } from '../dragController.ts';
 import type { Drag } from '../dropTarget.ts';
@@ -16,7 +16,14 @@ import { ClassIcon } from './ClassIcon.tsx';
 /** 画面に出る部品の分類(non_visual は構造の木の見出しから足す)。 */
 type WidgetCategory = Exclude<Category, 'non_visual'>;
 
-const CATEGORIES: readonly WidgetCategory[] = ['input', 'display', 'view', 'container', 'drawing'];
+const CATEGORIES: readonly WidgetCategory[] = [
+  'input',
+  'display',
+  'view',
+  'container',
+  'drawing',
+  'custom',
+];
 
 /** 非ビジュアルのタブの分類(構造の木の欄と同じ)。 */
 type NonVisualGroup = 'actions' | 'objects' | 'variables';
@@ -37,6 +44,8 @@ function categoryLabel(c: GroupId): string {
       return l10n.t('Containers');
     case 'drawing':
       return l10n.t('Drawing');
+    case 'custom':
+      return l10n.t('Custom widgets');
     case 'spacer':
       return l10n.t('Spacers');
     case 'components':
@@ -155,7 +164,9 @@ export function Palette() {
   // 足すときの名前(action_1 など)をドキュメントから決めるので、変わったら作り直す
   useDesigner((s) => s.version);
   const components = useDesigner((s) => s.components);
-  const classes = Object.entries(getCatalog().classes);
+  // 自作部品(docs/adr/0044)はプロジェクトから届いたら足す
+  useDesigner((s) => s.customVersion);
+  const classes = [...Object.entries(getCatalog().classes), ...Object.entries(getCustomClasses())];
   const needle = filter.trim().toLowerCase();
   const spacers = [
     {
@@ -224,7 +235,7 @@ export function Palette() {
                     element: (
                       <Item
                         label={cls}
-                        icon={cls}
+                        icon={info.custom ? 'custom' : cls}
                         title={info.doc}
                         drag={{ kind: 'new', class: cls }}
                       />
