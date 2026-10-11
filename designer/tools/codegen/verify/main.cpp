@@ -108,6 +108,15 @@ int main(int argc, char** argv)
     check(called("action_open_trigger"), "action handler");
     window.button_search->on_click.get()(window.button_search);
     check(called("search"), "button handler");
+    // ドラッグ&ドロップ(docs/adr/0047)のハンドラ
+    check(window.list_view_files->drag_enabled.get() && window.list_view_files->accepts_drops.get(), "drag and drop properties");
+    {
+        tokotachi::DragData dropped;
+        dropped.text = "x";
+        tokotachi::DragEvent drop_event(tokotachi::Point(), dropped, tokotachi::MODIFIER_NONE, tokotachi::DropAction::COPY);
+        window.list_view_files->on_drop.get()(window.list_view_files, drop_event);
+        check(called("list_view_files_drop"), "drop handler");
+    }
     window.timer_refresh->on_timer.get()(window.timer_refresh);
     check(called("refresh"), "timer handler");
     bool can_close = true;

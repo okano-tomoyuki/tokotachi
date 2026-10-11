@@ -104,6 +104,27 @@ struct WidgetAccess
         ThemeScope scope(w);
         w->text_editing(e);
     }
+    static bool accepts_drops(const Widget* w) { return w->accepts_drops_; }
+    static void drag_move(Widget* w, DragEvent& e)
+    {
+        ThemeScope scope(w);
+        w->drag_move(e);
+    }
+    static void drag_leave(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->drag_leave();
+    }
+    static void drop(Widget* w, DragEvent& e)
+    {
+        ThemeScope scope(w);
+        w->drop(e);
+    }
+    static void drag_finished(Widget* w, DropAction action)
+    {
+        ThemeScope scope(w);
+        w->drag_finished(action);
+    }
     static void focus_in(Widget* w)
     {
         ThemeScope scope(w);

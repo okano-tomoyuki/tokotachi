@@ -7,6 +7,7 @@
 #include <tokotachi/core/application.hpp>
 #include <tokotachi/layout/box_layout.hpp>
 #include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 #include <tokotachi/widgets/label.hpp>
 #include <tokotachi/windows/menu_bar.hpp>
 #include <tokotachi/windows/status_bar.hpp>
@@ -23,6 +24,13 @@
 
 namespace tokotachi
 {
+
+/// DragData の内部の値を書く(ウィンドウだけが使う)。
+struct DragAccess
+{
+    static void set_source(DragData& d, Widget* w) { d.source_ = w; }
+    static void set_outside(DragData& d, bool v) { d.outside_ = v; }
+};
 
 namespace detail
 {
@@ -169,6 +177,11 @@ WindowImpl::WindowImpl(Window* q_)
       ime_dirty(false)
 {
     dirty.x0 = dirty.y0 = dirty.x1 = dirty.y1 = 0;
+    drag.active = false;
+    drag.outside = false;
+    drag.source = nullptr;
+    drag.target = nullptr;
+    drag.action = DropAction::NONE;
     static const SDL_SystemCursor ids[7] = {SDL_SYSTEM_CURSOR_DEFAULT,   SDL_SYSTEM_CURSOR_TEXT,
                                             SDL_SYSTEM_CURSOR_POINTER,   SDL_SYSTEM_CURSOR_WAIT,
                                             SDL_SYSTEM_CURSOR_CROSSHAIR, SDL_SYSTEM_CURSOR_EW_RESIZE,
@@ -356,6 +369,7 @@ void WindowImpl::render(bool present)
     canvas.set_scale(scale);
     canvas.begin(clip);
     paint_tree(q);
+    paint_drag_ghost();
     canvas.end();
 
     const SDL_Rect r = {clip.x0, clip.y0, clip.x1 - clip.x0, clip.y1 - clip.y0};
@@ -738,6 +752,15 @@ void WindowImpl::update_input_method_area()
 
 void WindowImpl::widget_destroyed(Widget* w)
 {
+    if (drag.source == w)
+    {
+        drag.source = nullptr;
+        DragAccess::set_source(drag.data, nullptr);
+    }
+    if (drag.target == w)
+    {
+        drag.target = nullptr;
+    }
     if (hover == w)
     {
         hover = nullptr;
@@ -803,6 +826,12 @@ void WindowImpl::mouse_down(const Point& p, MouseButton button, int clicks)
 
 void WindowImpl::mouse_up(const Point& p, MouseButton button, int clicks)
 {
+    // ドラッグの途中なら落とす(その後、始めたウィジェットにも離したことを送る)
+    if (drag.active && !drag.outside)
+    {
+        drag_update(p, to_modifiers(SDL_GetModState()));
+        drag_end(true, to_modifiers(SDL_GetModState()));
+    }
     if (Widget* w = grab)
     {
         grab = nullptr;
@@ -817,6 +846,11 @@ void WindowImpl::mouse_move(const Point& p)
 {
     pointer = p;
     const Modifiers mods = to_modifiers(SDL_GetModState());
+    if (drag.active && !drag.outside)
+    {
+        drag_update(p, mods);
+        return;
+    }
     if (grab)
     {
         MouseEvent ev(grab->map_from_window(p), MouseButton::NONE, mods, 0);
@@ -837,6 +871,19 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
     hide_tooltip();
     const Modifiers mods = to_modifiers(e.mod);
     const Key k = to_key(e.key);
+    // ドラッグの途中: Esc でやめる。Ctrl で操作(移す・写す)が変わるので、受け取る側に聞き直す
+    if (drag.active && !drag.outside)
+    {
+        if (e.down && k == Key::ESCAPE)
+        {
+            drag_end(false, mods);
+        }
+        else if (k == Key::CONTROL)
+        {
+            drag_update(drag.pos, mods);
+        }
+        return;
+    }
     // メニューバーのキーボードの操作(Alt・F10・Alt+ニーモニック)を先に(docs/adr/0027)。
     if (MenuBar* bar = q->menu_bar)
     {
@@ -872,6 +919,188 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
         const KeyEvent ev(k, mods, e.repeat, static_cast<std::uint32_t>(e.key));
         trigger_shortcut(ev);
     }
+}
+
+// ---- ドラッグ&ドロップ(docs/adr/0047) ----
+
+bool WindowImpl::start_drag(Widget* source, const DragData& data, const std::string& label)
+{
+    if (drag.active || !grab)
+    {
+        return false;
+    }
+    hide_tooltip();
+    drag.active = true;
+    drag.outside = false;
+    drag.data = data;
+    DragAccess::set_source(drag.data, source);
+    DragAccess::set_outside(drag.data, false);
+    drag.source = source;
+    drag.label = label;
+    drag.target = nullptr;
+    drag.action = DropAction::NONE;
+    drag.ghost = Rect();
+    drag_update(pointer, to_modifiers(SDL_GetModState()));
+    return true;
+}
+
+void WindowImpl::drag_update(const Point& p, Modifiers mods)
+{
+    drag.pos = p;
+    // ウィンドウの中は移す(Ctrl なら写す)、OS からは写すを提案する
+    const DropAction proposed =
+        drag.outside ? DropAction::COPY : (mods & MODIFIER_CONTROL) ? DropAction::COPY : DropAction::MOVE;
+    Widget* found = nullptr;
+    DropAction action = DropAction::NONE;
+    for (Widget* w = widget_at(p); w; w = WidgetAccess::parent_of(w))
+    {
+        if (!WidgetAccess::accepts_drops(w) || !w->effectively_enabled)
+        {
+            continue;
+        }
+        DragEvent ev(w->map_from_window(p), drag.data, mods, proposed);
+        WidgetAccess::drag_move(w, ev);
+        if (!drag.active)
+        {
+            return;  // ハンドラがドラッグを終わらせた
+        }
+        if (ev.accepted && ev.action != DropAction::NONE)
+        {
+            found = w;
+            action = ev.action;
+            break;
+        }
+    }
+    if (drag.target && drag.target != found)
+    {
+        Widget* old = drag.target;
+        drag.target = nullptr;
+        WidgetAccess::drag_leave(old);
+    }
+    drag.target = found;
+    drag.action = action;
+    // 像を描き直す
+    invalidate(drag.ghost);
+    drag.ghost = drag_ghost_rect();
+    invalidate(drag.ghost);
+}
+
+void WindowImpl::drag_end(bool do_drop, Modifiers mods)
+{
+    if (!drag.active)
+    {
+        return;
+    }
+    DropAction result = DropAction::NONE;
+    if (Widget* target = drag.target)
+    {
+        drag.target = nullptr;
+        if (do_drop)
+        {
+            DragEvent ev(target->map_from_window(drag.pos), drag.data, mods, drag.action);
+            WidgetAccess::drop(target, ev);
+            result = ev.accepted ? ev.action : DropAction::NONE;
+        }
+        else
+        {
+            WidgetAccess::drag_leave(target);
+        }
+    }
+    Widget* source = drag.source;
+    drag.active = false;
+    drag.source = nullptr;
+    drag.data = DragData();
+    invalidate(drag.ghost);
+    drag.ghost = Rect();
+    if (source)
+    {
+        WidgetAccess::drag_finished(source, result);
+    }
+}
+
+void WindowImpl::os_drop(const SDL_DropEvent& e)
+{
+    const Modifiers mods = to_modifiers(SDL_GetModState());
+    switch (e.type)
+    {
+    case SDL_EVENT_DROP_BEGIN:
+        if (drag.active)
+        {
+            return;  // ウィンドウの中のドラッグの途中
+        }
+        drag.active = true;
+        drag.outside = true;
+        drag.data = DragData();
+        DragAccess::set_outside(drag.data, true);
+        drag.source = nullptr;
+        drag.label.clear();
+        drag.target = nullptr;
+        drag.action = DropAction::NONE;
+        drag.ghost = Rect();
+        break;
+    case SDL_EVENT_DROP_POSITION:
+        if (drag.active && drag.outside)
+        {
+            drag_update(to_dp(e.x, e.y), mods);
+        }
+        break;
+    case SDL_EVENT_DROP_FILE:
+    case SDL_EVENT_DROP_TEXT:
+        if (drag.active && drag.outside && e.data)
+        {
+            if (e.type == SDL_EVENT_DROP_FILE)
+            {
+                drag.data.files.push_back(e.data);
+            }
+            else
+            {
+                drag.data.text += e.data;
+            }
+            drag.pos = to_dp(e.x, e.y);
+        }
+        break;
+    case SDL_EVENT_DROP_COMPLETE:
+        if (drag.active && drag.outside)
+        {
+            // 中身が無ければ、落とさずに離れた
+            const bool dropped = !drag.data.files.empty() || !drag.data.text.empty();
+            if (dropped)
+            {
+                // 中身が分かったので、受け取るかを聞き直してから落とす
+                drag_update(drag.pos, mods);
+            }
+            drag_end(dropped, mods);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+Rect WindowImpl::drag_ghost_rect() const
+{
+    if (!drag.active || drag.outside || drag.label.empty())
+    {
+        return Rect();
+    }
+    const TextLayout l(drag.label, Font(), scale);
+    return Rect(drag.pos.x + 12, drag.pos.y + 14, std::ceil(l.width()) + 16, std::ceil(l.height()) + 8);
+}
+
+void WindowImpl::paint_drag_ghost()
+{
+    const Rect r = drag_ghost_rect();
+    if (r.is_empty())
+    {
+        return;
+    }
+    // 受け取る先が無いときは薄く描く
+    const float alpha = drag.target ? 1.0f : 0.5f;
+    const Color bg = theme::selection();
+    canvas.fill_round_rect(r, 4, bg.with_alpha(static_cast<std::uint8_t>(220 * alpha)));
+    const TextLayout l(drag.label, Font(), scale);
+    const Color fg = theme::on_selection();
+    canvas.draw_text(l, Point(r.x + 8, r.y + 4), fg.with_alpha(static_cast<std::uint8_t>(255 * alpha)));
 }
 
 bool WindowImpl::trigger_shortcut(const KeyEvent& ev)
@@ -990,6 +1219,13 @@ void WindowImpl::handle(const SDL_Event& e)
             TextInputEvent ev(e.text.text ? e.text.text : "");
             WidgetAccess::text_input(focus, ev);
         }
+        break;
+    case SDL_EVENT_DROP_BEGIN:
+    case SDL_EVENT_DROP_POSITION:
+    case SDL_EVENT_DROP_FILE:
+    case SDL_EVENT_DROP_TEXT:
+    case SDL_EVENT_DROP_COMPLETE:
+        os_drop(e.drop);
         break;
     case SDL_EVENT_TEXT_EDITING:
         if (focus && focus->accepts_text_input)

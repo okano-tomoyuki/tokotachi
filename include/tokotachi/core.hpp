@@ -6,6 +6,7 @@
 #include "core/application.hpp"
 #include "core/binding.hpp"
 #include "core/clipboard.hpp"
+#include "core/drag.hpp"
 #include "core/event.hpp"
 #include "core/geometry.hpp"
 #include "core/property.hpp"

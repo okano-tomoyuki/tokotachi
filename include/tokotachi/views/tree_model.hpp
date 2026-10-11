@@ -55,6 +55,8 @@ public:
     TreeItem* insert_item(int index, const std::string& text);
     /// 項目を(子孫ごと)除いて破棄する。どの深さの項目でもよい。
     void remove_item(TreeItem* item);
+    /// 項目を parent(nullptr なら一番上)の子の index の位置へ移す(範囲の外なら最後)。自分・子孫の下へは移せない(何もしない)。
+    void move_item(TreeItem* item, TreeItem* parent, int index);
     void clear();
 
     /// 一番上の項目(並んだ順)。
@@ -78,6 +80,9 @@ public:
     void set_text(const ModelIndex& index, int column, const std::string& text) override;
     /// 同じ親の子どうしを並べ替える(すべての深さで)。
     void sort(int column, SortOrder order) override;
+    /// 木の中の移動(ドラッグ&ドロップ)。自分・子孫の下へは移せない。
+    bool can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const override;
+    bool move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) override;
     ModelIndex locate(const ModelIndex& index) const override;
 
 private:

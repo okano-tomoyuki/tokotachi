@@ -78,6 +78,24 @@ danger.set(tokotachi::ColorRole::FIELD, tokotachi::Color::rgb(0xfef2f2), tokotac
 area_danger->theme_override = danger;   // area_danger の中の部品すべてに効く
 ```
 
+## ドラッグ&ドロップ
+
+同じウィンドウの中の部品の間と、OS(エクスプローラー・ファイルマネージャー)から落としたファイル・文字を受け取れます
+(別のウィンドウ・ほかのアプリへドラッグすることはできません)。
+
+```cpp
+label_drop->accepts_drops = true;
+label_drop->on_drag_move = [](tokotachi::Object*, tokotachi::DragEvent& e) {
+    e.accepted = e.data.from_outside() || !e.data.text.empty();  // OS からのものは、落とすまで中身が分からない
+};
+label_drop->on_drop = [=](tokotachi::Object*, tokotachi::DragEvent& e) {
+    label_drop->text = e.data.files.empty() ? e.data.text : e.data.files[0];
+};
+```
+
+始める側は、マウスのボタンを押している間(`on_mouse_move` など)に `start_drag(data, label)` を呼び、
+終わったら `on_drag_finish` で操作(移す・写す・受け取られなかった)を受け取ります。移す(`DropAction::MOVE`)なら元のデータを消します。
+
 ## 座標
 
 - 単位は dp。位置は親の左上からの相対です。

@@ -2111,6 +2111,103 @@ TEST(image_from_pixels_and_draw)
     CHECK(window.impl()->buffer[2 * stride + 2] == 0xffff0000u);
 }
 
+// OS からのドロップ(SDL_EVENT_DROP_*。位置は dp)。
+void dispatch_drop(tokotachi::Window& window, SDL_EventType type, const tokotachi::Point& p, const char* data = nullptr)
+{
+    const float k = window.impl()->scale / window.impl()->density;
+    SDL_Event e;
+    SDL_zero(e);
+    e.type = type;
+    e.drop.windowID = SDL_GetWindowID(window.impl()->window);
+    e.drop.x = p.x * k;
+    e.drop.y = p.y * k;
+    e.drop.data = data;
+    tokotachi::Application::instance()->impl()->dispatch(e);
+}
+
+TEST(drag_and_drop_in_window_and_from_outside)
+{
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::Widget* source = new tokotachi::Widget(&window);
+    source->bounds = tokotachi::Rect(0, 0, 100, 100);
+    tokotachi::Widget* box = new tokotachi::Widget(&window);  // 受け取る(中の子の上でも、親へ送られて受け取る)
+    box->bounds = tokotachi::Rect(150, 0, 150, 200);
+    tokotachi::Widget* inner = new tokotachi::Widget(box);
+    inner->bounds = tokotachi::Rect(10, 10, 50, 50);
+    box->accepts_drops = true;
+
+    // 押している間に始める。ボタンを押していなければ始められない
+    tokotachi::DragData data;
+    data.text = "りんご";
+    data.formats["app/id"] = "7";
+    CHECK(!source->start_drag(data));
+    bool started = false;
+    source->on_mouse_down = [&](tokotachi::Object*, tokotachi::MouseEvent&) {};
+    source->on_mouse_move = [&](tokotachi::Object*, tokotachi::MouseEvent&)
+    {
+        if (!started)
+        {
+            started = source->start_drag(data, "りんご");
+        }
+    };
+    std::vector<std::string> log;
+    tokotachi::DropAction finished = tokotachi::DropAction::COPY;
+    source->on_drag_finish = [&](tokotachi::Object*, tokotachi::DropAction a) { finished = a; };
+    box->on_drag_move = [&](tokotachi::Object*, tokotachi::DragEvent& e)
+    {
+        log.push_back("move");
+        CHECK(e.data.source() == source && !e.data.from_outside() && e.data.formats.at("app/id") == "7");
+        e.accepted = e.pos.x < 100;  // 左の 100dp だけで受け取る
+    };
+    box->on_drag_leave = [&](tokotachi::Object*) { log.push_back("leave"); };
+    box->on_drop = [&](tokotachi::Object*, tokotachi::DragEvent& e)
+    {
+        log.push_back("drop " + e.data.text);
+        CHECK(e.action == tokotachi::DropAction::MOVE && e.pos.x == 20 && e.pos.y == 30);
+    };
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(10, 10));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(20, 10));
+    CHECK(started && log.empty());
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 20));  // inner の上: box が受け取る
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(280, 20));  // 受け取らない位置
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 30));
+    window.impl()->render(false);                                              // 像を描ける
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(170, 30));
+    CHECK(log.size() == 6 && log[0] == "move" && log[1] == "move" && log[2] == "leave" && log[5] == "drop りんご");  // 離した位置でも聞き直す
+    CHECK(finished == tokotachi::DropAction::MOVE);
+
+    // Esc でやめると、受け取らなかったことになる
+    started = false;
+    log.clear();
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(10, 10));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 20));
+    dispatch_key(window, SDLK_ESCAPE);
+    CHECK(started && finished == tokotachi::DropAction::NONE && log.back() == "leave");
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(170, 20));
+    CHECK(log.back() == "leave");  // 落とさない
+
+    // OS からのファイル: 重ねている間は中身が分からず、落としたときに入る
+    std::vector<std::string> files;
+    box->on_drag_move = [&](tokotachi::Object*, tokotachi::DragEvent& e)
+    {
+        CHECK(e.data.from_outside() && e.data.source() == nullptr && e.action == tokotachi::DropAction::COPY);
+    };
+    box->on_drop = [&](tokotachi::Object*, tokotachi::DragEvent& e) { files = e.data.files; };
+    dispatch_drop(window, SDL_EVENT_DROP_BEGIN, tokotachi::Point());
+    dispatch_drop(window, SDL_EVENT_DROP_POSITION, tokotachi::Point(200, 50));
+    dispatch_drop(window, SDL_EVENT_DROP_FILE, tokotachi::Point(200, 50), "C:/a.txt");
+    dispatch_drop(window, SDL_EVENT_DROP_FILE, tokotachi::Point(200, 50), "C:/b.txt");
+    dispatch_drop(window, SDL_EVENT_DROP_COMPLETE, tokotachi::Point(200, 50));
+    CHECK(files.size() == 2 && files[1] == "C:/b.txt");
+    // 落とさずに離れた(中身が無い)ときは drop を送らない
+    files.clear();
+    dispatch_drop(window, SDL_EVENT_DROP_BEGIN, tokotachi::Point());
+    dispatch_drop(window, SDL_EVENT_DROP_POSITION, tokotachi::Point(200, 50));
+    dispatch_drop(window, SDL_EVENT_DROP_COMPLETE, tokotachi::Point(200, 50));
+    CHECK(files.empty() && !window.impl()->drag.active);
+}
+
 TEST(list_view_selection_and_keys)
 {
     tokotachi::Window window("t", 300, 300);
@@ -2242,6 +2339,94 @@ TEST(item_view_text_style_search_and_edit)
     view->edit(list->index_of(items[1]));
     list->add_item("date");
     CHECK(!view->is_editing());
+}
+
+// ドラッグ: from で押し、少しずつ動かして to で離す。
+void drag_mouse(tokotachi::Window& window, const tokotachi::Point& from, const tokotachi::Point& to)
+{
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, from);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(from.x, from.y + 6));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, to);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, to);
+}
+
+std::string texts_of(const tokotachi::ListModel* list)
+{
+    std::string out;
+    const std::vector<tokotachi::Item*> items = list->items;
+    for (std::size_t i = 0; i < items.size(); ++i)
+    {
+        out += items[i]->text.get();
+    }
+    return out;
+}
+
+TEST(item_view_drag_to_reorder)
+{
+    tokotachi::Window window("t", 300, 300);
+    window.visible = true;
+    tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+    for (const char* t : {"a", "b", "c", "d", "e"})
+    {
+        list->add_item(t);
+    }
+    tokotachi::ListView* view = new tokotachi::ListView(&window);
+    view->bounds = tokotachi::Rect(0, 0, 200, 250);
+    view->model = list;
+    view->selection_mode = tokotachi::SelectionMode::MULTI;
+    view->drag_enabled = true;
+    view->drop_enabled = true;
+    window.apply_layout();
+    const float h = view_row_height();
+
+    // a を d の後ろ(d の下半分)へ
+    dispatch_click(window, row_point(0));
+    drag_mouse(window, row_point(0), tokotachi::Point(100, 1 + 3 * h + h * 0.75f));
+    CHECK(texts_of(list) == "bcdae");
+    CHECK(view->current == list->index_of(list->items.get()[3]) && view->selection.get().size() == 1);  // 移した項目を選んだまま
+
+    // 選んでいる複数の項目(b・e)をまとめて先頭へ。選んでいる項目を押してもほかの選択は外れない
+    click_with(window, row_point(0), SDL_KMOD_NONE);   // b
+    click_with(window, row_point(4), SDL_KMOD_LCTRL);  // と e
+    CHECK(view->selection.get().size() == 2);
+    drag_mouse(window, row_point(4), tokotachi::Point(100, 1 + h * 0.25f));
+    CHECK(texts_of(list) == "becda");
+    // ドラッグしなければ、ふつうのクリック(選択がその項目だけになる)
+    click_with(window, row_point(0), SDL_KMOD_NONE);
+    CHECK(view->selection.get().size() == 1);
+    // ListModel::move_item(移した後の位置)
+    list->move_item(list->items.get()[0], 2);
+    CHECK(texts_of(list) == "ecbda");
+
+    // 木: 項目の上に落とすと子に、自分の子孫には落とせない
+    tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+    tokotachi::TreeItem* docs = tree->add_item("docs");
+    tokotachi::TreeItem* work = docs->add_child("work");
+    tokotachi::TreeItem* music = tree->add_item("music");
+    tokotachi::TreeView* tree_view = new tokotachi::TreeView(&window);
+    tree_view->bounds = tokotachi::Rect(0, 0, 200, 250);
+    tree_view->model = tree;
+    tree_view->drag_enabled = true;
+    tree_view->drop_enabled = true;
+    tree_view->expand_all();
+    view->visible = false;
+    window.apply_layout();
+    // 行: docs(0)・work(1)・music(2)。music を docs の上(中ほど)へ
+    dispatch_click(window, row_point(2));
+    drag_mouse(window, row_point(2), row_point(0));
+    CHECK(music->parent_item.get() == docs && docs->children.get().size() == 2 && docs->children.get()[1] == music);
+    // docs を自分の子(work)の上へは移せない
+    dispatch_click(window, row_point(0));
+    drag_mouse(window, row_point(0), row_point(1));
+    CHECK(docs->parent_item.get() == nullptr && work->parent_item.get() == docs);
+    // work を一番上の終わり(最後の行より下)へ
+    tree->move_item(work, nullptr, -1);
+    CHECK(work->parent_item.get() == nullptr && tree->items.get().size() == 2 && tree->items.get()[1] == work);
+
+    // ほかのウィジェットから: モデルの can_drop・drop_data(既定は受け取らない)
+    tokotachi::DragData data;
+    data.text = "x";
+    CHECK(!list->can_drop(data, tokotachi::ModelIndex(), 0));
 }
 
 TEST(list_view_follows_model_changes)

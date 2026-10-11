@@ -2,6 +2,7 @@
   "format_version": 1,
   "tokotachi_version": "0.1.0",
   "window_members": [
+    "accepts_drops",
     "accepts_text_input",
     "actions",
     "add_action",
@@ -34,6 +35,10 @@
     "minimum_hint",
     "minimum_size",
     "on_close",
+    "on_drag_finish",
+    "on_drag_leave",
+    "on_drag_move",
+    "on_drop",
     "on_finish",
     "on_focus_in",
     "on_focus_out",
@@ -56,6 +61,7 @@
     "result",
     "save_png",
     "showing",
+    "start_drag",
     "status_bar",
     "theme",
     "theme_override",
@@ -168,6 +174,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "title": {
           "type": "string",
           "declared_in": "Window",
@@ -183,6 +195,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -340,6 +372,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "title": {
           "type": "string",
           "declared_in": "Window",
@@ -355,6 +393,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -517,6 +575,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
@@ -543,6 +607,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -704,6 +788,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
@@ -727,6 +817,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -893,6 +1003,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
@@ -923,6 +1039,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -1089,6 +1225,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "TextInputBase",
@@ -1113,6 +1255,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -1279,6 +1441,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "TextInputBase",
@@ -1309,6 +1477,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -1470,6 +1658,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "minimum": {
           "type": "double",
           "declared_in": "RangeBase",
@@ -1525,6 +1719,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -1686,6 +1900,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "minimum": {
           "type": "double",
           "declared_in": "RangeBase",
@@ -1738,6 +1958,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -1898,6 +2138,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "items": {
           "type": {
             "array": "string"
@@ -1937,6 +2183,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -2097,6 +2363,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "Label",
@@ -2138,6 +2410,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -2293,6 +2585,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "minimum": {
           "type": "double",
           "declared_in": "ProgressBar",
@@ -2326,6 +2624,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -2485,6 +2803,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "header_visible": {
           "type": "bool",
           "declared_in": "ItemView",
@@ -2524,9 +2848,41 @@
           "declared_in": "ItemView",
           "doc": "選び方(既定 SINGLE)。",
           "default": "SINGLE"
+        },
+        "drag_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "選んでいる項目をドラッグできるか(既定 false。docs/adr/0047)。文字は 1 列目を改行でつないだもの。",
+          "default": false
+        },
+        "drop_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。",
+          "default": false
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -2696,6 +3052,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "header_visible": {
           "type": "bool",
           "declared_in": "ItemView",
@@ -2736,6 +3098,18 @@
           "doc": "選び方(既定 SINGLE)。",
           "default": "SINGLE"
         },
+        "drag_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "選んでいる項目をドラッグできるか(既定 false。docs/adr/0047)。文字は 1 列目を改行でつないだもの。",
+          "default": false
+        },
+        "drop_enabled": {
+          "type": "bool",
+          "declared_in": "ItemView",
+          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。",
+          "default": false
+        },
         "indentation": {
           "type": "float",
           "declared_in": "TreeView",
@@ -2747,6 +3121,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -2911,9 +3305,35 @@
           "declared_in": "Widget",
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -3072,6 +3492,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "current_index": {
           "type": "int",
           "declared_in": "TabWidget",
@@ -3088,6 +3514,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -3251,6 +3697,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "orientation": {
           "type": {
             "enum": "Orientation"
@@ -3269,6 +3721,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -3432,6 +3904,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "fit_width": {
           "type": "bool",
           "declared_in": "ScrollArea",
@@ -3440,6 +3918,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -3595,6 +4093,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "cached": {
           "type": "bool",
           "declared_in": "PaintBox",
@@ -3603,6 +4107,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -3954,9 +4478,35 @@
           "declared_in": "Widget",
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -4124,6 +4674,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "button_style": {
           "type": {
             "enum": "ToolButtonStyle"
@@ -4133,6 +4689,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -4283,6 +4859,12 @@
           "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
           "default": {}
         },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
         "text": {
           "type": "string",
           "declared_in": "StatusBar",
@@ -4291,6 +4873,26 @@
         }
       },
       "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
         "on_paint": {
           "type": "PaintHandler",
           "declared_in": "Widget",
@@ -4689,6 +5291,26 @@
       {
         "name": "can_close",
         "type": "bool&"
+      }
+    ],
+    "DragFinishHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "action",
+        "type": "DropAction"
+      }
+    ],
+    "DragHandler": [
+      {
+        "name": "sender",
+        "type": "Object*"
+      },
+      {
+        "name": "e",
+        "type": "DragEvent&"
       }
     ],
     "KeyHandler": [

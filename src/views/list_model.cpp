@@ -192,6 +192,80 @@ void ListModel::remove_item(Item* item)
     notify_changed(items);
 }
 
+void ListModel::move_item(Item* item, int index)
+{
+    const ModelIndex i = index_of(item);
+    if (!i.is_valid())
+    {
+        return;
+    }
+    std::vector<ModelIndex> one(1, i);
+    // 移した後の位置にするため、元より後ろなら 1 つ後ろの前に入れる
+    const int n = static_cast<int>(items_.size());
+    const int at = index < 0 || index >= n ? n : index >= i.row() ? index + 1 : index;
+    move_rows(one, ModelIndex(), at);
+}
+
+bool ListModel::can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int) const
+{
+    if (parent.is_valid() || indexes.empty())
+    {
+        return false;
+    }
+    for (std::size_t k = 0; k < indexes.size(); ++k)
+    {
+        if (!item_at(indexes[k]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ListModel::move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row)
+{
+    if (!can_move_rows(indexes, parent, row))
+    {
+        return false;
+    }
+    // 移す項目(今の並びの順)を除き、row より前にあったものの数だけ入れる位置をずらす
+    const int n = static_cast<int>(items_.size());
+    const int at = row < 0 || row > n ? n : row;
+    std::vector<bool> moving(items_.size(), false);
+    for (std::size_t k = 0; k < indexes.size(); ++k)
+    {
+        moving[static_cast<std::size_t>(item_at(indexes[k])->row_)] = true;
+    }
+    std::vector<Item*> moved, rest;
+    int before = 0;
+    for (int r = 0; r < n; ++r)
+    {
+        if (moving[static_cast<std::size_t>(r)])
+        {
+            moved.push_back(items_[static_cast<std::size_t>(r)]);
+            if (r < at)
+            {
+                ++before;
+            }
+        }
+        else
+        {
+            rest.push_back(items_[static_cast<std::size_t>(r)]);
+        }
+    }
+    const std::vector<Item*>::iterator pos = rest.begin() + (at - before);
+    rest.insert(pos, moved.begin(), moved.end());
+    if (rest == items_)
+    {
+        return true;
+    }
+    items_.swap(rest);
+    renumber(0);
+    notify_changed(items);
+    notify_layout_changed();
+    return true;
+}
+
 void ListModel::clear()
 {
     if (items_.empty())

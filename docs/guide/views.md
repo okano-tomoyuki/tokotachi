@@ -56,6 +56,18 @@ item->editable = true;                                                          
 
 `ItemModel` を派生したときは、`text_color`・`font`・`editable`・`set_text` を上書きします。
 
+## ドラッグでの並べ替え
+
+`drag_enabled` で選んでいる項目をドラッグでき、`drop_enabled` で項目の間・項目の上(木では子にする)に落とせます。
+同じモデルの項目は、モデルの `move_rows` で移します(`ListModel`・`TreeModel` は実装済み。コードからは `move_item`)。
+ほかのデータ(別の部品・OS からのファイル)は、モデルの `can_drop`・`drop_data` を上書きするか、`on_drop` で受け取ります
+(落とした行は `index_at(e.pos)` で分かります)。
+
+```cpp
+tree_view_folders->drag_enabled = true;
+tree_view_folders->drop_enabled = true;
+```
+
 ## 大量のデータ: ItemModel を派生する
 
 ビューは**見えている行だけ**を描き、そのときにモデルへ問い合わせます。数十万行のデータは、項目のオブジェクトを作らずに

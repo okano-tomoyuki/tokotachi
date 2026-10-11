@@ -125,6 +125,9 @@ void MainWindow::tokotachi_setup_ui()
     list_view_files = new tokotachi::ListView(tab_widget_files);
     list_view_files->sorting_enabled = true;
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+    list_view_files->drag_enabled = true;
+    list_view_files->drop_enabled = true;
+    list_view_files->on_drop = [this](tokotachi::Object* sender, tokotachi::DragEvent& e) { list_view_files_drop(sender, e); };
     list_view_files->on_activate = [this](tokotachi::Object* sender) { list_view_files_activate(sender); };
     list_view_files->add_column("名前", 200);
     tokotachi::Column* list_view_files_column_2 = list_view_files->add_column("大きさ", 80);
@@ -183,7 +186,7 @@ void MainWindow::tokotachi_setup_ui()
 
     window_layout->add(row_buttons);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="707bf125">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="62701c94">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)
@@ -211,6 +214,10 @@ void MainWindow::search(tokotachi::Object* sender)
 }
 
 void MainWindow::tab_widget_files_change(tokotachi::Object* sender)
+{
+}
+
+void MainWindow::list_view_files_drop(tokotachi::Object* sender, tokotachi::DragEvent& e)
 {
 }
 

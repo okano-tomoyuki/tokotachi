@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/drag.hpp"
 #include "../core/event.hpp"
 #include "../core/geometry.hpp"
 #include "../core/property.hpp"
@@ -116,6 +117,23 @@ public:
     void remove_action(Action* action);
     ReadOnlyProperty<std::vector<Action*> > actions;
 
+    // --- ドラッグ&ドロップ(docs/adr/0047) ---
+    /// ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。
+    Property<bool> accepts_drops;
+    /// ドラッグを始める。マウスのボタンを押している間(mouse_down・mouse_move の中)に呼ぶ。label はドラッグ中にポインタの横に出す文字。
+    /// ボタンを離すとポインタの下の受け取るウィジェットへ drop を送り、終わったら drag_finished・on_drag_finish を呼ぶ。Esc でやめる。
+    /// ボタンを押していない・ウィンドウに属していない・ほかのドラッグの途中なら何もせず false。
+    bool start_drag(const DragData& data, const std::string& label = std::string());
+    /// ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。
+    /// ハンドラが無ければ、on_drop があるときだけ受け取る。
+    Property<DragHandler> on_drag_move;
+    /// ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。
+    Property<NotifyHandler> on_drag_leave;
+    /// 落とした。受け取らなかったら accepted を false にする。
+    Property<DragHandler> on_drop;
+    /// 自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。
+    Property<DragFinishHandler> on_drag_finish;
+
     // --- イベントのハンドラ ---
     /// 自分の描画の後に呼ぶ(子の描画の前)。
     Property<PaintHandler> on_paint;
@@ -162,6 +180,12 @@ protected:
     virtual void text_editing(TextEditingEvent& e);
     virtual void focus_in();
     virtual void focus_out();
+    /// ドラッグ&ドロップ(accepts_drops のとき。docs/adr/0047)。既定の実装はハンドラを呼ぶ。
+    virtual void drag_move(DragEvent& e);
+    virtual void drag_leave();
+    virtual void drop(DragEvent& e);
+    /// 自分が始めたドラッグが終わった。既定の実装は on_drag_finish を呼ぶ。
+    virtual void drag_finished(DropAction action);
     /// 倍率が変わった(テキストのレイアウトなど、ピクセルに依存するキャッシュを捨てる)。
     virtual void scale_changed();
     /// アプリケーションのテーマが変わった(色・寸法から作ったキャッシュを捨てる)。この後、描き直しと配置のやり直しが行われる。
@@ -239,6 +263,8 @@ private:
     void set_cursor(const MouseCursor& v);
     bool get_accepts_text_input() const { return accepts_text_input_; }
     void set_accepts_text_input(const bool& v);
+    bool get_accepts_drops() const { return accepts_drops_; }
+    void set_accepts_drops(const bool& v) { accepts_drops_ = v; }
     float get_display_scale() const;
     void set_tooltip(const std::string& v) { tooltip_ = v; }
     ThemeOverride get_theme_override() const { return theme_override_; }
@@ -261,6 +287,7 @@ private:
     bool hidden_by_parent_;  ///< 親が自分の都合で隠している(visible_ とは別。displayed を見る)
     bool enabled_;
     bool accepts_text_input_;
+    bool accepts_drops_;
     bool is_window_;
     FocusPolicy focus_policy_;
     MouseCursor cursor_;
@@ -279,6 +306,10 @@ private:
     KeyHandler on_key_up_;
     NotifyHandler on_focus_in_;
     NotifyHandler on_focus_out_;
+    DragHandler on_drag_move_;
+    NotifyHandler on_drag_leave_;
+    DragHandler on_drop_;
+    DragFinishHandler on_drag_finish_;
 };
 
 }  // namespace tokotachi

@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/drag.hpp"
 #include "../graphics/image.hpp"
 #include "../graphics/text_layout.hpp"
 #include "../graphics/theme.hpp"
@@ -101,6 +102,15 @@ public:
     virtual bool editable(const ModelIndex& index, int column) const;
     /// 利用者がビューで column 列目の文字を編集した。値を変えたら notify_data_changed で知らせる(既定は何もしない)。
     virtual void set_text(const ModelIndex& index, int column, const std::string& text);
+
+    /// ドラッグ&ドロップ(docs/adr/0047)。row は parent の子の位置(その前に入れる。-1 なら終わり)。
+    /// 同じモデルの項目 indexes(表示の順)を移せるか・移す(既定は移せない)。移したら notify_layout_changed などで知らせる。
+    virtual bool can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const;
+    virtual bool move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row);
+    /// ほか(別のモデル・ウィジェット・OS)から落としたデータを受け取れるか・受け取る(既定は受け取らない)。
+    /// OS からのデータは、落とすまで中身が分からない(DragData::from_outside)。
+    virtual bool can_drop(const DragData& data, const ModelIndex& parent, int row) const;
+    virtual bool drop_data(const DragData& data, DropAction action, const ModelIndex& parent, int row);
 
     /// column 列目の文字で並べ替える(既定は何もしない)。並べ替えたら notify_layout_changed で知らせる。
     virtual void sort(int column, SortOrder order);

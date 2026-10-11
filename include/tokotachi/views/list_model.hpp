@@ -29,6 +29,8 @@ public:
     Item* insert_item(int index, const std::string& text);
     /// 項目を除いて破棄する。
     void remove_item(Item* item);
+    /// 項目を index の位置へ移す(移した後の位置。範囲の外なら最後)。
+    void move_item(Item* item, int index);
     /// すべての項目を除いて破棄する。
     void clear();
 
@@ -53,6 +55,9 @@ public:
     void set_text(const ModelIndex& index, int column, const std::string& text) override;
     /// 文字のバイト列の順(UTF-8 なので、コードポイントの順)で、同じ値の項目の順は保つ。
     void sort(int column, SortOrder order) override;
+    /// 一覧の中の並べ替え(ドラッグ&ドロップ)。
+    bool can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const override;
+    bool move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) override;
     ModelIndex locate(const ModelIndex& index) const override;
 
 private:

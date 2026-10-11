@@ -47,6 +47,14 @@ bool ItemModel::editable(const ModelIndex&, int) const { return false; }
 
 void ItemModel::set_text(const ModelIndex&, int, const std::string&) {}
 
+bool ItemModel::can_move_rows(const std::vector<ModelIndex>&, const ModelIndex&, int) const { return false; }
+
+bool ItemModel::move_rows(const std::vector<ModelIndex>&, const ModelIndex&, int) { return false; }
+
+bool ItemModel::can_drop(const DragData&, const ModelIndex&, int) const { return false; }
+
+bool ItemModel::drop_data(const DragData&, DropAction, const ModelIndex&, int) { return false; }
+
 void ItemModel::sort(int, SortOrder) {}
 
 ModelIndex ItemModel::locate(const ModelIndex&) const { return ModelIndex(); }

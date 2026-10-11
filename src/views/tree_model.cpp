@@ -122,6 +122,113 @@ void TreeModel::clear()
     notify_changed(items);
 }
 
+void TreeModel::move_item(TreeItem* item, TreeItem* parent, int index)
+{
+    const ModelIndex i = index_of(item);
+    if (!i.is_valid())
+    {
+        return;
+    }
+    std::vector<ModelIndex> one(1, i);
+    // 移した後の位置にするため、同じ親で元より後ろなら 1 つ後ろの前に入れる
+    const int n = static_cast<int>(siblings(parent).size());
+    const int at = index < 0 || index >= n ? -1 : parent == item->parent_ && index >= i.row() ? index + 1 : index;
+    move_rows(one, index_of(parent), at);
+}
+
+bool TreeModel::can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int) const
+{
+    if (indexes.empty() || (parent.is_valid() && !item_at(parent)))
+    {
+        return false;
+    }
+    const TreeItem* target = item_at(parent);
+    for (std::size_t k = 0; k < indexes.size(); ++k)
+    {
+        const TreeItem* item = item_at(indexes[k]);
+        if (!item)
+        {
+            return false;
+        }
+        // 自分・子孫の下へは移せない
+        for (const TreeItem* p = target; p; p = p->parent_)
+        {
+            if (p == item)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool TreeModel::move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row)
+{
+    if (!can_move_rows(indexes, parent, row))
+    {
+        return false;
+    }
+    TreeItem* target = item_at(parent);
+    std::vector<TreeItem*>& dest = siblings(target);
+    // 入れる位置の前にある項目(移さないもの)を覚え、その後ろに入れる(移す項目を除くと位置がずれるため)
+    const int n = static_cast<int>(dest.size());
+    const int at = row < 0 || row > n ? n : row;
+    // 移す項目のうち、ほかの移す項目の子孫は、親ごと移るので除く
+    std::vector<TreeItem*> moving;
+    for (std::size_t k = 0; k < indexes.size(); ++k)
+    {
+        TreeItem* item = item_at(indexes[k]);
+        bool inside = false;
+        for (std::size_t m = 0; m < indexes.size() && !inside; ++m)
+        {
+            const TreeItem* other = item_at(indexes[m]);
+            for (const TreeItem* p = item->parent_; p; p = p->parent_)
+            {
+                inside = inside || p == other;
+            }
+        }
+        if (!inside && std::find(moving.begin(), moving.end(), item) == moving.end())
+        {
+            moving.push_back(item);
+        }
+    }
+    TreeItem* anchor = nullptr;  // この項目の後ろに入れる(nullptr なら先頭)
+    for (int r = at - 1; r >= 0; --r)
+    {
+        if (std::find(moving.begin(), moving.end(), dest[static_cast<std::size_t>(r)]) == moving.end())
+        {
+            anchor = dest[static_cast<std::size_t>(r)];
+            break;
+        }
+    }
+    for (std::size_t k = 0; k < moving.size(); ++k)
+    {
+        TreeItem* item = moving[k];
+        std::vector<TreeItem*>& from = siblings(item->parent_);
+        from.erase(from.begin() + item->row_);
+        renumber(from, static_cast<std::size_t>(item->row_));
+        if (item->parent_)
+        {
+            notify_changed(item->parent_->children);
+        }
+        item->parent_ = target;
+    }
+    std::size_t pos = 0;
+    if (anchor)
+    {
+        pos = static_cast<std::size_t>(std::find(dest.begin(), dest.end(), anchor) - dest.begin()) + 1;
+    }
+    dest.insert(dest.begin() + static_cast<std::ptrdiff_t>(pos), moving.begin(), moving.end());
+    renumber(dest, 0);
+    if (target)
+    {
+        notify_changed(target->children);
+    }
+    notify_changed(items);
+    notify_layout_changed();
+    return true;
+}
+
 void TreeModel::renumber(std::vector<TreeItem*>& list, std::size_t from)
 {
     for (std::size_t i = from; i < list.size(); ++i)

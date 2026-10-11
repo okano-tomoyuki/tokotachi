@@ -46,6 +46,11 @@ Widget::Widget(Widget* parent_widget)
       TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, ThemeOverride, theme_override),
       TOKOTACHI_READONLY_PROPERTY(Widget, Theme, theme),
       TOKOTACHI_READONLY_PROPERTY(Widget, std::vector<Action*>, actions),
+      TOKOTACHI_PROPERTY_GETTER(Widget, bool, accepts_drops),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, DragHandler, on_drag_move),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_drag_leave),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, DragHandler, on_drop),
+      TOKOTACHI_HANDLER_PROPERTY(Widget, DragFinishHandler, on_drag_finish),
       TOKOTACHI_HANDLER_PROPERTY(Widget, PaintHandler, on_paint),
       TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_resize),
       TOKOTACHI_HANDLER_PROPERTY(Widget, MouseHandler, on_mouse_down),
@@ -66,6 +71,7 @@ Widget::Widget(Widget* parent_widget)
       hidden_by_parent_(false),
       enabled_(true),
       accepts_text_input_(false),
+      accepts_drops_(false),
       is_window_(false),
       focus_policy_(FocusPolicy::NONE),
       cursor_(MouseCursor::ARROW)
@@ -695,6 +701,50 @@ void Widget::mouse_wheel(WheelEvent& e)
     {
         e.accepted = false;
     }
+}
+
+bool Widget::start_drag(const DragData& data, const std::string& label)
+{
+    Window* w = get_window();
+    return w && w->impl()->start_drag(this, data, label);
+}
+
+void Widget::drag_move(DragEvent& e)
+{
+    Object* self = this;
+    if (on_drag_move_)
+    {
+        detail::fire(on_drag_move_, self, e);
+    }
+    else
+    {
+        e.accepted = static_cast<bool>(on_drop_);
+    }
+}
+
+void Widget::drag_leave()
+{
+    Object* self = this;
+    detail::fire(on_drag_leave_, self);
+}
+
+void Widget::drop(DragEvent& e)
+{
+    Object* self = this;
+    if (on_drop_)
+    {
+        detail::fire(on_drop_, self, e);
+    }
+    else
+    {
+        e.accepted = false;
+    }
+}
+
+void Widget::drag_finished(DropAction action)
+{
+    Object* self = this;
+    detail::fire(on_drag_finish_, self, action);
 }
 
 void Widget::arrange_children()

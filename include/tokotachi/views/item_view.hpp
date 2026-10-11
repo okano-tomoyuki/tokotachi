@@ -115,6 +115,12 @@ public:
     /// 編集を終える(commit が false なら、文字を変えずにやめる)。
     void finish_editing(bool commit = true);
 
+    /// 選んでいる項目をドラッグできるか(既定 false。docs/adr/0047)。文字は 1 列目を改行でつないだもの。
+    Property<bool> drag_enabled;
+    /// 項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、
+    /// ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。
+    Property<bool> drop_enabled;
+
     /// selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。
     Property<NotifyHandler> on_selection_change;
     /// 項目をダブルクリックした・Enter を押した(対象は current)。
@@ -133,6 +139,9 @@ protected:
     void key_down(KeyEvent& e) override;
     void focus_in() override;
     void focus_out() override;
+    void drag_move(DragEvent& e) override;
+    void drag_leave() override;
+    void drop(DragEvent& e) override;
     void scale_changed() override;
     void theme_changed() override;
     void arrange_children() override;
@@ -172,6 +181,10 @@ private:
     void set_sort_order(const SortOrder& v);
     SelectionMode get_selection_mode() const { return selection_mode_; }
     void set_selection_mode(const SelectionMode& v);
+    bool get_drag_enabled() const { return drag_enabled_; }
+    void set_drag_enabled(const bool& v) { drag_enabled_ = v; }
+    bool get_drop_enabled() const { return drop_enabled_; }
+    void set_drop_enabled(const bool& v);
     ModelIndex get_current() const { return current_; }
     void set_current(const ModelIndex& v);
     std::vector<ModelIndex> get_selection() const;
@@ -237,6 +250,28 @@ private:
     Rect cell_text_rect(int row, int column) const;
     /// index の、編集できる最初の列(無ければ -1)。
     int first_editable_column(const ModelIndex& index) const;
+
+    /// 落とす位置(docs/adr/0047)。BEFORE は row 行の前、ONTO は row 行の項目の子の終わり、END は一番上の終わり。
+    enum class DropPlace
+    {
+        NONE,
+        BEFORE,
+        ONTO,
+        END
+    };
+    struct DropTarget
+    {
+        DropPlace place;
+        int row;            ///< 印を描く行(BEFORE はこの行の上の線、ONTO はこの行の枠)
+        int depth;          ///< 入れる深さ(線の字下げ)
+        ModelIndex parent;  ///< モデルの親
+        int position;       ///< 親の子の位置(-1 なら終わり)
+    };
+    /// 位置 p(ビューの座標)に落とすときの位置。
+    DropTarget drop_target_at(const Point& p) const;
+    /// e のデータを target に落とせるか。同じモデルの項目なら、移す項目を indexes に入れる。
+    bool can_accept(const DragEvent& e, const DropTarget& target, std::vector<ModelIndex>& indexes) const;
+    void paint_drop_indicator(Canvas& canvas, const Rect& view);
     /// 古い ModelIndex の行をずらした値。
     static ModelIndex shifted(const ModelIndex& index, int delta);
 
@@ -268,6 +303,13 @@ private:
     Timer* edit_timer_;        ///< 選んでいる項目のクリックから編集を始めるまで待つ
     ModelIndex pending_edit_;
     int pending_column_;
+    bool drag_enabled_;
+    bool drop_enabled_;
+    int press_row_;            ///< 押した行(ドラッグを始める候補。-1 なら無し)
+    Point press_pos_;
+    bool press_deferred_;      ///< 選んでいる項目を押したので、選択は離したときに変える
+    Modifiers press_modifiers_;
+    DropTarget drop_target_;   ///< 今の落とす位置(描く)
 
     const bool tree_;
     float indentation_;

@@ -147,9 +147,14 @@
                         "class": "ListView",
                         "properties": {
                           "sorting_enabled": true,
-                          "selection_mode": "MULTI"
+                          "selection_mode": "MULTI",
+                          "drag_enabled": true,
+                          "drop_enabled": true
                         },
-                        "events": { "on_activate": "list_view_files_activate" },
+                        "events": {
+                          "on_drop": "list_view_files_drop",
+                          "on_activate": "list_view_files_activate"
+                        },
                         "columns": [
                           {
                             "properties": {

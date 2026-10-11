@@ -61,6 +61,8 @@ struct WindowImpl
     void widget_destroyed(Widget* w);
     // w が隠された・無効にされた(w とその子孫からフォーカス・ホバー・捕捉を外す)。
     void widget_hidden(Widget* w);
+    // ドラッグを始める(docs/adr/0047)。ボタンを押していない・ほかのドラッグの途中なら false。
+    bool start_drag(Widget* source, const DragData& data, const std::string& label);
 
     Window* q;
     SDL_Window* window;
@@ -85,6 +87,19 @@ struct WindowImpl
 
     Widget* hover;
     Widget* grab;
+    // ドラッグ&ドロップの途中の状態(docs/adr/0047)
+    struct Drag
+    {
+        bool active;
+        bool outside;         // OS から
+        DragData data;
+        Widget* source;
+        std::string label;
+        Widget* target;       // 受け取ると答えたウィジェット
+        DropAction action;    // target が答えた操作
+        Point pos;            // ポインタの位置(dp)
+        Rect ghost;           // 最後に描いた像の範囲
+    } drag;
     Widget* focus;
     bool text_input_active;
     bool ime_dirty;
@@ -105,6 +120,15 @@ private:
     void mouse_up(const Point& p, MouseButton button, int clicks);
     void mouse_move(const Point& p);
     void key(const SDL_KeyboardEvent& e);
+    // ドラッグの位置を p にし、受け取るウィジェットを探し直す。
+    void drag_update(const Point& p, Modifiers mods);
+    // ドラッグを終える(drop が true なら、受け取るウィジェットへ落とす)。
+    void drag_end(bool drop, Modifiers mods);
+    // OS からのドロップ(SDL_EVENT_DROP_*)。
+    void os_drop(const SDL_DropEvent& e);
+    // ドラッグ中の像(label)を描く・その範囲。
+    Rect drag_ghost_rect() const;
+    void paint_drag_ghost();
     // ショートカットが一致する Action を実行する。実行したら true。
     bool trigger_shortcut(const KeyEvent& ev);
 };

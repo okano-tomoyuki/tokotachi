@@ -25,7 +25,8 @@ const float ROW_PADDING_Y = 4;     // 行の上下の余白
 const float ICON_SIZE = 16;        // 画像・チェックボックスの大きさ
 const float GAP = 6;               // チェックボックス・画像・文字の間
 const float MIN_EDITOR_WIDTH = 40; // セルの編集の欄の最小の幅
-const int EDIT_DELAY_MS = 500;     // 選んでいる項目のクリックから編集を始めるまで(ダブルクリックと区別する)
+const int EDIT_DELAY_MS = 500;
+const float DRAG_THRESHOLD = 4;    // 押してからドラッグを始めるまでに動かす距離(dp)     // 選んでいる項目のクリックから編集を始めるまで(ダブルクリックと区別する)
 const float MIN_COLUMN = 24;       // 列の最小の幅
 const float DIVIDER_GRAB = 4;      // 見出しの境目をつかめる幅(左右それぞれ)
 const float DEFAULT_INDENT = 20;   // 木の 1 段の字下げ
@@ -128,6 +129,8 @@ ItemView::ItemView(Widget* parent_widget, bool tree)
       TOKOTACHI_PROPERTY_GETTER(ItemView, SelectionMode, selection_mode),
       TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ItemView, ModelIndex, current),
       TOKOTACHI_READONLY_PROPERTY(ItemView, std::vector<ModelIndex>, selection),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, bool, drag_enabled),
+      TOKOTACHI_PROPERTY_GETTER(ItemView, bool, drop_enabled),
       TOKOTACHI_HANDLER_PROPERTY(ItemView, NotifyHandler, on_selection_change),
       TOKOTACHI_HANDLER_PROPERTY(ItemView, NotifyHandler, on_activate),
       model_(nullptr),
@@ -148,12 +151,21 @@ ItemView::ItemView(Widget* parent_widget, bool tree)
       edit_column_(0),
       edit_timer_(new Timer(this)),
       pending_column_(0),
+      drag_enabled_(false),
+      drop_enabled_(false),
+      press_row_(-1),
+      press_deferred_(false),
+      press_modifiers_(MODIFIER_NONE),
       tree_(tree),
       indentation_(DEFAULT_INDENT),
       rows_dirty_(true),
       layouts_scale_(0)
 {
     focus_policy = FocusPolicy::TAB_AND_CLICK;
+    drop_target_.place = DropPlace::NONE;
+    drop_target_.row = -1;
+    drop_target_.depth = 0;
+    drop_target_.position = -1;
     vertical_->visible = false;
     horizontal_->visible = false;
     const NotifyHandler moved = [this](Object*)
@@ -1189,6 +1201,7 @@ void ItemView::paint(Canvas& canvas)
             {
                 paint_row(canvas, row, view);
             }
+            paint_drop_indicator(canvas, view);
             canvas.restore();
         }
     }
@@ -1417,12 +1430,55 @@ void ItemView::mouse_down(MouseEvent& e)
         activate();
         return;
     }
-    move_to(row, e.modifiers, true);
+    // ドラッグできるなら、押した行を覚える。選んでいる項目を修飾キー無しで押したら、複数の選択のままドラッグできるように、
+    // 選択は離したときに変える(docs/adr/0047)
+    press_row_ = drag_enabled_ ? row : -1;
+    press_pos_ = e.pos;
+    press_modifiers_ = e.modifiers;
+    press_deferred_ = drag_enabled_ && is_selected(info.index) && !(e.modifiers & (MODIFIER_CONTROL | MODIFIER_SHIFT));
+    if (!press_deferred_)
+    {
+        move_to(row, e.modifiers, true);
+    }
 }
 
 void ItemView::mouse_move(MouseEvent& e)
 {
     Widget::mouse_move(e);
+    // 押した行から少し動かしたら、選んでいる項目のドラッグを始める
+    if (press_row_ >= 0 && model_ && std::hypot(e.pos.x - press_pos_.x, e.pos.y - press_pos_.y) > DRAG_THRESHOLD)
+    {
+        const int row = press_row_;
+        press_row_ = -1;
+        if (press_deferred_)
+        {
+            press_deferred_ = false;
+        }
+        edit_timer_->enabled = false;
+        pending_edit_ = ModelIndex();
+        const std::vector<ModelIndex> items = get_selection();
+        const ModelIndex pressed = row < row_total() ? row_at(row).index : ModelIndex();
+        if (!items.empty() && is_selected(pressed))
+        {
+            DragData data;
+            std::string label;
+            for (std::size_t k = 0; k < items.size(); ++k)
+            {
+                const std::string t = model_->text(items[k], 0);
+                data.text += (k == 0 ? "" : "\n") + t;
+                if (k == 0)
+                {
+                    label = t;
+                }
+            }
+            if (items.size() > 1)
+            {
+                label += " (+" + std::to_string(items.size() - 1) + ")";
+            }
+            start_drag(data, label);
+            return;
+        }
+    }
     if (resizing_column_ >= 0)
     {
         columns_[resizing_column_]->width = resize_width_ + (e.pos.x - resize_origin_);
@@ -1444,6 +1500,13 @@ void ItemView::mouse_up(MouseEvent& e)
     {
         return;
     }
+    // ドラッグしなかった: 押した選んでいる項目を、ふつうのクリックとして選ぶ
+    if (press_deferred_ && press_row_ >= 0 && press_row_ < row_total())
+    {
+        move_to(press_row_, press_modifiers_, true);
+    }
+    press_row_ = -1;
+    press_deferred_ = false;
     if (resizing_column_ >= 0)
     {
         e.accepted = true;
@@ -1534,6 +1597,195 @@ std::string fold(const std::string& s)
 }
 
 }  // namespace
+
+// ---- ドラッグ&ドロップ(docs/adr/0047) ----
+
+void ItemView::set_drop_enabled(const bool& v)
+{
+    drop_enabled_ = v;
+    accepts_drops = v;
+}
+
+ItemView::DropTarget ItemView::drop_target_at(const Point& p) const
+{
+    DropTarget t;
+    t.place = DropPlace::NONE;
+    t.row = -1;
+    t.depth = 0;
+    t.position = -1;
+    const Rect view = viewport();
+    if (!model_ || p.y < view.y || p.y >= view.bottom())
+    {
+        return t;
+    }
+    const float h = row_height();
+    const float y = p.y - view.y + vertical_->value.get();
+    const int row = static_cast<int>(std::floor(y / h));
+    if (row >= row_total())
+    {
+        // 最後の行より下: 一番上の終わり
+        t.place = DropPlace::END;
+        t.row = row_total();
+        return t;
+    }
+    if (row < 0)
+    {
+        return t;
+    }
+    const Row info = row_at(row);
+    const float within = y - row * h;
+    // 木では行の中ほどなら項目の子に、上下の端なら間に。一覧では上半分なら前、下半分なら後ろ
+    const float edge = tree_ ? h / 4 : h / 2;
+    if (tree_ && within >= edge && within < h - edge)
+    {
+        t.place = DropPlace::ONTO;
+        t.row = row;
+        t.depth = info.depth + 1;
+        t.parent = info.index;
+        return t;
+    }
+    t.place = DropPlace::BEFORE;
+    if (within < edge)
+    {
+        // 項目の前
+        t.row = row;
+        t.depth = info.depth;
+        t.parent = model_->parent_of(info.index);
+        t.position = info.index.row();
+    }
+    else if (tree_ && row + 1 < row_total() && row_at(row + 1).depth > info.depth)
+    {
+        // 開いている項目の後ろ: 最初の子
+        t.row = row + 1;
+        t.depth = info.depth + 1;
+        t.parent = info.index;
+        t.position = 0;
+    }
+    else
+    {
+        // 項目の後ろ(同じ親の次)
+        t.row = row + 1;
+        t.depth = info.depth;
+        t.parent = model_->parent_of(info.index);
+        t.position = info.index.row() + 1;
+    }
+    return t;
+}
+
+bool ItemView::can_accept(const DragEvent& e, const DropTarget& target, std::vector<ModelIndex>& indexes) const
+{
+    indexes.clear();
+    if (!model_ || target.place == DropPlace::NONE)
+    {
+        return false;
+    }
+    // 同じモデルを表示しているビューからの項目は、モデルの中で移す
+    const ItemView* source = dynamic_cast<const ItemView*>(e.data.source());
+    if (source && source->model_ == model_)
+    {
+        indexes = source->get_selection();
+        return model_->can_move_rows(indexes, target.parent, target.position);
+    }
+    return model_->can_drop(e.data, target.parent, target.position);
+}
+
+void ItemView::drag_move(DragEvent& e)
+{
+    const DropTarget target = drop_target_at(e.pos);
+    std::vector<ModelIndex> indexes;
+    const bool ok = can_accept(e, target, indexes);
+    if (ok && !indexes.empty())
+    {
+        e.action = DropAction::MOVE;  // 同じモデルの中は移すだけ
+    }
+    if (ok)
+    {
+        e.accepted = true;
+    }
+    else
+    {
+        // モデルが受け取らないものは、ハンドラ(on_drag_move・on_drop)に任せる(位置は index_at で引ける)
+        Widget::drag_move(e);
+    }
+    const DropTarget shown = ok ? target : DropTarget();
+    if (shown.place != drop_target_.place || shown.row != drop_target_.row || shown.depth != drop_target_.depth)
+    {
+        drop_target_ = shown;
+        if (!ok)
+        {
+            drop_target_.place = DropPlace::NONE;
+        }
+        invalidate();
+    }
+    // 端に近づけたらスクロールする
+    const Rect view = viewport();
+    const float h = row_height();
+    if (e.pos.y < view.y + h / 2)
+    {
+        vertical_->value = vertical_->value.get() - h / 2;
+    }
+    else if (e.pos.y > view.bottom() - h / 2)
+    {
+        vertical_->value = vertical_->value.get() + h / 2;
+    }
+}
+
+void ItemView::drag_leave()
+{
+    if (drop_target_.place != DropPlace::NONE)
+    {
+        drop_target_.place = DropPlace::NONE;
+        invalidate();
+    }
+}
+
+void ItemView::drop(DragEvent& e)
+{
+    const DropTarget target = drop_target_at(e.pos);
+    drop_target_.place = DropPlace::NONE;
+    invalidate();
+    std::vector<ModelIndex> indexes;
+    if (!can_accept(e, target, indexes))
+    {
+        Widget::drop(e);
+        return;
+    }
+    const ModelIndex parent = target.parent;
+    if (!indexes.empty())
+    {
+        e.action = DropAction::MOVE;
+        e.accepted = model_->move_rows(indexes, target.parent, target.position);
+    }
+    else
+    {
+        e.accepted = model_->drop_data(e.data, e.action, target.parent, target.position);
+    }
+    // 子にしたら開いて見せる
+    if (e.accepted && tree_ && parent.is_valid())
+    {
+        const ModelIndex now = model_->locate(parent);
+        expand(now.is_valid() ? now : parent);
+    }
+}
+
+void ItemView::paint_drop_indicator(Canvas& canvas, const Rect& view)
+{
+    if (drop_target_.place == DropPlace::NONE)
+    {
+        return;
+    }
+    const float h = row_height();
+    const float y = view.y + drop_target_.row * h - vertical_->value.get();
+    const Color c = theme::accent();
+    if (drop_target_.place == DropPlace::ONTO)
+    {
+        canvas.stroke_round_rect(Rect(view.x + 1, y + 1, view.width - 2, h - 2), 3, 2, c);
+        return;
+    }
+    // 間: 入れる深さの字下げから線を引く
+    const float x = tree_ ? view.x + content_start(drop_target_.depth) - horizontal_->value.get() : view.x;
+    canvas.fill_rect(Rect(x, y - 1, view.right() - x, 2), c);
+}
 
 // ---- セルの編集 ----
 

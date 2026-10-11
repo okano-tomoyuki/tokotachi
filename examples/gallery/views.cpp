@@ -1,5 +1,6 @@
 // 一覧と木: ListView(列・並べ替え・チェック・文字の色と太さ・編集)と TreeView を Splitter で並べる。
 // 項目は F2 か、選んでいる項目のクリックで名前を変えられる。押した文字で始まる項目へも動ける。
+// どちらもドラッグで並べ替えられる(木では項目の上に落とすと子にする)。
 #include "gallery.hpp"
 
 int main(int argc, char** argv)
@@ -18,6 +19,8 @@ int main(int argc, char** argv)
     folders->add_item("音楽");
     tokotachi::TreeView* tree_view_folders = new tokotachi::TreeView();
     tree_view_folders->model = folders;
+    tree_view_folders->drag_enabled = true;
+    tree_view_folders->drop_enabled = true;
     tree_view_folders->expand_all();
 
     // 一覧: 列と見出し。見出しを押すと並べ替える。
@@ -44,6 +47,8 @@ int main(int argc, char** argv)
     list_view_files->sorting_enabled = true;
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
     list_view_files->model = files;
+    list_view_files->drag_enabled = true;
+    list_view_files->drop_enabled = true;
     list_view_files->select(files->index(2));
 
     tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);
