@@ -178,6 +178,7 @@
   "Variables": "Variable",
   "Views": "一覧",
   "Where to create the project?": "どこにプロジェクトを作りますか？",
+  "Not generated yet": "未生成",
   "Windows not in a project": "プロジェクトに属さないウィンドウ",
   "Windows with the same file name cannot share header_dir / source_dir: {0}": "同じファイル名のウィンドウは、header_dir・source_dir を共有できません: {0}",
   "Write a namespace such as \"app\" or \"app::ui\"": "\"app\" や \"app::ui\" のように名前空間を書きます",

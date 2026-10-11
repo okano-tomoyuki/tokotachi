@@ -1,7 +1,7 @@
 import type { TtprojDocument } from '@tokotachi-designer/core';
 import { describe, expect, it } from 'vitest';
-import { generateCpp } from './index.ts';
-import { generateProject, windowCppOptions } from './project.ts';
+import { cppOutputPaths, generateCpp } from './index.ts';
+import { generateProject, projectOutputPaths, windowCppOptions } from './project.ts';
 import { MAIN_WINDOW, SETTINGS_DIALOG } from './testing.ts';
 
 const PROJECT: TtprojDocument = {
@@ -45,6 +45,26 @@ describe('project', () => {
       namespace: [],
       commentLocale: 'en',
     });
+  });
+
+  it('生成先のパスを、定義ファイルの中身を読まずに求める(プロジェクトのビューの「未生成」の表示に使う)', () => {
+    const options = windowCppOptions(PROJECT, 'ui/dialogs/settings_dialog.ttui.json');
+    expect(cppOutputPaths('settings_dialog.ttui.json', options)).toEqual({
+      header: '../../include/settings_dialog.hpp',
+      source: '../../src/settings_dialog.cpp',
+    });
+    expect(projectOutputPaths(PROJECT)).toEqual(['main.cpp', 'CMakeLists.txt']);
+    const themed = { ...PROJECT, theme: { presets: { danger: { radius: 0 } } } };
+    expect(projectOutputPaths(themed)).toEqual([
+      'main.cpp',
+      'CMakeLists.txt',
+      'include/tokotachi_themes.hpp',
+    ]);
+    // 生成したときに出力するファイルと一致する
+    const generated = generateProject(themed, 'app.ttproj.json', WINDOWS, () => undefined);
+    expect('error' in generated ? [] : generated.files.map((f) => f.path)).toEqual(
+      projectOutputPaths(themed),
+    );
   });
 
   it('起動部分と CMakeLists.txt を生成する', () => {

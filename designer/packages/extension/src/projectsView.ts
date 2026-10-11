@@ -1,10 +1,16 @@
 /**
  * アクティビティバーのプロジェクトのビュー(docs/designer/project-spec.md §6)。プロジェクトごとにウィンドウを並べ、メインのウィンドウに ★ を付ける。
  * どのプロジェクトにも属さないウィンドウは「プロジェクトに属さないウィンドウ」にまとめる。
+ * プロジェクトの下には起動部分(main.cpp など)、ウィンドウの下にはヘッダ・ソースの生成先を出す(まだ無ければ「未生成」)。
  */
+import { cppOutputPaths, projectOutputPaths, windowCppOptions } from '@tokotachi-designer/codegen';
 import { DOCUMENT_EXTENSION, PROJECT_EXTENSION, sameWindowPath } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 import { findProjects, windowPathIn, windowUri, type ProjectInfo } from './projects.ts';
+import { cppOptions } from './settings.ts';
+
+/** ファイルの変更をまとめて描き直すまでの時間(ms) */
+const REFRESH_DELAY_MS = 300;
 
 type Node =
   | { readonly kind: 'project'; readonly project: ProjectInfo }
@@ -14,18 +20,53 @@ type Node =
       readonly project: ProjectInfo | undefined;
       readonly main: boolean;
     }
-  | { readonly kind: 'loose'; readonly windows: readonly vscode.Uri[] };
+  | { readonly kind: 'loose'; readonly windows: readonly vscode.Uri[] }
+  | { readonly kind: 'generated'; readonly uri: vscode.Uri; readonly missing: boolean };
 
 function fileName(uri: vscode.Uri): string {
   return uri.path.split('/').pop() ?? '';
 }
 
-export class ProjectsView implements vscode.TreeDataProvider<Node> {
+async function exists(uri: vscode.Uri): Promise<boolean> {
+  try {
+    await vscode.workspace.fs.stat(uri);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function generatedNodes(uris: readonly vscode.Uri[]): Promise<Node[]> {
+  return Promise.all(
+    uris.map(async (uri) => ({ kind: 'generated' as const, uri, missing: !(await exists(uri)) })),
+  );
+}
+
+/** ウィンドウのヘッダ・ソースの生成先(コード生成と同じく、プロジェクトに属せばプロジェクトの設定、属さなければ拡張の設定で決める)。 */
+function windowOutputs(uri: vscode.Uri, project: ProjectInfo | undefined): vscode.Uri[] {
+  const options = project?.doc
+    ? windowCppOptions(project.doc, windowPathIn(project.uri, uri))
+    : cppOptions(uri);
+  const { header, source } = cppOutputPaths(fileName(uri), options);
+  return [header, source].map((path) => vscode.Uri.joinPath(uri, '..', path));
+}
+
+export class ProjectsView implements vscode.TreeDataProvider<Node>, vscode.Disposable {
   private readonly changed = new vscode.EventEmitter<undefined>();
   readonly onDidChangeTreeData = this.changed.event;
+  private timer: ReturnType<typeof setTimeout> | undefined;
 
-  refresh(): void {
-    this.changed.fire(undefined);
+  /** 描き直す(続けて呼ばれたらまとめる)。 */
+  refresh(delay = 0): void {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.changed.fire(undefined);
+    }, delay);
+  }
+
+  dispose(): void {
+    clearTimeout(this.timer);
+    this.changed.dispose();
   }
 
   getTreeItem(node: Node): vscode.TreeItem {
@@ -45,7 +86,10 @@ export class ProjectsView implements vscode.TreeDataProvider<Node> {
         return item;
       }
       case 'window': {
-        const item = new vscode.TreeItem(fileName(node.uri).replace(DOCUMENT_EXTENSION, ''));
+        const item = new vscode.TreeItem(
+          fileName(node.uri).replace(DOCUMENT_EXTENSION, ''),
+          vscode.TreeItemCollapsibleState.Collapsed,
+        );
         item.iconPath = new vscode.ThemeIcon(node.main ? 'star-full' : 'window');
         item.description = node.main ? vscode.l10n.t('main window') : undefined;
         item.resourceUri = node.uri;
@@ -69,18 +113,41 @@ export class ProjectsView implements vscode.TreeDataProvider<Node> {
         item.iconPath = new vscode.ThemeIcon('folder');
         return item;
       }
+      case 'generated': {
+        const item = new vscode.TreeItem(fileName(node.uri));
+        // resourceUri と ThemeIcon.File で、ファイルアイコンのテーマの拡張子ごとのアイコンにする
+        item.resourceUri = node.uri;
+        item.iconPath = vscode.ThemeIcon.File;
+        item.tooltip = vscode.workspace.asRelativePath(node.uri);
+        item.contextValue = node.missing ? 'generated.missing' : 'generated';
+        if (node.missing) {
+          item.description = vscode.l10n.t('Not generated yet');
+          return item;
+        }
+        item.command = { command: 'vscode.open', title: '', arguments: [node.uri] };
+        return item;
+      }
     }
   }
 
   async getChildren(node?: Node): Promise<Node[]> {
     if (node?.kind === 'project') {
       const doc = node.project.doc;
-      return (doc?.windows ?? []).map((path) => ({
-        kind: 'window' as const,
-        uri: windowUri(node.project.uri, path),
-        project: node.project,
-        main: doc?.main_window !== undefined && sameWindowPath(doc.main_window, path),
-      }));
+      const outputs = doc
+        ? projectOutputPaths(doc).map((path) => vscode.Uri.joinPath(node.project.uri, '..', path))
+        : [];
+      return [
+        ...(await generatedNodes(outputs)),
+        ...(doc?.windows ?? []).map((path) => ({
+          kind: 'window' as const,
+          uri: windowUri(node.project.uri, path),
+          project: node.project,
+          main: doc?.main_window !== undefined && sameWindowPath(doc.main_window, path),
+        })),
+      ];
+    }
+    if (node?.kind === 'window') {
+      return generatedNodes(windowOutputs(node.uri, node.project));
     }
     if (node?.kind === 'loose') {
       return node.windows.map((uri) => ({
@@ -119,17 +186,39 @@ export function registerProjectsView(): { view: ProjectsView; disposable: vscode
   const watcher = vscode.workspace.createFileSystemWatcher(
     `**/*{${PROJECT_EXTENSION},${DOCUMENT_EXTENSION}}`,
   );
+  // 生成したファイルができた・消えたら「未生成」を付け直す
+  const generated = vscode.workspace.createFileSystemWatcher(
+    '**/{*.hpp,*.cpp,CMakeLists.txt}',
+    false,
+    true,
+    false,
+  );
   const refresh = (): void => {
-    view.refresh();
+    view.refresh(REFRESH_DELAY_MS);
   };
   return {
     view,
     disposable: vscode.Disposable.from(
       vscode.window.registerTreeDataProvider('tokotachiDesigner.projects', view),
+      view,
       watcher,
       watcher.onDidCreate(refresh),
       watcher.onDidDelete(refresh),
       watcher.onDidChange(refresh),
+      generated,
+      generated.onDidCreate(refresh),
+      generated.onDidDelete(refresh),
+      // 保存する前のプロジェクトファイルの変更(出力先の設定など)も反映する
+      vscode.workspace.onDidChangeTextDocument((e) => {
+        if (e.document.uri.path.endsWith(PROJECT_EXTENSION)) {
+          refresh();
+        }
+      }),
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration('tokotachiDesigner.codegen')) {
+          refresh();
+        }
+      }),
     ),
   };
 }

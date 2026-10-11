@@ -69,6 +69,15 @@ export function themesHeaderPath(project: TtprojDocument): string {
   return dir === '' ? THEMES_HEADER : `${dir}/${THEMES_HEADER}`;
 }
 
+/** generateProject が出力するファイル(プロジェクトのフォルダからの相対パス)。テーマを登録していなければテーマのヘッダは無い。 */
+export function projectOutputPaths(project: TtprojDocument): string[] {
+  return [
+    'main.cpp',
+    'CMakeLists.txt',
+    ...(Object.keys(project.theme?.presets ?? {}).length > 0 ? [themesHeaderPath(project)] : []),
+  ];
+}
+
 /** 登録したテーマの関数のヘッダ(project-spec.md §4.2)。テーマを登録していなければ作らない。 */
 function themesCode(project: TtprojDocument, comments: Comments): GeneratedCode | undefined {
   const presets = Object.entries(project.theme?.presets ?? {});

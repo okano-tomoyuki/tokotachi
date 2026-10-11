@@ -84,18 +84,29 @@ function relative(fromDir: string | undefined, to: string): string {
   return [...Array<string>(from.length - common).fill('..'), ...target.slice(common)].join('/');
 }
 
+/** ヘッダ・ソースの出力先(定義ファイルのフォルダからの相対パス。定義ファイルの中身には依らない)。 */
+export function cppOutputPaths(
+  dslFileName: string,
+  options: CppOptions,
+): { readonly header: string; readonly source: string } {
+  const base = baseName(dslFileName);
+  return {
+    header: join(options.headerDir, `${base}${options.headerExtension}`),
+    source: join(options.sourceDir, `${base}${options.sourceExtension}`),
+  };
+}
+
 export function resolveCppTarget(
   doc: TtuiDocument,
   dslFileName: string,
   options: CppOptions,
 ): CppTarget {
-  const base = baseName(dslFileName);
-  const headerFile = `${base}${options.headerExtension}`;
-  const header = join(options.headerDir, headerFile);
+  const headerFile = `${baseName(dslFileName)}${options.headerExtension}`;
+  const { header, source } = cppOutputPaths(dslFileName, options);
   return {
     className: doc.window.name,
     header,
-    source: join(options.sourceDir, `${base}${options.sourceExtension}`),
+    source,
     headerInclude: relative(options.sourceDir, header),
     namespace: options.namespace,
     includeGuard: `${options.includeGuardPrefix}${headerFile}`

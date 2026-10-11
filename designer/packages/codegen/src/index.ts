@@ -17,10 +17,17 @@ import { createFile, mergeFile, type GeneratedCode, type MergeResult } from './r
 import { findStaleNames, staleNamesWarning } from './stale.ts';
 
 export { regionHash } from './hash.ts';
-export { generateProject, projectName, windowCppOptions, type ProjectWindow } from './project.ts';
+export {
+  generateProject,
+  projectName,
+  projectOutputPaths,
+  windowCppOptions,
+  type ProjectWindow,
+} from './project.ts';
 export { findHandler, type HandlerPosition } from './locate.ts';
 export {
   baseName,
+  cppOutputPaths,
   DEFAULT_CPP_OPTIONS,
   resolveCppTarget,
   type CommentLocale,
