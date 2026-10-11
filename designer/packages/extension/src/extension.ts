@@ -6,6 +6,7 @@ import { DesignerEditorProvider } from './designerEditorProvider.ts';
 import { registerDiagnostics } from './diagnostics.ts';
 import { generateProjectCode, generateWindowCode, registerGenerateOnSave } from './generateCode.ts';
 import { addToProject, chooseColorScheme, newProject, setMainWindow } from './projectCommands.ts';
+import { ProjectEditorProvider } from './projectEditorProvider.ts';
 import { registerProjectsView } from './projectsView.ts';
 import { newWindow } from './newWindow.ts';
 
@@ -65,6 +66,7 @@ export function activate(context: vscode.ExtensionContext): void {
       projects.view.refresh();
     }),
     DesignerEditorProvider.register(context),
+    ProjectEditorProvider.register(context),
     registerDiagnostics(),
     registerGenerateOnSave(),
     vscode.commands.registerCommand('tokotachiDesigner.newWindow', (folder?: vscode.Uri) =>

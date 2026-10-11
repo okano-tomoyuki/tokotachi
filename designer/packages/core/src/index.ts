@@ -33,6 +33,7 @@ export {
   checkThemeOverride,
   colorRoles,
   parseThemeOverride,
+  replaceThemePreset,
   resolveThemeOverride,
   resolveThemePresets,
   THEME_DIMENSIONS,
@@ -77,3 +78,4 @@ export {
   validateProject,
   type ProjectParseResult,
 } from './project/parse.ts';
+export { themePreviewDocument } from './project/themePreview.ts';

@@ -12,6 +12,7 @@ import {
   type PropertyValue,
 } from '@tokotachi-designer/core';
 import { useEffect, useState } from 'react';
+import { useDesigner } from '../store.ts';
 import { ThemeOverrideField } from './ThemeOverrideField.tsx';
 
 interface Props {
@@ -147,6 +148,7 @@ function TextField({ info, value, onCommit, multiline }: Props & { multiline: bo
 
 export function PropertyField(props: Props) {
   const { info, value, onCommit } = props;
+  const themePresets = useDesigner((s) => s.themePresets);
   const t = info.type;
   const catalog = getCatalog();
   if (t === 'bool') {
@@ -214,7 +216,7 @@ export function PropertyField(props: Props) {
     );
   }
   if (typeof t === 'object' && 'value' in t && t.value === 'ThemeOverride') {
-    return <ThemeOverrideField value={value} onCommit={onCommit} />;
+    return <ThemeOverrideField value={value} onCommit={onCommit} presets={themePresets} />;
   }
   if (typeof t === 'object' && 'value' in t && t.value === 'Image') {
     // 定義ファイルからの相対パス。「…」でファイルを選ぶ

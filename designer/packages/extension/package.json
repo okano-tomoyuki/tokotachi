@@ -39,6 +39,16 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "tokotachiDesigner.projectEditor",
+        "displayName": "%customEditor.project.displayName%",
+        "selector": [
+          {
+            "filenamePattern": "*.ttproj.json"
+          }
+        ],
+        "priority": "default"
       }
     ],
     "commands": [

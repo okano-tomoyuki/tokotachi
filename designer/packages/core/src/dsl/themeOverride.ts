@@ -209,3 +209,38 @@ export function resolveThemePresets(
   }
   return copy;
 }
+
+/**
+ * preset の参照を書き換えた写しを作る(プロジェクトのテーマを改名・削除するとき)。
+ * @param to 新しい名前。undefined なら preset を外す(部品に書いた色・寸法は残し、何も残らなければ theme_override ごと消す)
+ * @returns 書き換えた写しと、書き換えた数(0 なら元のまま)
+ */
+export function replaceThemePreset(
+  doc: TtuiDocument,
+  from: string,
+  to: string | undefined,
+): { readonly document: TtuiDocument; readonly count: number } {
+  const copy = JSON.parse(JSON.stringify(doc)) as TtuiDocument;
+  let count = 0;
+  for (const ref of themePresetReferences(copy)) {
+    if (ref.name !== from) {
+      continue;
+    }
+    let properties: unknown = copy;
+    for (const key of ref.at.slice(0, -2)) {
+      properties = (properties as Record<string | number, unknown>)[key];
+    }
+    const target = properties as Record<string, unknown>;
+    const override = target['theme_override'] as Record<string, unknown>;
+    if (to !== undefined) {
+      override['preset'] = to;
+    } else {
+      Reflect.deleteProperty(override, 'preset');
+      if (Object.keys(override).length === 0) {
+        Reflect.deleteProperty(target, 'theme_override');
+      }
+    }
+    count++;
+  }
+  return { document: count > 0 ? copy : doc, count };
+}

@@ -2,6 +2,7 @@
   "displayName": "Tokotachi Designer",
   "description": "GUI designer for the Tokotachi C++ GUI library",
   "customEditor.displayName": "Tokotachi Designer",
+  "customEditor.project.displayName": "Tokotachi Project Settings",
   "command.newWindow.title": "New Window...",
   "command.generateCode.title": "Generate Code",
   "command.openAsText.title": "Open as Text",

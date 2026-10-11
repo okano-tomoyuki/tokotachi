@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   checkThemeOverride,
   parseThemeOverride,
+  replaceThemePreset,
   resolveThemeOverride,
   resolveThemePresets,
   themePresetReferences,
@@ -85,5 +86,46 @@ describe('themeOverride', () => {
     expect(resolved.window.children[0]?.properties['theme_override']).toEqual({ radius: 0 });
     // 登録していない名前は、参照を外して部品に書いたものだけで描く
     expect(resolved.window.children[1]?.properties['theme_override']).toEqual({ radius: 3 });
+  });
+
+  it('参照を改名する・外す(外して何も残らなければ theme_override ごと消す)', () => {
+    const doc = {
+      format_version: 1,
+      window: {
+        name: 'MainWindow',
+        class: 'Window',
+        children: [
+          {
+            name: 'button_ok',
+            class: 'Button',
+            properties: { text: 'OK', theme_override: { preset: 'danger' } },
+          },
+          {
+            name: 'button_no',
+            class: 'Button',
+            properties: { theme_override: { preset: 'danger', radius: 3 } },
+          },
+          {
+            name: 'button_other',
+            class: 'Button',
+            properties: { theme_override: { preset: 'x' } },
+          },
+        ],
+      },
+    } as never;
+    type Doc = { window: { children: { properties: Record<string, unknown> }[] } };
+    const renamed = replaceThemePreset(doc, 'danger', 'alert');
+    expect(renamed.count).toBe(2);
+    expect(themePresetReferences(renamed.document).map((r) => r.name)).toEqual([
+      'alert',
+      'alert',
+      'x',
+    ]);
+    // 元は変えない
+    expect(themePresetReferences(doc).map((r) => r.name)).toEqual(['danger', 'danger', 'x']);
+    const removed = replaceThemePreset(doc, 'danger', undefined).document as never as Doc;
+    expect(removed.window.children[0]?.properties).toEqual({ text: 'OK' });
+    expect(removed.window.children[1]?.properties['theme_override']).toEqual({ radius: 3 });
+    expect(replaceThemePreset(doc, 'nothing', 'y')).toEqual({ document: doc, count: 0 });
   });
 });

@@ -1,7 +1,7 @@
 /**
  * プロジェクトファイルの読み込み・検証・決まった形での書き出し(docs/designer/project-spec.md §3・§4)。
  */
-import { isValidIdentifier } from '../identifier.ts';
+import { describeIdentifierProblem, isValidIdentifier } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { Diagnostic } from '../dsl/diagnostics.ts';
 import { checkThemeOverride } from '../dsl/themeOverride.ts';
@@ -72,7 +72,7 @@ export function validateProject(project: TtprojDocument): Diagnostic[] {
     // 名前は生成する関数の名前(<名前>_theme)にもなる
     const invalid = isValidIdentifier(name);
     if (invalid !== null) {
-      error(invalid, ['theme', 'presets', name]);
+      error(describeIdentifierProblem(invalid), ['theme', 'presets', name]);
       continue;
     }
     const problem = checkThemeOverride(preset, false);

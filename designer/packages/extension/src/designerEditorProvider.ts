@@ -218,8 +218,14 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
   }
 }
 
-/** Webview の HTML。 */
-function renderHtml(webview: vscode.Webview, webviewRoot: vscode.Uri): string {
+/**
+ * Webview の HTML。デザイナーとプロジェクトの設定画面で同じ成果物を使い、view で出す画面を選ぶ。
+ */
+export function renderHtml(
+  webview: vscode.Webview,
+  webviewRoot: vscode.Uri,
+  view: 'designer' | 'project' = 'designer',
+): string {
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'main.js'));
   const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'main.css'));
   const nonce = createNonce();
@@ -237,7 +243,7 @@ function renderHtml(webview: vscode.Webview, webviewRoot: vscode.Uri): string {
   <title>Tokotachi Designer</title>
 </head>
 <body>
-  <div id="root" data-language="${language}" data-l10n="${l10n}"></div>
+  <div id="root" data-view="${view}" data-language="${language}" data-l10n="${l10n}"></div>
   <script type="module" nonce="${nonce}" src="${scriptUri.toString()}"></script>
 </body>
 </html>`;

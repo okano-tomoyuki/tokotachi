@@ -1,7 +1,7 @@
 /**
  * テーマの上書き(theme_override。docs/adr/0042)の入力欄(docs/designer/editor-design.md §5)。
  * プロジェクトに登録したテーマ(preset)を選び、その上に、役割ごとのライト・ダークの色(同じなら 1 つの色として書く)と
- * 寸法(空なら継ぐ)を重ねる。
+ * 寸法(空なら継ぐ)を重ねる。部品のインスペクタと、プロジェクトの設定画面(プロジェクトのテーマ・登録したテーマ)で使う。
  */
 import {
   colorRoles,
@@ -10,13 +10,14 @@ import {
   THEME_DIMENSIONS,
   type PropertyValue,
 } from '@tokotachi-designer/core';
-import { useDesigner } from '../store.ts';
 
 interface Props {
   /** 書いた値(無ければ undefined)。 */
   readonly value: PropertyValue | undefined;
   /** 確定した値(null なら消す)。 */
   readonly onCommit: (value: PropertyValue | null) => void;
+  /** 選べる登録したテーマ(preset)の名前。undefined なら preset を書けない(プロジェクトのテーマ・登録したテーマ)。 */
+  readonly presets?: readonly string[] | undefined;
 }
 
 interface Entry {
@@ -51,8 +52,7 @@ function build(
   return Object.keys(out).length === 0 ? null : out;
 }
 
-export function ThemeOverrideField({ value, onCommit }: Props) {
-  const presets = useDesigner((s) => s.themePresets);
+export function ThemeOverrideField({ value, onCommit, presets }: Props) {
   const parsed = parseThemeOverride(value);
   const preset = parsed.preset;
   const colors: Entry[] = parsed.colors.map((c) => ({ ...c }));
@@ -75,7 +75,7 @@ export function ThemeOverrideField({ value, onCommit }: Props) {
   };
   return (
     <div className="theme-override">
-      {(presets.length > 0 || preset !== undefined) && (
+      {presets !== undefined && (presets.length > 0 || preset !== undefined) && (
         <label className="theme-override-row">
           <span className="theme-override-role">{l10n.t('Theme')}</span>
           <select
