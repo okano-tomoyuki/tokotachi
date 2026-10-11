@@ -5,9 +5,12 @@
  */
 import {
   checkValue,
+  clampToRange,
   COLOR_PATTERN,
+  describeRange,
   getCatalog,
   l10n,
+  type NumberRange,
   type PropertyInfo,
   type PropertyValue,
 } from '@tokotachi-designer/core';
@@ -24,6 +27,8 @@ interface Props {
   readonly onCommit: (value: PropertyValue | null) => void;
   /** 画像のファイルを選んでもらう(画像のプロパティだけ)。 */
   readonly onPickImage?: (() => void) | undefined;
+  /** 数値の範囲(カタログの range)。確定した値をこの範囲に収める。 */
+  readonly range?: NumberRange | undefined;
 }
 
 interface Codec {
@@ -98,7 +103,7 @@ function placeholderOf(info: PropertyInfo, c: Codec): string {
 }
 
 /** 文字の入力欄(1 行か複数行)。 */
-function TextField({ info, value, onCommit, multiline }: Props & { multiline: boolean }) {
+function TextField({ info, value, onCommit, multiline, range }: Props & { multiline: boolean }) {
   const c = codec(info);
   const shown = value === undefined ? '' : c.format(value);
   const [text, setText] = useState(shown);
@@ -122,13 +127,19 @@ function TextField({ info, value, onCommit, multiline }: Props & { multiline: bo
       return;
     }
     setError(undefined);
-    onCommit(parsed ?? null);
+    // 範囲の外なら、範囲の端にする(実行したときも丸める・無視されるので、書く値を揃える)
+    const next = typeof parsed === 'number' ? clampToRange(parsed, range) : parsed;
+    if (next !== parsed) {
+      setText(c.format(next as PropertyValue));
+    }
+    onCommit(next ?? null);
   };
+  const rangeText = describeRange(range);
   const common = {
     value: text,
     placeholder: placeholderOf(info, c),
     className: error === undefined ? '' : 'invalid',
-    title: error,
+    title: error ?? (rangeText === undefined ? undefined : l10n.t('Range: {0}', rangeText)),
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setText(e.target.value);
     },

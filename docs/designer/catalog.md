@@ -58,6 +58,7 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 | `excluded` | Widget の派生で親を渡して作れるが、パレットに出さないクラス(理由を書く)。classes にも excluded にも無い部品があれば、取り出しの道具がエラーにする(新しい部品の書き忘れを防ぐ) | `ButtonBase`・`ScrollBar` |
 | `geometry` | 位置と大きさのプロパティ(ウィンドウと自由な配置の子だけに書ける) | `Widget` の `x`・`y`・`width`・`height` |
 | `after_children` | 子(タブ・区画)を入れた後でないと効かないプロパティ(生成するコードでは子の後に設定する。codegen-design.md §4) | `TabWidget::current_index`・`Splitter::sizes` |
+| `range` | 数値のプロパティの範囲(ヘッダの説明に書いたもの)。端は数値、同じ部品のプロパティ(`{ "property": "maximum" }`)、配列のプロパティ・子の数に offset を足したもの(`{ "count": "items", "offset": -1 }`)。インスペクタが確定した値を収め、検証が範囲の外を警告する | `RangeBase::value` は minimum〜maximum、`SpinBox::decimals` は 0〜10、`Column::width` は 24 以上 |
 | `extra_enums`・`extra_values` | プロパティの型には出てこないが、定義ファイルで使う列挙型・値の型 | `Align`・`Anchor`・`DialogButton`・`ColorRole`・`Placement`・`Color` |
 | `special_values` | メンバではなく専用の書き方で表す値の型 | `ThemeColor`・`Shortcut`・`Image`(パスで書く。dsl-spec.md §5.1) |
 

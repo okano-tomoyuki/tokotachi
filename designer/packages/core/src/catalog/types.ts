@@ -35,6 +35,17 @@ export type Category = 'input' | 'display' | 'view' | 'container' | 'drawing' | 
 /** インスペクタの編集の種類(型から決まらないもの)。 */
 export type EditorKind = 'multiline' | 'mnemonic';
 
+/**
+ * 数値のプロパティの範囲の端。数値か、同じ部品のプロパティの値か、配列のプロパティ・子(items・tabs・columns)の数に offset を足したもの。
+ */
+export type RangeBound =
+  number | { readonly property: string } | { readonly count: string; readonly offset?: number };
+
+export interface PropertyRange {
+  readonly min?: RangeBound;
+  readonly max?: RangeBound;
+}
+
 export interface PropertyInfo {
   type: PropertyType;
   /** 宣言したクラス。 */
@@ -46,6 +57,8 @@ export interface PropertyInfo {
   /** 子(タブ・区画)を入れた後に設定する。 */
   after_children?: true;
   editor?: EditorKind;
+  /** 数値の範囲(ヘッダの説明に書いたもの。range.ts で値を求める)。 */
+  range?: PropertyRange;
   /** 既定値(実物で測った値。まだ測っていなければ無い)。 */
   default?: unknown;
 }

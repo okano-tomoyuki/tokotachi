@@ -61,6 +61,26 @@
     "TabWidget": ["current_index"],
     "Splitter": ["sizes"]
   },
+  "$comment_range": "数値のプロパティの範囲(ヘッダの説明に書いたもの)。min・max は数値か、同じ部品のプロパティ({ \"property\": 名前 })か、配列のプロパティ・子の数に offset を足したもの({ \"count\": 名前, \"offset\": -1 })。インスペクタは確定した値を範囲に収め、検証は範囲の外を警告する。",
+  "range": {
+    "Widget.width": { "min": 0 },
+    "Widget.height": { "min": 0 },
+    "RangeBase.value": { "min": { "property": "minimum" }, "max": { "property": "maximum" } },
+    "RangeBase.single_step": { "min": 0 },
+    "RangeBase.page_step": { "min": 0 },
+    "ProgressBar.value": { "min": { "property": "minimum" }, "max": { "property": "maximum" } },
+    "SpinBox.decimals": { "min": 0, "max": 10 },
+    "ComboBox.current_index": { "min": -1, "max": { "count": "items", "offset": -1 } },
+    "TabWidget.current_index": { "min": -1, "max": { "count": "tabs", "offset": -1 } },
+    "ItemView.sort_column": { "min": -1, "max": { "count": "columns", "offset": -1 } },
+    "TreeView.indentation": { "min": 8 },
+    "Timer.interval": { "min": 0 },
+    "BoxLayout.spacing": { "min": 0 },
+    "GridLayout.row_spacing": { "min": 0 },
+    "GridLayout.column_spacing": { "min": 0 },
+    "SplitterPane.stretch": { "min": 0 },
+    "Column.width": { "min": 24 }
+  },
   "editor": {
     "TextEdit.text": "multiline",
     "Label.text": "multiline",

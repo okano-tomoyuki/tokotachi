@@ -94,12 +94,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 640
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 480
         },
         "minimum_size": {
@@ -260,12 +266,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 400
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 200
         },
         "minimum_size": {
@@ -431,12 +443,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -610,12 +628,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -791,12 +815,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -979,12 +1009,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -1161,12 +1197,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -1344,12 +1386,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -1427,24 +1475,42 @@
           "type": "double",
           "declared_in": "RangeBase",
           "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。",
+          "range": {
+            "min": {
+              "property": "minimum"
+            },
+            "max": {
+              "property": "maximum"
+            }
+          },
           "default": 0
         },
         "single_step": {
           "type": "double",
           "declared_in": "RangeBase",
           "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。",
+          "range": {
+            "min": 0
+          },
           "default": 1
         },
         "page_step": {
           "type": "double",
           "declared_in": "RangeBase",
           "doc": "Page Up・Page Down で動く量(既定 10)。",
+          "range": {
+            "min": 0
+          },
           "default": 10
         },
         "decimals": {
           "type": "int",
           "declared_in": "SpinBox",
           "doc": "小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。",
+          "range": {
+            "min": 0,
+            "max": 10
+          },
           "default": 0
         }
       },
@@ -1536,12 +1602,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -1619,18 +1691,32 @@
           "type": "double",
           "declared_in": "RangeBase",
           "doc": "値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。",
+          "range": {
+            "min": {
+              "property": "minimum"
+            },
+            "max": {
+              "property": "maximum"
+            }
+          },
           "default": 0
         },
         "single_step": {
           "type": "double",
           "declared_in": "RangeBase",
           "doc": "矢印キー・ホイールで動く量(既定 1)。0 より大きければ、利用者の操作による値を minimum + n × single_step に合わせる。",
+          "range": {
+            "min": 0
+          },
           "default": 1
         },
         "page_step": {
           "type": "double",
           "declared_in": "RangeBase",
           "doc": "Page Up・Page Down で動く量(既定 10)。",
+          "range": {
+            "min": 0
+          },
           "default": 10
         },
         "orientation": {
@@ -1728,12 +1814,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -1807,6 +1899,13 @@
           "type": "int",
           "declared_in": "ComboBox",
           "doc": "選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。",
+          "range": {
+            "min": -1,
+            "max": {
+              "count": "items",
+              "offset": -1
+            }
+          },
           "default": -1
         },
         "placeholder_text": {
@@ -1912,12 +2011,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -2100,12 +2205,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -2183,6 +2294,14 @@
           "type": "double",
           "declared_in": "ProgressBar",
           "doc": "値(既定 0)。範囲の外は丸める。",
+          "range": {
+            "min": {
+              "property": "minimum"
+            },
+            "max": {
+              "property": "maximum"
+            }
+          },
           "default": 0
         },
         "text_visible": {
@@ -2278,12 +2397,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -2362,6 +2487,13 @@
           "type": "int",
           "declared_in": "ItemView",
           "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。",
+          "range": {
+            "min": -1,
+            "max": {
+              "count": "columns",
+              "offset": -1
+            }
+          },
           "default": -1
         },
         "sort_order": {
@@ -2476,12 +2608,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -2560,6 +2698,13 @@
           "type": "int",
           "declared_in": "ItemView",
           "doc": "並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。",
+          "range": {
+            "min": -1,
+            "max": {
+              "count": "columns",
+              "offset": -1
+            }
+          },
           "default": -1
         },
         "sort_order": {
@@ -2581,6 +2726,9 @@
           "type": "float",
           "declared_in": "TreeView",
           "doc": "1 段の字下げ(dp。既定 20。8 以上)。",
+          "range": {
+            "min": 8
+          },
           "default": 20
         }
       },
@@ -2676,12 +2824,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -2830,12 +2984,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -2903,6 +3063,13 @@
           "declared_in": "TabWidget",
           "doc": "選んでいるタブの番号(タブが無ければ -1)。範囲の外の値は無視する。",
           "after_children": true,
+          "range": {
+            "min": -1,
+            "max": {
+              "count": "tabs",
+              "offset": -1
+            }
+          },
           "default": -1
         }
       },
@@ -2996,12 +3163,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -3171,12 +3344,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -3328,12 +3507,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -3472,6 +3657,9 @@
           "type": "int",
           "declared_in": "Timer",
           "doc": "間隔(ミリ秒、既定 1000)。動いている間に変えると、その時点から数え直す。",
+          "range": {
+            "min": 0
+          },
           "default": 1000
         },
         "repeat": {
@@ -3525,6 +3713,9 @@
           "type": "float",
           "declared_in": "BoxLayout",
           "doc": "項目の間隔(dp、既定 8)。",
+          "range": {
+            "min": 0
+          },
           "default": 8
         }
       },
@@ -3554,11 +3745,17 @@
           "type": "float",
           "declared_in": "GridLayout",
           "doc": "行の間隔・列の間隔(dp、既定 8)。",
+          "range": {
+            "min": 0
+          },
           "default": 8
         },
         "column_spacing": {
           "type": "float",
           "declared_in": "GridLayout",
+          "range": {
+            "min": 0
+          },
           "default": 8
         }
       },
@@ -3670,12 +3867,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -3833,12 +4036,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -3986,12 +4195,18 @@
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "height": {
           "type": "float",
           "declared_in": "Widget",
           "geometry": true,
+          "range": {
+            "min": 0
+          },
           "default": 0
         },
         "minimum_size": {
@@ -4146,6 +4361,9 @@
           "type": "int",
           "declared_in": "SplitterPane",
           "doc": "Splitter の大きさが変わったときの伸び縮みの比率(0 なら大きさを保つ。すべて 0 なら最後の区画が受け持つ)。",
+          "range": {
+            "min": 0
+          },
           "default": 1
         },
         "collapsible": {
@@ -4174,6 +4392,9 @@
           "type": "float",
           "declared_in": "Column",
           "doc": "幅(dp。24 以上)。利用者は見出しの境目のドラッグでも変えられる。最後の列は、ビューに余りがあれば広げて描く。",
+          "range": {
+            "min": 24
+          },
           "default": 120
         },
         "alignment": {

@@ -251,5 +251,10 @@
   "Add the new window to which project?": "新しいウィンドウをどのプロジェクトに加えますか?",
   "Hidden (visible is false)": "非表示(visible が false)",
   "Not shown because a parent is hidden": "親が非表示のため表示されません",
-  "Hidden": "非表示"
+  "Hidden": "非表示",
+  "{0} to {1}": "{0}〜{1}",
+  "{0} or more": "{0} 以上",
+  "{0} or less": "{0} 以下",
+  "Range: {0}": "範囲: {0}",
+  "{0} is out of the range of \"{1}\" ({2})": "{0} は \"{1}\" の範囲({2})の外です"
 }

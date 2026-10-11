@@ -17,6 +17,7 @@ import type {
 import { layouts, menus, namedNodes, temporaryNames, widgets, type NamedNode } from './tree.ts';
 import { bindingOf, isBindable, variableTypeOf } from './bindings.ts';
 import { checkMembers, checkValue, isEnumValue } from './values.ts';
+import { describeRange, inRange, propertyRange } from './range.ts';
 
 export function validateDocument(doc: TtuiDocument): Diagnostic[] {
   return new Validator(doc).run();
@@ -216,7 +217,36 @@ class Validator {
       if (typeof prop.type === 'object' && 'ref' in prop.type && typeof value === 'string') {
         this.checkReference(value, prop.type.ref, p);
       }
+      if (typeof value === 'number') {
+        // 範囲の外でも実行はできる(丸める・無視する)ので警告にする
+        const range = propertyRange(cls, prop, this.nodeAt(path));
+        if (!inRange(value, range)) {
+          this.report(
+            'warning',
+            'out-of-range',
+            l10n.t(
+              '{0} is out of the range of "{1}" ({2})',
+              value,
+              name,
+              describeRange(range) ?? '',
+            ),
+            p,
+          );
+        }
+      }
     }
+  }
+
+  /** path の位置のノード(定義ファイルの JSON)。 */
+  private nodeAt(path: JsonPath): unknown {
+    let node: unknown = this.doc;
+    for (const key of path) {
+      node =
+        typeof node === 'object' && node !== null
+          ? (node as Record<string | number, unknown>)[key]
+          : undefined;
+    }
+    return node;
   }
 
   /** Variable との結びつけ(dsl-spec.md §5.2)。 */

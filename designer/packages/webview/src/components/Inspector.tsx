@@ -2,6 +2,7 @@
  * インスペクタ(docs/designer/editor-design.md §5)。選んだノードの名前・プロパティ・ハンドラを編集する。
  */
 import {
+  propertyRange,
   bindingOf,
   checkValue,
   defaultHandlerName,
@@ -349,6 +350,7 @@ function NodeEditor({ node }: { node: OutlineNode }) {
                         name={name}
                         info={p}
                         value={value}
+                        range={propertyRange(node.class ?? '', p, json)}
                         onCommit={(v) => {
                           sendEdit({
                             kind: 'setProperties',

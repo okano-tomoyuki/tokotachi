@@ -44,6 +44,13 @@ export {
   type ThemePresets,
 } from './dsl/themeOverride.ts';
 export * from './dsl/outline.ts';
+export {
+  clampToRange,
+  describeRange,
+  inRange,
+  propertyRange,
+  type NumberRange,
+} from './dsl/range.ts';
 export { bindingOf, isBindable, variableTypeOf } from './dsl/bindings.ts';
 export {
   IMAGE_EXTENSIONS,

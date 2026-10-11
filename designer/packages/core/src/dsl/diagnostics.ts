@@ -20,6 +20,7 @@ export type DiagnosticCode =
   | 'not-designable-property'
   | 'geometry-not-allowed'
   | 'invalid-property-value'
+  | 'out-of-range'
   | 'unknown-event'
   // 参照・ハンドラ
   | 'unknown-reference'
