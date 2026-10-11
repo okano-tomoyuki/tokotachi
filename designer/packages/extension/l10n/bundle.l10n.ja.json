@@ -72,6 +72,8 @@
   "Expected a color role ({0}) or \"#RRGGBB\" / \"#RRGGBBAA\"": "色の役割({0})か \"#RRGGBB\"・\"#RRGGBBAA\" を書きます",
   "Expected a relative path from this file to an image file ({0}), separated by \"/\"": "このファイルから画像のファイル({0})への相対パスを、\"/\" で区切って書きます",
   "Expected a shortcut such as \"Ctrl+S\" (modifiers: Ctrl, Shift, Alt, Meta)": "\"Ctrl+S\" のようなショートカットを書きます(修飾キー: Ctrl・Shift・Alt・Meta)",
+  "Expected a date \"YYYY-MM-DD\" (an empty string for no date)": "日付は \"YYYY-MM-DD\" で書きます(空の日付は空の文字)",
+  "Expected a color \"#RRGGBB\" / \"#RRGGBBAA\"": "色は \"#RRGGBB\"・\"#RRGGBBAA\" で書きます",
   "Expected a value of type {0}": "型が {0} の値を書きます",
   "Expected an object with \"colors\" and the dimensions ({0})": "\"colors\" と寸法({0})を持つオブジェクトを書きます",
   "Expected an object with the members of {0}": "{0} のメンバを持つオブジェクトを書きます",

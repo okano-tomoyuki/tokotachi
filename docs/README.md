@@ -67,6 +67,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0048](adr/0048-image-box-and-icons.md) | 画像を表示する部品 ImageBox と、ラベル・ボタン・メニューの画像を加え、拡大・縮小を滑らかにする | 承認 |
 | [0049](adr/0049-group-box-mnemonics-and-widget-details.md) | 見出しの付いた枠 GroupBox・部品のニーモニックと、値の部品・分割の細かな機能を加える | 承認 |
 | [0050](adr/0050-table-view.md) | 表 TableView は ItemView の表の扱いとして作り、セルの矩形を選んで表計算の流儀で編集する | 承認 |
+| [0051](adr/0051-date-and-color-input.md) | 日付の値 Date と、日付の入力欄 DateEdit・暦 Calendar・色を選ぶダイアログ ColorDialog・色のボタン ColorButton を加える | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

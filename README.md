@@ -21,11 +21,11 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 
 | グループ | 内容 |
 |---|---|
-| `core/` | Object・プロパティ・結びつけ・変数・イベント・Application・タイマー・スレッド(post・Task)・クリップボード・基本の値(Point・Rect・Color) |
+| `core/` | Object・プロパティ・結びつけ・変数・イベント・Application・タイマー・スレッド(post・Task)・クリップボード・基本の値(Point・Rect・Color・Date) |
 | `graphics/` | Canvas・Image・Bitmap・文字のレイアウト・テーマ |
 | `layout/` | BoxLayout・GridLayout・PlaceLayout・そろえ方 |
-| `widgets/` | Widget とボタン・入力欄・値の部品・スクロール・タブ・分割・PaintBox・ImageBox・GroupBox |
-| `windows/` | Window・ポップアップ・ダイアログ・メニューバー・ツールバー・ステータスバー |
+| `widgets/` | Widget とボタン・入力欄・値の部品・日付(DateEdit・Calendar)・色のボタン・スクロール・タブ・分割・PaintBox・ImageBox・GroupBox |
+| `windows/` | Window・ポップアップ・ダイアログ(メッセージ・ファイル・色)・メニューバー・ツールバー・ステータスバー |
 | `actions/` | Action・ショートカット・メニュー |
 | `views/` | 一覧・木・表のモデルとビュー |
 

@@ -363,19 +363,31 @@ void WindowImpl::layout_tree(Widget* w)
 
 void WindowImpl::run_layout()
 {
-    // 配置の結果を受けたハンドラが、さらに配置を依頼することがあるので、落ち着くまで(上限あり)繰り返す。
-    for (int i = 0; layout_pending && i < 8; ++i)
+    for (int round = 0; round < 2; ++round)
     {
-        layout_pending = false;
-        layout_tree(q);
-    }
-    // レイアウトを持つウィンドウは、その最小の大きさより小さくできないようにする。
-    const Size m = WidgetAccess::layout_of(q) ? q->minimum_hint.get() : Size();
-    if (m != minimum_size)
-    {
+        // 配置の結果を受けたハンドラが、さらに配置を依頼することがあるので、落ち着くまで(上限あり)繰り返す。
+        for (int i = 0; layout_pending && i < 8; ++i)
+        {
+            layout_pending = false;
+            layout_tree(q);
+        }
+        // レイアウトを持つウィンドウは、その最小の大きさより小さくできないようにする。
+        const Size m = WidgetAccess::layout_of(q) ? q->minimum_hint.get() : Size();
+        if (m == minimum_size || !window)
+        {
+            return;
+        }
         minimum_size = m;
         SDL_SetWindowMinimumSize(window, static_cast<int>(std::ceil(m.width * scale / density)),
                                  static_cast<int>(std::ceil(m.height * scale / density)));
+        // OS がその場で大きくしたら、知らせ(イベント)を待たずに大きさを合わせて配置し直す
+        // (イベントを処理しない capture・デザイナーのキャンバスでも、広がった部分まで描くため)
+        const Size before = WidgetAccess::bounds(q).size();
+        sync_size();
+        if (WidgetAccess::bounds(q).size() == before)
+        {
+            return;
+        }
     }
 }
 

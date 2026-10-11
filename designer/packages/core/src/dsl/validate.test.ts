@@ -223,4 +223,32 @@ describe('validateDocument', () => {
     doc.window.tool_bar.items[1] = {};
     expect(codes(doc)).toEqual(['invalid-tool-item', 'invalid-menu-item']);
   });
+
+  it('日付(「YYYY-MM-DD」・空)と色(「#RRGGBB」)の値', () => {
+    const doc = sampleCopy();
+    items(doc).push(
+      {
+        widget: {
+          name: 'date_edit_a',
+          class: 'DateEdit',
+          properties: { date: '2026-10-11', minimum: '' },
+        },
+      },
+      { widget: { name: 'date_edit_b', class: 'DateEdit', properties: { date: '2026-02-30' } } },
+      { widget: { name: 'date_edit_c', class: 'DateEdit', properties: { date: '2026/10/11' } } },
+      {
+        widget: {
+          name: 'color_button_a',
+          class: 'ColorButton',
+          properties: { color: '#2563EB80' },
+        },
+      },
+      { widget: { name: 'color_button_b', class: 'ColorButton', properties: { color: 'red' } } },
+    );
+    expect(codes(doc)).toEqual([
+      'invalid-property-value',
+      'invalid-property-value',
+      'invalid-property-value',
+    ]);
+  });
 });

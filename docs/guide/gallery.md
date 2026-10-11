@@ -23,6 +23,16 @@ GridLayout で項目名と並べ、項目名のニーモニック(Alt+N など)�
 
 @include inputs.cpp
 
+## 日付と色
+
+DateEdit(書式・暦のポップアップ)・Calendar・ColorButton(押すと ColorDialog を開く。不透明度も選べる)。
+
+![日付と色](pickers.png)
+
+![色の選択](color_dialog.png)
+
+@include pickers.cpp
+
 ## 一覧と木
 
 TreeView と ListView(列・並べ替え・チェック・複数選択)を Splitter で並べています。

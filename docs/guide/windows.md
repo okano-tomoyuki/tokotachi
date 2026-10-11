@@ -67,3 +67,4 @@ tokotachi::MessageDialog::show(&window, "確認", "変更を保存しますか�
 - ボタンは OS の慣習の順に並びます(Windows・KDE は「OK キャンセル」、GNOME などは「キャンセル OK」)。
 - Enter は決定のボタン、Esc・閉じるボタンは取り消しのボタンを押します。
 - ファイルの選択は `FileDialog`(OS のダイアログ)。`paths` で選んだパスを、`error` で失敗の理由を読みます。
+- 色の選択は `ColorDialog`(`ColorDialog::show(&window, 今の色, on_finish)`。`alpha_enabled` で不透明度も)。押すと開く `ColorButton` もあります。

@@ -273,6 +273,8 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 | `Font` | メンバの名前のオブジェクト | `{ "size": 18 }` |
 | `ThemeColor` | 役割の名前、または `"#RRGGBB"`・`"#RRGGBBAA"` | `"ACCENT"`、`"#FF8000"`(§10 Q7) |
 | `Shortcut` | 表記の文字列(`Shortcut(const char*)` と同じ) | `"Ctrl+S"` |
+| `Color` | `"#RRGGBB"`・`"#RRGGBBAA"`(`r`・`g`・`b`・`a` のオブジェクトも書ける) | `"#2563EB"` |
+| `Date` | `"YYYY-MM-DD"`(空の文字は空の日付) | `"2026-10-11"` |
 | `ThemeOverride` | `colors`(役割の名前 → 色か `{ "light", "dark" }`)と寸法(`radius`・`field_radius`・`field_padding`)のオブジェクト(§5.3) | `{ "colors": { "ACCENT": "#DC2626" }, "radius": 0 }` |
 | `std::vector<std::string>` | 文字列の配列 | `["小", "中", "大"]` |
 | `std::vector<float>` | 数値の配列 | `[160, 360]` |

@@ -84,6 +84,28 @@ const ICONS: Readonly<Record<string, ReactNode>> = {
       <path className="a" d="M11.6 7.3l.9 1.2.9-1.2" />
     </>
   ),
+  DateEdit: (
+    <>
+      <rect x="1.5" y="4.5" width="13" height="7" />
+      <path d="M3.5 8h4" />
+      <rect className="a" x="10" y="6" width="3.5" height="4" />
+    </>
+  ),
+  Calendar: (
+    <>
+      <rect x="1.5" y="2.5" width="13" height="12" />
+      <rect className="af" x="2" y="3" width="12" height="2.5" />
+      <path d="M4 8.5h1.5M7.25 8.5h1.5M10.5 8.5h1.5M4 11.5h1.5M7.25 11.5h1.5" />
+      <rect className="a" x="10.5" y="10.5" width="1.5" height="2" />
+    </>
+  ),
+  ColorButton: (
+    <>
+      <rect x="1.5" y="4.5" width="13" height="7" />
+      <rect className="af" x="3" y="6" width="4" height="4" />
+      <path d="M8.5 8h4" />
+    </>
+  ),
 
   // ---- 表示 ----
   Label: <path d="M3.5 13.5L8 2.5l4.5 11M5.3 9.5h5.4" />,

@@ -5,8 +5,11 @@
 
 #include "widgets/button.hpp"
 #include "widgets/button_base.hpp"
+#include "widgets/calendar.hpp"
 #include "widgets/check_box.hpp"
+#include "widgets/color_button.hpp"
 #include "widgets/combo_box.hpp"
+#include "widgets/date_edit.hpp"
 #include "widgets/group_box.hpp"
 #include "widgets/image_box.hpp"
 #include "widgets/label.hpp"

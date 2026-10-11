@@ -86,7 +86,7 @@ export class Canvas {
    * @param fonts 使うフォントのファイル(既定は OS のフォント)
    */
   static async load(
-    options: { wasmDir?: string; fonts?: readonly string[] } = {},
+    options: { wasmDir?: string; fonts?: readonly string[]; language?: string } = {},
   ): Promise<Canvas> {
     const dir = options.wasmDir ?? defaultWasmDir();
     const file = join(dir, MODULE_FILE);
@@ -102,6 +102,8 @@ export class Canvas {
       fonts: options.fonts ?? systemFonts(),
       os: process.platform === 'win32' ? 'windows' : process.platform,
       desktop: process.env['XDG_CURRENT_DESKTOP'] ?? '',
+      // 利用者の言語(既定は OS の言語。暦の月・曜日、ダイアログのボタンの文字を選ぶ)
+      language: options.language ?? Intl.DateTimeFormat().resolvedOptions().locale,
     };
     module.ccall('ttc_configure', null, ['string'], [JSON.stringify(config)]);
     return new Canvas(module);

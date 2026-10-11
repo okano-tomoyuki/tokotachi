@@ -114,6 +114,16 @@ function valueType(name: string, value: PropertyValue): string {
   if (name === 'Shortcut') {
     return `tokotachi::Shortcut(${cppString(scalarText(value))})`;
   }
+  if (name === 'Date') {
+    // 「2026-10-11」→ Date(2026, 10, 11)。空なら空の日付
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(scalarText(value));
+    return m
+      ? `tokotachi::Date(${String(Number(m[1]))}, ${String(Number(m[2]))}, ${String(Number(m[3]))})`
+      : 'tokotachi::Date()';
+  }
+  if (name === 'Color' && typeof value === 'string') {
+    return color(value);
+  }
   if (name === 'Margins' && typeof value === 'number') {
     return `tokotachi::Margins(${number(value, 'float')})`;
   }
@@ -127,6 +137,8 @@ function valueType(name: string, value: PropertyValue): string {
       return `tokotachi::Point(${floats([member(o, 'x', 0), member(o, 'y', 0)])})`;
     case 'Rect':
       return `tokotachi::Rect(${floats(['x', 'y', 'width', 'height'].map((m) => member(o, m, 0)))})`;
+    case 'Color':
+      return `tokotachi::Color(${['r', 'g', 'b', 'a'].map((m) => String(Math.round(member(o, m, m === 'a' ? 255 : 0)))).join(', ')})`;
     case 'Font': {
       // 後ろの既定値(太字・斜体でない)は省く: Font(18)・Font(18, true)・Font(18, false, true)
       const bold = o['bold'] === true;

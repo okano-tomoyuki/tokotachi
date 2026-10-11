@@ -24,6 +24,7 @@ namespace
 {
 
 tokotachi::Application* g_app = nullptr;
+std::string g_language;  ///< 拡張が渡した利用者の言語(空なら Application が調べたもの)
 /// 描いたウィンドウ(次の描画で破棄する)。Dialog のときは、その持ち主の隠れたウィンドウも。
 tokotachi::Window* g_window = nullptr;
 tokotachi::Window* g_owner = nullptr;
@@ -40,6 +41,10 @@ void ensure_app()
         static char name[] = "tokotachi-canvas";
         static char* argv[] = {name, nullptr};
         g_app = new tokotachi::Application(1, argv);
+    }
+    if (!g_language.empty())
+    {
+        g_app->language = g_language;
     }
 }
 
@@ -507,6 +512,11 @@ EMSCRIPTEN_KEEPALIVE void ttc_configure(const char* config_text)
     setenv("TOKOTACHI_FONT_FILES", fonts.c_str(), 1);
     setenv("TOKOTACHI_HOST_OS", config["os"].as_string().c_str(), 1);
     setenv("XDG_CURRENT_DESKTOP", config["desktop"].as_string().c_str(), 1);
+    // 利用者の言語(暦の月・曜日、ダイアログのボタンの文字を選ぶ。ネイティブでは OS の設定)
+    if (config.has("language") && config["language"].is_string())
+    {
+        g_language = config["language"].as_string();
+    }
 }
 
 EMSCRIPTEN_KEEPALIVE const char* ttc_render(const char* request_text)

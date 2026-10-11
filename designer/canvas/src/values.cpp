@@ -179,6 +179,17 @@ bool from_json(const Json& j, tokotachi::Font& out)
 
 bool from_json(const Json& j, tokotachi::Color& out)
 {
+    // 「#RRGGBB」・「#RRGGBBAA」か、メンバ(r・g・b・a)のオブジェクト
+    if (j.is_string())
+    {
+        tokotachi::ThemeColor c;
+        if (j.as_string().empty() || j.as_string()[0] != '#' || !from_json(j, c))
+        {
+            return false;
+        }
+        out = c.color();
+        return true;
+    }
     if (!j.is_object())
     {
         return false;
@@ -424,6 +435,39 @@ Json to_json(const tokotachi::Font& v)
     o.set("bold", to_json(v.bold));
     o.set("italic", to_json(v.italic));
     return o;
+}
+
+bool from_json(const Json& j, tokotachi::Date& out)
+{
+    // 「2026-10-11」(空の文字は空の日付)
+    if (!j.is_string())
+    {
+        return false;
+    }
+    const std::string& s = j.as_string();
+    if (s.empty())
+    {
+        out = tokotachi::Date();
+        return true;
+    }
+    int y = 0, m = 0, d = 0;
+    if (std::sscanf(s.c_str(), "%d-%d-%d", &y, &m, &d) != 3 || !tokotachi::Date(y, m, d).is_valid())
+    {
+        return false;
+    }
+    out = tokotachi::Date(y, m, d);
+    return true;
+}
+
+Json to_json(const tokotachi::Date& v)
+{
+    if (v.is_null())
+    {
+        return Json(std::string());
+    }
+    char buf[16];
+    std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d", v.year, v.month, v.day);
+    return Json(std::string(buf));
 }
 
 Json to_json(const tokotachi::Color& v)

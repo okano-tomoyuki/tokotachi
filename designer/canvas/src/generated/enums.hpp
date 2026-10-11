@@ -17,6 +17,8 @@ bool from_json(const Json& j, tokotachi::ButtonStyle& out);
 Json to_json(tokotachi::ButtonStyle v);
 bool from_json(const Json& j, tokotachi::ColorRole& out);
 Json to_json(tokotachi::ColorRole v);
+bool from_json(const Json& j, tokotachi::DayOfWeek& out);
+Json to_json(tokotachi::DayOfWeek v);
 bool from_json(const Json& j, tokotachi::DialogButton& out);
 Json to_json(tokotachi::DialogButton v);
 bool from_json(const Json& j, tokotachi::FocusPolicy& out);

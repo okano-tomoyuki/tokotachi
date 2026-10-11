@@ -2296,6 +2296,690 @@
         "height": 36
       }
     },
+    "DateEdit": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "日付の入力欄(docs/adr/0051)。打ち込むか、↑↓・ホイールで年・月・日を増減するか、右のボタンで暦(Calendar)を開いて選ぶ。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
+          "default": true
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "default": true
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget",
+          "default": "NONE"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget",
+          "default": "ARROW"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
+        "date": {
+          "type": {
+            "value": "Date"
+          },
+          "declared_in": "DateEdit",
+          "doc": "日付(既定は空)。範囲の外の値は範囲に収める。",
+          "default": ""
+        },
+        "minimum": {
+          "type": {
+            "value": "Date"
+          },
+          "declared_in": "DateEdit",
+          "doc": "選べる範囲(既定は 1 年 1 月 1 日〜9999 年 12 月 31 日)。",
+          "default": "0001-01-01"
+        },
+        "maximum": {
+          "type": {
+            "value": "Date"
+          },
+          "declared_in": "DateEdit",
+          "default": "9999-12-31"
+        },
+        "format": {
+          "type": "string",
+          "declared_in": "DateEdit",
+          "doc": "表示の書式(yyyy・yy・MM・M・dd・d を年・月・日に置き換える。既定 \"yyyy/MM/dd\")。打ち込んだ文字も、この順に読む。",
+          "default": "yyyy/MM/dd"
+        },
+        "first_day_of_week": {
+          "type": {
+            "enum": "DayOfWeek"
+          },
+          "declared_in": "DateEdit",
+          "doc": "暦の週の始まり(既定は日曜日)。",
+          "default": "SUNDAY"
+        },
+        "placeholder_text": {
+          "type": "string",
+          "declared_in": "DateEdit",
+          "doc": "日付が空のときに出す文字。",
+          "default": ""
+        }
+      },
+      "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "DateEdit",
+          "doc": "date が変わった(利用者の操作・代入のどちらでも)。"
+        }
+      },
+      "preferred_size": {
+        "width": 124,
+        "height": 36
+      }
+    },
+    "ColorButton": {
+      "bases": [
+        "ButtonBase",
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "色を見せるボタン(docs/adr/0051)。押すと ColorDialog を開き、OK で選んだ色にする。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
+          "default": true
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "default": true
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget",
+          "default": "POINTING_HAND"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
+        "text": {
+          "type": "string",
+          "declared_in": "ButtonBase",
+          "default": ""
+        },
+        "font": {
+          "type": {
+            "value": "Font"
+          },
+          "declared_in": "ButtonBase",
+          "default": {
+            "size": 14,
+            "bold": false,
+            "italic": false
+          }
+        },
+        "color": {
+          "type": {
+            "value": "Color"
+          },
+          "declared_in": "ColorButton",
+          "default": "#000000"
+        },
+        "alpha_enabled": {
+          "type": "bool",
+          "declared_in": "ColorButton",
+          "doc": "ダイアログで不透明度も選ぶか(既定 false)。false でも、代入した色の不透明度はそのまま。",
+          "default": false
+        },
+        "dialog_title": {
+          "type": "string",
+          "declared_in": "ColorButton",
+          "doc": "開くダイアログの題(空なら標準の題)。",
+          "default": ""
+        }
+      },
+      "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_click": {
+          "type": "NotifyHandler",
+          "declared_in": "ButtonBase",
+          "doc": "上で押して離した・フォーカスがあるときに Space か Enter を押した。"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "ColorButton",
+          "doc": "color が変わった(ダイアログで選んだ・代入のどちらでも)。"
+        }
+      },
+      "preferred_size": {
+        "width": 106,
+        "height": 36
+      }
+    },
+    "Calendar": {
+      "bases": [
+        "Widget",
+        "Object"
+      ],
+      "kind": "widget",
+      "category": "input",
+      "doc": "月ごとの暦から日を選ぶ(docs/adr/0051)。DateEdit のポップアップの中身にもなる。",
+      "properties": {
+        "x": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "y": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "default": 0
+        },
+        "width": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "height": {
+          "type": "float",
+          "declared_in": "Widget",
+          "geometry": true,
+          "range": {
+            "min": 0
+          },
+          "default": 0
+        },
+        "minimum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "doc": "利用者が決める最小・最大の大きさ(既定は 0 と無制限)。",
+          "default": {
+            "width": 0,
+            "height": 0
+          }
+        },
+        "maximum_size": {
+          "type": {
+            "value": "Size"
+          },
+          "declared_in": "Widget",
+          "default": {
+            "width": 1000000000,
+            "height": 1000000000
+          }
+        },
+        "visible": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "表示するか(利用者が決める)。ToolBar・Splitter・TabWidget が自分の都合(幅に収まらない・たたんだ・選んでいないタブ)で 子を隠すときは、この値を変えない(showing が false になる。docs/adr/0041)。",
+          "default": true
+        },
+        "enabled": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "default": true
+        },
+        "focus_policy": {
+          "type": {
+            "enum": "FocusPolicy"
+          },
+          "declared_in": "Widget",
+          "default": "TAB_AND_CLICK"
+        },
+        "cursor": {
+          "type": {
+            "enum": "MouseCursor"
+          },
+          "declared_in": "Widget",
+          "default": "ARROW"
+        },
+        "tooltip": {
+          "type": "string",
+          "declared_in": "Widget",
+          "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
+          "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
+        "accepts_drops": {
+          "type": "bool",
+          "declared_in": "Widget",
+          "doc": "ドロップを受け取るか(既定 false)。true なら、ポインタの下にドラッグが来たときに drag_move・drag_leave・drop を送る。",
+          "default": false
+        },
+        "date": {
+          "type": {
+            "value": "Date"
+          },
+          "declared_in": "Calendar",
+          "doc": "選んでいる日(空なら選んでいない)。代入すると、その月を見せる。範囲の外の日は範囲に収める。",
+          "default": ""
+        },
+        "minimum": {
+          "type": {
+            "value": "Date"
+          },
+          "declared_in": "Calendar",
+          "doc": "選べる範囲(既定は 1 年 1 月 1 日〜9999 年 12 月 31 日)。",
+          "default": "0001-01-01"
+        },
+        "maximum": {
+          "type": {
+            "value": "Date"
+          },
+          "declared_in": "Calendar",
+          "default": "9999-12-31"
+        },
+        "first_day_of_week": {
+          "type": {
+            "enum": "DayOfWeek"
+          },
+          "declared_in": "Calendar",
+          "doc": "週の始まりの曜日(既定は日曜日)。",
+          "default": "SUNDAY"
+        }
+      },
+      "handlers": {
+        "on_drag_move": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグがポインタの下に来た・動いた。受け取らないなら accepted を false にする(親へ送る)。操作は action で変えられる。 ハンドラが無ければ、on_drop があるときだけ受け取る。"
+        },
+        "on_drag_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget",
+          "doc": "ドラッグが離れた(受け取ると答えた後に、ほかへ移った・やめた)。"
+        },
+        "on_drop": {
+          "type": "DragHandler",
+          "declared_in": "Widget",
+          "doc": "落とした。受け取らなかったら accepted を false にする。"
+        },
+        "on_drag_finish": {
+          "type": "DragFinishHandler",
+          "declared_in": "Widget",
+          "doc": "自分が始めたドラッグが終わった(受け取った側の操作。受け取られなければ NONE。MOVE なら元のデータを消す)。"
+        },
+        "on_paint": {
+          "type": "PaintHandler",
+          "declared_in": "Widget",
+          "doc": "自分の描画の後に呼ぶ(子の描画の前)。"
+        },
+        "on_resize": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_down": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_up": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_move": {
+          "type": "MouseHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_enter": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_leave": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_mouse_wheel": {
+          "type": "WheelHandler",
+          "declared_in": "Widget",
+          "doc": "ホイール。受け取らなければ(ハンドラが無いか accepted を false にすると)親へ送る。"
+        },
+        "on_key_down": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_key_up": {
+          "type": "KeyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_in": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_focus_out": {
+          "type": "NotifyHandler",
+          "declared_in": "Widget"
+        },
+        "on_change": {
+          "type": "NotifyHandler",
+          "declared_in": "Calendar",
+          "doc": "date が変わった(利用者の操作・代入のどちらでも)。"
+        },
+        "on_activate": {
+          "type": "NotifyHandler",
+          "declared_in": "Calendar",
+          "doc": "日を押した・Enter を押した(選び終えた)。"
+        }
+      },
+      "preferred_size": {
+        "width": 236,
+        "height": 256
+      }
+    },
     "Label": {
       "bases": [
         "Widget",
@@ -5768,6 +6452,9 @@
         "a": "int"
       }
     },
+    "Date": {
+      "special": true
+    },
     "Font": {
       "members": {
         "size": "float",
@@ -5910,6 +6597,18 @@
         "ON_TOOLTIP": "ツールチップの文字"
       },
       "doc": "テーマの中の色の役割。"
+    },
+    "DayOfWeek": {
+      "values": [
+        "SUNDAY",
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY"
+      ],
+      "doc": "曜日。"
     },
     "DialogButton": {
       "values": [

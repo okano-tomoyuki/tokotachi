@@ -1645,6 +1645,24 @@ TEST(window_capture)
     CHECK((b.pixels()[0] | 0xff000000u) == (window.impl()->buffer[0] | 0xff000000u));
 }
 
+TEST(window_grows_to_minimum_before_capture)
+{
+    // 中身の最小の大きさがウィンドウより大きいと、ウィンドウは広がる。イベントを処理しなくても、広がった部分まで描く
+    tokotachi::Window window("t", 200, 100);
+    window.background = tokotachi::Color(0x10, 0x20, 0x30);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::Widget* tall = new tokotachi::Widget(&window);
+    tall->minimum_size = tokotachi::Size(50, 300);
+    box->add(tall);
+    window.visible = true;
+    tokotachi::Bitmap b = window.capture();
+    CHECK(window.height.get() >= 300);
+    const float s = static_cast<float>(b.width()) / window.width.get();
+    CHECK(b.height() >= static_cast<int>(300 * s));
+    const tokotachi::Color bottom = b.pixel(5, b.height() - 3);
+    CHECK(bottom.r == 0x10 && bottom.g == 0x20 && bottom.b == 0x30);
+}
+
 TEST(save_png)
 {
     tokotachi::Window window("t", 120, 60);
@@ -2541,6 +2559,167 @@ struct TableFixture
 
     std::string text(int r, int c) const { return model->text(model->index(r), c); }
 };
+
+TEST(application_language_selects_standard_texts)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    const std::string saved = app->language;
+    tokotachi::Window window("t", 200, 100);
+    app->language = "en-US";
+    tokotachi::Dialog* english = new tokotachi::Dialog(&window, "t");
+    CHECK(english->add_button(tokotachi::DialogButton::CANCEL)->text == "Cancel");
+    app->language = "ja-JP";
+    tokotachi::Dialog* japanese = new tokotachi::Dialog(&window, "t");
+    CHECK(japanese->add_button(tokotachi::DialogButton::CANCEL)->text == "キャンセル");
+    app->language = saved;
+}
+
+TEST(date_arithmetic_format_parse)
+{
+    const tokotachi::Date d(2026, 10, 11);
+    CHECK(d.is_valid() && !d.is_null() && tokotachi::Date().is_null() && !tokotachi::Date(2026, 2, 29).is_valid());
+    CHECK(d.day_of_week() == tokotachi::DayOfWeek::SUNDAY && tokotachi::Date(2000, 1, 1).day_of_week() == tokotachi::DayOfWeek::SATURDAY);
+    CHECK(tokotachi::Date::days_in_month(2024, 2) == 29 && tokotachi::Date::days_in_month(2100, 2) == 28);
+    CHECK(d.add_days(30) == tokotachi::Date(2026, 11, 10) && d.add_days(-11) == tokotachi::Date(2026, 9, 30));
+    CHECK(tokotachi::Date(2026, 1, 31).add_months(1) == tokotachi::Date(2026, 2, 28));
+    CHECK(tokotachi::Date(2024, 2, 29).add_years(1) == tokotachi::Date(2025, 2, 28));
+    CHECK(d.days_to(tokotachi::Date(2027, 10, 11)) == 365 && tokotachi::Date(9999, 12, 31).add_days(5) == tokotachi::Date(9999, 12, 31));
+    CHECK(d.format() == "2026/10/11" && d.format("yy-M-d") == "26-10-11" && tokotachi::Date(2026, 1, 5).format("M月d日") == "1月5日");
+    CHECK(tokotachi::Date().format().empty());
+    CHECK(tokotachi::Date::parse("2026-1-5") == tokotachi::Date(2026, 1, 5));
+    CHECK(tokotachi::Date::parse("26.1.5") == tokotachi::Date(2026, 1, 5));
+    CHECK(tokotachi::Date::parse("5/1/2026", "dd/MM/yyyy") == tokotachi::Date(2026, 1, 5));
+    CHECK(tokotachi::Date::parse("2026/2/30").is_null() && tokotachi::Date::parse("2026/2").is_null());
+    CHECK(tokotachi::Date(2026, 1, 1) < d && d <= d && d > tokotachi::Date(2025, 12, 31));
+}
+
+TEST(date_edit_typing_and_steps)
+{
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::DateEdit* date_edit = new tokotachi::DateEdit(&window);
+    date_edit->bounds = tokotachi::Rect(10, 10, 160, 32);
+    window.apply_layout();
+    int changes = 0;
+    date_edit->on_change = [&](tokotachi::Object*) { ++changes; };
+    CHECK(date_edit->date.get().is_null() && date_edit->text.get().empty());
+    // 打ち込んで Enter(区切りは何でもよい)
+    dispatch_click(window, tokotachi::Point(40, 26));
+    dispatch_text(window, "2026-3-31");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(date_edit->date == tokotachi::Date(2026, 3, 31) && date_edit->text == "2026/03/31" && changes == 1);
+    // ↑↓ はキャレットのある欄: 月の上で ↑ → 4 月 30 日
+    date_edit->focused = true;
+    dispatch_key(window, SDLK_HOME);
+    for (int i = 0; i < 6; ++i)
+    {
+        dispatch_key(window, SDLK_RIGHT);
+    }
+    dispatch_key(window, SDLK_UP);
+    CHECK(date_edit->date == tokotachi::Date(2026, 4, 30));
+    // 年の上で ↓
+    dispatch_key(window, SDLK_HOME);
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(date_edit->date == tokotachi::Date(2025, 4, 30));
+    // 読めなければ元に戻す。空にすると空の日付
+    dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+    dispatch_text(window, "abc");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(date_edit->date == tokotachi::Date(2025, 4, 30) && date_edit->text == "2025/04/30");
+    dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+    dispatch_key(window, SDLK_BACKSPACE);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(date_edit->date.get().is_null());
+    // 範囲と書式
+    date_edit->minimum = tokotachi::Date(2026, 1, 1);
+    date_edit->date = tokotachi::Date(2020, 5, 5);
+    CHECK(date_edit->date == tokotachi::Date(2026, 1, 1));
+    date_edit->format = "dd.MM.yyyy";
+    CHECK(date_edit->text == "01.01.2026");
+    // 暦を開いて、矢印と Enter で選ぶ
+    date_edit->open_calendar();
+    CHECK(date_edit->is_calendar_open());
+    dispatch_key(window, SDLK_RIGHT);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(!date_edit->is_calendar_open() && date_edit->date == tokotachi::Date(2026, 1, 2));
+}
+
+TEST(calendar_navigation)
+{
+    tokotachi::Window window("t", 400, 400);
+    window.visible = true;
+    tokotachi::Calendar* calendar = new tokotachi::Calendar(&window);
+    calendar->bounds = tokotachi::Rect(0, 0, 300, 300);
+    calendar->first_day_of_week = tokotachi::DayOfWeek::MONDAY;
+    calendar->date = tokotachi::Date(2026, 10, 11);
+    CHECK(calendar->shown_year == 2026 && calendar->shown_month == 10);
+    int activated = 0;
+    calendar->on_activate = [&](tokotachi::Object*) { ++activated; };
+    calendar->focused = true;
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(calendar->date == tokotachi::Date(2026, 10, 18));
+    dispatch_key(window, SDLK_PAGEDOWN);
+    CHECK(calendar->date == tokotachi::Date(2026, 11, 18) && calendar->shown_month == 11);
+    dispatch_key(window, SDLK_END);
+    CHECK(calendar->date == tokotachi::Date(2026, 11, 30));
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(activated == 1);
+    // 範囲の外へは動かない
+    calendar->maximum = tokotachi::Date(2026, 12, 1);
+    dispatch_key(window, SDLK_PAGEDOWN, true, SDL_KMOD_LSHIFT);
+    CHECK(calendar->date == tokotachi::Date(2026, 12, 1));
+    // 月だけを変える
+    calendar->show_month(2026, 1);
+    CHECK(calendar->shown_month == 1 && calendar->date == tokotachi::Date(2026, 12, 1));
+}
+
+TEST(color_dialog_sync)
+{
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::ColorDialog* color_dialog = new tokotachi::ColorDialog(&window);
+    color_dialog->color = tokotachi::Color(0x25, 0x63, 0xEB, 100);
+    // 不透明度を選ばないなら 255
+    CHECK(color_dialog->color.get() == tokotachi::Color(0x25, 0x63, 0xEB));
+    color_dialog->alpha_enabled = true;
+    color_dialog->color = tokotachi::Color(0x25, 0x63, 0xEB, 100);
+    CHECK(color_dialog->color.get().a == 100);
+    // 欄を探す(16 進数の入力欄と、R・G・B・A の数値)
+    std::vector<tokotachi::LineEdit*> edits;
+    std::vector<tokotachi::SpinBox*> spins;
+    std::vector<tokotachi::Widget*> stack(1, color_dialog);
+    while (!stack.empty())
+    {
+        tokotachi::Widget* w = stack.back();
+        stack.pop_back();
+        const std::vector<tokotachi::Widget*> children = w->children;
+        for (std::size_t i = children.size(); i-- > 0;)
+        {
+            stack.push_back(children[i]);
+        }
+        if (tokotachi::SpinBox* s = dynamic_cast<tokotachi::SpinBox*>(w))
+        {
+            spins.push_back(s);
+        }
+        else if (tokotachi::LineEdit* l = dynamic_cast<tokotachi::LineEdit*>(w))
+        {
+            if (!dynamic_cast<tokotachi::SpinBox*>(w->parent.get()))
+            {
+                edits.push_back(l);
+            }
+        }
+    }
+    CHECK(edits.size() == 1 && spins.size() == 4);
+    CHECK(edits[0]->text == "#2563EB64" && spins[0]->value == 0x25 && spins[3]->value == 100);
+    // 数値を変えると色と 16 進数が変わる
+    spins[1]->value = 255;
+    CHECK(color_dialog->color.get() == tokotachi::Color(0x25, 0xFF, 0xEB, 100) && edits[0]->text == "#25FFEB64");
+    // 16 進数を打ち込むと(読める長さになったら)色が変わる
+    edits[0]->text = "#FF0000";
+    CHECK(color_dialog->color.get() == tokotachi::Color(255, 0, 0, 100) && spins[0]->value == 255 && spins[1]->value == 0);
+    edits[0]->text = "#00FF0080";
+    CHECK(color_dialog->color.get() == tokotachi::Color(0, 255, 0, 128));
+}
 
 TEST(table_view_select_cells)
 {

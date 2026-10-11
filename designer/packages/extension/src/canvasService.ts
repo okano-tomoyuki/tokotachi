@@ -38,17 +38,25 @@ export async function renderCanvas(
   components?: ComponentResolver,
 ): Promise<CanvasFrame> {
   const canvas = await load(context);
-  const r = withCustomClasses(classes, () =>
-    canvas.render(doc, {
-      colorScheme,
-      placeholders: true,
-      tabs,
-      images,
-      themeOverride,
-      themePresets,
-      components,
-    }),
-  );
+  let r;
+  try {
+    r = withCustomClasses(classes, () =>
+      canvas.render(doc, {
+        colorScheme,
+        placeholders: true,
+        tabs,
+        images,
+        themeOverride,
+        themePresets,
+        components,
+      }),
+    );
+  } catch (e) {
+    // WebAssembly の中で止まると、その状態は壊れていることがあるので捨て、次の描画で読み込み直す
+    // (一度の失敗で、以後どのファイルも描けなくなるのを防ぐ)
+    loading = undefined;
+    throw e;
+  }
   if (r.errors.length > 0) {
     console.warn(`Tokotachi Designer: ${r.errors.join(', ')}`);
   }

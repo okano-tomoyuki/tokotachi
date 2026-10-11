@@ -54,6 +54,27 @@ export function isEnumValue(enumName: string, value: PropertyValue): boolean {
 /** `#RRGGBB`・`#RRGGBBAA`。 */
 export const COLOR_PATTERN = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/;
 
+/** 日付の値(「2026-10-11」。空の文字は空の日付)。 */
+export const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** 「YYYY-MM-DD」が正しい日付か(1 年〜9999 年)。空の文字(空の日付)も正しい。 */
+export function isDateText(text: string): boolean {
+  if (text === '') {
+    return true;
+  }
+  const m = DATE_PATTERN.exec(text);
+  if (!m) {
+    return false;
+  }
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (y < 1 || mo < 1 || mo > 12 || d < 1) {
+    return false;
+  }
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1] ?? 0;
+  return d <= days;
+}
+
 const SHORTCUT_MODIFIERS = new Set(['ctrl', 'shift', 'alt', 'meta']);
 const SHORTCUT_KEYS = new Set([
   'delete',
@@ -121,6 +142,16 @@ export function checkValue(type: PropertyType, value: PropertyValue): string | n
       return null;
     }
     return l10n.t('Expected a color role ({0}) or "#RRGGBB" / "#RRGGBBAA"', 'ColorRole');
+  }
+  if (name === 'Date') {
+    if (typeof value === 'string' && isDateText(value)) {
+      return null;
+    }
+    return l10n.t('Expected a date "YYYY-MM-DD" (an empty string for no date)');
+  }
+  // Color は「#RRGGBB」・「#RRGGBBAA」でも書ける
+  if (name === 'Color' && typeof value === 'string') {
+    return COLOR_PATTERN.test(value) ? null : l10n.t('Expected a color "#RRGGBB" / "#RRGGBBAA"');
   }
   if (name === 'Shortcut') {
     if (typeof value === 'string' && isShortcut(value)) {

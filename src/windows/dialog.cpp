@@ -11,6 +11,7 @@
 #include <tokotachi/layout/layout.hpp>
 
 #include "../core/application_impl.hpp"
+#include "../core/locale.hpp"
 #include "../core/property_impl.hpp"
 #include "../widgets/widget_access.hpp"
 #include "window_impl.hpp"
@@ -87,27 +88,9 @@ int rank(DialogButton b)
     return r == Role::DESTRUCTIVE ? 0 : r == Role::REJECT ? 1 : 2;
 }
 
-// 利用者の言語が日本語か(標準のボタンの文字を選ぶ)。
-bool japanese()
-{
-    static const bool ja = []()
-    {
-        int count = 0;
-        SDL_Locale** locales = SDL_GetPreferredLocales(&count);
-        bool result = false;
-        if (locales && count > 0 && locales[0] && locales[0]->language)
-        {
-            result = std::strcmp(locales[0]->language, "ja") == 0;
-        }
-        SDL_free(locales);
-        return result;
-    }();
-    return ja;
-}
-
 std::string standard_text(DialogButton b)
 {
-    const bool ja = japanese();
+    const bool ja = detail::prefers_japanese();
     switch (b)
     {
     case DialogButton::OK:

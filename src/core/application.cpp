@@ -14,6 +14,7 @@
 #include <tokotachi/core/thread.hpp>
 
 #include "application_impl.hpp"
+#include "locale.hpp"
 #include "property_impl.hpp"
 #include "../windows/window_impl.hpp"
 
@@ -389,6 +390,7 @@ Application::Application(int, char**)
       TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, dark_theme),
       TOKOTACHI_READONLY_PROPERTY(Application, bool, dark),
       TOKOTACHI_READONLY_PROPERTY(Application, Theme, theme),
+      TOKOTACHI_PROPERTY_GETTER(Application, std::string, language),
       TOKOTACHI_HANDLER_PROPERTY(Application, NotifyHandler, on_theme_change),
       d_(new detail::ApplicationImpl(this))
 {
@@ -409,6 +411,7 @@ Application::Application(int, char**)
         std::fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         std::exit(1);
     }
+    language_ = detail::system_language();
     g_timer_event = SDL_RegisterEvents(1);
     g_call_event = SDL_RegisterEvents(1);
     g_main_thread = SDL_GetCurrentThreadID();

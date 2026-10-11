@@ -101,6 +101,8 @@ add_library(tokotachi_objects OBJECT
     src/core/application.cpp
     src/core/binding.cpp
     src/core/clipboard.cpp
+    src/core/date.cpp
+    src/core/locale.cpp
     src/core/object.cpp
     src/core/task.cpp
     src/core/timer.cpp
@@ -126,7 +128,10 @@ add_library(tokotachi_objects OBJECT
     src/widgets/button.cpp
     src/widgets/button_base.cpp
     src/widgets/check_box.cpp
+    src/widgets/calendar.cpp
+    src/widgets/color_button.cpp
     src/widgets/combo_box.cpp
+    src/widgets/date_edit.cpp
     src/widgets/group_box.cpp
     src/widgets/image_box.cpp
     src/widgets/label.cpp
@@ -145,6 +150,7 @@ add_library(tokotachi_objects OBJECT
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
     src/widgets/widget.cpp
+    src/windows/color_dialog.cpp
     src/windows/dialog.cpp
     src/windows/file_dialog.cpp
     src/windows/menu_bar.cpp
@@ -283,7 +289,7 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     tokotachi_copy_runtime(hello)
 
     # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
-    set(TOKOTACHI_GALLERY buttons inputs views table window dialog drawing drop images)
+    set(TOKOTACHI_GALLERY buttons inputs pickers views table window dialog drawing drop images)
     foreach(_name ${TOKOTACHI_GALLERY})
         add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
         target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)
@@ -331,6 +337,14 @@ if(TOKOTACHI_BUILD_DOCS)
             COMMENT "Taking the screenshot of gallery_${_name}")
         list(APPEND _shots "${_png}")
     endforeach()
+    # 色のダイアログ(gallery_pickers が開いて撮る)
+    set(_png "${TOKOTACHI_DOCS_IMAGES}/color_dialog.png")
+    add_custom_command(OUTPUT "${_png}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${TOKOTACHI_DOCS_IMAGES}"
+        COMMAND ${CMAKE_COMMAND} -E env SDL_VIDEO_DRIVER=offscreen $<TARGET_FILE:gallery_pickers> --screenshot "${_png}" --color-dialog
+        DEPENDS gallery_pickers
+        COMMENT "Taking the screenshot of the color dialog")
+    list(APPEND _shots "${_png}")
     file(GLOB_RECURSE _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.md ${CMAKE_CURRENT_LIST_DIR}/include/tokotachi/*.hpp
          ${CMAKE_CURRENT_LIST_DIR}/examples/gallery/*.cpp)
     add_custom_target(docs
