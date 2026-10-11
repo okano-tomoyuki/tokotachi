@@ -22,7 +22,20 @@ export type Drag =
   /** パレットの空き(BoxLayout にだけ入れられる)。 */
   | { readonly kind: 'spacer'; readonly spacer: { stretch: number } | { spacing: number } }
   /** キャンバス・構造の木の部品(移す)。 */
-  | { readonly kind: 'move'; readonly path: JsonPath; readonly id: string };
+  | {
+      readonly kind: 'move';
+      readonly path: JsonPath;
+      readonly id: string;
+      /** 一緒に移す部品(複数選択。path・id のものを含む)。 */
+      readonly group?: readonly { readonly path: JsonPath; readonly id: string }[];
+    };
+
+/** 移す部品すべて(複数選択なら group、無ければ 1 つ)。 */
+export function movingNodes(
+  drag: Drag,
+): readonly { readonly path: JsonPath; readonly id: string }[] {
+  return drag.kind !== 'move' ? [] : (drag.group ?? [{ path: drag.path, id: drag.id }]);
+}
 
 /** 入れる場所の印(線か枠)。 */
 export interface Indicator {
@@ -68,13 +81,13 @@ export function dropTarget(
   const whole: CanvasRect = { x: 0, y: 0, width: frame.width, height: frame.height, showing: true };
   const all = flattenOutline(roots);
   // 入れ物の候補(移す部品とその中は除く)
-  const moving = drag.kind === 'move' ? `${drag.id}/` : undefined;
+  const moving = movingNodes(drag).map((m) => `${m.id}/`);
   let best: { node: OutlineNode; rect: CanvasRect } | undefined;
   for (const node of all) {
     if (node.kind !== 'widget' && node.kind !== 'window') {
       continue;
     }
-    if (moving !== undefined && `${node.id}/`.startsWith(moving)) {
+    if (moving.some((m) => `${node.id}/`.startsWith(m))) {
       continue;
     }
     const info = node.class === undefined ? undefined : findClass(node.class);
@@ -304,10 +317,8 @@ function gridSlot(
   };
   // 空いているか(またがる項目も含めて。移す部品自身のセルは空きとみなす)
   const occupied = items.some((item, i) => {
-    if (
-      drag.kind === 'move' &&
-      drag.path.join('/') === [...layoutPath, 'items', i, 'widget'].join('/')
-    ) {
+    const cell = [...layoutPath, 'items', i, 'widget'].join('/');
+    if (movingNodes(drag).some((m) => m.path.join('/') === cell)) {
       return false;
     }
     const r0 = Number(item['row'] ?? 0);

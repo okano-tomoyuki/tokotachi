@@ -80,8 +80,10 @@ export interface DesignerState {
   readonly hidden: ReadonlyMap<string, OutlineHidden>;
   readonly frame: CanvasFrame | undefined;
   readonly canvasError: string | undefined;
-  /** 選んでいる木のノードの id。 */
+  /** 選んでいる木のノードの id(インスペクタに出す、主に選んでいるもの)。 */
   readonly selection: string | undefined;
+  /** 選んでいるノードすべての id(複数選択。selection を含む)。 */
+  readonly selected: readonly string[];
   /** 最後の編集の失敗(しばらく表示する)。 */
   readonly editError: string | undefined;
   /** ドラッグしているもの(パレットの部品・空き、移す部品)と、入れる場所。 */
@@ -99,6 +101,10 @@ export interface DesignerState {
   readonly contextMenu:
     { readonly x: number; readonly y: number; readonly items: readonly MenuItem[] } | undefined;
   readonly select: (id: string | undefined) => void;
+  /** 選択に足す・外す(Ctrl+クリック)。 */
+  readonly toggleSelect: (id: string) => void;
+  /** 主に選んでいるものから id までを選ぶ(構造の木の Shift+クリック。ids は木の見えている行の順)。 */
+  readonly selectRange: (id: string, ids: readonly string[]) => void;
   readonly setSidebar: (change: Partial<SidebarLayout>) => void;
 }
 
@@ -112,6 +118,7 @@ export const useDesigner = create<DesignerState>()((set) => ({
   frame: undefined,
   canvasError: undefined,
   selection: 'window',
+  selected: ['window'],
   editError: undefined,
   drag: undefined,
   target: undefined,
@@ -122,7 +129,36 @@ export const useDesigner = create<DesignerState>()((set) => ({
   sidebar: DEFAULT_SIDEBAR,
   contextMenu: undefined,
   select: (id) => {
-    set({ selection: id });
+    set({ selection: id, selected: id === undefined ? [] : [id] });
+  },
+  toggleSelect: (id) => {
+    set((s) => {
+      if (s.selected.includes(id)) {
+        const rest = s.selected.filter((x) => x !== id);
+        // 主に選んでいたものを外したら、残りの最後を主にする(何も残らなければウィンドウ)
+        const selection = s.selection === id ? (rest[rest.length - 1] ?? 'window') : s.selection;
+        return { selection, selected: rest.length > 0 ? rest : ['window'] };
+      }
+      // ウィンドウは部品と一緒に選ばない
+      const others = s.selected.filter((x) => x !== 'window');
+      return { selection: id, selected: id === 'window' ? [id] : [...others, id] };
+    });
+  },
+  selectRange: (id, ids) => {
+    set((s) => {
+      const from = s.selection === undefined ? -1 : ids.indexOf(s.selection);
+      const to = ids.indexOf(id);
+      if (from < 0 || to < 0) {
+        return { selection: id, selected: [id] };
+      }
+      const range = ids.slice(Math.min(from, to), Math.max(from, to) + 1);
+      const selected = range.filter((x) => x !== 'window' || range.length === 1);
+      // 主に選んでいるもの(範囲の起点)はそのままにする(ウィンドウを外したときは id を主にする)
+      return {
+        selection: s.selection !== undefined && selected.includes(s.selection) ? s.selection : id,
+        selected,
+      };
+    });
   },
   setSidebar: (change) => {
     set((s) => ({ sidebar: { ...s.sidebar, ...change } }));
@@ -139,12 +175,19 @@ export function closeContextMenu(): void {
 }
 
 let nextRequestId = 1;
-/** 足した・移した部品の名前。ドキュメントが届いたら、その部品を選ぶ。 */
-let pendingSelection: string | undefined;
+/** 足した・移した部品の名前。ドキュメントが届いたら、その部品を選ぶ(複数なら最初を主にする)。 */
+let pendingSelection: readonly string[] | undefined;
 
-export function sendEdit(command: EditCommand, select?: string): void {
-  pendingSelection = select;
+export function sendEdit(command: EditCommand, select?: string | readonly string[]): void {
+  pendingSelection =
+    select === undefined ? undefined : typeof select === 'string' ? [select] : select;
   postMessage({ type: 'edit', requestId: nextRequestId++, command });
+}
+
+/** 選んでいるノードすべて(構造の木の順)。 */
+export function selectedNodes(state: DesignerState): OutlineNode[] {
+  const ids = new Set(state.selected);
+  return flattenOutline(state.outline).filter((n) => ids.has(n.id));
 }
 
 /** 選んでいるノード(無くなっていれば undefined)。 */
@@ -163,29 +206,43 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
       useDesigner.setState((s) => {
         const tree = document ? outline(document) : [];
         // 足した・移した部品を選ぶ。選んでいたノードが無くなったら、ウィンドウを選ぶ
+        const pending = pendingSelection;
         const added =
-          pendingSelection === undefined
-            ? undefined
-            : flattenOutline(tree).find(
+          pending === undefined
+            ? []
+            : flattenOutline(tree).filter(
                 (n) =>
                   ['widget', 'object', 'menu_item', 'tool_item', 'action', 'variable'].includes(
                     n.kind,
-                  ) && n.label === pendingSelection,
+                  ) && pending.includes(n.label),
               );
-        if (added) {
+        if (added.length > 0) {
           pendingSelection = undefined;
         }
+        // 主に選ぶのは、名前を渡した順の最初
+        const first = pending
+          ?.map((name) => added.find((n) => n.label === name))
+          .find((n) => n !== undefined);
         const selection =
-          added?.id ??
+          first?.id ??
           (s.selection !== undefined && findOutlineNode(tree, s.selection)
             ? s.selection
             : 'window');
+        // 足した・移したものを選んだら、ほかの選択は解く。無くなったノードは選択から外す
+        const kept = s.selected.filter((id) => findOutlineNode(tree, id) !== undefined);
+        const selected =
+          added.length > 0
+            ? added.map((n) => n.id)
+            : kept.includes(selection)
+              ? kept
+              : [...kept.filter((id) => id !== 'window'), selection];
         return {
           version: message.version,
           fileName: message.fileName,
           document,
           diagnostics,
           outline: tree,
+          selected,
           hidden: document ? hiddenOutlineNodes(document, tree) : new Map<string, OutlineHidden>(),
           selection,
         };

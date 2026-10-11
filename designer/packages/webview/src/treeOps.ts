@@ -4,6 +4,7 @@
  */
 import {
   canCopy,
+  outermostPaths,
   findClass,
   getCatalog,
   l10n,
@@ -14,7 +15,7 @@ import {
   type OutlineNode,
 } from '@tokotachi-designer/core';
 import { copySelection, duplicateSelection, pasteFromClipboard } from './clipboard.ts';
-import { selectedNode, sendEdit, useDesigner, type MenuItem } from './store.ts';
+import { selectedNode, selectedNodes, sendEdit, useDesigner, type MenuItem } from './store.ts';
 
 interface Json {
   readonly [key: string]: unknown;
@@ -203,11 +204,25 @@ export function canRemove(node: OutlineNode | undefined): boolean {
   );
 }
 
-/** 選んでいるノードを消す(タブ・区画は、中の部品ごと消す)。 */
+/** 選んでいるノードのうち、条件に合うものの位置(中に入っているものは親ごと扱う。構造の木の順)。 */
+export function selectedPaths(accept: (node: OutlineNode) => boolean): JsonPath[] {
+  const state = useDesigner.getState();
+  if (!state.document) {
+    return [];
+  }
+  return outermostPaths(
+    state.document,
+    selectedNodes(state)
+      .filter(accept)
+      .map((n) => n.path),
+  );
+}
+
+/** 選んでいるノードを消す(複数選択ならすべて。タブ・区画は、中の部品ごと消す)。 */
 export function removeSelected(): void {
-  const node = selectedNode(useDesigner.getState());
-  if (node && canRemove(node)) {
-    sendEdit({ kind: 'remove', targets: [node.path] });
+  const targets = selectedPaths(canRemove);
+  if (targets.length > 0) {
+    sendEdit({ kind: 'remove', targets });
   }
 }
 
@@ -221,15 +236,19 @@ export function moveSelected(delta: -1 | 1): void {
 
 /** ノードの右クリックのメニュー(足す操作、並べ替え、削除)。 */
 export function nodeMenu(node: OutlineNode): MenuItem[] {
-  const items = addOps(node);
-  const doc = useDesigner.getState().document;
-  const copyable = doc !== undefined && canCopy(doc, node.path);
+  const state = useDesigner.getState();
+  // 複数選択の中の行なら、選んでいるものすべてに対する操作だけを出す
+  const multiple = state.selected.length > 1 && state.selected.includes(node.id);
+  const items = multiple ? [] : addOps(node);
+  const doc = state.document;
+  const copyable = doc !== undefined && selectedPaths((n) => canCopy(doc, n.path)).length > 0;
+  const removable = selectedPaths(canRemove).length > 0;
   items.push(
     {
       label: l10n.t('Cut'),
       shortcut: 'Ctrl+X',
       separator: items.length > 0,
-      disabled: !copyable || !canRemove(node),
+      disabled: !copyable || !removable,
       run: () => {
         copySelection(true);
       },
@@ -254,6 +273,16 @@ export function nodeMenu(node: OutlineNode): MenuItem[] {
       run: duplicateSelection,
     },
   );
+  if (multiple) {
+    items.push({
+      label: l10n.t('Delete {0} items', selectedPaths(canRemove).length),
+      shortcut: 'Delete',
+      separator: true,
+      disabled: !removable,
+      run: removeSelected,
+    });
+    return items;
+  }
   if (movable(node)) {
     items.push(
       {

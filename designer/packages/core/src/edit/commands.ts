@@ -41,6 +41,7 @@ import {
   type Bar,
 } from './menus.ts';
 import { pasteNodes, type ClipboardItem } from './clipboard.ts';
+import { moveWidgets } from './slots.ts';
 import {
   addVariable,
   removeBindings,
@@ -72,6 +73,8 @@ export type EditCommand =
   | { readonly kind: 'addObject'; readonly class: string }
   /** 部品を別の場所へ移す(レイアウトの中の位置・別の入れ物)。 */
   | { readonly kind: 'moveWidget'; readonly target: JsonPath; readonly slot: Slot }
+  /** 部品をまとめて移す(構造の木の順に並べる。slots.ts)。 */
+  | { readonly kind: 'moveWidgets'; readonly targets: readonly JsonPath[]; readonly slot: Slot }
   /** ノード(部品・空き・タブ・区画・レイアウト・Action・オブジェクト)を消す。 */
   | { readonly kind: 'remove'; readonly targets: readonly JsonPath[] }
   /** BoxLayout に空き(伸びる空き・固定の空き)を足す。 */
@@ -402,6 +405,9 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
       return;
     case 'moveWidget':
       moveWidget(doc, command.target, command.slot);
+      return;
+    case 'moveWidgets':
+      moveWidgets(doc, command.targets, command.slot);
       return;
     case 'paste':
       pasteNodes(doc, command.items, command.slot);

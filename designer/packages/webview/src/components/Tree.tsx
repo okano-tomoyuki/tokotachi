@@ -3,7 +3,7 @@
  * ウィンドウの木の下に、画面に出ないもの(Action・オブジェクト・変数)の欄を分けて常に並べる(足すのはパレットの非ビジュアルのタブから)。
  * 足す・並べ替える・消す操作は、行の右クリックのメニューに出す(treeOps.ts)。
  */
-import { l10n, type OutlineNode } from '@tokotachi-designer/core';
+import { flattenOutline, l10n, type OutlineNode } from '@tokotachi-designer/core';
 import { useEffect, useRef, useState } from 'react';
 import { dragWith } from '../pointerDrag.ts';
 import { nodeMenu } from '../treeOps.ts';
@@ -40,18 +40,21 @@ function label(node: OutlineNode): string {
 }
 
 function Row({ node, depth }: { node: OutlineNode; depth: number }) {
-  const selected = useDesigner((s) => s.selection === node.id);
+  const selected = useDesigner((s) => s.selected.includes(node.id));
+  const primary = useDesigner((s) => s.selection === node.id);
   const select = useDesigner((s) => s.select);
+  const toggleSelect = useDesigner((s) => s.toggleSelect);
+  const selectRange = useDesigner((s) => s.selectRange);
   const hidden = useDesigner((s) => s.hidden.get(node.id));
   const [open, setOpen] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const hasChildren = node.children.length > 0;
   useEffect(() => {
     // キャンバスで選んだときも、選んだ行が見えるようにする
-    if (selected) {
+    if (primary) {
       ref.current?.scrollIntoView({ block: 'nearest' });
     }
-  }, [selected]);
+  }, [primary]);
   return (
     <>
       <div
@@ -65,12 +68,25 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
               : undefined
         }
         style={{ paddingLeft: depth * 12 + 4 }}
-        onClick={() => {
-          select(node.id);
+        onClick={(e) => {
+          // Ctrl+クリックで選択に足す・外す、Shift+クリックで範囲を選ぶ
+          if (e.ctrlKey || e.metaKey) {
+            toggleSelect(node.id);
+          } else if (e.shiftKey) {
+            selectRange(
+              node.id,
+              flattenOutline(useDesigner.getState().outline).map((n) => n.id),
+            );
+          } else {
+            select(node.id);
+          }
         }}
         onContextMenu={(e) => {
           e.preventDefault();
-          select(node.id);
+          // 選んでいない行なら、その行だけを選ぶ(選んでいる行なら、選択のまま操作する)
+          if (!useDesigner.getState().selected.includes(node.id)) {
+            select(node.id);
+          }
           openContextMenu(e.clientX, e.clientY, nodeMenu(node));
         }}
       >

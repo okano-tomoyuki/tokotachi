@@ -18,7 +18,7 @@ import { dropTarget } from '../dropTarget.ts';
 import { widgetGhost } from '../ghost.ts';
 import { ResizeHandles } from './ResizeHandles.tsx';
 import { stepZoom } from './ZoomControl.tsx';
-import { selectedNode, sendEdit, useDesigner } from '../store.ts';
+import { selectedNode, selectedNodes, sendEdit, useDesigner } from '../store.ts';
 import { postMessage } from '../vscode.ts';
 
 /** ノードの枠に使う部品の位置(レイアウト・タブ・区画は、付いている部品・中の部品の位置)。 */
@@ -53,7 +53,9 @@ export function CanvasView() {
   const canvasError = useDesigner((s) => s.canvasError);
   const roots = useDesigner((s) => s.outline);
   const selected = useDesigner(selectedNode);
+  const selectedIds = useDesigner((s) => s.selected);
   const select = useDesigner((s) => s.select);
+  const toggleSelect = useDesigner((s) => s.toggleSelect);
   const drag = useDesigner((s) => s.drag);
   const target = useDesigner((s) => s.target);
   const ref = useRef<HTMLCanvasElement>(null);
@@ -132,6 +134,11 @@ export function CanvasView() {
   };
 
   const selectionRect = rectOf(selected, roots, frame.rects);
+  // 選んでいるものすべての枠(複数選択)
+  const selectedRects = selectedIds.flatMap((id) => {
+    const r = rectOf(findOutlineNode(roots, id), roots, frame.rects);
+    return r ? [r] : [];
+  });
   const document = useDesigner.getState().document;
   return (
     <div className="canvas-scroll" ref={scrollRef}>
@@ -152,7 +159,27 @@ export function CanvasView() {
               if (node?.kind === 'widget') {
                 const r = node.variable === undefined ? undefined : frame.rects[node.variable];
                 const ghost = r ? widgetGhost(frame, r, p.x - r.x, p.y - r.y) : undefined;
-                beginDrag({ kind: 'move', path: node.path, id: node.id }, e, undefined, ghost);
+                // 選んでいる部品をつかんだら、選んでいる部品をまとめて移す(中に入っているものは親ごと)
+                const group = selectedIds.includes(node.id)
+                  ? selectedNodes(useDesigner.getState())
+                      .filter((n) => n.kind === 'widget')
+                      .filter(
+                        (n, _, all) => !all.some((o) => o !== n && n.id.startsWith(`${o.id}/`)),
+                      )
+                  : [];
+                beginDrag(
+                  {
+                    kind: 'move',
+                    path: node.path,
+                    id: node.id,
+                    ...(group.length > 1
+                      ? { group: group.map((n) => ({ path: n.path, id: n.id })) }
+                      : {}),
+                  },
+                  e,
+                  undefined,
+                  ghost,
+                );
               }
             }}
             onMouseMove={(e) => {
@@ -169,7 +196,13 @@ export function CanvasView() {
             }}
             onClick={(e) => {
               const p = point(e);
-              select(hit(p.x, p.y)?.id ?? 'window');
+              const id = hit(p.x, p.y)?.id ?? 'window';
+              // Ctrl・Shift+クリックで選択に足す・外す
+              if ((e.ctrlKey || e.metaKey || e.shiftKey) && id !== 'window') {
+                toggleSelect(id);
+              } else {
+                select(id);
+              }
             }}
             onDoubleClick={(e) => {
               const p = point(e);
@@ -195,18 +228,15 @@ export function CanvasView() {
             }}
           >
             <canvas ref={ref} style={{ width, height }} />
-            {selectionRect && !drag && (
-              <div
-                className="selection"
-                style={{
-                  left: selectionRect.x,
-                  top: selectionRect.y,
-                  width: selectionRect.width,
-                  height: selectionRect.height,
-                }}
-              />
-            )}
-            {selectionRect && !drag && selected && (
+            {!drag &&
+              selectedRects.map((r, i) => (
+                <div
+                  key={i}
+                  className={`selection${selectedRects.length > 1 ? ' multiple' : ''}`}
+                  style={{ left: r.x, top: r.y, width: r.width, height: r.height }}
+                />
+              ))}
+            {selectionRect && !drag && selected && selectedIds.length <= 1 && (
               <ResizeHandles node={selected} rect={selectionRect} />
             )}
             {target && (

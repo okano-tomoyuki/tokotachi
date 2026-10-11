@@ -22,7 +22,7 @@ import {
   type VariableNode,
 } from '@tokotachi-designer/core';
 import { useEffect, useState } from 'react';
-import { selectedNode, sendEdit, useDesigner } from '../store.ts';
+import { selectedNode, selectedNodes, sendEdit, useDesigner } from '../store.ts';
 import { postMessage } from '../vscode.ts';
 import { LayoutSection } from './LayoutSection.tsx';
 import { PropertyField } from './PropertyField.tsx';
@@ -456,10 +456,99 @@ function EntryEditor({ node }: { node: OutlineNode }) {
   );
 }
 
+/**
+ * 複数選択のインスペクタ。どのノードにもある(同じ型の)プロパティだけを出し、確定した値をすべてに設定する(1 回の編集)。
+ * 値が揃っていなければ「複数の値」と出す。位置と大きさ・名前・ハンドラ・Variable との結びつけは、1 つずつ編集する。
+ */
+function MultiEditor({ nodes }: { nodes: readonly OutlineNode[] }) {
+  const editable = nodes.filter((n) => n.editable && n.class !== undefined);
+  const jsons = editable.map((n) => nodeJson(n.path));
+  const infos = editable.map((n) => findClass(n.class ?? ''));
+  const first = infos[0];
+  const props = first
+    ? Object.entries(first.properties).filter(
+        ([name, p]) =>
+          p.geometry !== true &&
+          infos.every(
+            (info) => JSON.stringify(info?.properties[name]?.type) === JSON.stringify(p.type),
+          ),
+      )
+    : [];
+  const classes = [...new Set(editable.map((n) => n.class))];
+  return (
+    <>
+      <div className="inspector-head">
+        <span className="inspector-class">{l10n.t('{0} items selected', nodes.length)}</span>
+        <span className="tree-class">{classes.join(', ')}</span>
+      </div>
+      {editable.length < nodes.length && (
+        <div className="inspector-empty">
+          {l10n.t('Only the common properties of the widgets and objects are shown.')}
+        </div>
+      )}
+      <table className="grid">
+        <tbody>
+          {props.map(([name, p]) => {
+            const values = jsons.map((j) => j?.properties?.[name]);
+            const bound = values.some((v) => bindingOf(v) !== undefined);
+            // 書いていなければ既定値(クラスで違うことがある)で比べる
+            const effective = values.map((v, i) => v ?? infos[i]?.properties[name]?.default);
+            const same = effective.every((v) => JSON.stringify(v) === JSON.stringify(effective[0]));
+            const written = values.every((v) => JSON.stringify(v) === JSON.stringify(values[0]));
+            const value = !same
+              ? undefined
+              : written
+                ? values[0]
+                : (effective[0] as PropertyValue | undefined);
+            return (
+              <tr key={name} title={p.doc}>
+                <th className={values.some((v) => v !== undefined) ? 'set' : ''}>{name}</th>
+                <td className="value-cell">
+                  {bound ? (
+                    <div className="bound-value">{l10n.t('Some are bound to a variable')}</div>
+                  ) : (
+                    <PropertyField
+                      name={name}
+                      info={p}
+                      value={value}
+                      mixed={!same}
+                      onCommit={(v) => {
+                        sendEdit(
+                          {
+                            kind: 'batch',
+                            commands: editable.map((n) => ({
+                              kind: 'setProperties' as const,
+                              target: n.path,
+                              properties: { [name]: v },
+                            })),
+                          },
+                          editable.flatMap((n) => (n.label === '' ? [] : [n.label])),
+                        );
+                      }}
+                    />
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
 export function Inspector() {
   const node = useDesigner(selectedNode);
+  const count = useDesigner((s) => s.selected.length);
   // ドキュメントが変わったら描き直す
   useDesigner((s) => s.version);
+  if (count > 1) {
+    return (
+      <div className="inspector">
+        <MultiEditor nodes={selectedNodes(useDesigner.getState())} />
+      </div>
+    );
+  }
   let content;
   if (node?.kind === 'spacer') {
     content = <LayoutSection node={node} />;

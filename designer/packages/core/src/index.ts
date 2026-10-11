@@ -76,6 +76,7 @@ export {
   type ClipboardData,
   type ClipboardItem,
 } from './edit/clipboard.ts';
+export { endOfLayout, outermostPaths, slotAfter } from './edit/slots.ts';
 export { minimalTextEdit, type TextEdit } from './edit/textEdit.ts';
 export { variableValue } from './edit/variables.ts';
 export type * from './protocol.ts';

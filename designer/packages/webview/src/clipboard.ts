@@ -9,31 +9,30 @@ import {
   parseClipboard,
   preparePaste,
   serializeClipboard,
+  slotAfter,
   type JsonPath,
 } from '@tokotachi-designer/core';
-import { slotAfter, slotForClick } from './dragController.ts';
-import { selectedNode, sendEdit, useDesigner } from './store.ts';
-import { removeSelected } from './treeOps.ts';
+import { slotForClick } from './dragController.ts';
+import { sendEdit, useDesigner } from './store.ts';
+import { removeSelected, selectedPaths } from './treeOps.ts';
 
 /** この画面で最後にコピーしたもの(Clipboard API が使えないときの代わり)。 */
 let lastCopied: string | undefined;
 
-/** 選んでいるノードの位置(コピーできるものだけ)。 */
-function copyTarget(): JsonPath | undefined {
+/** 選んでいるノードのうちコピーできるものの位置(複数選択ならすべて。中に入っているものは親ごと)。 */
+function copyTargets(): JsonPath[] {
   const { document } = useDesigner.getState();
-  const node = selectedNode(useDesigner.getState());
-  return document && node && canCopy(document, node.path) ? node.path : undefined;
+  return document ? selectedPaths((n) => canCopy(document, n.path)) : [];
 }
 
 export function canCopySelection(): boolean {
-  return copyTarget() !== undefined;
+  return copyTargets().length > 0;
 }
 
 /** 選んでいるノードをコピーした文字(コピーできなければ undefined)。 */
 function copyText(): string | undefined {
   const { document } = useDesigner.getState();
-  const path = copyTarget();
-  const data = document && path ? copyNodes(document, [path]) : undefined;
+  const data = document ? copyNodes(document, copyTargets()) : undefined;
   if (!data) {
     return undefined;
   }
@@ -57,7 +56,11 @@ function pasteText(text: string, after?: JsonPath): boolean {
     ? undefined
     : ((after ? slotAfter(document, after) : undefined) ??
       slotForClick(document, outline, selection));
-  sendEdit({ kind: 'paste', items, slot }, items[0]?.node.name);
+  // 貼り付けたものすべてを選ぶ
+  sendEdit(
+    { kind: 'paste', items, slot },
+    items.map((i) => i.node.name),
+  );
   return true;
 }
 
@@ -124,12 +127,12 @@ export function pasteFromClipboard(): void {
     });
 }
 
-/** 複製(Ctrl+D): コピーして、すぐ後ろに貼り付ける。クリップボードは変えない。 */
+/** 複製(Ctrl+D): コピーして、すぐ後ろ(複数なら最後のものの後ろ)に貼り付ける。クリップボードは変えない。 */
 export function duplicateSelection(): void {
   const { document } = useDesigner.getState();
-  const path = copyTarget();
-  const data = document && path ? copyNodes(document, [path]) : undefined;
-  if (data && path) {
-    pasteText(serializeClipboard(data), path);
+  const paths = copyTargets();
+  const data = document ? copyNodes(document, paths) : undefined;
+  if (data) {
+    pasteText(serializeClipboard(data), paths[paths.length - 1]);
   }
 }

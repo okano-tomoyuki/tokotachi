@@ -360,6 +360,11 @@ textarea.invalid {
   outline-offset: -1px;
 }
 
+/* 複数選択では、どれも同じ点線の枠にする(大きさを変える取っ手は出さない) */
+.selection.multiple {
+  outline-style: dashed;
+}
+
 .problems {
   margin: 0;
   padding: 6px 12px;

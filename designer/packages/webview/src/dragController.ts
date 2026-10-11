@@ -4,6 +4,7 @@
  * 動かさずに離したら、クリックとして扱う(パレットなら、選んでいる部品の後ろ・入れ物の終わりに足す)。
  */
 import {
+  endOfLayout,
   findOutlineNode,
   newWidget,
   valueAt,
@@ -101,8 +102,20 @@ function insert(document: TtuiDocument, drag: Drag, slot: Slot): void {
       }
       return;
     case 'move': {
-      const name = (valueAt(document, drag.path) as { name?: string } | undefined)?.name;
-      sendEdit({ kind: 'moveWidget', target: drag.path, slot }, name);
+      const nameOf = (path: JsonPath): string | undefined =>
+        (valueAt(document, path) as { name?: string } | undefined)?.name;
+      if (drag.group && drag.group.length > 1) {
+        // 移した後も同じ部品を選ぶ(主に選んでいた、つかんだ部品を最初に)
+        const names = [drag.path, ...drag.group.map((g) => g.path)].flatMap((p) => {
+          const n = nameOf(p);
+          return n === undefined ? [] : [n];
+        });
+        sendEdit({ kind: 'moveWidgets', targets: drag.group.map((g) => g.path), slot }, [
+          ...new Set(names),
+        ]);
+        return;
+      }
+      sendEdit({ kind: 'moveWidget', target: drag.path, slot }, nameOf(drag.path));
       return;
     }
   }
@@ -110,26 +123,6 @@ function insert(document: TtuiDocument, drag: Drag, slot: Slot): void {
 
 interface Json {
   readonly [key: string]: unknown;
-}
-
-/** レイアウトの終わりのスロット(GridLayout は新しい行の 0 列)。 */
-function endOf(document: TtuiDocument, layoutPath: readonly (string | number)[]): Slot | undefined {
-  const layout = valueAt(document, layoutPath) as Json | undefined;
-  if (!layout) {
-    return undefined;
-  }
-  const items = (layout['items'] as Json[] | undefined) ?? [];
-  if (layout['class'] === 'GridLayout') {
-    const row = items.reduce(
-      (m, i) => Math.max(m, Number(i['row'] ?? 0) + Number(i['row_span'] ?? 1)),
-      0,
-    );
-    return { kind: 'item', layout: layoutPath, index: items.length, row, column: 0 };
-  }
-  if (layout['class'] === 'PlaceLayout') {
-    return { kind: 'item', layout: layoutPath, index: items.length, x: 8, y: 8 };
-  }
-  return { kind: 'item', layout: layoutPath, index: items.length };
 }
 
 /**
@@ -145,10 +138,10 @@ export function slotForClick(
   const path = node?.path ?? ['window'];
   const json = valueAt(document, path) as Json | undefined;
   if (json?.['layout'] !== undefined) {
-    return endOf(document, [...path, 'layout']);
+    return endOfLayout(document, [...path, 'layout']);
   }
   if (node?.kind === 'layout') {
-    return endOf(document, path);
+    return endOfLayout(document, path);
   }
   if (path[path.length - 1] === 'widget' && path[path.length - 3] === 'items') {
     const layoutPath = path.slice(0, -3);
@@ -156,50 +149,12 @@ export function slotForClick(
     if (layout?.['class'] === 'BoxLayout') {
       return { kind: 'item', layout: layoutPath, index: Number(path[path.length - 2]) + 1 };
     }
-    return endOf(document, layoutPath);
+    return endOfLayout(document, layoutPath);
   }
   if (document.window.layout) {
-    return endOf(document, ['window', 'layout']);
+    return endOfLayout(document, ['window', 'layout']);
   }
   return { kind: 'child', parent: ['window'], x: 8, y: 8 };
-}
-
-/**
- * 部品のすぐ後ろ(複製を入れる場所)。BoxLayout は次の項目、ほかのレイアウトは終わり、自由な配置は少しずらした位置、
- * タブ・区画・ツールバー・ステータスバーは次の位置。部品でなければ undefined。
- */
-export function slotAfter(document: TtuiDocument, path: JsonPath): Slot | undefined {
-  const n = path.length;
-  const last = path[n - 1];
-  const index = (key: string | number | undefined): number => Number(key) + 1;
-  if (last === 'widget' && path[n - 3] === 'items') {
-    const owner = path.slice(0, -3);
-    if (owner.length === 2 && owner[1] === 'tool_bar') {
-      return { kind: 'tool_bar', index: index(path[n - 2]) };
-    }
-    const layout = valueAt(document, owner) as Json | undefined;
-    return layout?.['class'] === 'BoxLayout'
-      ? { kind: 'item', layout: owner, index: index(path[n - 2]) }
-      : endOf(document, owner);
-  }
-  if (path[n - 2] === 'children') {
-    const json = valueAt(document, path) as { properties?: Json } | undefined;
-    const at = (key: string): number => {
-      const v = json?.properties?.[key];
-      return typeof v === 'number' ? v : 0;
-    };
-    return { kind: 'child', parent: path.slice(0, -2), x: at('x') + 16, y: at('y') + 16 };
-  }
-  if (last === 'page' && path[n - 3] === 'tabs') {
-    return { kind: 'tab', parent: path.slice(0, -3), index: index(path[n - 2]) };
-  }
-  if (last === 'widget' && path[n - 3] === 'panes') {
-    return { kind: 'pane', parent: path.slice(0, -3), index: index(path[n - 2]) };
-  }
-  if (path[n - 2] === 'widgets' && path[n - 3] === 'status_bar') {
-    return { kind: 'status_bar', index: index(last) };
-  }
-  return undefined;
 }
 
 /** パレットのクリック: 選んでいる場所に足す。 */

@@ -261,5 +261,10 @@
   "Copy": "コピー",
   "Paste": "貼り付け",
   "Duplicate": "複製",
-  "Select where to paste the widgets": "部品を貼り付ける場所を選んでください"
+  "Select where to paste the widgets": "部品を貼り付ける場所を選んでください",
+  "{0} items selected": "{0} 個を選択",
+  "Only the common properties of the widgets and objects are shown.": "部品・オブジェクトに共通するプロパティだけを出しています。",
+  "Some are bound to a variable": "Variable と結び付けたものがあります",
+  "(multiple values)": "(複数の値)",
+  "Delete {0} items": "{0} 個を削除"
 }
