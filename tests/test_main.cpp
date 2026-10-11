@@ -2178,6 +2178,72 @@ TEST(list_view_selection_and_keys)
     view->on_selection_change = tokotachi::NotifyHandler();
 }
 
+TEST(item_view_text_style_search_and_edit)
+{
+    tokotachi::Window window("t", 300, 300);
+    window.visible = true;
+    tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+    const char* const names[] = {"apple", "Banana", "blueberry", "cherry", "bread"};
+    std::vector<tokotachi::Item*> items;
+    for (int i = 0; i < 5; ++i)
+    {
+        items.push_back(list->add_item(names[i]));
+    }
+    tokotachi::ListView* view = new tokotachi::ListView(&window);
+    view->bounds = tokotachi::Rect(0, 0, 200, 250);
+    view->model = list;
+    window.apply_layout();
+
+    // 項目ごとの文字の色・フォント(既定はビューの標準)
+    items[1]->text_color = tokotachi::ThemeColor(tokotachi::Color(220, 38, 38));
+    items[1]->font = tokotachi::Font(14, true);
+    CHECK(list->text_color(list->index_of(items[1]), 0) == tokotachi::ThemeColor(tokotachi::Color(220, 38, 38)));
+    CHECK(list->font(list->index_of(items[1]), 0).bold);
+    CHECK(list->text_color(list->index_of(items[0]), 0) == tokotachi::ThemeColor());
+    window.impl()->render(false);  // 描ける
+
+    // 押した文字で始まる項目へ(大文字・小文字は区別しない。続けて押すと前方一致)
+    dispatch_click(window, row_point(0));
+    dispatch_key(window, SDLK_B);
+    CHECK(view->current == list->index_of(items[1]));
+    dispatch_key(window, SDLK_L);  // "bl"
+    CHECK(view->current == list->index_of(items[2]));
+    SDL_Delay(1100);               // 間が空くと、新しい検索
+    dispatch_key(window, SDLK_B);  // 同じ文字は、次の項目へ
+    CHECK(view->current == list->index_of(items[4]));
+    dispatch_key(window, SDLK_B);  // "bb" も次へ(終わりから始めへ戻る)
+    CHECK(view->current == list->index_of(items[1]) && view->is_selected(list->index_of(items[1])));
+
+    // F2 で編集し、Enter で確定する(モデルの set_text)。編集できない項目では始めない
+    dispatch_key(window, SDLK_F2);
+    CHECK(!view->is_editing());
+    items[1]->editable = true;
+    SDL_Delay(1100);
+    dispatch_key(window, SDLK_F2);
+    CHECK(view->is_editing());
+    dispatch_key(window, SDLK_END);  // 編集の欄が受け取り、current は動かない
+    dispatch_text(window, "s");
+    CHECK(view->current == list->index_of(items[1]));
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(!view->is_editing() && items[1]->text.get() == "Bananas" && view->focused);
+    // Esc でやめる
+    view->edit(list->index_of(items[1]));
+    dispatch_text(window, "x");
+    dispatch_key(window, SDLK_ESCAPE);
+    CHECK(!view->is_editing() && items[1]->text.get() == "Bananas");
+    // 2 列目以降は column_texts に入る
+    view->add_column("名前", 100);
+    view->add_column("色", 80);
+    view->edit(list->index_of(items[1]), 1);
+    dispatch_text(window, "黄");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(items[1]->column_texts.get().size() == 1 && items[1]->column_texts.get()[0] == "黄");
+    // モデルの行が変わったらやめる
+    view->edit(list->index_of(items[1]));
+    list->add_item("date");
+    CHECK(!view->is_editing());
+}
+
 TEST(list_view_follows_model_changes)
 {
     tokotachi::Window window("t", 300, 300);

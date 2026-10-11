@@ -15,12 +15,16 @@ Item::Item(detail::ItemHost* host, const std::string& initial_text)
       TOKOTACHI_PROPERTY_MEMBER(Item, bool, enabled),
       TOKOTACHI_PROPERTY_MEMBER(Item, bool, checkable),
       TOKOTACHI_PROPERTY_MEMBER(Item, bool, checked),
+      TOKOTACHI_PROPERTY_MEMBER(Item, ThemeColor, text_color),
+      TOKOTACHI_PROPERTY_MEMBER(Item, Font, font),
+      TOKOTACHI_PROPERTY_MEMBER(Item, bool, editable),
       host_(host),
       row_(0),
       text_(initial_text),
       enabled_(true),
       checkable_(false),
-      checked_(false)
+      checked_(false),
+      editable_(false)
 {
 }
 
@@ -34,6 +38,22 @@ std::string Item::column_text(int column) const
     }
     const std::size_t i = static_cast<std::size_t>(column - 1);
     return column > 0 && i < column_texts_.size() ? column_texts_[i] : std::string();
+}
+
+void Item::set_column_text(int column, const std::string& value)
+{
+    if (column <= 0)
+    {
+        set_text(value);
+        return;
+    }
+    std::vector<std::string> texts = column_texts_;
+    if (texts.size() < static_cast<std::size_t>(column))
+    {
+        texts.resize(static_cast<std::size_t>(column));
+    }
+    texts[static_cast<std::size_t>(column - 1)] = value;
+    set_column_texts(texts);
 }
 
 void Item::changed()
@@ -94,6 +114,33 @@ void Item::set_checked(const bool& v)
     if (v != checked_)
     {
         checked_ = v;
+        changed();
+    }
+}
+
+void Item::set_text_color(const ThemeColor& v)
+{
+    if (v != text_color_)
+    {
+        text_color_ = v;
+        changed();
+    }
+}
+
+void Item::set_font(const Font& v)
+{
+    if (v != font_)
+    {
+        font_ = v;
+        changed();
+    }
+}
+
+void Item::set_editable(const bool& v)
+{
+    if (v != editable_)
+    {
+        editable_ = v;
         changed();
     }
 }
@@ -207,6 +254,33 @@ std::string ListModel::text(const ModelIndex& i, int column) const
 {
     const Item* item = item_at(i);
     return item ? item->column_text(column) : std::string();
+}
+
+ThemeColor ListModel::text_color(const ModelIndex& i, int) const
+{
+    const Item* item = item_at(i);
+    return item ? item->text_color_ : ThemeColor();
+}
+
+Font ListModel::font(const ModelIndex& i, int) const
+{
+    const Item* item = item_at(i);
+    return item ? item->font_ : Font();
+}
+
+bool ListModel::editable(const ModelIndex& i, int) const
+{
+    const Item* item = item_at(i);
+    return item && item->editable_;
+}
+
+void ListModel::set_text(const ModelIndex& i, int column, const std::string& value)
+{
+    Item* item = item_at(i);
+    if (item)
+    {
+        item->set_column_text(column, value);
+    }
 }
 
 Image ListModel::icon(const ModelIndex& i) const

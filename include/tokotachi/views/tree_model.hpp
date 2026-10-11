@@ -72,6 +72,10 @@ public:
     bool checkable(const ModelIndex& index) const override;
     bool checked(const ModelIndex& index) const override;
     void set_checked(const ModelIndex& index, bool checked) override;
+    ThemeColor text_color(const ModelIndex& index, int column) const override;
+    Font font(const ModelIndex& index, int column) const override;
+    bool editable(const ModelIndex& index, int column) const override;
+    void set_text(const ModelIndex& index, int column, const std::string& text) override;
     /// 同じ親の子どうしを並べ替える(すべての深さで)。
     void sort(int column, SortOrder order) override;
     ModelIndex locate(const ModelIndex& index) const override;

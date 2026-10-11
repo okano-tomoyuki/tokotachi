@@ -1,10 +1,13 @@
 #include <tokotachi/views/item_view.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <climits>
 #include <cmath>
 
 #include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/core/timer.hpp>
+#include <tokotachi/widgets/line_edit.hpp>
 #include <tokotachi/widgets/scroll_bar.hpp>
 
 #include "../core/property_impl.hpp"
@@ -21,6 +24,8 @@ const float TREE_PADDING = 4;      // 木の印の左の余白
 const float ROW_PADDING_Y = 4;     // 行の上下の余白
 const float ICON_SIZE = 16;        // 画像・チェックボックスの大きさ
 const float GAP = 6;               // チェックボックス・画像・文字の間
+const float MIN_EDITOR_WIDTH = 40; // セルの編集の欄の最小の幅
+const int EDIT_DELAY_MS = 500;     // 選んでいる項目のクリックから編集を始めるまで(ダブルクリックと区別する)
 const float MIN_COLUMN = 24;       // 列の最小の幅
 const float DIVIDER_GRAB = 4;      // 見出しの境目をつかめる幅(左右それぞれ)
 const float DEFAULT_INDENT = 20;   // 木の 1 段の字下げ
@@ -138,6 +143,11 @@ ItemView::ItemView(Widget* parent_widget, bool tree)
       resize_origin_(0),
       resize_width_(0),
       pressed_column_(-1),
+      search_time_(0),
+      editor_(nullptr),
+      edit_column_(0),
+      edit_timer_(new Timer(this)),
+      pending_column_(0),
       tree_(tree),
       indentation_(DEFAULT_INDENT),
       rows_dirty_(true),
@@ -148,11 +158,24 @@ ItemView::ItemView(Widget* parent_widget, bool tree)
     horizontal_->visible = false;
     const NotifyHandler moved = [this](Object*)
     {
+        // スクロールしたら、編集の欄が行からずれるので確定する
+        finish_editing(true);
         hover_row_ = -1;
         invalidate();
     };
     vertical_->on_change = moved;
     horizontal_->on_change = moved;
+    // 選んでいる項目をもう一度押したら、ダブルクリックでないと分かってから編集する
+    edit_timer_->interval = EDIT_DELAY_MS;
+    edit_timer_->repeat = false;
+    edit_timer_->on_timer = [this](Object*)
+    {
+        if (pending_edit_.is_valid() && pending_edit_ == current_)
+        {
+            edit(pending_edit_, pending_column_);
+        }
+        pending_edit_ = ModelIndex();
+    };
 }
 
 ItemView::~ItemView()
@@ -209,6 +232,8 @@ void ItemView::forget_state()
 
 void ItemView::structure_changed()
 {
+    // 行が変わったら、編集している位置が分からなくなるのでやめる
+    finish_editing(false);
     rows_dirty_ = true;
     hover_row_ = -1;
     mark_layout_dirty();
@@ -1125,7 +1150,7 @@ void ItemView::toggle_expanded(int row)
 
 // ---- 描画 ----
 
-const TextLayout& ItemView::text_layout(const std::string& text) const
+const TextLayout& ItemView::text_layout(const std::string& text, const Font& font) const
 {
     const float scale = display_scale;
     if (scale != layouts_scale_ || layouts_.size() > LAYOUT_CACHE_LIMIT)
@@ -1133,10 +1158,11 @@ const TextLayout& ItemView::text_layout(const std::string& text) const
         layouts_.clear();
         layouts_scale_ = scale;
     }
-    std::map<std::string, TextLayout>::iterator it = layouts_.find(text);
+    const LayoutKey key(text, std::make_pair(font.size, (font.bold ? 1 : 0) | (font.italic ? 2 : 0)));
+    std::map<LayoutKey, TextLayout>::iterator it = layouts_.find(key);
     if (it == layouts_.end())
     {
-        it = layouts_.insert(std::make_pair(text, TextLayout(text, Font(), scale))).first;
+        it = layouts_.insert(std::make_pair(key, TextLayout(text, font, scale))).first;
     }
     return it->second;
 }
@@ -1290,7 +1316,7 @@ void ItemView::paint_row(Canvas& canvas, int row, const Rect& view)
                 tx += ICON_SIZE + GAP;
             }
         }
-        const TextLayout& l = text_layout(model_->text(index, c));
+        const TextLayout& l = text_layout(model_->text(index, c), model_->font(index, c));
         const Align align = columns_.empty() ? Align::START : columns_[c]->alignment_;
         if (align == Align::END)
         {
@@ -1300,7 +1326,10 @@ void ItemView::paint_row(Canvas& canvas, int row, const Rect& view)
         {
             tx = std::max(tx, cx + (cw - l.width()) / 2);
         }
-        canvas.draw_text(l, Point(tx, y + (h - l.height()) / 2), fg);
+        // 項目の文字の色(無効な項目・フォーカスのあるビューで選んでいる行は、ビューの色)
+        const ThemeColor own = model_->text_color(index, c);
+        const Color color = enabled_now && !(selected && has_focus) && own != ThemeColor() ? own.resolve() : fg;
+        canvas.draw_text(l, Point(tx, y + (h - l.height()) / 2), color);
         canvas.restore();
     }
 
@@ -1363,6 +1392,21 @@ void ItemView::mouse_down(MouseEvent& e)
         anchor_ = info.index;
         change_current(info.index);
         return;
+    }
+    // 選んでいる current の項目を修飾キー無しでもう一度押したら、少し待ってから編集する(ダブルクリックなら編集しない)
+    const int column = column_at(in_row.x);
+    if (e.clicks == 1 && !(e.modifiers & (MODIFIER_CONTROL | MODIFIER_SHIFT)) && info.index == current_ &&
+        is_selected(info.index) && column >= 0 && model_->editable(info.index, column))
+    {
+        pending_edit_ = info.index;
+        pending_column_ = column;
+        edit_timer_->enabled = false;  // 押し直したら待ち直す
+        edit_timer_->enabled = true;
+    }
+    else
+    {
+        edit_timer_->enabled = false;
+        pending_edit_ = ModelIndex();
     }
     if (e.clicks == 2)
     {
@@ -1464,11 +1508,265 @@ void ItemView::mouse_wheel(WheelEvent& e)
     bar->value = bar->value.get() + ticks * step;
 }
 
+namespace
+{
+
+/// 文字での検索の、続けて押したとみなす間隔(秒)。
+const double SEARCH_TIMEOUT = 1.0;
+
+double now_seconds()
+{
+    return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+/// ASCII の英字を小文字にした写し(それ以外の文字はそのまま比べる)。
+std::string fold(const std::string& s)
+{
+    std::string out = s;
+    for (std::size_t i = 0; i < out.size(); ++i)
+    {
+        if (out[i] >= 'A' && out[i] <= 'Z')
+        {
+            out[i] = static_cast<char>(out[i] - 'A' + 'a');
+        }
+    }
+    return out;
+}
+
+}  // namespace
+
+// ---- セルの編集 ----
+
+namespace
+{
+
+/// セルの編集の欄。Enter で確定・Esc でやめ、ほかへフォーカスが移ったら確定する。キーはビューへ送らない
+/// (↑↓・文字のキーで current が動かないように)。
+class CellEditor : public LineEdit
+{
+public:
+    explicit CellEditor(ItemView* view) : LineEdit(view), view_(view) {}
+
+protected:
+    void key_down(KeyEvent& e) override
+    {
+        if (e.key == Key::ESCAPE || e.key == Key::RETURN)
+        {
+            e.accepted = true;
+            view_->finish_editing(e.key == Key::RETURN);
+            return;
+        }
+        LineEdit::key_down(e);
+        if (e.key != Key::TAB)
+        {
+            e.accepted = true;
+        }
+    }
+
+    void focus_out() override
+    {
+        LineEdit::focus_out();
+        view_->finish_editing(true);
+    }
+
+private:
+    ItemView* view_;
+};
+
+}  // namespace
+
+int ItemView::column_at(float x) const
+{
+    if (columns_.empty())
+    {
+        return 0;
+    }
+    for (int c = 0; c < column_count(); ++c)
+    {
+        const float left = column_x(c);
+        if (x >= left && x < left + column_draw_width(c))
+        {
+            return c;
+        }
+    }
+    return -1;
+}
+
+int ItemView::first_editable_column(const ModelIndex& index) const
+{
+    if (!model_)
+    {
+        return -1;
+    }
+    for (int c = 0; c < column_count(); ++c)
+    {
+        if (model_->editable(index, c))
+        {
+            return c;
+        }
+    }
+    return -1;
+}
+
+Rect ItemView::cell_text_rect(int row, int column) const
+{
+    const Rect view = viewport();
+    const Row info = row_at(row);
+    const float h = row_height();
+    const float y = view.y + row * h - vertical_->value.get();
+    const float cx = view.x - horizontal_->value.get() + column_x(column);
+    const float cw = column_draw_width(column);
+    float tx = cx + CELL_PADDING;
+    if (column == 0)
+    {
+        // 木の印・チェックボックス・画像の後ろ(paint_row と同じ)
+        tx = cx + content_start(info.depth);
+        if (model_->checkable(info.index))
+        {
+            tx += ICON_SIZE + GAP;
+        }
+        if (!model_->icon(info.index).is_null())
+        {
+            tx += ICON_SIZE + GAP;
+        }
+    }
+    // 編集の欄の内側の余白と枠の分だけ左に広げ、文字の位置を描いた文字にそろえる。見えている範囲に収める
+    const float left = std::max(view.x, tx - theme::field_padding() - 1);
+    const float right = std::min(view.right(), cx + cw);
+    return Rect(left, y, std::max(right - left, MIN_EDITOR_WIDTH), h);
+}
+
+void ItemView::edit(const ModelIndex& index, int column)
+{
+    finish_editing(true);
+    if (!model_ || !index.is_valid() || column < 0 || column >= column_count() || !model_->editable(index, column) ||
+        !model_->enabled(index))
+    {
+        return;
+    }
+    scroll_to(index);
+    const int row = row_of(index);
+    if (row < 0)
+    {
+        return;
+    }
+    // 列が見えるように横にスクロールする
+    if (!columns_.empty())
+    {
+        const float left = column_x(column);
+        const float scroll = horizontal_->value;
+        const float view_w = viewport().width;
+        if (left < scroll || left + std::min(column_draw_width(column), view_w) > scroll + view_w)
+        {
+            horizontal_->value = left;
+        }
+    }
+    if (!editor_)
+    {
+        editor_ = new CellEditor(this);
+    }
+    edit_index_ = index;
+    edit_column_ = column;
+    editor_->font = model_->font(index, column);
+    editor_->text = model_->text(index, column);
+    editor_->bounds = cell_text_rect(row, column);
+    editor_->visible = true;
+    editor_->focused = true;
+    editor_->select_all();
+}
+
+bool ItemView::is_editing() const { return edit_index_.is_valid(); }
+
+void ItemView::finish_editing(bool commit)
+{
+    if (!edit_index_.is_valid() || !editor_)
+    {
+        return;
+    }
+    // 確定・やめるの途中で、フォーカスの移動から呼ばれても 1 回だけにする
+    const ModelIndex index = edit_index_;
+    const int column = edit_column_;
+    edit_index_ = ModelIndex();
+    const bool had_focus = editor_->focused;
+    const std::string text = editor_->text;
+    editor_->visible = false;
+    if (had_focus)
+    {
+        focused = true;
+    }
+    if (commit && model_ && text != model_->text(index, column))
+    {
+        model_->set_text(index, column, text);
+    }
+    invalidate();
+}
+
+bool ItemView::search_key(const KeyEvent& e)
+{
+    if (e.modifiers & (MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META))
+    {
+        return false;
+    }
+    // 英字・数字・記号のキー(SDL のキーコードは、その文字の ASCII の値)
+    const std::uint32_t code = e.native_key;
+    const double now = now_seconds();
+    const bool continuing = !search_text_.empty() && now - search_time_ < SEARCH_TIMEOUT;
+    // 空白は、検索を続けているときだけ文字にする(それ以外は選ぶ・チェックする)
+    if (code < 0x20 || code >= 0x7F || (code == 0x20 && !continuing))
+    {
+        return false;
+    }
+    search_text_ = (continuing ? search_text_ : std::string()) + fold(std::string(1, static_cast<char>(code)));
+    search_time_ = now;
+    const int n = row_total();
+    if (n == 0)
+    {
+        return true;
+    }
+    // 同じ文字を続けて押したら、その文字で始まる次の項目へ。そうでなければ、今の項目から前方一致を探す
+    const bool repeated = search_text_.find_first_not_of(search_text_[0]) == std::string::npos;
+    const std::string needle = repeated ? search_text_.substr(0, 1) : search_text_;
+    const int cur = row_of(current_);
+    const int start = cur < 0 ? 0 : repeated ? cur + 1 : cur;
+    for (int k = 0; k < n; ++k)
+    {
+        const int r = (start + k) % n;
+        if (!row_enabled(r))
+        {
+            continue;
+        }
+        const std::string text = fold(model_->text(row_at(r).index, 0));
+        if (text.compare(0, needle.size(), needle) == 0)
+        {
+            move_to(r, MODIFIER_NONE, false);
+            break;
+        }
+    }
+    return true;
+}
+
 void ItemView::key_down(KeyEvent& e)
 {
     Widget::key_down(e);
     if (!model_)
     {
+        return;
+    }
+    // F2 で、current の項目の編集できる最初の列を編集する(docs/adr/0046)
+    if (e.key == Key::F2 && !e.modifiers && current_.is_valid())
+    {
+        const int column = first_editable_column(current_);
+        if (column >= 0)
+        {
+            e.accepted = true;
+            edit(current_, column);
+            return;
+        }
+    }
+    // 押した文字で始まる項目へ動く(docs/adr/0046)
+    if (search_key(e))
+    {
+        e.accepted = true;
         return;
     }
     const int n = row_total();

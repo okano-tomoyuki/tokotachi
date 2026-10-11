@@ -22,6 +22,8 @@
 #include <vector>
 
 #include "../graphics/image.hpp"
+#include "../graphics/text_layout.hpp"
+#include "../graphics/theme.hpp"
 #include "../core/property.hpp"
 
 namespace tokotachi
@@ -88,6 +90,17 @@ public:
     virtual bool checked(const ModelIndex& index) const;
     /// 利用者がチェックボックスを押した。値を変えたら notify_data_changed で知らせる。
     virtual void set_checked(const ModelIndex& index, bool checked);
+
+    /// column 列目の文字の色(既定は ColorRole::TEXT。ビューの標準の色)。無効な項目と、フォーカスのあるビューで選んでいる行は、
+    /// ビューの色で描く(選択の色の上で読めるように)。
+    virtual ThemeColor text_color(const ModelIndex& index, int column) const;
+    /// column 列目の文字のフォント(既定は Font())。行の高さは既定のフォントで決まるので、大きいフォントははみ出た分が切れる。
+    virtual Font font(const ModelIndex& index, int column) const;
+
+    /// column 列目の文字をビューで編集できるか(既定は false。docs/adr/0046)。
+    virtual bool editable(const ModelIndex& index, int column) const;
+    /// 利用者がビューで column 列目の文字を編集した。値を変えたら notify_data_changed で知らせる(既定は何もしない)。
+    virtual void set_text(const ModelIndex& index, int column, const std::string& text);
 
     /// column 列目の文字で並べ替える(既定は何もしない)。並べ替えたら notify_layout_changed で知らせる。
     virtual void sort(int column, SortOrder order);

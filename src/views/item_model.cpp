@@ -39,6 +39,14 @@ bool ItemModel::checked(const ModelIndex&) const { return false; }
 
 void ItemModel::set_checked(const ModelIndex&, bool) {}
 
+ThemeColor ItemModel::text_color(const ModelIndex&, int) const { return ThemeColor(); }
+
+Font ItemModel::font(const ModelIndex&, int) const { return Font(); }
+
+bool ItemModel::editable(const ModelIndex&, int) const { return false; }
+
+void ItemModel::set_text(const ModelIndex&, int, const std::string&) {}
+
 void ItemModel::sort(int, SortOrder) {}
 
 ModelIndex ItemModel::locate(const ModelIndex&) const { return ModelIndex(); }

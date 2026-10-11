@@ -29,7 +29,9 @@ namespace tokotachi
 {
 
 class ItemView;
+class LineEdit;
 class ScrollBar;
+class Timer;
 
 enum class SelectionMode
 {
@@ -104,6 +106,14 @@ public:
     void scroll_to(const ModelIndex& index);
     /// 位置 p(ビューの座標)の行の項目(無ければ無効な ModelIndex)。
     ModelIndex index_at(const Point& p) const;
+
+    /// index の column 列目の文字を、その場で編集し始める(モデルの editable が false なら何もしない。docs/adr/0046)。
+    /// 利用者は F2・選んでいる項目のクリックでも始められる。Enter・ほかへのフォーカスの移動で確定し(モデルの set_text を呼ぶ)、
+    /// Esc でやめる。スクロールすると確定し、モデルの行が変わるとやめる。
+    void edit(const ModelIndex& index, int column = 0);
+    bool is_editing() const;
+    /// 編集を終える(commit が false なら、文字を変えずにやめる)。
+    void finish_editing(bool commit = true);
 
     /// selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。
     Property<NotifyHandler> on_selection_change;
@@ -205,7 +215,7 @@ private:
     int header_divider_at(const Point& p) const;
     int header_column_at(const Point& p) const;
 
-    const TextLayout& text_layout(const std::string& text) const;
+    const TextLayout& text_layout(const std::string& text, const Font& font = Font()) const;
     void paint_header(Canvas& canvas, const Rect& view);
     void paint_row(Canvas& canvas, int row, const Rect& view);
 
@@ -219,6 +229,14 @@ private:
     void reveal_row(int row);
     void toggle_expanded(int row);
     void activate();
+    /// 押した文字で始まる項目へ動く。文字のキーでなければ false。
+    bool search_key(const KeyEvent& e);
+    /// 中身の座標 x の列(列が無ければ 0。どの列でもなければ -1)。
+    int column_at(float x) const;
+    /// row 行 column 列目の文字の範囲(ビューの座標。編集の欄を置く)。
+    Rect cell_text_rect(int row, int column) const;
+    /// index の、編集できる最初の列(無ければ -1)。
+    int first_editable_column(const ModelIndex& index) const;
     /// 古い ModelIndex の行をずらした値。
     static ModelIndex shifted(const ModelIndex& index, int delta);
 
@@ -242,6 +260,14 @@ private:
     float resize_origin_;  ///< ドラッグを始めた x と幅
     float resize_width_;
     int pressed_column_;  ///< 押した見出し(-1 なら無し)
+    std::string search_text_;  ///< 文字での検索で、続けて押した文字(小文字)
+    double search_time_;       ///< 最後に押した時刻(秒)
+    LineEdit* editor_;         ///< セルの編集の欄(初めて編集するときに作り、使い回す)
+    ModelIndex edit_index_;    ///< 編集している項目(していなければ無効)
+    int edit_column_;
+    Timer* edit_timer_;        ///< 選んでいる項目のクリックから編集を始めるまで待つ
+    ModelIndex pending_edit_;
+    int pending_column_;
 
     const bool tree_;
     float indentation_;
@@ -249,7 +275,9 @@ private:
     mutable std::vector<Row> rows_;
     mutable std::map<void*, int> row_map_;  ///< 識別子から行へ
     mutable bool rows_dirty_;
-    mutable std::map<std::string, TextLayout> layouts_;
+    /// 文字とフォント(大きさ・太さと傾きの組)ごとのレイアウト
+    typedef std::pair<std::string, std::pair<float, int> > LayoutKey;
+    mutable std::map<LayoutKey, TextLayout> layouts_;
     mutable float layouts_scale_;
 };
 

@@ -187,6 +187,33 @@ std::string TreeModel::text(const ModelIndex& i, int column) const
     return item ? item->column_text(column) : std::string();
 }
 
+ThemeColor TreeModel::text_color(const ModelIndex& i, int) const
+{
+    const TreeItem* item = item_at(i);
+    return item ? item->text_color_ : ThemeColor();
+}
+
+Font TreeModel::font(const ModelIndex& i, int) const
+{
+    const TreeItem* item = item_at(i);
+    return item ? item->font_ : Font();
+}
+
+bool TreeModel::editable(const ModelIndex& i, int) const
+{
+    const TreeItem* item = item_at(i);
+    return item && item->editable_;
+}
+
+void TreeModel::set_text(const ModelIndex& i, int column, const std::string& value)
+{
+    TreeItem* item = item_at(i);
+    if (item)
+    {
+        item->set_column_text(column, value);
+    }
+}
+
 Image TreeModel::icon(const ModelIndex& i) const
 {
     const TreeItem* item = item_at(i);

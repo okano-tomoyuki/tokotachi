@@ -1,4 +1,5 @@
-// 一覧と木: ListView(列・並べ替え・チェック)と TreeView を Splitter で並べる。
+// 一覧と木: ListView(列・並べ替え・チェック・文字の色と太さ・編集)と TreeView を Splitter で並べる。
+// 項目は F2 か、選んでいる項目のクリックで名前を変えられる。押した文字で始まる項目へも動ける。
 #include "gallery.hpp"
 
 int main(int argc, char** argv)
@@ -12,7 +13,7 @@ int main(int argc, char** argv)
     tokotachi::TreeModel* folders = new tokotachi::TreeModel(&window);
     tokotachi::TreeItem* documents = folders->add_item("文書");
     documents->add_child("仕事")->add_child("報告書");
-    documents->add_child("家計簿");
+    documents->add_child("家計簿")->text_color = tokotachi::ThemeColor(tokotachi::Color(0xDC, 0x26, 0x26));
     folders->add_item("画像")->add_child("旅行");
     folders->add_item("音楽");
     tokotachi::TreeView* tree_view_folders = new tokotachi::TreeView();
@@ -31,7 +32,11 @@ int main(int argc, char** argv)
         item->column_texts = std::vector<std::string>{ROWS[i][1], ROWS[i][2]};
         item->checkable = true;
         item->checked = i == 1;
+        item->editable = true;
     }
+    // 項目ごとの文字の色・太さ(docs/adr/0046)
+    files->items.get()[0]->font = tokotachi::Font(14, true);
+    files->items.get()[3]->text_color = tokotachi::ThemeColor(tokotachi::ColorRole::TEXT_SECONDARY);
     tokotachi::ListView* list_view_files = new tokotachi::ListView();
     list_view_files->add_column("名前", 150);
     list_view_files->add_column("大きさ", 70)->alignment = tokotachi::Align::END;
