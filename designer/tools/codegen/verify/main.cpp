@@ -149,6 +149,15 @@ int main(int argc, char** argv)
     check(called("slider_zoom_change"), "dialog widget handler");
     dialog->on_finish.get()(dialog);
     check(called("settings_finish"), "dialog handler");
+    // 部品ファイル(docs/adr/0043): 部品ファイルのクラスを置き、置いた側のプロパティを後から設定する
+    check(dialog->panel_user->parent.get() == dialog && dialog->panel_user->tooltip.get() == "表示する名前",
+          "component instance");
+    check(dialog->panel_user->label_caption->text.get() == "名前" &&
+              dialog->panel_user->line_edit_value->parent.get() == dialog->panel_user,
+          "component content");
+    check(dialog->panel_user->bounds.get().width > 300, "component in layout");
+    dialog->panel_user->line_edit_value->on_change.get()(dialog->panel_user->line_edit_value);
+    check(called("value_change"), "component handler");
     std::printf("\n  ],\n  \"rects\": [\n");
     bool first = true;
     print_rects(&window, 0, 0, first);

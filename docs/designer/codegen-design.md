@@ -236,6 +236,18 @@ int main(int argc, char** argv)
 
 この順で生成したウィンドウの配置が、キャンバス(同じ定義ファイルを WebAssembly の Tokotachi で組んだもの)と同じになることを、生成したコードの実行で確かめる(§7)。
 
+### 4.1 部品ファイル([ADR 0043](../adr/0043-designer-component-files.md))
+
+- 部品ファイル(根が `Widget`)は `class LabeledEdit : public tokotachi::Widget` にし、コンストラクタは
+  `explicit LabeledEdit(tokotachi::Widget* parent)`(`: tokotachi::Widget(parent)`)。根の `width`・`height` は書かない。
+- 部品ファイルを置いた部品は `panel_user = new LabeledEdit(this);` とし、メンバの型は `LabeledEdit*`。
+  ヘッダで部品ファイルのヘッダを include する(ヘッダのフォルダからの相対パス。部品ファイルの出力先は、部品ファイルが属するプロジェクトの設定で決まる)。
+- 部品ファイルの中身(子の部品・ハンドラ)は部品ファイルのクラスのコンストラクタが組むので、置いた側の順は部品の 1 と同じ位置で、
+  その後に置いた側のプロパティを設定する。
+- キャンバスでは、部品ファイルのクラスが WebAssembly の Tokotachi に無いので、置いた部品を Widget として作り、部品ファイルの操作の並びを
+  変数の名前に `置いた部品の名前.` を付けて続ける(ハンドラはつながない。画像のパスは置いた側のフォルダからにする)。
+  順は生成したコードと同じなので、描いた画面は同じになる(見本の settings_dialog が置く parts/labeled_edit で確かめている)。
+
 ## 5. 書き出しの決まり
 
 | # | 論点 | 案 |

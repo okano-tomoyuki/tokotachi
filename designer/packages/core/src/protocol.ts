@@ -38,6 +38,14 @@ export type ExtensionToWebviewMessage =
     }
   /** キャンバスの描画の結果。document の後に届く(検証のエラーがあれば描かない)。 */
   | { readonly type: 'canvas'; readonly frame: CanvasFrame }
+  /**
+   * パレットに出す部品ファイル(docs/adr/0043。ワークスペースの、根が Widget の定義ファイル。開いているものは除く)。
+   * path は定義ファイルのフォルダからの相対パス。
+   */
+  | {
+      readonly type: 'components';
+      readonly items: readonly { readonly path: string; readonly className: string }[];
+    }
   /** ウィンドウが属するプロジェクトに登録したテーマの名前(属さなければ空)。描くたびに送る。 */
   | { readonly type: 'themePresets'; readonly names: readonly string[] }
   /** キャンバスを描けなかった理由(WebAssembly のモジュールが無い等)。 */
@@ -51,6 +59,8 @@ export type ExtensionToWebviewMessage =
       readonly type: 'projectInfo';
       readonly candidates: readonly string[];
       readonly presetUsage: Readonly<Record<string, number>>;
+      /** プロジェクトのウィンドウ・候補のうち、部品ファイル(docs/adr/0043。メインのウィンドウにできない)のもの。 */
+      readonly components: readonly string[];
     }
   /** プロジェクトの設定画面へ: テーマの見本のウィンドウを描いた結果(ライトとダーク)。target は previewTheme のもの。 */
   | {
@@ -77,6 +87,8 @@ export type WebviewToExtensionMessage =
   | { readonly type: 'goToHandler'; readonly handler: string }
   /** テキストエディタで開く。 */
   | { readonly type: 'openAsText' }
+  /** 置いた部品ファイル(定義ファイルのフォルダからの相対パス)をデザイナーで開く(docs/adr/0043)。 */
+  | { readonly type: 'openComponent'; readonly path: string }
   /**
    * 画像のファイルを選んでもらい、ノードのプロパティに定義ファイルからの相対パスを設定する
    * (選ばなければ何もしない。設定は edit と同じく 1 回の変更)。

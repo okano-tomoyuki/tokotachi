@@ -3,6 +3,7 @@
  * 描画は同期的に行う(1 回 10 ms ほど)ので、編集が続いたときは最後の内容だけを描く。
  */
 import { Canvas } from '@tokotachi-designer/canvas';
+import type { ComponentResolver } from '@tokotachi-designer/codegen';
 import type { CanvasFrame, ThemePresets, TtuiDocument } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 
@@ -24,6 +25,7 @@ export async function renderCanvas(
   images: ReadonlyMap<string, Uint8Array>,
   themeOverride?: Readonly<Record<string, unknown>>,
   themePresets?: ThemePresets,
+  components?: ComponentResolver,
 ): Promise<CanvasFrame> {
   const canvas = await load(context);
   const r = canvas.render(doc, {
@@ -33,6 +35,7 @@ export async function renderCanvas(
     images,
     themeOverride,
     themePresets,
+    components,
   });
   if (r.errors.length > 0) {
     console.warn(`Tokotachi Designer: ${r.errors.join(', ')}`);

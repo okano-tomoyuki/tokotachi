@@ -33,6 +33,10 @@ void SettingsDialog::tokotachi_setup_ui()
 
     window_layout->add_spacing(4);
 
+    panel_user = new LabeledEdit(this);
+    panel_user->tooltip = "表示する名前";
+    window_layout->add(panel_user);
+
     scroll_area_badges = new tokotachi::ScrollArea(this);
     scroll_area_badges->minimum_size = tokotachi::Size(0, 120);
     scroll_area_badges->fit_width = true;
@@ -88,7 +92,7 @@ void SettingsDialog::tokotachi_setup_ui()
 
     window_layout->add(area_free);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="86f2fb91">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="0a248f3e">
 
 // <tokotachi-designer:handler-stubs>
 void SettingsDialog::settings_finish(tokotachi::Object* sender)

@@ -28,6 +28,7 @@ import {
 import {
   configureL10n,
   hasErrors,
+  isComponentDocument,
   isJapanese,
   isValidIdentifier,
   l10n,
@@ -37,6 +38,7 @@ import {
   sameWindowPath,
   type Diagnostic,
   type TtprojDocument,
+  type TtuiDocument,
 } from '@tokotachi-designer/core';
 import ja from '../../extension/l10n/bundle.l10n.ja.json' with { type: 'json' };
 
@@ -89,6 +91,25 @@ function projectContaining(
   }
 }
 
+/**
+ * 置いた部品ファイル(docs/adr/0043)を読む。部品ファイルでない・誤りがあれば undefined(生成はエラーになる)。
+ * プロジェクトに属していればプロジェクトの設定、属していなければ置いた側と同じ設定で生成したヘッダを include する。
+ */
+function readComponent(
+  componentPath: string,
+  options: CppOptions,
+): { document: TtuiDocument; options: CppOptions } | undefined {
+  const parsed = parseDocument(readIfExists(componentPath) ?? '');
+  if (!parsed.document || hasErrors(parsed.diagnostics) || !isComponentDocument(parsed.document)) {
+    return undefined;
+  }
+  const owner = projectContaining(componentPath);
+  return {
+    document: parsed.document,
+    options: owner ? windowCppOptions(owner.doc, owner.windowPath) : options,
+  };
+}
+
 /** ウィンドウのコードを生成して書く。 */
 function generateWindow(dslPath: string, options: CppOptions, flags: Flags): number {
   const text = readIfExists(dslPath);
@@ -108,6 +129,7 @@ function generateWindow(dslPath: string, options: CppOptions, flags: Flags): num
     (path) => readIfExists(resolve(outDir, path)),
     options,
     (path) => readBinaryIfExists(resolve(outDir, path)),
+    (path) => readComponent(resolve(outDir, path), options),
   );
   return write(generated, outDir, flags);
 }

@@ -1,5 +1,5 @@
 /**
- * 新しいウィンドウの定義ファイルを作って開く(コマンド「新しいウィンドウ」)。
+ * 新しいウィンドウ・部品ファイル(docs/adr/0043)の定義ファイルを作って開く(コマンド「新しいウィンドウ」「新しい部品ファイル」)。
  * ファイルの名前(snake_case)を入力してもらい、クラスの名前はそこから PascalCase で作る(main_window → MainWindow)。
  */
 import {
@@ -39,6 +39,31 @@ export function newWindowDocument(name: string): TtuiDocument {
               name: 'label_message',
               class: 'Label',
               properties: { text: 'Hello, Tokotachi' },
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
+/** 新しい部品ファイルの既定の内容(横に並べるレイアウトとラベル 1 つ)。 */
+export function newComponentDocument(name: string): TtuiDocument {
+  return {
+    format_version: 1,
+    window: {
+      name: className(name),
+      class: 'Widget',
+      properties: { width: 320, height: 48 },
+      layout: {
+        class: 'BoxLayout',
+        properties: { orientation: 'HORIZONTAL' },
+        items: [
+          {
+            widget: {
+              name: 'label_caption',
+              class: 'Label',
+              properties: { text: className(name) },
             },
           },
         ],
@@ -117,7 +142,15 @@ async function destinationOf(arg: unknown): Promise<Destination | undefined> {
   return picked?.destination;
 }
 
-export async function newWindow(arg?: unknown): Promise<void> {
+export function newWindow(arg?: unknown): Promise<void> {
+  return create(arg, 'window');
+}
+
+export function newComponent(arg?: unknown): Promise<void> {
+  return create(arg, 'component');
+}
+
+async function create(arg: unknown, kind: 'window' | 'component'): Promise<void> {
   if (!vscode.workspace.workspaceFolders?.length && !(arg instanceof vscode.Uri)) {
     void vscode.window.showErrorMessage(vscode.l10n.t('Open a folder first.'));
     return;
@@ -127,15 +160,20 @@ export async function newWindow(arg?: unknown): Promise<void> {
     return;
   }
   const base = destination.folder;
-  let initial = 'main_window';
+  const component = kind === 'component';
+  let initial = component ? 'component' : 'main_window';
   for (let i = 2; await exists(vscode.Uri.joinPath(base, `${initial}${DOCUMENT_EXTENSION}`)); i++) {
-    initial = `window${String(i)}`;
+    initial = `${component ? 'component' : 'window'}${String(i)}`;
   }
   const name = await vscode.window.showInputBox({
-    title: vscode.l10n.t('New Window'),
-    prompt: vscode.l10n.t(
-      'File name of the window definition (the class name is made from it: main_window → MainWindow)',
-    ),
+    title: component ? vscode.l10n.t('New Component File') : vscode.l10n.t('New Window'),
+    prompt: component
+      ? vscode.l10n.t(
+          'File name of the component file (the class name is made from it: search_bar → SearchBar)',
+        )
+      : vscode.l10n.t(
+          'File name of the window definition (the class name is made from it: main_window → MainWindow)',
+        ),
     value: initial,
     validateInput: async (value) => {
       if (isValidIdentifier(value) !== null || !/^[a-z]/.test(value)) {
@@ -153,7 +191,9 @@ export async function newWindow(arg?: unknown): Promise<void> {
   const uri = vscode.Uri.joinPath(base, `${name}${DOCUMENT_EXTENSION}`);
   await vscode.workspace.fs.writeFile(
     uri,
-    new TextEncoder().encode(serializeDocument(newWindowDocument(name))),
+    new TextEncoder().encode(
+      serializeDocument(component ? newComponentDocument(name) : newWindowDocument(name)),
+    ),
   );
   if (destination.project === 'nearest') {
     // 同じフォルダか上のフォルダにプロジェクトがあれば、そこに加える

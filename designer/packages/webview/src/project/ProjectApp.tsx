@@ -149,6 +149,7 @@ function TextSetting({
 
 function WindowsSection({ project }: { project: TtprojDocument }) {
   const candidates = useProject((s) => s.candidates);
+  const components = useProject((s) => s.components);
   const diagnostics = useProject((s) => s.diagnostics);
   const [adding, setAdding] = useState('');
   const windows = project.windows ?? [];
@@ -172,6 +173,12 @@ function WindowsSection({ project }: { project: TtprojDocument }) {
                   <input
                     type="radio"
                     name="main_window"
+                    disabled={components.includes(w) && project.main_window !== w}
+                    title={
+                      components.includes(w)
+                        ? l10n.t('A component file cannot be the main window')
+                        : undefined
+                    }
                     checked={project.main_window === w}
                     onChange={() => {
                       editProject((p) => ({ ...p, main_window: w }));
@@ -252,7 +259,9 @@ function WindowsSection({ project }: { project: TtprojDocument }) {
             editProject((p) => ({
               ...p,
               windows: [...(p.windows ?? []), path],
-              ...(p.main_window === undefined ? { main_window: path } : {}),
+              ...(p.main_window === undefined && !components.includes(path)
+                ? { main_window: path }
+                : {}),
             }));
           }}
         >

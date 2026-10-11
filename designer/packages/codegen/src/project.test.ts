@@ -2,7 +2,7 @@ import type { TtprojDocument } from '@tokotachi-designer/core';
 import { describe, expect, it } from 'vitest';
 import { cppOutputPaths, generateCpp } from './index.ts';
 import { generateProject, projectOutputPaths, windowCppOptions } from './project.ts';
-import { MAIN_WINDOW, SETTINGS_DIALOG } from './testing.ts';
+import { MAIN_WINDOW, readSampleComponent, SETTINGS_DIALOG } from './testing.ts';
 
 const PROJECT: TtprojDocument = {
   format_version: 1,
@@ -169,6 +169,13 @@ describe('project', () => {
       'settings_dialog.ttui.json',
       () => undefined,
       windowCppOptions(project, path),
+      undefined,
+      (p) => {
+        const component = readSampleComponent(p);
+        return component
+          ? { document: component, options: windowCppOptions(project, `ui/dialogs/${p}`) }
+          : undefined;
+      },
     );
     const source = r.files.find((f) => f.path.endsWith('.cpp'));
     expect(source?.result.ok && source.result.text).toContain(

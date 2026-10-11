@@ -4,6 +4,7 @@
   "customEditor.displayName": "Tokotachi Designer",
   "customEditor.project.displayName": "Tokotachi プロジェクトの設定",
   "command.newWindow.title": "新しいウィンドウ...",
+  "command.newComponent.title": "新しい部品ファイル...",
   "command.generateCode.title": "コードを生成",
   "command.openAsText.title": "テキストとして開く",
   "config.generateOnSave": "ウィンドウの定義(`*.ttui.json`)を保存したときに、C++ のコードを生成する。",

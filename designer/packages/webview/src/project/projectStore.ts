@@ -22,6 +22,8 @@ export interface ProjectState {
   readonly candidates: readonly string[];
   /** 登録したテーマを参照している部品の数。 */
   readonly presetUsage: Readonly<Record<string, number>>;
+  /** 部品ファイル(メインのウィンドウにできない)。 */
+  readonly components: readonly string[];
   /** 編集しているテーマ(登録したテーマの名前。null ならプロジェクトのテーマ)。 */
   readonly themeTarget: string | null;
   /** テーマの見本を描いた結果。 */
@@ -44,6 +46,7 @@ export const useProject = create<ProjectState>()(() => ({
   diagnostics: [],
   candidates: [],
   presetUsage: {},
+  components: [],
   themeTarget: null,
   preview: undefined,
   editError: undefined,
@@ -99,7 +102,11 @@ export function handleProjectMessage(message: ExtensionToWebviewMessage): void {
       break;
     }
     case 'projectInfo':
-      useProject.setState({ candidates: message.candidates, presetUsage: message.presetUsage });
+      useProject.setState({
+        candidates: message.candidates,
+        presetUsage: message.presetUsage,
+        components: message.components,
+      });
       break;
     case 'themePreview':
       useProject.setState({

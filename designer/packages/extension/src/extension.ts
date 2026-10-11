@@ -8,7 +8,7 @@ import { generateProjectCode, generateWindowCode, registerGenerateOnSave } from 
 import { addToProject, chooseColorScheme, newProject, setMainWindow } from './projectCommands.ts';
 import { ProjectEditorProvider } from './projectEditorProvider.ts';
 import { registerProjectsView } from './projectsView.ts';
-import { newWindow } from './newWindow.ts';
+import { newComponent, newWindow } from './newWindow.ts';
 
 /** コマンドの対象の定義ファイル(エクスプローラーの右クリック、無ければ開いているもの)。 */
 async function targetDocument(uri?: vscode.Uri): Promise<vscode.TextDocument | undefined> {
@@ -75,6 +75,9 @@ export function activate(context: vscode.ExtensionContext): void {
     // 引数は呼ばれた場所で違う(フォルダの URI・ビューの項目・それ以外のオブジェクト)ので、newWindow が見分ける
     vscode.commands.registerCommand('tokotachiDesigner.newWindow', (arg?: unknown) =>
       newWindow(arg),
+    ),
+    vscode.commands.registerCommand('tokotachiDesigner.newComponent', (arg?: unknown) =>
+      newComponent(arg),
     ),
     vscode.commands.registerCommand('tokotachiDesigner.generateCode', async (arg?: unknown) => {
       const document = await targetDocument(uriOf(arg));

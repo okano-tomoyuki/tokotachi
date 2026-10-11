@@ -6,13 +6,17 @@ import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hasErrors, parseDocument } from '@tokotachi-designer/core';
+import { hasErrors, parseDocument, type TtuiDocument } from '@tokotachi-designer/core';
 import { DEFAULT_CPP_OPTIONS, generateCpp } from '@tokotachi-designer/codegen';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const designer = resolve(here, '../..');
 const repoRoot = resolve(designer, '..');
-const SAMPLES = ['main_window.ttui.json', 'settings_dialog.ttui.json'];
+const SAMPLES = [
+  'main_window.ttui.json',
+  'settings_dialog.ttui.json',
+  'parts/labeled_edit.ttui.json',
+];
 const work = join(designer, '.cache', 'verify-cpp');
 const generatedDir = join(work, 'generated');
 const buildDir = join(work, 'build');
@@ -41,8 +45,10 @@ function recordHandlers(source: string, className: string): string {
   );
 }
 
-/** 見本から C++ を生成して作業フォルダに書く。 */
-function generate(file: string): void {
+const OPTIONS = { ...DEFAULT_CPP_OPTIONS, commentLocale: 'ja' } as const;
+
+/** 見本の定義ファイルを読む(samples/ からの相対パス)。 */
+function read(file: string): TtuiDocument {
   const parsed = parseDocument(readFileSync(join(designer, 'samples', file), 'utf8'));
   for (const d of parsed.diagnostics) {
     console.error(`${file}: ${d.severity}: ${d.path.join('.')}: ${d.message}`);
@@ -50,21 +56,30 @@ function generate(file: string): void {
   if (!parsed.document || hasErrors(parsed.diagnostics)) {
     throw new Error(`見本の定義ファイル ${file} に誤りがある`);
   }
+  return parsed.document;
+}
+
+/** 見本から C++ を生成して作業フォルダに書く(定義ファイルと同じフォルダの構成)。 */
+function generate(file: string): void {
+  const document = read(file);
+  const dir = dirname(file);
   const generated = generateCpp(
-    parsed.document,
-    file,
+    document,
+    file.split('/').pop() ?? file,
     () => undefined,
-    { ...DEFAULT_CPP_OPTIONS, commentLocale: 'ja' },
-    (path) => readFileSync(join(designer, 'samples', path)),
+    OPTIONS,
+    (path) => readFileSync(join(designer, 'samples', dir, path)),
+    (path) => ({ document: read(join(dir, path).replace(/\\/g, '/')), options: OPTIONS }),
   );
+  mkdirSync(join(generatedDir, dir), { recursive: true });
   for (const f of generated.files) {
     if (!f.result.ok) {
       throw new Error(`${f.path}: ${f.result.error}`);
     }
     const text = f.path.endsWith('.cpp')
-      ? recordHandlers(f.result.text, parsed.document.window.name)
+      ? recordHandlers(f.result.text, document.window.name)
       : f.result.text;
-    writeFileSync(join(generatedDir, f.path), text);
+    writeFileSync(join(generatedDir, dir, f.path), text);
   }
 }
 

@@ -96,6 +96,8 @@ export interface DesignerState {
   readonly zoom: number;
   /** プロジェクトに登録したテーマの名前(theme_override の preset で選べるもの)。 */
   readonly themePresets: readonly string[];
+  /** パレットに出す部品ファイル(パスは定義ファイルのフォルダからの相対パス)。 */
+  readonly components: readonly { readonly path: string; readonly className: string }[];
   readonly sidebar: SidebarLayout;
   /** 開いている右クリックのメニュー(画面の座標と項目)。 */
   readonly contextMenu:
@@ -126,6 +128,7 @@ export const useDesigner = create<DesignerState>()((set) => ({
   pointer: undefined,
   zoom: 1,
   themePresets: [],
+  components: [],
   sidebar: DEFAULT_SIDEBAR,
   contextMenu: undefined,
   select: (id) => {
@@ -257,6 +260,9 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
       break;
     case 'themePresets':
       useDesigner.setState({ themePresets: message.names });
+      break;
+    case 'components':
+      useDesigner.setState({ components: message.items });
       break;
     case 'editResult':
       if (!message.ok) {

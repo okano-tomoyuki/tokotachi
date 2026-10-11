@@ -237,7 +237,7 @@ export function generateProject(
     return { error: 'Set main_window in the project file' };
   }
   if (main.doc.window.class !== 'Window') {
-    return { error: 'The main window must be a Window (not a Dialog)' };
+    return { error: 'The main window must be a Window (not a Dialog or a component file)' };
   }
   const options = windowCppOptions(project, main.path);
   const qualified = [...options.namespace, main.doc.window.name].join('::');

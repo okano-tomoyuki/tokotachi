@@ -3,6 +3,7 @@
  */
 import { existsSync } from 'node:fs';
 import {
+  componentReferences,
   DOCUMENT_EXTENSION,
   imageReferences,
   locate,
@@ -13,6 +14,7 @@ import {
   type Diagnostic,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { loadComponents } from './components.ts';
 import { projectOf } from './projects.ts';
 
 export function registerDiagnostics(): vscode.Disposable {
@@ -38,6 +40,14 @@ export function registerDiagnostics(): vscode.Disposable {
           });
         }
       }
+    }
+    // 置いた部品ファイル(docs/adr/0043)が有るか・根が Widget か・循環していないか
+    if (parsed?.document && componentReferences(parsed.document).length > 0) {
+      const { diagnostics: problems } = await loadComponents(document.uri, parsed.document);
+      if (document.isClosed || document.getText() !== text) {
+        return; // 調べている間に変わった: 新しい内容で調べ直す
+      }
+      diagnostics.push(...problems);
     }
     // プロジェクトに登録したテーマの参照(プロジェクトに属するウィンドウだけが使え、登録した名前でなければならない)
     const references = parsed?.document ? themePresetReferences(parsed.document) : [];
@@ -91,10 +101,13 @@ export function registerDiagnostics(): vscode.Disposable {
     vscode.workspace.onDidOpenTextDocument(run),
     vscode.workspace.onDidChangeTextDocument((e) => {
       run(e.document);
-      // プロジェクトのテーマが変わったら、開いているウィンドウの参照を調べ直す
-      if (e.document.uri.path.endsWith(PROJECT_EXTENSION)) {
+      // プロジェクトのテーマ・部品ファイルが変わったら、開いているウィンドウの参照を調べ直す
+      if (
+        e.document.uri.path.endsWith(PROJECT_EXTENSION) ||
+        e.document.uri.path.endsWith(DOCUMENT_EXTENSION)
+      ) {
         vscode.workspace.textDocuments
-          .filter((d) => d.uri.path.endsWith(DOCUMENT_EXTENSION))
+          .filter((d) => d !== e.document && d.uri.path.endsWith(DOCUMENT_EXTENSION))
           .forEach(run);
       }
     }),

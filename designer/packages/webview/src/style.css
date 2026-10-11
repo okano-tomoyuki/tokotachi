@@ -428,6 +428,30 @@ textarea.invalid {
   font-weight: bold;
 }
 
+.inspector-component {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 0 8px 8px;
+  opacity: 0.9;
+}
+
+.link-button {
+  padding: 0;
+  overflow: hidden;
+  color: var(--vscode-textLink-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.link-button:hover {
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: underline;
+}
+
 .name-field {
   flex: 1;
 }

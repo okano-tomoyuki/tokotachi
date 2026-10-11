@@ -59,6 +59,11 @@
         "icon": "$(add)"
       },
       {
+        "command": "tokotachiDesigner.newComponent",
+        "title": "%command.newComponent.title%",
+        "category": "Tokotachi Designer"
+      },
+      {
         "command": "tokotachiDesigner.generateCode",
         "title": "%command.generateCode.title%",
         "category": "Tokotachi Designer",
@@ -132,6 +137,11 @@
           "group": "navigation@9"
         },
         {
+          "command": "tokotachiDesigner.newComponent",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@9"
+        },
+        {
           "command": "tokotachiDesigner.generateCode",
           "when": "resourceFilename =~ /\\.ttui\\.json$/",
           "group": "navigation@9"
@@ -145,6 +155,9 @@
       "file/newFile": [
         {
           "command": "tokotachiDesigner.newWindow"
+        },
+        {
+          "command": "tokotachiDesigner.newComponent"
         }
       ],
       "view/title": [
@@ -177,6 +190,10 @@
         },
         {
           "command": "tokotachiDesigner.newWindow",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
+        },
+        {
+          "command": "tokotachiDesigner.newComponent",
           "when": "view == tokotachiDesigner.projects && viewItem == project"
         },
         {

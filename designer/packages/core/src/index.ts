@@ -44,6 +44,7 @@ export {
   type ThemePresets,
 } from './dsl/themeOverride.ts';
 export * from './dsl/outline.ts';
+export * from './dsl/components.ts';
 export {
   clampToRange,
   describeRange,

@@ -8,7 +8,7 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buildSetup, type Op } from '@tokotachi-designer/codegen';
+import { type ComponentResolver, type Op } from '@tokotachi-designer/codegen';
 import {
   isImageType,
   normalizePath,
@@ -16,6 +16,7 @@ import {
   type ThemePresets,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
+import { canvasSetup } from './components.ts';
 import { systemFonts } from './fonts.ts';
 import { withPlaceholders } from './placeholders.ts';
 
@@ -112,6 +113,7 @@ export class Canvas {
    * @param options.images 定義ファイルが参照する画像の中身(正規化したパス → 中身)。無い画像は描かない
    * @param options.themeOverride アプリケーションのテーマに重ねる上書き(プロジェクトの theme.override。検証済みのもの)
    * @param options.themePresets プロジェクトに登録したテーマ(theme.presets)。部品の theme_override の preset を展開する
+   * @param options.components 置いた部品ファイルを読む(docs/adr/0043)。読めない部品ファイルは空の Widget として描く
    */
   render(
     doc: TtuiDocument,
@@ -122,6 +124,7 @@ export class Canvas {
       images?: ReadonlyMap<string, Uint8Array>;
       themeOverride?: Readonly<Record<string, unknown>> | undefined;
       themePresets?: ThemePresets | undefined;
+      components?: ComponentResolver | undefined;
     } = {},
   ): RenderResult {
     // プロジェクトに登録したテーマの参照は、その中身に展開して描く(生成するコードの <名前>_theme() と同じ)
@@ -135,8 +138,9 @@ export class Canvas {
       type: 'int',
       value: index,
     }));
+    const setup = canvasSetup(target, options.components, options.themePresets);
     // 画像のプロパティの値は、正規化したパスにして、その中身と一緒に渡す
-    const ops = buildSetup(target).ops.map((op): Op =>
+    const ops = setup.ops.map((op): Op =>
       op.op === 'set' && isImageType(op.type) && typeof op.value === 'string'
         ? { ...op, value: normalizePath(op.value) }
         : op,
@@ -146,7 +150,7 @@ export class Canvas {
       images[path] = Buffer.from(data).toString('base64');
     }
     const request = {
-      window_class: target.window.class,
+      window_class: setup.windowClass,
       color_scheme: options.colorScheme ?? 'LIGHT',
       ...(options.themeOverride !== undefined ? { theme_override: options.themeOverride } : {}),
       images,

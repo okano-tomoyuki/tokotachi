@@ -18,7 +18,12 @@ import {
 /** ドラッグしているもの。 */
 export type Drag =
   /** パレットの部品(新しく足す)。 */
-  | { readonly kind: 'new'; readonly class: string }
+  | {
+      readonly kind: 'new';
+      readonly class: string;
+      /** 部品ファイルを置く(docs/adr/0043)。class は Widget。 */
+      readonly component?: string;
+    }
   /** パレットの空き(BoxLayout にだけ入れられる)。 */
   | { readonly kind: 'spacer'; readonly spacer: { stretch: number } | { spacing: number } }
   /** キャンバス・構造の木の部品(移す)。 */
@@ -114,6 +119,10 @@ export function dropTarget(
     }
     const info = node.class === undefined ? undefined : findClass(node.class);
     if (node.kind === 'widget' && !info?.accepts_children && !info?.child_keys) {
+      continue;
+    }
+    // 部品ファイルを置いた部品の中身は、部品ファイルが決める
+    if (node.component !== undefined) {
       continue;
     }
     const rect =

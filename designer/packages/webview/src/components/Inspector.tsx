@@ -313,6 +313,22 @@ function NodeEditor({ node }: { node: OutlineNode }) {
         <span className="inspector-class">{node.class}</span>
         {json.name !== undefined && <NameField node={node} name={json.name} />}
       </div>
+      {node.component !== undefined && (
+        <div className="inspector-component">
+          <span>{l10n.t('Component file')}</span>
+          <button
+            className="link-button"
+            title={l10n.t('Open the component file to edit its content')}
+            onClick={() => {
+              if (node.component !== undefined) {
+                postMessage({ type: 'openComponent', path: node.component });
+              }
+            }}
+          >
+            {node.component}
+          </button>
+        </div>
+      )}
       <LayoutSection node={node} />
       <div className="tabs">
         <button

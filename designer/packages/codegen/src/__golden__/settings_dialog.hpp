@@ -3,7 +3,8 @@
 #define SETTINGS_DIALOG_HPP
 
 #include <tokotachi/tokotachi.hpp>
-// <tokotachi-designer:end id="tokotachi_header_begin" hash="790c3e9a">
+#include "parts/labeled_edit.hpp"
+// <tokotachi-designer:end id="tokotachi_header_begin" hash="dc13bb56">
 
 // <tokotachi-designer:begin id="tokotachi_namespace_begin">
 // <tokotachi-designer:end id="tokotachi_namespace_begin" hash="811c9dc5">
@@ -16,6 +17,7 @@ public:
 
     // <tokotachi-designer:begin id="declarations">
     tokotachi::Label* label_heading;
+    LabeledEdit* panel_user;
     tokotachi::ScrollArea* scroll_area_badges;
     tokotachi::Widget* area_badges;
     tokotachi::Label* label_badge;
@@ -26,7 +28,7 @@ public:
 
     void settings_finish(tokotachi::Object* sender);
     void slider_zoom_change(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="6e69fdc9">
+    // <tokotachi-designer:end id="declarations" hash="c22c8a8b">
 
 private:
     void tokotachi_setup_ui();

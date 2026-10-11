@@ -8,6 +8,7 @@ import {
   generateProject,
   resolveCppTarget,
   windowCppOptions,
+  type CppOptions,
   type CppTarget,
   type GenerateResult,
   type ProjectWindow,
@@ -23,6 +24,7 @@ import {
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { loadComponents } from './components.ts';
 import { projectOf, readText, windowUri } from './projects.ts';
 import { cppOptions, generateOnSave } from './settings.ts';
 
@@ -112,12 +114,27 @@ export async function generateWindowCode(
   }
   // 画像も先に読む(生成したコードに埋め込む)
   const images = await readImages(directory, doc);
+  // 置いた部品ファイル(docs/adr/0043)のクラスの名前とヘッダ。プロジェクトに属していれば、部品ファイルもプロジェクトの設定で生成する
+  const { components } = await loadComponents(document.uri, doc);
+  const componentOptions = new Map<string, CppOptions>();
+  for (const [path, c] of components) {
+    const componentOwner = owner ? await projectOf(c.uri) : undefined;
+    componentOptions.set(
+      path,
+      componentOwner ? windowCppOptions(componentOwner.project.doc, componentOwner.path) : settings,
+    );
+  }
   const generated = generateCpp(
     doc,
     fileName,
     (path) => existing.get(path),
     settings,
     (path) => images.get(path),
+    (path) => {
+      const c = components.get(path);
+      const options = componentOptions.get(path);
+      return c && options ? { document: c.document, options } : undefined;
+    },
   );
   const written = await writeGenerated(directory, generated, existing, options, () =>
     generateWindowCode(document, { quiet: true, overwrite: true }),

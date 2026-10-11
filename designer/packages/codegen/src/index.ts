@@ -3,16 +3,25 @@
  * 文字列を受け取り文字列を返すだけで、ファイルの入出力は呼び出し側(拡張・CLI)が行う。
  */
 import {
+  componentReferences,
   imageReferences,
   l10n,
   normalizePath,
+  relativePath,
+  resolvePath,
   themePresetReferences,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
-import { emitCpp } from './cpp/emit.ts';
+import { emitCpp, type EmittedComponent } from './cpp/emit.ts';
 import { embedImages } from './cpp/images.ts';
 import { CPP_NAMES, cppSyntax } from './cpp/syntax.ts';
-import { DEFAULT_CPP_OPTIONS, fileNameOf, resolveCppTarget, type CppOptions } from './names.ts';
+import {
+  cppOutputPaths,
+  DEFAULT_CPP_OPTIONS,
+  fileNameOf,
+  resolveCppTarget,
+  type CppOptions,
+} from './names.ts';
 import { createFile, mergeFile, type GeneratedCode, type MergeResult } from './region.ts';
 import { findStaleNames, staleNamesWarning } from './stale.ts';
 
@@ -38,18 +47,40 @@ export type { MergeResult } from './region.ts';
 export { cppString } from './cpp/values.ts';
 export {
   buildSetup,
+  COMPONENT_ROOT_SKIP,
+  inlineOps,
   type Arg,
+  type ComponentResolver,
+  type ResolvedComponent,
+  type SetupOptions,
   type Handler,
   type Op,
   type Result,
   type SetupModel,
 } from './model.ts';
 
+export type { EmittedComponent } from './cpp/emit.ts';
+
 /** 出力する 1 ファイル分の生成結果。 */
 export interface OutputFile {
   /** 定義ファイルのあるフォルダからの相対パス。 */
   readonly path: string;
   readonly result: MergeResult;
+}
+
+/** 置いた部品ファイル(docs/adr/0043)の中身と、そのコード生成の設定。 */
+export interface ComponentSource {
+  readonly document: TtuiDocument;
+  readonly options: CppOptions;
+}
+
+/** 仮の絶対パスの根(core のパスの計算は絶対パスを扱う。`..` をたどれるよう深くする)。 */
+const ROOT = '/r/r/r/r/r/r/r/r/r/r/r/r/r/r/r/r';
+
+/** 部品ファイルのヘッダの、置いた定義ファイルのフォルダからのパス。 */
+function componentHeader(path: string, options: CppOptions): string {
+  const dir = resolvePath(ROOT, `${normalizePath(path)}/..`);
+  return relativePath(ROOT, resolvePath(dir, cppOutputPaths(fileNameOf(path), options).header));
 }
 
 export interface GenerateResult {
@@ -64,6 +95,8 @@ export interface GenerateResult {
  * @param readExisting 出力先の既存の内容を返す(無ければ undefined)
  * @param readImage 定義ファイルが参照する画像の中身を返す(パスは定義ファイルのフォルダからの相対パス。無ければ undefined)。
  *   読めない画像があれば、ソースを生成せずにエラーにする
+ * @param readComponent 置いた部品ファイル(パスは定義ファイルに書いたまま)の中身と設定を返す。読めなければ undefined で、
+ *   ソースを生成せずにエラーにする
  */
 export function generateCpp(
   doc: TtuiDocument,
@@ -71,6 +104,7 @@ export function generateCpp(
   readExisting: (path: string) => string | undefined,
   options: CppOptions = DEFAULT_CPP_OPTIONS,
   readImage: (path: string) => Uint8Array | undefined = () => undefined,
+  readComponent: (path: string) => ComponentSource | undefined = () => undefined,
 ): GenerateResult {
   const target = resolveCppTarget(doc, dslFileName, options);
   const fail = (error: string): GenerateResult => ({
@@ -99,7 +133,33 @@ export function generateCpp(
     data.set(path, bytes);
   }
   const images = embedImages(paths, data);
-  const code = emitCpp(doc, fileNameOf(dslFileName), target, options.commentLocale, images);
+  const components = new Map<string, EmittedComponent>();
+  for (const ref of componentReferences(doc)) {
+    if (components.has(ref.path)) {
+      continue;
+    }
+    const source = readComponent(ref.path);
+    if (!source) {
+      return fail(l10n.t('Cannot read the component file "{0}"', ref.path));
+    }
+    // ヘッダから部品ファイルのヘッダへの相対パス
+    const headerDir = resolvePath(ROOT, `${target.header}/..`);
+    components.set(ref.path, {
+      document: source.document,
+      include: relativePath(
+        headerDir,
+        resolvePath(ROOT, componentHeader(ref.path, source.options)),
+      ),
+    });
+  }
+  const code = emitCpp(
+    doc,
+    fileNameOf(dslFileName),
+    target,
+    options.commentLocale,
+    images,
+    components,
+  );
   const syntax = cppSyntax(target.className);
   const generate = (generated: GeneratedCode, existing: string | undefined): MergeResult =>
     existing === undefined

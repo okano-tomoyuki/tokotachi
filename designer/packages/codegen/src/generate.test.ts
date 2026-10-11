@@ -4,9 +4,18 @@ import goldenDialogCpp from './__golden__/settings_dialog.cpp?raw';
 import goldenDialogHpp from './__golden__/settings_dialog.hpp?raw';
 import goldenCpp from './__golden__/main_window.cpp?raw';
 import goldenHpp from './__golden__/main_window.hpp?raw';
+import goldenComponentCpp from './__golden__/labeled_edit.cpp?raw';
+import goldenComponentHpp from './__golden__/labeled_edit.hpp?raw';
 import { cppString } from './cpp/values.ts';
 import { DEFAULT_CPP_OPTIONS, generateCpp, type CppOptions, type GenerateResult } from './index.ts';
-import { MAIN_WINDOW, mainWindowCopy, readSampleImage, SETTINGS_DIALOG } from './testing.ts';
+import {
+  LABELED_EDIT,
+  MAIN_WINDOW,
+  mainWindowCopy,
+  readSampleComponent,
+  readSampleImage,
+  SETTINGS_DIALOG,
+} from './testing.ts';
 
 const lf = (text: string): string => text.replace(/\r\n/g, '\n');
 
@@ -17,7 +26,10 @@ function gen(
   readExisting: (path: string) => string | undefined,
   options: CppOptions = DEFAULT_CPP_OPTIONS,
 ): GenerateResult {
-  return generateCpp(doc, dslFileName, readExisting, options, readSampleImage);
+  return generateCpp(doc, dslFileName, readExisting, options, readSampleImage, (path) => {
+    const document = readSampleComponent(path);
+    return document ? { document, options } : undefined;
+  });
 }
 
 function text(result: GenerateResult, path: string): string {
@@ -41,6 +53,24 @@ describe('generateCpp', () => {
     const d = gen(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
     expect(text(d, 'settings_dialog.hpp')).toBe(lf(goldenDialogHpp));
     expect(text(d, 'settings_dialog.cpp')).toBe(lf(goldenDialogCpp));
+    const c = gen(LABELED_EDIT, 'labeled_edit.ttui.json', () => undefined);
+    expect(text(c, 'labeled_edit.hpp')).toBe(lf(goldenComponentHpp));
+    expect(text(c, 'labeled_edit.cpp')).toBe(lf(goldenComponentCpp));
+  });
+
+  it('部品ファイルのヘッダは、置いた定義ファイルのヘッダからのパスで include する', () => {
+    const options = { ...DEFAULT_CPP_OPTIONS, headerDir: 'include', sourceDir: 'src' };
+    const d = gen(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined, options);
+    // 部品ファイルのヘッダは parts/include/labeled_edit.hpp
+    expect(text(d, 'include/settings_dialog.hpp')).toContain(
+      '#include "../parts/include/labeled_edit.hpp"',
+    );
+    expect(text(d, 'include/settings_dialog.hpp')).toContain('    LabeledEdit* panel_user;');
+    expect(text(d, 'src/settings_dialog.cpp')).toContain(
+      '    panel_user = new LabeledEdit(this);\n    panel_user->tooltip = ',
+    );
+    const missing = generateCpp(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
+    expect(missing.files[0]?.result).toMatchObject({ ok: false });
   });
 
   it('生成し直しても変わらない', () => {

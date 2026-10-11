@@ -2,7 +2,7 @@
  * パレット(docs/designer/editor-design.md §4.1)。カタログの分類ごとに部品を並べる。
  * キャンバスへドラッグして入れるか、クリックで選んでいる場所に足す。名前で絞り込め、分類は畳める(畳んだものは覚えておく)。
  * 「部品」と「非ビジュアル」の 2 つのタブに分け、非ビジュアルのタブには画面に出ないもの(Action・オブジェクト・Variable)を並べて、
- * 行の「+」で足す。
+ * 行の「+」で足す。部品のタブの終わりには、ワークスペースの部品ファイル(docs/adr/0043)を並べる。
  */
 import { getCatalog, l10n, type Category } from '@tokotachi-designer/core';
 import { Fragment, useState, type ReactNode } from 'react';
@@ -23,7 +23,7 @@ type NonVisualGroup = 'actions' | 'objects' | 'variables';
 
 const NON_VISUAL_GROUPS: readonly NonVisualGroup[] = ['actions', 'objects', 'variables'];
 
-type GroupId = WidgetCategory | 'spacer' | NonVisualGroup;
+type GroupId = WidgetCategory | 'spacer' | 'components' | NonVisualGroup;
 
 function categoryLabel(c: GroupId): string {
   switch (c) {
@@ -39,6 +39,8 @@ function categoryLabel(c: GroupId): string {
       return l10n.t('Drawing');
     case 'spacer':
       return l10n.t('Spacers');
+    case 'components':
+      return l10n.t('Component files');
     case 'actions':
       return l10n.t('Actions');
     case 'objects':
@@ -152,6 +154,7 @@ export function Palette() {
   const setSidebar = useDesigner((s) => s.setSidebar);
   // 足すときの名前(action_1 など)をドキュメントから決めるので、変わったら作り直す
   useDesigner((s) => s.version);
+  const components = useDesigner((s) => s.components);
   const classes = Object.entries(getCatalog().classes);
   const needle = filter.trim().toLowerCase();
   const spacers = [
@@ -236,6 +239,22 @@ export function Palette() {
                 key: sp.key,
                 label: sp.label,
                 element: <Item label={sp.label} icon={sp.key} title={sp.title} drag={sp.drag} />,
+              }))}
+            />
+            <Group
+              id="components"
+              filter={needle}
+              items={components.map((c) => ({
+                key: c.path,
+                label: c.className,
+                element: (
+                  <Item
+                    label={c.className}
+                    icon="Widget"
+                    title={c.path}
+                    drag={{ kind: 'new', class: 'Widget', component: c.path }}
+                  />
+                ),
               }))}
             />
           </>

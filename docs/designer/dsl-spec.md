@@ -114,7 +114,7 @@
 | キー | 必須 | 型 | 説明 |
 |---|---|---|---|
 | `name` | ○ | 識別子 | **生成するクラスの名前**(PascalCase を勧める。`MainWindow`) |
-| `class` | ○ | `"Window"`・`"Dialog"` | 生成するクラスの基底クラス |
+| `class` | ○ | `"Window"`・`"Dialog"`・`"Widget"` | 生成するクラスの基底クラス。`Widget` は部品ファイル(§4.9) |
 | `properties` | | 名前 → 値 | §5。ウィンドウ自身のプロパティ(`title`・`width`・`height`・`background` 等) |
 | `events` | | 名前 → ハンドラ名 | §6 |
 | `menu_bar` | | メニューバーのノード | §4.5。`Window::menu_bar` に設定する |
@@ -133,6 +133,7 @@
 |---|---|---|---|
 | `name` | ○ | 識別子 | |
 | `class` | ○ | クラス名 | カタログにある、利用者が作れる Widget の派生(`Button`・`Widget` 等) |
+| `component` | | 相対パス | 部品ファイル(§4.9)を置く。`class` は `Widget` にし、`layout`・`children` 等の子は書けない |
 | `properties` | | 名前 → 値 | §5 |
 | `events` | | 名前 → ハンドラ名 | §6 |
 | `actions` | | Action の名前の配列 | `Widget::add_action`(右クリックのメニュー等に出る Action) |
@@ -241,6 +242,21 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 
 所有者はウィンドウ(`new tokotachi::Variable<std::string>(this, "メモ.txt")`)。
 
+### 4.9 部品ファイル
+
+部品の組み合わせ(検索欄とボタンなど)を別の定義ファイルにして、ほかのウィンドウから置く([ADR 0043](../adr/0043-designer-component-files.md))。
+
+- 部品ファイルは、ウィンドウのノードの `class` を `Widget` にした定義ファイル(拡張子は同じ `.ttui.json`)。`name` は生成するクラスの名前。
+  メニューバー・ツールバー・ステータスバー・`buttons` は書けない。`width`・`height` はデザイナーで描く大きさで、生成するコードには書かない
+  (置いた側のレイアウトが大きさを決める)。
+- 置く側は、部品のノードに `component`(定義ファイルのフォルダからの相対パス)を書く。設定できるのは Widget のプロパティ・ハンドラ・`actions` だけ。
+
+```json
+{ "name": "search_bar_1", "class": "Widget", "component": "parts/search_bar.ttui.json", "properties": { "tooltip": "検索" } }
+```
+
+- 部品ファイルの中の部品・ハンドラは、部品ファイルのクラスのもの(置いた側から `search_bar_1->button_search` で触れる)。
+
 ## 5. プロパティ
 
 `properties` のキーは Tokotachi のプロパティの名前、値の書き方はプロパティの型(カタログ)で決まる。
@@ -323,7 +339,9 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 - `name`・メンバ関数の名前の重複と、識別子・予約語・基底クラスのメンバとの衝突
 - クラス・プロパティ・ハンドラがカタログにあること、値が型に合うこと
 - 参照(Action・部品・メニュー)の解決と型の一致
-- 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content`・`columns` は対応するクラスだけ、`buttons` は Dialog だけ)
+- 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content`・`columns` は対応するクラスだけ、`buttons` は Dialog だけ、
+  部品ファイルの根はバーを持たない、部品ファイルを置いた部品は子を持たない)
+- 部品ファイルの参照の書き方(`.ttui.json` で終わる相対パス・区切りは `/`)。ファイルが有るか・根が Widget か・循環していないかは拡張が調べる
 - レイアウトの項目の制約(GridLayout のセルの重なり、BoxLayout の項目のキー)
 - 同じメンバ関数を書いたハンドラの型が一致すること
 - 生成したコードの一時的な変数の名前(codegen-design.md N3)とノードの `name` が重ならないこと

@@ -46,6 +46,8 @@ export interface OutlineNode {
   readonly editable: boolean;
   /** キャンバスの描画の結果の変数の名前(部品・レイアウト・バー)。 */
   readonly variable?: string;
+  /** 部品ファイルを置いた部品なら、そのパス(docs/adr/0043)。 */
+  readonly component?: string;
   readonly children: readonly OutlineNode[];
 }
 
@@ -55,7 +57,7 @@ function node(
   path: JsonPath,
   kind: OutlineKind,
   label: string,
-  rest: Partial<Pick<OutlineNode, 'class' | 'variable' | 'editable'>> = {},
+  rest: Partial<Pick<OutlineNode, 'class' | 'variable' | 'editable' | 'component'>> = {},
   children: readonly OutlineNode[] = [],
 ): OutlineNode {
   return { id: id(path), path, kind, label, editable: rest.editable ?? false, children, ...rest };
@@ -106,7 +108,12 @@ function widget(w: WidgetNode, path: JsonPath): OutlineNode {
     path,
     'widget',
     w.name,
-    { class: w.class, variable: w.name, editable: true },
+    {
+      class: w.class,
+      variable: w.name,
+      editable: true,
+      ...(w.component === undefined ? {} : { component: w.component }),
+    },
     children,
   );
 }

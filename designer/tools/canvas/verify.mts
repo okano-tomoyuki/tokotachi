@@ -21,6 +21,12 @@ const work = join(designer, '.cache', 'canvas-verify');
 
 const SAMPLES = ['main_window', 'settings_dialog'];
 
+/** 見本が置いている部品ファイルを読む(パスは samples/ からの相対パス)。 */
+function readComponent(path: string): { document: TtuiDocument } | undefined {
+  const parsed = parseDocument(readFileSync(join(designer, 'samples', path), 'utf8'));
+  return parsed.document ? { document: parsed.document } : undefined;
+}
+
 /** 見本が参照する画像を読む。 */
 function sampleImages(doc: TtuiDocument): Map<string, Uint8Array> {
   return new Map(
@@ -46,12 +52,12 @@ async function main(): Promise<void> {
     }
     const images = sampleImages(parsed.document);
     t = performance.now();
-    const first = canvas.render(parsed.document, { images });
+    const first = canvas.render(parsed.document, { images, components: readComponent });
     const firstMs = performance.now() - t;
     t = performance.now();
     const N = 20;
     for (let i = 0; i < N; i++) {
-      canvas.render(parsed.document, { images });
+      canvas.render(parsed.document, { images, components: readComponent });
     }
     const eachMs = (performance.now() - t) / N;
     writeFileSync(join(work, `${name}.png`), encodePng(first));

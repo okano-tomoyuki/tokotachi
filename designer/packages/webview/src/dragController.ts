@@ -6,6 +6,7 @@
 import {
   endOfLayout,
   findOutlineNode,
+  newComponentWidget,
   newWidget,
   valueAt,
   type OutlineNode,
@@ -87,7 +88,10 @@ function drop(): void {
 function insert(document: TtuiDocument, drag: Drag, slot: Slot): void {
   switch (drag.kind) {
     case 'new': {
-      const widget = newWidget(document, drag.class);
+      const widget =
+        drag.component === undefined
+          ? newWidget(document, drag.class)
+          : newComponentWidget(document, drag.component);
       sendEdit({ kind: 'addWidget', slot, widget }, widget.name);
       return;
     }

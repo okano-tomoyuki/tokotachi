@@ -166,6 +166,38 @@ describe('validateDocument', () => {
     expect(codes(dialog)).toEqual(['invalid-dialog-button']);
   });
 
+  it('部品ファイル: 根の Widget はバーを持たず、置いた部品は中身を書かない', () => {
+    const component = {
+      format_version: 1,
+      window: {
+        name: 'SearchBar',
+        class: 'Widget',
+        properties: { width: 300, height: 40 },
+        layout: {
+          class: 'BoxLayout',
+          items: [{ widget: { name: 'edit_search', class: 'LineEdit' } }],
+        },
+      },
+    };
+    expect(codes(component)).toEqual([]);
+    expect(codes({ ...component, window: { ...component.window, status_bar: {} } })).toEqual([
+      'children-not-allowed',
+    ]);
+    const doc = sampleCopy();
+    items(doc)[0].widget = {
+      name: 'panel_search',
+      class: 'Widget',
+      component: 'parts/search_bar.ttui.json',
+    };
+    expect(codes(doc)).toEqual([]);
+    items(doc)[0].widget.class = 'Label';
+    items(doc)[0].widget.component = 'C:/parts/search_bar.json';
+    expect(codes(doc)).toEqual(['invalid-component', 'invalid-component']);
+    items(doc)[0].widget.class = 'Widget';
+    items(doc)[0].widget.children = [];
+    expect(codes(doc)).toEqual(['invalid-component', 'children-not-allowed']);
+  });
+
   it('レイアウトの項目', () => {
     const doc = sampleCopy();
     const box = doc.window.layout;

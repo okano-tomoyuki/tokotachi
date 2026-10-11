@@ -28,6 +28,16 @@
         },
         { "spacing": 4 },
         {
+          "widget": {
+            "name": "panel_user",
+            "class": "Widget",
+            "component": "parts/labeled_edit.ttui.json",
+            "properties": {
+              "tooltip": "表示する名前"
+            }
+          }
+        },
+        {
           "stretch": 1,
           "widget": {
             "name": "scroll_area_badges",

@@ -4,9 +4,15 @@
  * プロジェクトの下には起動部分(main.cpp など)、ウィンドウの下にはヘッダ・ソースの生成先を出す(まだ無ければ「未生成」)。
  */
 import { cppOutputPaths, projectOutputPaths, windowCppOptions } from '@tokotachi-designer/codegen';
-import { DOCUMENT_EXTENSION, PROJECT_EXTENSION, sameWindowPath } from '@tokotachi-designer/core';
+import {
+  DOCUMENT_EXTENSION,
+  isComponentDocument,
+  parseDocument,
+  PROJECT_EXTENSION,
+  sameWindowPath,
+} from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
-import { findProjects, windowPathIn, windowUri, type ProjectInfo } from './projects.ts';
+import { findProjects, readText, windowPathIn, windowUri, type ProjectInfo } from './projects.ts';
 import { cppOptions } from './settings.ts';
 
 /** ファイルの変更をまとめて描き直すまでの時間(ms) */
@@ -19,12 +25,24 @@ type Node =
       readonly uri: vscode.Uri;
       readonly project: ProjectInfo | undefined;
       readonly main: boolean;
+      /** 部品ファイル(根が Widget。docs/adr/0043)か。 */
+      readonly component: boolean;
     }
   | { readonly kind: 'loose'; readonly windows: readonly vscode.Uri[] }
   | { readonly kind: 'generated'; readonly uri: vscode.Uri; readonly missing: boolean };
 
 function fileName(uri: vscode.Uri): string {
   return uri.path.split('/').pop() ?? '';
+}
+
+/** 部品ファイル(根が Widget)か。読めなければ false。 */
+async function isComponentFile(uri: vscode.Uri): Promise<boolean> {
+  const text = await readText(uri);
+  if (text === undefined) {
+    return false;
+  }
+  const parsed = parseDocument(text);
+  return parsed.document !== undefined && isComponentDocument(parsed.document);
 }
 
 async function exists(uri: vscode.Uri): Promise<boolean> {
@@ -90,8 +108,14 @@ export class ProjectsView implements vscode.TreeDataProvider<Node>, vscode.Dispo
           fileName(node.uri).replace(DOCUMENT_EXTENSION, ''),
           vscode.TreeItemCollapsibleState.Collapsed,
         );
-        item.iconPath = new vscode.ThemeIcon(node.main ? 'star-full' : 'window');
-        item.description = node.main ? vscode.l10n.t('main window') : undefined;
+        item.iconPath = new vscode.ThemeIcon(
+          node.main ? 'star-full' : node.component ? 'symbol-module' : 'window',
+        );
+        item.description = node.main
+          ? vscode.l10n.t('main window')
+          : node.component
+            ? vscode.l10n.t('component')
+            : undefined;
         item.resourceUri = node.uri;
         item.contextValue = node.project
           ? node.main
@@ -138,24 +162,33 @@ export class ProjectsView implements vscode.TreeDataProvider<Node>, vscode.Dispo
         : [];
       return [
         ...(await generatedNodes(outputs)),
-        ...(doc?.windows ?? []).map((path) => ({
-          kind: 'window' as const,
-          uri: windowUri(node.project.uri, path),
-          project: node.project,
-          main: doc?.main_window !== undefined && sameWindowPath(doc.main_window, path),
-        })),
+        ...(await Promise.all(
+          (doc?.windows ?? []).map(async (path) => {
+            const uri = windowUri(node.project.uri, path);
+            return {
+              kind: 'window' as const,
+              uri,
+              project: node.project,
+              main: doc?.main_window !== undefined && sameWindowPath(doc.main_window, path),
+              component: await isComponentFile(uri),
+            };
+          }),
+        )),
       ];
     }
     if (node?.kind === 'window') {
       return generatedNodes(windowOutputs(node.uri, node.project));
     }
     if (node?.kind === 'loose') {
-      return node.windows.map((uri) => ({
-        kind: 'window' as const,
-        uri,
-        project: undefined,
-        main: false,
-      }));
+      return Promise.all(
+        node.windows.map(async (uri) => ({
+          kind: 'window' as const,
+          uri,
+          project: undefined,
+          main: false,
+          component: await isComponentFile(uri),
+        })),
+      );
     }
     if (node) {
       return [];

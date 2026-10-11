@@ -15,6 +15,11 @@ type Group = 'actions' | 'objects' | 'variables';
 /** 見出しの順(構造の木の outline と同じ順)。 */
 const GROUPS: readonly Group[] = ['actions', 'objects', 'variables'];
 
+/** 部品ファイルを置いた部品の、木に出す種類(部品ファイルの名前。`parts/search_bar.ttui.json` → `search_bar.ttui.json`)。 */
+function componentName(path: string): string {
+  return path.split('/').pop() ?? path;
+}
+
 function groupLabel(group: Group): string {
   switch (group) {
     case 'actions':
@@ -101,7 +106,11 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
         </span>
         <ClassIcon name={nodeIconKey(node)} />
         <span className="tree-label">{label(node)}</span>
-        {node.class !== undefined && <span className="tree-class">{node.class}</span>}
+        {node.class !== undefined && (
+          <span className="tree-class">
+            {node.component === undefined ? node.class : componentName(node.component)}
+          </span>
+        )}
         {hidden === 'self' && <span className="tree-hidden">{l10n.t('Hidden')}</span>}
       </div>
       {open && node.children.map((c) => <Row key={c.id} node={c} depth={depth + 1} />)}

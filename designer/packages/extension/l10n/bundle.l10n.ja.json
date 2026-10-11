@@ -278,5 +278,18 @@
   "Make the same width": "幅を揃える",
   "Make the same height": "高さを揃える",
   "Align": "整列",
-  "Select two or more freely placed widgets": "自由な配置の部品を 2 つ以上選んでください"
+  "Select two or more freely placed widgets": "自由な配置の部品を 2 つ以上選んでください",
+  "A widget placed from a component file must have \"class\": \"Widget\"": "部品ファイルを置いた部品の \"class\" は \"Widget\" にします",
+  "A widget placed from a component file cannot have \"{0}\" (the component file decides its content)": "部品ファイルを置いた部品には \"{0}\" を書けません(中身は部品ファイルが決めます)",
+  "Cannot read the component file \"{0}\"": "部品ファイル \"{0}\" を読めません",
+  "The component file \"{0}\" is not found": "部品ファイル \"{0}\" が見つかりません",
+  "\"{0}\" is not a component file without errors (its root must be a Widget)": "\"{0}\" は誤りの無い部品ファイルではありません(根は Widget にします)",
+  "The component files refer to each other: {0}": "部品ファイルが互いに置き合っています: {0}",
+  "New Component File": "新しい部品ファイル",
+  "File name of the component file (the class name is made from it: search_bar → SearchBar)": "部品ファイルの名前(クラスの名前はここから作る: search_bar → SearchBar)",
+  "component": "部品ファイル",
+  "Component file": "部品ファイル",
+  "Open the component file to edit its content": "部品ファイルを開いて中身を編集します",
+  "Component files": "部品ファイル",
+  "A component file cannot be the main window": "部品ファイルはメインのウィンドウにできません"
 }

@@ -38,8 +38,10 @@ export type DiagnosticCode =
   | 'invalid-menu-item'
   | 'invalid-tool-item'
   | 'invalid-dialog-button'
+  | 'invalid-component'
   // ファイル(core では調べず、拡張が調べて出す)
   | 'missing-image'
+  | 'missing-component'
   | 'unknown-theme';
 
 export interface Diagnostic {

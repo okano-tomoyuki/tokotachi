@@ -3,6 +3,8 @@
  */
 import {
   dirname,
+  isComponentDocument,
+  parseDocument,
   parseProject,
   PROJECT_EXTENSION,
   relativePath,
@@ -98,12 +100,15 @@ export async function updateProject(
   return ok;
 }
 
-/** ウィンドウをプロジェクトに加える(最初のウィンドウはメインのウィンドウにもする)。 */
+/** ウィンドウをプロジェクトに加える(最初の Window はメインのウィンドウにもする。部品ファイルはしない)。 */
 export async function addWindowToProject(
   project: vscode.Uri,
   window: vscode.Uri,
 ): Promise<boolean> {
   const path = windowPathIn(project, window);
+  const text = await readText(window);
+  const parsed = text === undefined ? undefined : parseDocument(text).document;
+  const canBeMain = !parsed || !isComponentDocument(parsed);
   return updateProject(project, (doc) => {
     if ((doc.windows ?? []).some((w) => sameWindowPath(w, path))) {
       return doc;
@@ -111,7 +116,7 @@ export async function addWindowToProject(
     return {
       ...doc,
       windows: [...(doc.windows ?? []), path],
-      ...(doc.main_window === undefined ? { main_window: path } : {}),
+      ...(doc.main_window === undefined && canBeMain ? { main_window: path } : {}),
     };
   });
 }

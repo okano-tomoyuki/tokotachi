@@ -30,6 +30,11 @@ export type Events = z.infer<typeof Events>;
 export interface WidgetNode {
   readonly name: string;
   readonly class: string;
+  /**
+   * 部品ファイル(根が Widget の定義ファイル。定義ファイルのフォルダからの相対パス)。書いたときは class は Widget で、
+   * 中身(レイアウト・子)は部品ファイルが決める(docs/adr/0043)。
+   */
+  readonly component?: string | undefined;
   readonly properties?: Properties | undefined;
   readonly events?: Events | undefined;
   /** add_action する Action の名前。 */
@@ -103,6 +108,7 @@ export interface PaneNode {
 export const WidgetNode: z.ZodType<WidgetNode> = z.strictObject({
   name: z.string(),
   class: z.string(),
+  component: z.string().optional(),
   properties: Properties.optional(),
   events: Events.optional(),
   actions: z.array(z.string()).optional(),
@@ -249,7 +255,8 @@ export type DialogButtonNode = z.infer<typeof DialogButtonNode>;
 export const WindowNode = z.strictObject({
   /** 生成するクラスの名前。 */
   name: z.string(),
-  class: z.enum(['Window', 'Dialog']),
+  /** Window・Dialog か、部品ファイルなら Widget(docs/adr/0043)。 */
+  class: z.enum(['Window', 'Dialog', 'Widget']),
   properties: Properties.optional(),
   events: Events.optional(),
   menu_bar: MenuBarNode.optional(),

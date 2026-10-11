@@ -9,6 +9,7 @@ import type {
 } from '@tokotachi-designer/core';
 import {
   checkThemeOverride,
+  DOCUMENT_EXTENSION,
   hasErrors,
   IMAGE_EXTENSIONS,
   isImagePath,
@@ -19,6 +20,12 @@ import {
 import * as vscode from 'vscode';
 import { applyEditCommand } from './applyEditCommand.ts';
 import { renderCanvas } from './canvasService.ts';
+import {
+  componentResolver,
+  listComponents,
+  loadComponents,
+  readComponentImages,
+} from './components.ts';
 import { generateWindowCode, readImages } from './generateCode.ts';
 import { goToHandler } from './goToHandler.ts';
 import { projectOf } from './projects.ts';
@@ -78,6 +85,9 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       }
       try {
         const images = await readImages(vscode.Uri.joinPath(document.uri, '..'), parsed.document);
+        // 置いた部品ファイル(docs/adr/0043)は、その中身を展開して描く
+        const { components } = await loadComponents(document.uri, parsed.document);
+        await readComponentImages(components, images);
         // プロジェクトに属していれば、そのテーマで描く(project-spec.md §4.1)
         const theme = (await projectOf(document.uri))?.project.doc.theme;
         await post({ type: 'themePresets', names: Object.keys(theme?.presets ?? {}) });
@@ -94,6 +104,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
           images,
           override,
           theme?.presets,
+          componentResolver(components),
         );
         await post({ type: 'canvas', frame });
       } catch (e) {
@@ -143,6 +154,20 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       `**/*.{${IMAGE_EXTENSIONS.join(',')}}`,
     );
 
+    // 置いた部品ファイルが作られた・消えたときも描き直す
+    const componentWatcher = vscode.workspace.createFileSystemWatcher(`**/*${DOCUMENT_EXTENSION}`);
+    // パレットの部品ファイルの一覧(ほかの定義ファイルが変わったら作り直す。続いたときは最後だけ)
+    let componentsTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleComponents = (): void => {
+      if (componentsTimer !== undefined) {
+        clearTimeout(componentsTimer);
+      }
+      componentsTimer = setTimeout(() => {
+        componentsTimer = undefined;
+        void listComponents(document.uri).then((items) => post({ type: 'components', items }));
+      }, 300);
+    };
+
     const subscriptions = [
       imageWatcher,
       imageWatcher.onDidChange(scheduleRender),
@@ -152,6 +177,7 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
         switch (message.type) {
           case 'ready':
             postDocument();
+            scheduleComponents();
             break;
           case 'edit':
             enqueueEdit(message.requestId, message.command);
@@ -165,6 +191,13 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           case 'openAsText':
             void vscode.commands.executeCommand('vscode.openWith', document.uri, 'default');
+            break;
+          case 'openComponent':
+            void vscode.commands.executeCommand(
+              'vscode.openWith',
+              vscode.Uri.joinPath(document.uri, '..', message.path),
+              DesignerEditorProvider.viewType,
+            );
             break;
           case 'pickImage':
             void pickImage(message.target, message.property);
@@ -195,12 +228,31 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       vscode.window.onDidChangeActiveColorTheme(() => {
         scheduleRender();
       }),
-      // プロジェクトのテーマが変わったら描き直す(保存していない変更も)
+      // プロジェクトのテーマ・ほかの定義ファイル(置いた部品ファイル)が変わったら描き直す(保存していない変更も)
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.uri.path.endsWith(PROJECT_EXTENSION)) {
+        const path = e.document.uri.path;
+        if (
+          path.endsWith(PROJECT_EXTENSION) ||
+          (path.endsWith(DOCUMENT_EXTENSION) &&
+            e.document.uri.toString() !== document.uri.toString())
+        ) {
           scheduleRender();
         }
+        if (path.endsWith(DOCUMENT_EXTENSION)) {
+          scheduleComponents();
+        }
       }),
+      componentWatcher,
+      ...[
+        componentWatcher.onDidChange,
+        componentWatcher.onDidCreate,
+        componentWatcher.onDidDelete,
+      ].map((on) =>
+        on(() => {
+          scheduleRender();
+          scheduleComponents();
+        }),
+      ),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(`${SECTION}.canvas`)) {
           scheduleRender();
@@ -210,6 +262,9 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
     panel.onDidDispose(() => {
       if (renderTimer !== undefined) {
         clearTimeout(renderTimer);
+      }
+      if (componentsTimer !== undefined) {
+        clearTimeout(componentsTimer);
       }
       for (const s of subscriptions) {
         s.dispose();

@@ -8,6 +8,10 @@ import { findClass, widgets, type TtuiDocument, type WidgetNode } from '@tokotac
 export const PLACEHOLDER_SIZE = { width: 80, height: 48 };
 
 function isEmptyContainer(node: WidgetNode): boolean {
+  // 部品ファイルを置いた部品の中身は、部品ファイルが決める
+  if (node.component !== undefined) {
+    return false;
+  }
   const info = findClass(node.class);
   if (!info?.accepts_children && !info?.child_keys) {
     return false;

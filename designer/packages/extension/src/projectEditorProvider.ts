@@ -6,6 +6,7 @@
 import {
   checkThemeOverride,
   DOCUMENT_EXTENSION,
+  isComponentDocument,
   minimalTextEdit,
   parseDocument,
   parseProject,
@@ -186,7 +187,7 @@ export class ProjectEditorProvider implements vscode.CustomTextEditorProvider {
 /** 加えられるウィンドウと、登録したテーマを参照している部品の数。 */
 async function projectInfo(
   document: vscode.TextDocument,
-): Promise<{ candidates: string[]; presetUsage: Record<string, number> }> {
+): Promise<{ candidates: string[]; presetUsage: Record<string, number>; components: string[] }> {
   const project = parseProject(document.getText()).project;
   const windows = project?.windows ?? [];
   const files = await vscode.workspace.findFiles(
@@ -198,14 +199,21 @@ async function projectInfo(
     .filter((path) => !windows.some((w) => sameWindowPath(w, path)))
     .sort((a, b) => a.localeCompare(b));
   const presetUsage: Record<string, number> = {};
-  for (const path of windows) {
+  const components: string[] = [];
+  for (const path of [...windows, ...candidates]) {
     const text = await readText(windowUri(document.uri, path));
     const doc = text === undefined ? undefined : parseDocument(text).document;
+    if (doc && isComponentDocument(doc)) {
+      components.push(path);
+    }
+    if (!windows.includes(path)) {
+      continue;
+    }
     for (const ref of doc ? themePresetReferences(doc) : []) {
       presetUsage[ref.name] = (presetUsage[ref.name] ?? 0) + 1;
     }
   }
-  return { candidates, presetUsage };
+  return { candidates, presetUsage, components };
 }
 
 function eolOf(document: vscode.TextDocument): string {

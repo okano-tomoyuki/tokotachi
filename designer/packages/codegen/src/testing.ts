@@ -2,10 +2,18 @@
 import { TtuiDocument } from '@tokotachi-designer/core';
 import mainWindow from '../../../samples/main_window.ttui.json' with { type: 'json' };
 import settingsDialog from '../../../samples/settings_dialog.ttui.json' with { type: 'json' };
+import labeledEdit from '../../../samples/parts/labeled_edit.ttui.json' with { type: 'json' };
 import openPng from '../../../samples/icons/open.png?inline';
 
 export const MAIN_WINDOW: TtuiDocument = TtuiDocument.parse(mainWindow);
 export const SETTINGS_DIALOG: TtuiDocument = TtuiDocument.parse(settingsDialog);
+/** 部品ファイルの見本(settings_dialog が置いている)。 */
+export const LABELED_EDIT: TtuiDocument = TtuiDocument.parse(labeledEdit);
+
+/** 見本が置いている部品ファイルを読む(パスは samples/ からの相対パス。無ければ undefined)。 */
+export function readSampleComponent(path: string): TtuiDocument | undefined {
+  return path === 'parts/labeled_edit.ttui.json' ? LABELED_EDIT : undefined;
+}
 
 /** 見本の写し(テストで書き換える)。 */
 export function mainWindowCopy(): any {

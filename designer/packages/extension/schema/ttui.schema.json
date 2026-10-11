@@ -19,7 +19,8 @@
           "type": "string",
           "enum": [
             "Window",
-            "Dialog"
+            "Dialog",
+            "Widget"
           ]
         },
         "properties": {
@@ -470,6 +471,9 @@
           "type": "string"
         },
         "class": {
+          "type": "string"
+        },
+        "component": {
           "type": "string"
         },
         "properties": {

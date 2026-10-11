@@ -25,6 +25,13 @@ import { cppString, cppValue, enumValue, placementStatements } from './values.ts
 
 const INDENT = '    ';
 
+/** 置いた部品ファイル(docs/adr/0043)。 */
+export interface EmittedComponent {
+  readonly document: TtuiDocument;
+  /** ヘッダから部品ファイルのヘッダを include するパス。 */
+  readonly include: string;
+}
+
 export interface CppFiles {
   readonly header: GeneratedCode;
   readonly source: GeneratedCode;
@@ -75,7 +82,9 @@ function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): stri
     switch (op.op) {
       case 'new':
         return [
-          `${assignee(op.variable, op.class, op.declare)} = new tokotachi::${op.class}(${op.parent ?? ''});`,
+          op.component !== undefined
+            ? `${op.variable} = new ${op.component}(${op.parent ?? ''});`
+            : `${assignee(op.variable, op.class, op.declare)} = new tokotachi::${op.class}(${op.parent ?? ''});`,
         ];
       case 'set': {
         const image =
@@ -130,9 +139,33 @@ export function namespaceEnd(namespace: readonly string[]): string {
     .join('\n');
 }
 
+/** コンストラクタの引数(Dialog は持ち主のウィンドウ、部品ファイルは親の部品)。 */
+function constructorParams(base: string): string {
+  switch (base) {
+    case 'Dialog':
+      return 'tokotachi::Window* parent';
+    case 'Widget':
+      return 'tokotachi::Widget* parent';
+    default:
+      return '';
+  }
+}
+
+function baseInitializer(base: string): string {
+  switch (base) {
+    case 'Dialog':
+      return 'tokotachi::Dialog(parent, std::string())';
+    case 'Widget':
+      return 'tokotachi::Widget(parent)';
+    default:
+      return 'tokotachi::Window(std::string())';
+  }
+}
+
 /**
  * @param sourceName 定義ファイルの名前(生成物の説明に使う)
  * @param images 埋め込む画像(定義ファイルが参照するもの。cpp/images.ts の embedImages)
+ * @param components 置いた部品ファイル(パスは定義ファイルに書いたまま)と、そのクラス・ヘッダを include するパス
  */
 export function emitCpp(
   doc: TtuiDocument,
@@ -140,19 +173,34 @@ export function emitCpp(
   target: CppTarget,
   locale: CommentLocale,
   images: readonly EmbeddedImage[] = [],
+  components: ReadonlyMap<string, EmittedComponent> = new Map(),
 ): CppFiles {
   const comments = generatedComments(locale);
   const { className, includeGuard, namespace } = target;
   const base = doc.window.class;
-  const setup = buildSetup(doc);
+  const setup = buildSetup(doc, {
+    resolve: (path) => {
+      const c = components.get(path);
+      return c ? { document: c.document } : undefined;
+    },
+  });
   const body = printOps(setup.ops, new Map(images.map((i) => [i.path, i.variable])));
   const members = namedNodes(doc);
+  // 部品ファイルを置いた部品のメンバの型は、部品ファイルのクラス
+  const componentClasses = new Map(
+    setup.ops.flatMap((op) =>
+      op.op === 'new' && op.component !== undefined ? [[op.variable, op.component] as const] : [],
+    ),
+  );
+  const includes = [...new Set([...components.values()].map((c) => c.include))];
 
   const declarations: Region = {
     id: 'declarations',
     indent: 1,
     content: [
-      ...members.map((m) => `${INDENT}tokotachi::${m.class}* ${m.name};`),
+      ...members.map(
+        (m) => `${INDENT}${componentClasses.get(m.name) ?? `tokotachi::${m.class}`}* ${m.name};`,
+      ),
       ...(members.length > 0 && setup.handlers.length > 0 ? [''] : []),
       ...setup.handlers.map((h) => `${INDENT}void ${h.name}(${paramList(h.type)});`),
     ].join('\n'),
@@ -165,6 +213,7 @@ export function emitCpp(
       `#define ${includeGuard}`,
       '',
       '#include <tokotachi/tokotachi.hpp>',
+      ...includes.map((i) => `#include "${i}"`),
     ].join('\n'),
   };
   const nsBegin: Region = {
@@ -182,8 +231,8 @@ export function emitCpp(
     indent: 0,
     content: `#endif  // ${includeGuard}`,
   };
-  const constructor =
-    base === 'Dialog' ? `explicit ${className}(tokotachi::Window* parent);` : `${className}();`;
+  const params = constructorParams(base);
+  const constructor = params === '' ? `${className}();` : `explicit ${className}(${params});`;
 
   const header: GeneratedCode = {
     regions: [headerBegin, nsBegin, declarations, nsEnd, headerEnd],
@@ -194,7 +243,7 @@ export function emitCpp(
         '',
         rendered('tokotachi_namespace_begin'),
         '',
-        `/// ${comments.classDoc(sourceName)}`,
+        `/// ${base === 'Widget' ? comments.componentDoc(sourceName) : comments.classDoc(sourceName)}`,
         `class ${className} : public tokotachi::${base}`,
         '{',
         'public:',
@@ -240,10 +289,7 @@ export function emitCpp(
         : []),
     ].join('\n'),
   };
-  const init =
-    base === 'Dialog'
-      ? `${INDENT}: tokotachi::Dialog(parent, std::string())`
-      : `${INDENT}: tokotachi::Window(std::string())`;
+  const init = `${INDENT}: ${baseInitializer(base)}`;
   const source: GeneratedCode = {
     regions: [sourceBegin, nsBegin, setupRegion, nsEnd],
     stubs,
@@ -253,7 +299,7 @@ export function emitCpp(
         '',
         rendered('tokotachi_namespace_begin'),
         '',
-        `${className}::${base === 'Dialog' ? `${className}(tokotachi::Window* parent)` : `${className}()`}`,
+        `${className}::${className}(${params})`,
         init,
         '{',
         `${INDENT}tokotachi_setup_ui();`,
