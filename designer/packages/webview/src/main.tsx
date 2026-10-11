@@ -2,7 +2,7 @@ import { configureL10n, valueAt, type L10nBundle } from '@tokotachi-designer/cor
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
-import { handleMessage, selectedNode, useDesigner } from './store.ts';
+import { DEFAULT_SIDEBAR, handleMessage, selectedNode, useDesigner } from './store.ts';
 import { loadState, onMessage, postMessage, saveState } from './vscode.ts';
 import './style.css';
 
@@ -19,14 +19,17 @@ configureL10n(
 
 onMessage(handleMessage);
 
-// 倍率は Webview の状態に保存し、開き直したときに戻す
-const { zoom } = loadState();
+// 倍率と左のペインの配置は Webview の状態に保存し、開き直したときに戻す
+const { zoom, sidebar } = loadState();
 if (typeof zoom === 'number' && zoom >= 0.5 && zoom <= 2) {
   useDesigner.setState({ zoom });
 }
+if (sidebar) {
+  useDesigner.setState({ sidebar: { ...DEFAULT_SIDEBAR, ...sidebar } });
+}
 useDesigner.subscribe((state, previous) => {
-  if (state.zoom !== previous.zoom) {
-    saveState({ ...loadState(), zoom: state.zoom });
+  if (state.zoom !== previous.zoom || state.sidebar !== previous.sidebar) {
+    saveState({ ...loadState(), zoom: state.zoom, sidebar: state.sidebar });
   }
 });
 

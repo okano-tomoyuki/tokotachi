@@ -79,9 +79,156 @@ textarea.invalid {
   overflow: auto;
 }
 
-.tree-pane {
-  width: 220px;
+/* ---- 左のペイン(Sidebar.tsx): 上にパレット、下に構造の木。間の仕切りと右の端で大きさを変える ---- */
+
+.sidebar {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  overflow: hidden;
   border-right: 1px solid var(--vscode-panel-border);
+}
+
+.sidebar-palette {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.sidebar-structure {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sidebar-split {
+  flex: none;
+  height: 4px;
+  cursor: ns-resize;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.sidebar-split:hover,
+.sidebar-resize:hover {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+.sidebar-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Action・オブジェクト・変数の欄(ウィンドウの木の下に分けて、常に出す) */
+.tree-area {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tree-groups {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tree-group-head {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding-left: 4px;
+  line-height: 22px;
+  font-size: 0.85em;
+  opacity: 0.85;
+  cursor: default;
+  user-select: none;
+}
+
+.tree-group-head:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.tree-group-head .tree-label {
+  flex: 1;
+}
+
+.tree-count {
+  padding: 0 5px;
+  border-radius: 8px;
+  line-height: 16px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+}
+
+.toolbar .toggle {
+  color: var(--vscode-foreground);
+  background: transparent;
+}
+
+.toolbar .toggle.on {
+  background: var(
+    --vscode-toolbar-activeBackground,
+    var(--vscode-list-inactiveSelectionBackground)
+  );
+}
+
+/* ---- 右クリックのメニュー(ContextMenu.tsx) ---- */
+
+.context-menu {
+  position: fixed;
+  z-index: 100;
+  min-width: 160px;
+  padding: 4px 0;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(
+    --vscode-menu-background,
+    var(--vscode-editorWidget-background, var(--vscode-editor-background))
+  );
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.context-menu button {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  width: 100%;
+  padding: 3px 16px;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+}
+
+.context-menu button:hover:not(:disabled),
+.context-menu button:focus {
+  outline: none;
+  color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground));
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground));
+}
+
+.context-menu-hint {
+  opacity: 0.7;
+}
+
+.context-menu hr {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-panel-border));
 }
 
 .canvas-pane {
@@ -330,6 +477,10 @@ textarea.invalid {
 /* ---- パレットとドラッグ ---- */
 
 .section-head {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
   padding: 4px 6px;
   font-weight: bold;
   cursor: default;
@@ -337,13 +488,32 @@ textarea.invalid {
 }
 
 .palette {
-  border-bottom: 1px solid var(--vscode-panel-border);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.palette-filter {
+  flex: 1;
+  min-width: 0;
+  font-weight: normal;
+}
+
+.palette-body {
+  flex: 1;
+  overflow: auto;
 }
 
 .palette-category {
-  padding: 4px 6px 2px;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 4px 6px 2px 2px;
   font-size: 0.85em;
   opacity: 0.7;
+  cursor: default;
+  user-select: none;
 }
 
 .palette-item {
@@ -353,6 +523,33 @@ textarea.invalid {
   padding: 2px 6px 2px 14px;
   cursor: grab;
   user-select: none;
+}
+
+.palette-item.non-visual {
+  cursor: default;
+}
+
+.palette-item.non-visual .palette-label {
+  flex: 1;
+}
+
+.palette-add {
+  min-width: 22px;
+  padding: 0 6px;
+  line-height: 18px;
+  font-weight: bold;
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  background: var(--vscode-button-secondaryBackground, rgba(127, 127, 127, 0.25));
+  border-radius: 2px;
+}
+
+.palette-add:hover:not(:disabled) {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+.palette-tabs {
+  flex: none;
 }
 
 .palette-item:hover {
@@ -432,18 +629,6 @@ textarea.invalid {
   pointer-events: none;
   outline: 1px dashed var(--vscode-focusBorder);
   background: rgba(127, 127, 127, 0.15);
-}
-
-.tree-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px;
-  border-bottom: 1px solid var(--vscode-panel-border);
-}
-
-.tree-toolbar button {
-  padding: 1px 6px;
 }
 
 .zoom {

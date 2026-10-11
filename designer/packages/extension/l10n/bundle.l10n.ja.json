@@ -203,5 +203,12 @@
   "{0}: generated regions ({1}) have been edited by hand. Specify --force to overwrite them": "{0}: 生成した区間({1})が手で編集されています。上書きするには --force を指定してください",
   "{0}: not up to date (run ttd generate)": "{0}: 最新ではありません(ttd generate を実行してください)",
   "{0}: up to date": "{0}: 最新です",
-  "{0}: updated{1}": "{0}: 更新しました{1}"
+  "{0}: updated{1}": "{0}: 更新しました{1}",
+  "Show the palette and structure": "パレットと構造を表示",
+  "Hide the palette and structure": "パレットと構造を隠す",
+  "Filter": "絞り込み",
+  "Drag to resize": "ドラッグして大きさを変える",
+  "Structure": "構造",
+  "Widgets": "部品",
+  "Non-visual": "非ビジュアル"
 }

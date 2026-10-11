@@ -1,50 +1,20 @@
-import { hasErrors, l10n, type OutlineNode } from '@tokotachi-designer/core';
+import { hasErrors, l10n } from '@tokotachi-designer/core';
+import { useEffect } from 'react';
 import { CanvasView } from './components/CanvasView.tsx';
+import { ContextMenu } from './components/ContextMenu.tsx';
+import { GhostView } from './components/GhostView.tsx';
 import { Inspector } from './components/Inspector.tsx';
 import { Problems } from './components/Problems.tsx';
-import { Tree } from './components/Tree.tsx';
-import { useEffect } from 'react';
-import { GhostView } from './components/GhostView.tsx';
-import { Palette } from './components/Palette.tsx';
-import { TreeToolbar } from './components/TreeToolbar.tsx';
+import { Sidebar } from './components/Sidebar.tsx';
 import { ZoomControl } from './components/ZoomControl.tsx';
-import { selectedNode, sendEdit, useDesigner } from './store.ts';
+import { selectedNode, useDesigner } from './store.ts';
+import { canRemove, moveSelected, removeSelected } from './treeOps.ts';
 import { postMessage } from './vscode.ts';
-
-/** 消せるノード(ウィンドウ・メニューの項目などは除く)。 */
-function canRemove(node: OutlineNode | undefined): boolean {
-  return (
-    node !== undefined &&
-    [
-      'widget',
-      'spacer',
-      'tab',
-      'pane',
-      'action',
-      'object',
-      'menu_bar',
-      'tool_bar',
-      'status_bar',
-      'menu',
-      'menu_item',
-      'separator',
-      'tool_item',
-    ].includes(node.kind)
-  );
-}
-
-function removeSelected(): void {
-  const node = selectedNode(useDesigner.getState());
-  if (node && canRemove(node)) {
-    // タブ・区画は、中の部品ごと消す
-    sendEdit({ kind: 'remove', targets: [node.path] });
-  }
-}
 
 export function App() {
   const selected = useDesigner(selectedNode);
   useEffect(() => {
-    // Delete キーで消す(入力欄の中では消さない)
+    // Delete キーで消し、Alt+↑・↓ で同じ並びの中を動かす(入力欄の中では何もしない)
     const key = (e: KeyboardEvent): void => {
       const t = e.target as HTMLElement | null;
       if (t && ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName)) {
@@ -52,6 +22,9 @@ export function App() {
       }
       if (e.key === 'Delete') {
         removeSelected();
+      } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault();
+        moveSelected(e.key === 'ArrowUp' ? -1 : 1);
       }
     };
     window.addEventListener('keydown', key);
@@ -63,6 +36,8 @@ export function App() {
   const diagnostics = useDesigner((s) => s.diagnostics);
   const editError = useDesigner((s) => s.editError);
   const version = useDesigner((s) => s.version);
+  const sidebarHidden = useDesigner((s) => s.sidebar.hidden);
+  const setSidebar = useDesigner((s) => s.setSidebar);
 
   if (version < 0) {
     return <div className="message">{l10n.t('Loading...')}</div>;
@@ -91,6 +66,19 @@ export function App() {
     <div className="designer">
       <div className="toolbar">
         <button
+          className={`toggle${sidebarHidden ? '' : ' on'}`}
+          title={
+            sidebarHidden
+              ? l10n.t('Show the palette and structure')
+              : l10n.t('Hide the palette and structure')
+          }
+          onClick={() => {
+            setSidebar({ hidden: !sidebarHidden });
+          }}
+        >
+          ◧
+        </button>
+        <button
           title={l10n.t('Generate the C++ code')}
           disabled={hasErrors(diagnostics)}
           onClick={() => {
@@ -117,12 +105,9 @@ export function App() {
         {editError !== undefined && <span className="edit-error">{editError}</span>}
       </div>
       <GhostView />
+      <ContextMenu />
       <div className="panes">
-        <div className="pane tree-pane">
-          <Palette />
-          <TreeToolbar />
-          <Tree />
-        </div>
+        <Sidebar />
         <div className="pane canvas-pane">
           <CanvasView />
           <Problems />

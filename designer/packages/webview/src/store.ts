@@ -29,6 +29,44 @@ export interface Ghost {
   readonly dy: number;
 }
 
+/** 右クリックのメニューの項目。 */
+export interface MenuItem {
+  readonly label: string;
+  /** 説明(ツールチップ)。 */
+  readonly title?: string;
+  /** 右に添えるキーの操作。 */
+  readonly shortcut?: string;
+  readonly disabled?: boolean;
+  /** 前に区切りの線を引く。 */
+  readonly separator?: boolean;
+  readonly run: () => void;
+}
+
+/** 左のペイン(パレットと構造の木)の配置。Webview の状態に保存し、開き直したときに戻す。 */
+export interface SidebarLayout {
+  /** 幅(px)。 */
+  readonly width: number;
+  /** パレットの高さ(ペインの高さに対する割合)。 */
+  readonly paletteRatio: number;
+  /** 構造の木の下の Action・オブジェクト・Variable の欄の高さ(構造の欄の高さに対する割合)。 */
+  readonly groupsRatio: number;
+  /** ペインを隠しているか(キャンバスを広く使う)。 */
+  readonly hidden: boolean;
+  /** パレットで開いているタブ(画面に出る部品か、非ビジュアルか)。 */
+  readonly paletteTab: 'visual' | 'non_visual';
+  /** 畳んでいるパレットの分類。 */
+  readonly closedCategories: readonly string[];
+}
+
+export const DEFAULT_SIDEBAR: SidebarLayout = {
+  width: 220,
+  paletteRatio: 0.45,
+  groupsRatio: 0.35,
+  hidden: false,
+  paletteTab: 'visual',
+  closedCategories: [],
+};
+
 export interface DesignerState {
   readonly version: number;
   readonly fileName: string;
@@ -52,7 +90,12 @@ export interface DesignerState {
   readonly zoom: number;
   /** プロジェクトに登録したテーマの名前(theme_override の preset で選べるもの)。 */
   readonly themePresets: readonly string[];
+  readonly sidebar: SidebarLayout;
+  /** 開いている右クリックのメニュー(画面の座標と項目)。 */
+  readonly contextMenu:
+    { readonly x: number; readonly y: number; readonly items: readonly MenuItem[] } | undefined;
   readonly select: (id: string | undefined) => void;
+  readonly setSidebar: (change: Partial<SidebarLayout>) => void;
 }
 
 export const useDesigner = create<DesignerState>()((set) => ({
@@ -71,10 +114,24 @@ export const useDesigner = create<DesignerState>()((set) => ({
   pointer: undefined,
   zoom: 1,
   themePresets: [],
+  sidebar: DEFAULT_SIDEBAR,
+  contextMenu: undefined,
   select: (id) => {
     set({ selection: id });
   },
+  setSidebar: (change) => {
+    set((s) => ({ sidebar: { ...s.sidebar, ...change } }));
+  },
 }));
+
+/** 右クリックのメニューを開く(項目が無ければ開かない)。 */
+export function openContextMenu(x: number, y: number, items: readonly MenuItem[]): void {
+  useDesigner.setState({ contextMenu: items.length > 0 ? { x, y, items } : undefined });
+}
+
+export function closeContextMenu(): void {
+  useDesigner.setState({ contextMenu: undefined });
+}
 
 let nextRequestId = 1;
 /** 足した・移した部品の名前。ドキュメントが届いたら、その部品を選ぶ。 */
