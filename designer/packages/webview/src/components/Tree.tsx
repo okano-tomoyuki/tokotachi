@@ -42,6 +42,7 @@ function label(node: OutlineNode): string {
 function Row({ node, depth }: { node: OutlineNode; depth: number }) {
   const selected = useDesigner((s) => s.selection === node.id);
   const select = useDesigner((s) => s.select);
+  const hidden = useDesigner((s) => s.hidden.get(node.id));
   const [open, setOpen] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const hasChildren = node.children.length > 0;
@@ -55,7 +56,14 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
     <>
       <div
         ref={ref}
-        className={`tree-row${selected ? ' selected' : ''}`}
+        className={`tree-row${selected ? ' selected' : ''}${hidden ? ' hidden' : ''}`}
+        title={
+          hidden === 'self'
+            ? l10n.t('Hidden (visible is false)')
+            : hidden === 'ancestor'
+              ? l10n.t('Not shown because a parent is hidden')
+              : undefined
+        }
         style={{ paddingLeft: depth * 12 + 4 }}
         onClick={() => {
           select(node.id);
@@ -78,6 +86,7 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
         <ClassIcon name={nodeIconKey(node)} />
         <span className="tree-label">{label(node)}</span>
         {node.class !== undefined && <span className="tree-class">{node.class}</span>}
+        {hidden === 'self' && <span className="tree-hidden">{l10n.t('Hidden')}</span>}
       </div>
       {open && node.children.map((c) => <Row key={c.id} node={c} depth={depth + 1} />)}
     </>

@@ -298,6 +298,23 @@ textarea.invalid {
   --tt-icon-accent: currentColor;
 }
 
+/* visible を false にした部品と、その子孫(実行すると表示されない) */
+.tree-row.hidden > :not(.twisty) {
+  opacity: 0.5;
+}
+
+.tree-row.hidden .tree-label {
+  font-style: italic;
+}
+
+.tree-hidden {
+  padding: 0 4px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.8em;
+  line-height: 14px;
+}
+
 .tree-class {
   opacity: 0.6;
   font-size: 0.9em;

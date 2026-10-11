@@ -269,3 +269,49 @@ export function findOutlineNode(
 export function flattenOutline(roots: readonly OutlineNode[]): OutlineNode[] {
   return roots.flatMap((r) => [r, ...flattenOutline(r.children)]);
 }
+
+/** 木のノードの非表示: 自分で visible を false にしている('self')か、その子孫('ancestor')。 */
+export type OutlineHidden = 'self' | 'ancestor';
+
+function propertiesAt(doc: TtuiDocument, path: JsonPath): Record<string, unknown> | undefined {
+  let value: unknown = doc;
+  for (const key of path) {
+    value =
+      typeof value === 'object' && value !== null
+        ? (value as Record<string | number, unknown>)[key]
+        : undefined;
+  }
+  const properties =
+    typeof value === 'object' && value !== null
+      ? (value as Record<string, unknown>)['properties']
+      : undefined;
+  return typeof properties === 'object' && properties !== null
+    ? (properties as Record<string, unknown>)
+    : undefined;
+}
+
+/**
+ * 非表示のノード(id → 理由)。visible を false と書いた部品と、その子孫(実行すると表示されない)。
+ * ウィンドウの visible は表示するときに生成したコードが変えるので、ウィンドウは除く。選んでいないタブの中身は、利用者が隠したものではないので含めない。
+ */
+export function hiddenOutlineNodes(
+  doc: TtuiDocument,
+  roots: readonly OutlineNode[],
+): ReadonlyMap<string, OutlineHidden> {
+  const out = new Map<string, OutlineHidden>();
+  const visit = (node: OutlineNode, inherited: boolean): void => {
+    const self = node.kind !== 'window' && propertiesAt(doc, node.path)?.['visible'] === false;
+    if (self) {
+      out.set(node.id, 'self');
+    } else if (inherited) {
+      out.set(node.id, 'ancestor');
+    }
+    for (const c of node.children) {
+      visit(c, self || inherited);
+    }
+  };
+  for (const r of roots) {
+    visit(r, false);
+  }
+  return out;
+}

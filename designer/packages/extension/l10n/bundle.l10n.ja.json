@@ -248,5 +248,8 @@
   "Generate the code of all windows and the startup code": "すべてのウィンドウのコードと起動部分を生成する",
   "Generate Project Code": "プロジェクトのコードを生成",
   "Not in a project": "プロジェクトに属さない",
-  "Add the new window to which project?": "新しいウィンドウをどのプロジェクトに加えますか?"
+  "Add the new window to which project?": "新しいウィンドウをどのプロジェクトに加えますか?",
+  "Hidden (visible is false)": "非表示(visible が false)",
+  "Not shown because a parent is hidden": "親が非表示のため表示されません",
+  "Hidden": "非表示"
 }

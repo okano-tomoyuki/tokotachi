@@ -5,12 +5,14 @@
 import {
   findOutlineNode,
   flattenOutline,
+  hiddenOutlineNodes,
   outline,
   parseDocument,
   type CanvasFrame,
   type Diagnostic,
   type EditCommand,
   type ExtensionToWebviewMessage,
+  type OutlineHidden,
   type OutlineNode,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
@@ -74,6 +76,8 @@ export interface DesignerState {
   readonly document: TtuiDocument | undefined;
   readonly diagnostics: readonly Diagnostic[];
   readonly outline: readonly OutlineNode[];
+  /** 非表示のノード(visible を false と書いた部品と、その子孫)。 */
+  readonly hidden: ReadonlyMap<string, OutlineHidden>;
   readonly frame: CanvasFrame | undefined;
   readonly canvasError: string | undefined;
   /** 選んでいる木のノードの id。 */
@@ -104,6 +108,7 @@ export const useDesigner = create<DesignerState>()((set) => ({
   document: undefined,
   diagnostics: [],
   outline: [],
+  hidden: new Map(),
   frame: undefined,
   canvasError: undefined,
   selection: 'window',
@@ -181,6 +186,7 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
           document,
           diagnostics,
           outline: tree,
+          hidden: document ? hiddenOutlineNodes(document, tree) : new Map<string, OutlineHidden>(),
           selection,
         };
       });
