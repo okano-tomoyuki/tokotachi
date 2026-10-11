@@ -70,6 +70,27 @@ function contains(r: CanvasRect, x: number, y: number): boolean {
 
 const LINE = 3;
 
+/** 移す部品をつかんだ点(部品の左上から。dp)と、部品の大きさ。自由な配置では、部品の左上をカーソルからこの分ずらして置く。 */
+export interface Grab {
+  readonly dx: number;
+  readonly dy: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** レイアウトの内側の余白(数値 1 つなら 4 辺とも)。 */
+function marginsOf(layout: Json): { left: number; top: number; right: number; bottom: number } {
+  const m = (layout['properties'] as Json | undefined)?.['margins'];
+  if (typeof m === 'number') {
+    return { left: m, top: m, right: m, bottom: m };
+  }
+  const side = (k: string): number => {
+    const v = (m as Json | undefined)?.[k];
+    return typeof v === 'number' ? v : 0;
+  };
+  return { left: side('left'), top: side('top'), right: side('right'), bottom: side('bottom') };
+}
+
 export function dropTarget(
   doc: TtuiDocument,
   roots: readonly OutlineNode[],
@@ -77,6 +98,7 @@ export function dropTarget(
   x: number,
   y: number,
   drag: Drag,
+  grab?: Grab,
 ): DropTarget | undefined {
   const whole: CanvasRect = { x: 0, y: 0, width: frame.width, height: frame.height, showing: true };
   const all = flattenOutline(roots);
@@ -110,7 +132,7 @@ export function dropTarget(
   if (!best) {
     return undefined;
   }
-  return slotIn(doc, best.node, best.rect, frame, x, y, drag);
+  return slotIn(doc, best.node, best.rect, frame, x, y, drag, grab);
 }
 
 /** 入れ物の中の場所。 */
@@ -122,8 +144,15 @@ function slotIn(
   x: number,
   y: number,
   drag: Drag,
+  grab: Grab | undefined,
 ): DropTarget {
   const json = valueAt(doc, container.path) as Json;
+  // 自由な配置で部品の左上を置く点(つかんだ点の分ずらす)と、置く場所の印(部品の大きさの枠)
+  const left = x - (grab?.dx ?? 0);
+  const top = y - (grab?.dy ?? 0);
+  const free: Indicator | undefined = grab
+    ? { shape: 'box', x: left, y: top, width: grab.width, height: grab.height }
+    : undefined;
   const none = (indicator: Indicator): DropTarget => ({
     slot: undefined,
     indicator,
@@ -184,15 +213,22 @@ function slotIn(
       return gridSlot(layoutPath, items, rectOf, rect, x, y, drag);
     }
     if (cls === 'PlaceLayout') {
+      // 置く位置は、余白の内側(レイアウトの範囲)の左上から
+      const m = marginsOf(layout);
       return {
         slot: {
           kind: 'item',
           layout: layoutPath,
           index: items.length,
-          x: x - rect.x,
-          y: y - rect.y,
+          x: left - rect.x - m.left,
+          y: top - rect.y - m.top,
+          area: {
+            width: rect.width - m.left - m.right,
+            height: rect.height - m.top - m.bottom,
+          },
+          ...(grab ? { size: { width: grab.width, height: grab.height } } : {}),
         },
-        indicator: point,
+        indicator: free ?? point,
         container: rect,
       };
     }
@@ -239,8 +275,8 @@ function slotIn(
   }
   if (info?.accepts_children || container.kind === 'window') {
     return {
-      slot: { kind: 'child', parent: container.path, x: x - rect.x, y: y - rect.y },
-      indicator: point,
+      slot: { kind: 'child', parent: container.path, x: left - rect.x, y: top - rect.y },
+      indicator: free ?? point,
       container: rect,
     };
   }

@@ -187,7 +187,15 @@ export function CanvasView() {
                 return;
               }
               const p = point(e);
-              useDesigner.setState({ target: dropTarget(document, roots, frame, p.x, p.y, drag) });
+              // 部品を移すときは、つかんだ点の分ずらして置く(ドラッグ中の像と同じ位置)
+              const ghost = useDesigner.getState().ghost;
+              const grab =
+                drag.kind === 'move' && ghost?.image !== undefined
+                  ? { dx: ghost.dx, dy: ghost.dy, width: ghost.width, height: ghost.height }
+                  : undefined;
+              useDesigner.setState({
+                target: dropTarget(document, roots, frame, p.x, p.y, drag, grab),
+              });
             }}
             onMouseLeave={() => {
               if (drag) {

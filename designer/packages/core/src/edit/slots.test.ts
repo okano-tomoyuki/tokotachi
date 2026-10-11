@@ -94,4 +94,44 @@ describe('slots', () => {
       ['label_b', 130, 110],
     ]);
   });
+
+  it('PlaceLayout で動かすときは、基準点・相対の位置を保ち、部品の左上が置いた位置に来るように x・y を書く', () => {
+    const doc = {
+      format_version: 1,
+      window: {
+        name: 'MainWindow',
+        class: 'Window',
+        layout: {
+          class: 'PlaceLayout',
+          items: [
+            {
+              placement: { relative_x: 1, x: -8, y: 8, anchor: 'TOP_RIGHT' },
+              widget: { name: 'label_corner', class: 'Label' },
+            },
+          ],
+        },
+      },
+    } as unknown as TtuiDocument;
+    const out = moved(doc, {
+      kind: 'moveWidget',
+      target: ['window', 'layout', 'items', 0, 'widget'],
+      // 幅 300 の範囲の (100, 50) に、幅 40 の部品の左上を置く
+      slot: {
+        kind: 'item',
+        layout: ['window', 'layout'],
+        index: 0,
+        x: 100,
+        y: 50,
+        area: { width: 300, height: 200 },
+        size: { width: 40, height: 20 },
+      },
+    });
+    // 左上 = 300 × 1 + x - 40 → x = 100 - 300 + 40
+    expect(valueAt(out, ['window', 'layout', 'items', 0, 'placement'])).toEqual({
+      relative_x: 1,
+      x: -160,
+      y: 50,
+      anchor: 'TOP_RIGHT',
+    });
+  });
 });
