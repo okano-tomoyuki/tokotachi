@@ -58,6 +58,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0039](adr/0039-designer.md) | デザイナーを VS Code の拡張として本リポジトリに作り、キャンバスは WebAssembly にした Tokotachi で描く | 承認 |
 | [0040](adr/0040-designer-canvas-ops.md) | キャンバスとコード生成は同じ「部品を組む操作の並び」を使い、ウィンドウの画素を Window::capture で取り出す | 承認 |
 | [0041](adr/0041-visible-and-container-hiding.md) | 入れ物が自分の都合で子を隠すときは visible を変えず、内部の印で隠す | 承認 |
+| [0042](adr/0042-widget-theme-override.md) | ウィジェットごとにテーマの一部を上書きし、子孫に継がせる | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

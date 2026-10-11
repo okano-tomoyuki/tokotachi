@@ -4,11 +4,13 @@
 #include <cstdio>
 
 #include <tokotachi/layout/layout.hpp>
+#include <tokotachi/windows/popup.hpp>
 #include <tokotachi/windows/window.hpp>
 
 #include "../layout/layout_access.hpp"
 #include "../actions/action_access.hpp"
 #include "../core/property_impl.hpp"
+#include "theme.hpp"
 #include "widget_access.hpp"
 #include "../windows/window_impl.hpp"
 
@@ -41,6 +43,8 @@ Widget::Widget(Widget* parent_widget)
       TOKOTACHI_PROPERTY_GETTER(Widget, bool, accepts_text_input),
       TOKOTACHI_READONLY_PROPERTY(Widget, float, display_scale),
       TOKOTACHI_PROPERTY_MEMBER(Widget, std::string, tooltip),
+      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Widget, ThemeOverride, theme_override),
+      TOKOTACHI_READONLY_PROPERTY(Widget, Theme, theme),
       TOKOTACHI_READONLY_PROPERTY(Widget, std::vector<Action*>, actions),
       TOKOTACHI_HANDLER_PROPERTY(Widget, PaintHandler, on_paint),
       TOKOTACHI_HANDLER_PROPERTY(Widget, NotifyHandler, on_resize),
@@ -334,6 +338,63 @@ void Widget::set_visible(const bool& v)
     }
 }
 
+void Widget::set_theme_override(const ThemeOverride& v)
+{
+    if (v == theme_override_)
+    {
+        return;
+    }
+    theme_override_ = v;
+    notify_changed(theme_override);
+    detail::WidgetAccess::theme_changed(this);  // 自分と子孫へ(寸法が変わりうるので、配置もやり直す)
+    request_layout();
+    invalidate();
+}
+
+const Widget* Widget::theme_parent() const
+{
+    if (parent_)
+    {
+        return parent_;
+    }
+    const Popup* popup = is_window_ ? dynamic_cast<const Popup*>(this) : nullptr;
+    return popup ? popup->owner_widget.get() : nullptr;
+}
+
+bool Widget::compose_theme(Theme& out) const
+{
+    std::vector<const ThemeOverride*> chain;  // 自分から根へ
+    for (const Widget* w = this; w; w = w->theme_parent())
+    {
+        if (!w->theme_override_.empty())
+        {
+            chain.push_back(&w->theme_override_);
+        }
+    }
+    for (std::size_t i = chain.size(); i-- > 0;)
+    {
+        chain[i]->apply_to(out);  // 根に近いものから重ねる
+    }
+    return !chain.empty();
+}
+
+Theme Widget::get_theme() const
+{
+    Theme t = detail::application_theme();
+    compose_theme(t);
+    return t;
+}
+
+namespace detail
+{
+
+ThemeScope::ThemeScope(const Widget* w) : theme_(application_theme()), previous_(nullptr)
+{
+    previous_ = swap_scoped_theme(w && w->compose_theme(theme_) ? &theme_ : nullptr);
+}
+
+}  // namespace detail
+
 void Widget::set_hidden_by_parent(bool hide)
 {
     if (hide == hidden_by_parent_)
@@ -461,12 +522,14 @@ float Widget::get_display_scale() const
 
 Size Widget::get_minimum_hint() const
 {
+    detail::ThemeScope scope(this);  // 寸法(余白・角の丸み)は自分に効いているテーマで決める
     const Size c = compute_minimum_size();
     return Size(std::max(c.width, minimum_size_.width), std::max(c.height, minimum_size_.height));
 }
 
 Size Widget::get_preferred_size() const
 {
+    detail::ThemeScope scope(this);
     const Size p = compute_preferred_size();
     const Size m = get_minimum_hint();
     return Size(std::max(m.width, std::min(p.width, maximum_size_.width)),

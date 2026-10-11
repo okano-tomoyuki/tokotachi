@@ -1,6 +1,6 @@
 /// @file
 /// テーマ: 標準のウィジェットの色と寸法の組み合わせ(docs/adr/0023)。
-/// アプリケーションが 1 つのテーマを持ち、すべてのウィンドウに効く。部分的に変えるときは、ウィジェットの色のプロパティで変える。
+/// アプリケーションが 1 つのテーマを持ち、すべてのウィンドウに効く。ウィジェットごとに一部を上書きできる(ThemeOverride。docs/adr/0042)。
 #ifndef TOKOTACHI_GRAPHICS_THEME_HPP
 #define TOKOTACHI_GRAPHICS_THEME_HPP
 
@@ -109,6 +109,60 @@ public:
 
 private:
     Color colors_[COLOR_ROLE_COUNT];
+};
+
+/// テーマの一部の上書き(値の型。docs/adr/0042)。ウィジェットの theme_override に設定すると、そのウィジェットと子孫に効く。
+/// 上書きしていない役割・寸法は、親(ウィンドウはアプリケーション、ポップアップは開いた元のウィジェット)から継ぐ。
+/// 色は、ライトとダークで同じにも、別々にもできる(どちらを使うかは、継いだテーマの dark_colors で決める)。
+/// @code
+/// tokotachi::ThemeOverride danger;
+/// danger.set(tokotachi::ColorRole::ACCENT, tokotachi::Color::rgb(0xdc2626));  // ライト・ダークで同じ色
+/// danger.set(tokotachi::ColorRole::FIELD, tokotachi::Color::rgb(0xfef2f2), tokotachi::Color::rgb(0x450a0a));  // ライト・ダーク
+/// danger.set_radius(0);                                                       // 角を丸めない
+/// area_danger->theme_override = danger;
+/// @endcode
+class ThemeOverride
+{
+public:
+    /// 何も上書きしない。
+    ThemeOverride();
+
+    /// 役割の色を上書きする(ライト・ダークで同じ色)。
+    ThemeOverride& set(ColorRole role, const Color& color);
+    /// 役割の色を上書きする(ライト・ダークで別の色)。
+    ThemeOverride& set(ColorRole role, const Color& light, const Color& dark);
+    /// 役割の上書きをやめる(継ぐ)。
+    ThemeOverride& unset(ColorRole role);
+    bool has(ColorRole role) const { return has_[static_cast<int>(role)]; }
+    /// ライトのときの色(has(role) が true のとき)。
+    Color light(ColorRole role) const { return light_[static_cast<int>(role)]; }
+    /// ダークのときの色(has(role) が true のとき)。
+    Color dark(ColorRole role) const { return dark_[static_cast<int>(role)]; }
+
+    /// 寸法(Theme の radius・field_radius・field_padding。dp)を上書きする。負の値で上書きをやめる。
+    ThemeOverride& set_radius(float v);
+    ThemeOverride& set_field_radius(float v);
+    ThemeOverride& set_field_padding(float v);
+    /// 上書きしている寸法(上書きしていなければ負の値)。
+    float radius() const { return radius_; }
+    float field_radius() const { return field_radius_; }
+    float field_padding() const { return field_padding_; }
+
+    /// 何も上書きしていないか。
+    bool empty() const;
+    /// theme に重ねる(theme.dark_colors で、ライト・ダークのどちらの色を使うかを選ぶ)。
+    void apply_to(Theme& theme) const;
+
+    bool operator==(const ThemeOverride& o) const;
+    bool operator!=(const ThemeOverride& o) const { return !(*this == o); }
+
+private:
+    Color light_[COLOR_ROLE_COUNT];
+    Color dark_[COLOR_ROLE_COUNT];
+    bool has_[COLOR_ROLE_COUNT];
+    float radius_;
+    float field_radius_;
+    float field_padding_;
 };
 
 }  // namespace tokotachi

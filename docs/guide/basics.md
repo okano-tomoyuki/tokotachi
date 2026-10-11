@@ -69,6 +69,15 @@ label_name->color = tokotachi::ColorRole::TEXT_SECONDARY;   // 役割で指定�
 label_name->color = tokotachi::Color::rgb(0xdc2626);        // 具体的な色も指定できる
 ```
 
+部品ごとにテーマの一部を上書きできます。その部品と子孫に効き、上書きしていない役割は親から継ぎます。
+
+```cpp
+tokotachi::ThemeOverride danger;
+danger.set(tokotachi::ColorRole::ACCENT, tokotachi::Color::rgb(0xdc2626));                              // ライト・ダークで同じ色
+danger.set(tokotachi::ColorRole::FIELD, tokotachi::Color::rgb(0xfef2f2), tokotachi::Color::rgb(0x450a0a));  // ライト・ダークで別の色
+area_danger->theme_override = danger;   // area_danger の中の部品すべてに効く
+```
+
 ## 座標
 
 - 単位は dp。位置は親の左上からの相対です。

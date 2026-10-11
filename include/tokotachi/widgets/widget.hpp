@@ -16,6 +16,7 @@
 #include "../core/event.hpp"
 #include "../core/geometry.hpp"
 #include "../core/property.hpp"
+#include "../graphics/theme.hpp"
 
 namespace tokotachi
 {
@@ -28,6 +29,7 @@ class Window;
 namespace detail
 {
 struct WidgetAccess;
+class ThemeScope;
 }
 
 enum class FocusPolicy
@@ -101,6 +103,11 @@ public:
     ReadOnlyProperty<float> display_scale;
     /// ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。
     Property<std::string> tooltip;
+    /// テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。
+    Property<ThemeOverride> theme_override;
+    /// 自分に効いているテーマ(アプリケーションのテーマに、祖先と自分の theme_override を重ねたもの)。
+    /// 変わったことは、theme_override を変えたウィジェットと、アプリケーションのテーマが変わったときに、子孫にも知らせる。
+    ReadOnlyProperty<Theme> theme;
 
     // --- ショートカット(docs/adr/0027) ---
     /// Action を加える。そのショートカットは、フォーカスがこのウィジェットの中にあるときに効く(ウィンドウに加えればウィンドウ全体)。
@@ -183,6 +190,7 @@ protected:
 
 private:
     friend struct detail::WidgetAccess;
+    friend class detail::ThemeScope;
 
     Widget* get_parent() const { return parent_; }
     void set_parent(Widget* const& p);
@@ -233,6 +241,13 @@ private:
     void set_accepts_text_input(const bool& v);
     float get_display_scale() const;
     void set_tooltip(const std::string& v) { tooltip_ = v; }
+    ThemeOverride get_theme_override() const { return theme_override_; }
+    void set_theme_override(const ThemeOverride& v);
+    Theme get_theme() const;
+    /// テーマを継ぐ元(親。ウィンドウは無し。ポップアップは開いた元のウィジェット)。
+    const Widget* theme_parent() const;
+    /// 自分と祖先の theme_override を out(アプリケーションのテーマ)に重ねる。上書きが 1 つも無ければ false(out は変えない)。
+    bool compose_theme(Theme& out) const;
     std::vector<Action*> get_actions() const { return actions_; }
 
     Widget* parent_;
@@ -250,6 +265,7 @@ private:
     FocusPolicy focus_policy_;
     MouseCursor cursor_;
     std::string tooltip_;
+    ThemeOverride theme_override_;
     std::vector<Action*> actions_;
     PaintHandler on_paint_;
     NotifyHandler on_resize_;

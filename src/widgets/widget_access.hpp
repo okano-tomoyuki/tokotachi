@@ -5,6 +5,8 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/widgets/widget.hpp>
 
+#include "theme.hpp"
+
 namespace tokotachi
 {
 namespace detail
@@ -36,27 +38,96 @@ struct WidgetAccess
     static void clear_layout_dirty(Widget* w) { w->layout_dirty_ = false; }
     static void mark_layout_dirty(Widget* w) { w->mark_layout_dirty(); }
 
-    static void paint(Widget* w, Canvas& c) { w->paint(c); }
-    static void resized(Widget* w) { w->resized(); }
-    static void mouse_down(Widget* w, MouseEvent& e) { w->mouse_down(e); }
-    static void mouse_up(Widget* w, MouseEvent& e) { w->mouse_up(e); }
-    static void mouse_move(Widget* w, MouseEvent& e) { w->mouse_move(e); }
-    static void mouse_enter(Widget* w) { w->mouse_enter(); }
-    static void mouse_leave(Widget* w) { w->mouse_leave(); }
-    static void mouse_wheel(Widget* w, WheelEvent& e) { w->mouse_wheel(e); }
-    static void arrange_children(Widget* w) { w->arrange_children(); }
-    static void key_down(Widget* w, KeyEvent& e) { w->key_down(e); }
-    static void key_up(Widget* w, KeyEvent& e) { w->key_up(e); }
-    static void text_input(Widget* w, TextInputEvent& e) { w->text_input(e); }
-    static void text_editing(Widget* w, TextEditingEvent& e) { w->text_editing(e); }
-    static void focus_in(Widget* w) { w->focus_in(); }
-    static void focus_out(Widget* w) { w->focus_out(); }
-    static Rect input_method_rect(const Widget* w) { return w->input_method_rect(); }
+    // 描く・イベントを処理する間は、w に効いているテーマを今のテーマにする(docs/adr/0042)。
+    static void paint(Widget* w, Canvas& c)
+    {
+        ThemeScope scope(w);
+        w->paint(c);
+    }
+    static void resized(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->resized();
+    }
+    static void mouse_down(Widget* w, MouseEvent& e)
+    {
+        ThemeScope scope(w);
+        w->mouse_down(e);
+    }
+    static void mouse_up(Widget* w, MouseEvent& e)
+    {
+        ThemeScope scope(w);
+        w->mouse_up(e);
+    }
+    static void mouse_move(Widget* w, MouseEvent& e)
+    {
+        ThemeScope scope(w);
+        w->mouse_move(e);
+    }
+    static void mouse_enter(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->mouse_enter();
+    }
+    static void mouse_leave(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->mouse_leave();
+    }
+    static void mouse_wheel(Widget* w, WheelEvent& e)
+    {
+        ThemeScope scope(w);
+        w->mouse_wheel(e);
+    }
+    static void arrange_children(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->arrange_children();
+    }
+    static void key_down(Widget* w, KeyEvent& e)
+    {
+        ThemeScope scope(w);
+        w->key_down(e);
+    }
+    static void key_up(Widget* w, KeyEvent& e)
+    {
+        ThemeScope scope(w);
+        w->key_up(e);
+    }
+    static void text_input(Widget* w, TextInputEvent& e)
+    {
+        ThemeScope scope(w);
+        w->text_input(e);
+    }
+    static void text_editing(Widget* w, TextEditingEvent& e)
+    {
+        ThemeScope scope(w);
+        w->text_editing(e);
+    }
+    static void focus_in(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->focus_in();
+    }
+    static void focus_out(Widget* w)
+    {
+        ThemeScope scope(w);
+        w->focus_out();
+    }
+    static Rect input_method_rect(const Widget* w)
+    {
+        ThemeScope scope(w);
+        return w->input_method_rect();
+    }
 
     // w と子孫すべてに theme_changed を送る。
     static void theme_changed(Widget* w)
     {
-        w->theme_changed();
+        {
+            ThemeScope scope(w);
+            w->theme_changed();
+        }
+        w->notify_changed(w->theme);
         w->layout_dirty_ = true;  // 寸法(余白など)が変わり、望む大きさが変わりうる
         for (std::size_t i = 0; i < w->children_.size(); ++i)
         {

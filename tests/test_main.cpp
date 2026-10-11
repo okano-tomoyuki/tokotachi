@@ -1802,6 +1802,98 @@ TEST(theme_switch_notifies_and_repaints)
     app->color_scheme = tokotachi::ColorScheme::SYSTEM;
 }
 
+// 望む大きさの計算の中で、今のテーマの ACCENT が赤(0xdc2626)かを幅にする。
+struct ThemeProbe : tokotachi::Widget
+{
+    explicit ThemeProbe(tokotachi::Widget* parent) : tokotachi::Widget(parent) {}
+    tokotachi::Size compute_preferred_size() const override
+    {
+        const bool red = tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve() == tokotachi::Color::rgb(0xdc2626);
+        return tokotachi::Size(red ? 1.0f : 0.0f, 0);
+    }
+};
+
+TEST(theme_override_inherits_to_descendants)
+{
+    // ウィジェットごとのテーマの上書き: 自分と子孫に効き、上書きしていない役割は親から継ぐ(docs/adr/0042)。
+    tokotachi::Application* app = tokotachi::Application::instance();
+    app->color_scheme = tokotachi::ColorScheme::LIGHT;
+    const tokotachi::Color red = tokotachi::Color::rgb(0xdc2626);
+    const tokotachi::Color dark_red = tokotachi::Color::rgb(0x7f1d1d);
+    const tokotachi::Color pale = tokotachi::Color::rgb(0xfef2f2);
+
+    tokotachi::Window window("t", 200, 100);
+    tokotachi::Widget* panel = new tokotachi::Widget(&window);
+    panel->bounds = tokotachi::Rect(0, 0, 100, 100);
+    tokotachi::Widget* inner = new tokotachi::Widget(panel);
+    inner->bounds = tokotachi::Rect(10, 10, 20, 20);
+    tokotachi::Widget* outside = new tokotachi::Widget(&window);
+    outside->bounds = tokotachi::Rect(150, 10, 20, 20);
+    // 描くときに読む「今のテーマ」の色を記録する
+    tokotachi::Color painted_inner, painted_outside;
+    inner->on_paint = [&](tokotachi::Object*, tokotachi::Canvas& c)
+    {
+        painted_inner = tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve();
+        c.fill_rect(tokotachi::Rect(0, 0, 20, 20), painted_inner);
+    };
+    outside->on_paint = [&](tokotachi::Object*, tokotachi::Canvas&)
+    {
+        painted_outside = tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve();
+    };
+
+    tokotachi::ThemeOverride accent;
+    CHECK(accent.empty() && !accent.has(tokotachi::ColorRole::ACCENT));
+    accent.set(tokotachi::ColorRole::ACCENT, red, dark_red);
+    CHECK(!accent.empty() && accent.light(tokotachi::ColorRole::ACCENT) == red && accent.dark(tokotachi::ColorRole::ACCENT) == dark_red);
+    panel->theme_override = accent;
+    CHECK(panel->theme_override.get() == accent);
+    CHECK(panel->theme.get()[tokotachi::ColorRole::ACCENT] == red);
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == red);  // 子孫は継ぐ
+    CHECK(outside->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    CHECK(inner->theme.get()[tokotachi::ColorRole::WINDOW] == tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]);
+
+    window.visible = true;
+    window.impl()->render(false);
+    CHECK(painted_inner == red && painted_outside == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    // 描き終えたら、今のテーマはアプリケーションのものに戻る
+    CHECK(tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve() == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    const float scale = window.display_scale;
+    const int px = static_cast<int>(15 * scale), stride = static_cast<int>(200 * scale);
+    CHECK(window.impl()->buffer[static_cast<std::size_t>(px * stride + px)] == packed(red));
+
+    // 子で別の役割を上書きすると、親の上書きと合わさる。ダークにすると、ダークの色を使う。
+    tokotachi::ThemeOverride field;
+    field.set(tokotachi::ColorRole::FIELD, pale);
+    field.set_field_padding(20);
+    inner->theme_override = field;
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == red && inner->theme.get()[tokotachi::ColorRole::FIELD] == pale);
+    CHECK(inner->theme.get().field_padding == 20 && panel->theme.get().field_padding != 20);
+    app->color_scheme = tokotachi::ColorScheme::DARK;
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == dark_red && inner->theme.get()[tokotachi::ColorRole::FIELD] == pale);
+    CHECK(inner->theme.get()[tokotachi::ColorRole::WINDOW] == tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]);
+    window.impl()->render(false);
+    CHECK(painted_inner == dark_red);
+    app->color_scheme = tokotachi::ColorScheme::LIGHT;
+
+    // 望む大きさを計算するときも、自分に効いているテーマを読む。
+    ThemeProbe* probe = new ThemeProbe(panel);
+    CHECK(near(probe->preferred_size.get().width, 1));  // ACCENT が red(上書き)なら 1
+    probe->parent = &window;
+    CHECK(near(probe->preferred_size.get().width, 0));
+
+    // ポップアップは、開いた元のウィジェットのテーマを継ぐ。
+    tokotachi::Popup* popup = new tokotachi::Popup(inner);
+    CHECK(popup->theme.get()[tokotachi::ColorRole::ACCENT] == red && popup->theme.get()[tokotachi::ColorRole::FIELD] == pale);
+    delete popup;
+
+    // 上書きをやめると、親のものに戻る。
+    accent.unset(tokotachi::ColorRole::ACCENT);
+    CHECK(accent.empty());
+    panel->theme_override = accent;
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    app->color_scheme = tokotachi::ColorScheme::SYSTEM;
+}
+
 TEST(tab_widget_add_insert_remove)
 {
     tokotachi::Window window("t", 300, 200);
