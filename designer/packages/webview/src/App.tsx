@@ -1,6 +1,7 @@
 import { hasErrors, l10n } from '@tokotachi-designer/core';
 import { useEffect } from 'react';
 import { duplicateSelection, installClipboard } from './clipboard.ts';
+import { AlignBar } from './components/AlignBar.tsx';
 import { CanvasView } from './components/CanvasView.tsx';
 import { ContextMenu } from './components/ContextMenu.tsx';
 import { GhostView } from './components/GhostView.tsx';
@@ -112,6 +113,7 @@ export function App() {
         >
           {l10n.t('Delete')}
         </button>
+        <AlignBar />
         <ZoomControl />
         {editError !== undefined && <span className="edit-error">{editError}</span>}
       </div>

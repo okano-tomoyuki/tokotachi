@@ -266,5 +266,17 @@
   "Only the common properties of the widgets and objects are shown.": "部品・オブジェクトに共通するプロパティだけを出しています。",
   "Some are bound to a variable": "Variable と結び付けたものがあります",
   "(multiple values)": "(複数の値)",
-  "Delete {0} items": "{0} 個を削除"
+  "Delete {0} items": "{0} 個を削除",
+  "Align left edges": "左端を揃える",
+  "Align horizontal centers": "左右の中央を揃える",
+  "Align right edges": "右端を揃える",
+  "Align top edges": "上端を揃える",
+  "Align vertical centers": "上下の中央を揃える",
+  "Align bottom edges": "下端を揃える",
+  "Distribute horizontally (3 or more)": "左右に等間隔に並べる(3 つ以上)",
+  "Distribute vertically (3 or more)": "上下に等間隔に並べる(3 つ以上)",
+  "Make the same width": "幅を揃える",
+  "Make the same height": "高さを揃える",
+  "Align": "整列",
+  "Select two or more freely placed widgets": "自由な配置の部品を 2 つ以上選んでください"
 }
