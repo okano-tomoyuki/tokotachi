@@ -22,9 +22,10 @@ export async function renderCanvas(
   colorScheme: 'LIGHT' | 'DARK',
   tabs: Readonly<Record<string, number>>,
   images: ReadonlyMap<string, Uint8Array>,
+  themeOverride?: Readonly<Record<string, unknown>>,
 ): Promise<CanvasFrame> {
   const canvas = await load(context);
-  const r = canvas.render(doc, { colorScheme, placeholders: true, tabs, images });
+  const r = canvas.render(doc, { colorScheme, placeholders: true, tabs, images, themeOverride });
   if (r.errors.length > 0) {
     console.warn(`Tokotachi Designer: ${r.errors.join(', ')}`);
   }

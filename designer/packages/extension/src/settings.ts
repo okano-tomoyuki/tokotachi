@@ -37,8 +37,14 @@ export function generateOnSave(scope?: vscode.Uri): boolean {
     .get<boolean>('generateOnSave', true);
 }
 
-/** キャンバスの配色(auto は VS Code の配色テーマに合わせる)。 */
-export function colorScheme(): 'LIGHT' | 'DARK' {
+/**
+ * キャンバスの配色。プロジェクトのテーマが LIGHT・DARK ならそれに従う。SYSTEM(か、プロジェクトに属さない)なら、
+ * 実行するまで OS の設定は分からないので、拡張の設定で決める(auto は VS Code の配色テーマに合わせる)。
+ */
+export function colorScheme(project?: 'SYSTEM' | 'LIGHT' | 'DARK'): 'LIGHT' | 'DARK' {
+  if (project === 'LIGHT' || project === 'DARK') {
+    return project;
+  }
   const setting = vscode.workspace
     .getConfiguration(`${SECTION}.canvas`)
     .get<string>('colorScheme', 'auto');

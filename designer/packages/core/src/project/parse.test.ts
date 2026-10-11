@@ -53,4 +53,38 @@ describe('parseProject', () => {
 }
 `);
   });
+
+  it('テーマ: 配色と上書きを調べ、決まった形で書き出す', () => {
+    const theme = {
+      color_scheme: 'DARK',
+      override: {
+        colors: { ACCENT: '#DC2626', FIELD: { light: '#FFFFFF', dark: '#000000' } },
+        radius: 0,
+      },
+    };
+    expect(parseProject(JSON.stringify({ ...valid, theme })).diagnostics).toEqual([]);
+    expect(codes({ ...valid, theme: { color_scheme: 'AUTO' } })).toEqual(['theme.color_scheme']);
+    expect(
+      codes({ ...valid, theme: { override: { colors: { NOPE: '#000000' } } } }).length,
+    ).toBeGreaterThan(0);
+    expect(codes({ ...valid, theme: { override: { radius: -1 } } }).length).toBeGreaterThan(0);
+    const text = serializeProject({ format_version: 1, theme } as never);
+    expect(text).toBe(`{
+  "format_version": 1,
+  "theme": {
+    "color_scheme": "DARK",
+    "override": {
+      "colors": {
+        "ACCENT": "#DC2626",
+        "FIELD": {
+          "light": "#FFFFFF",
+          "dark": "#000000"
+        }
+      },
+      "radius": 0
+    }
+  }
+}
+`);
+  });
 });

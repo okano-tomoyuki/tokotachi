@@ -796,6 +796,16 @@ bool set_Window(tokotachi::Window* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "title")
     {
         std::string t;
@@ -874,6 +884,11 @@ bool get_Window(tokotachi::Window* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "title")
@@ -1001,6 +1016,16 @@ bool set_Dialog(tokotachi::Dialog* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "title")
     {
         std::string t;
@@ -1079,6 +1104,11 @@ bool get_Dialog(tokotachi::Dialog* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "title")
@@ -1206,6 +1236,16 @@ bool set_Button(tokotachi::Button* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -1294,6 +1334,11 @@ bool get_Button(tokotachi::Button* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -1426,6 +1471,16 @@ bool set_CheckBox(tokotachi::CheckBox* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -1514,6 +1569,11 @@ bool get_CheckBox(tokotachi::CheckBox* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -1646,6 +1706,16 @@ bool set_RadioButton(tokotachi::RadioButton* o, const std::string& p, const Json
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -1744,6 +1814,11 @@ bool get_RadioButton(tokotachi::RadioButton* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -1881,6 +1956,16 @@ bool set_LineEdit(tokotachi::LineEdit* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -1969,6 +2054,11 @@ bool get_LineEdit(tokotachi::LineEdit* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -2101,6 +2191,16 @@ bool set_TextEdit(tokotachi::TextEdit* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -2199,6 +2299,11 @@ bool get_TextEdit(tokotachi::TextEdit* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -2336,6 +2441,16 @@ bool set_SpinBox(tokotachi::SpinBox* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "minimum")
     {
         double t;
@@ -2454,6 +2569,11 @@ bool get_SpinBox(tokotachi::SpinBox* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "minimum")
@@ -2601,6 +2721,16 @@ bool set_Slider(tokotachi::Slider* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "minimum")
     {
         double t;
@@ -2719,6 +2849,11 @@ bool get_Slider(tokotachi::Slider* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "minimum")
@@ -2866,6 +3001,16 @@ bool set_ComboBox(tokotachi::ComboBox* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "items")
     {
         std::vector<std::string> t;
@@ -2964,6 +3109,11 @@ bool get_ComboBox(tokotachi::ComboBox* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "items")
@@ -3101,6 +3251,16 @@ bool set_Label(tokotachi::Label* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -3209,6 +3369,11 @@ bool get_Label(tokotachi::Label* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -3351,6 +3516,16 @@ bool set_ProgressBar(tokotachi::ProgressBar* o, const std::string& p, const Json
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "minimum")
     {
         double t;
@@ -3449,6 +3624,11 @@ bool get_ProgressBar(tokotachi::ProgressBar* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "minimum")
@@ -3586,6 +3766,16 @@ bool set_ListView(tokotachi::ListView* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "header_visible")
     {
         bool t;
@@ -3694,6 +3884,11 @@ bool get_ListView(tokotachi::ListView* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "header_visible")
@@ -3836,6 +4031,16 @@ bool set_TreeView(tokotachi::TreeView* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "header_visible")
     {
         bool t;
@@ -3954,6 +4159,11 @@ bool get_TreeView(tokotachi::TreeView* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "header_visible")
@@ -4101,6 +4311,16 @@ bool set_Widget(tokotachi::Widget* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     return false;
 }
 
@@ -4159,6 +4379,11 @@ bool get_Widget(tokotachi::Widget* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     return false;
@@ -4276,6 +4501,16 @@ bool set_TabWidget(tokotachi::TabWidget* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "current_index")
     {
         int t;
@@ -4344,6 +4579,11 @@ bool get_TabWidget(tokotachi::TabWidget* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "current_index")
@@ -4466,6 +4706,16 @@ bool set_Splitter(tokotachi::Splitter* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "orientation")
     {
         tokotachi::Orientation t;
@@ -4544,6 +4794,11 @@ bool get_Splitter(tokotachi::Splitter* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "orientation")
@@ -4671,6 +4926,16 @@ bool set_ScrollArea(tokotachi::ScrollArea* o, const std::string& p, const Json& 
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "fit_width")
     {
         bool t;
@@ -4739,6 +5004,11 @@ bool get_ScrollArea(tokotachi::ScrollArea* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "fit_width")
@@ -4861,6 +5131,16 @@ bool set_PaintBox(tokotachi::PaintBox* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "cached")
     {
         bool t;
@@ -4929,6 +5209,11 @@ bool get_PaintBox(tokotachi::PaintBox* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "cached")
@@ -5356,6 +5641,16 @@ bool set_MenuBar(tokotachi::MenuBar* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     return false;
 }
 
@@ -5414,6 +5709,11 @@ bool get_MenuBar(tokotachi::MenuBar* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     return false;
@@ -5556,6 +5856,16 @@ bool set_ToolBar(tokotachi::ToolBar* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "button_style")
     {
         tokotachi::ToolButtonStyle t;
@@ -5624,6 +5934,11 @@ bool get_ToolBar(tokotachi::ToolBar* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "button_style")
@@ -5746,6 +6061,16 @@ bool set_StatusBar(tokotachi::StatusBar* o, const std::string& p, const Json& v)
         o->tooltip = t;
         return true;
     }
+    if (p == "theme_override")
+    {
+        tokotachi::ThemeOverride t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->theme_override = t;
+        return true;
+    }
     if (p == "text")
     {
         std::string t;
@@ -5814,6 +6139,11 @@ bool get_StatusBar(tokotachi::StatusBar* o, const std::string& p, Json& out)
     if (p == "tooltip")
     {
         out = to_json(o->tooltip.get());
+        return true;
+    }
+    if (p == "theme_override")
+    {
+        out = to_json(o->theme_override.get());
         return true;
     }
     if (p == "text")
@@ -6329,79 +6659,79 @@ std::vector<std::string> property_names(const std::string& cls)
 {
     if (cls == "Window")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "title", "background"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "title", "background"};
     }
     if (cls == "Dialog")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "title", "background"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "title", "background"};
     }
     if (cls == "Button")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text", "font", "style"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text", "font", "style"};
     }
     if (cls == "CheckBox")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text", "font", "checked"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text", "font", "checked"};
     }
     if (cls == "RadioButton")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text", "font", "value", "group_value"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text", "font", "value", "group_value"};
     }
     if (cls == "LineEdit")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text", "placeholder_text", "font"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text", "placeholder_text", "font"};
     }
     if (cls == "TextEdit")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text", "placeholder_text", "font", "word_wrap"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text", "placeholder_text", "font", "word_wrap"};
     }
     if (cls == "SpinBox")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "minimum", "maximum", "value", "single_step", "page_step", "decimals"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "minimum", "maximum", "value", "single_step", "page_step", "decimals"};
     }
     if (cls == "Slider")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "minimum", "maximum", "value", "single_step", "page_step", "orientation"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "minimum", "maximum", "value", "single_step", "page_step", "orientation"};
     }
     if (cls == "ComboBox")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "items", "current_index", "placeholder_text", "font"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "items", "current_index", "placeholder_text", "font"};
     }
     if (cls == "Label")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text", "font", "color", "alignment", "word_wrap"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text", "font", "color", "alignment", "word_wrap"};
     }
     if (cls == "ProgressBar")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "minimum", "maximum", "value", "text_visible"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "minimum", "maximum", "value", "text_visible"};
     }
     if (cls == "ListView")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "header_visible", "sorting_enabled", "sort_column", "sort_order", "selection_mode"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "header_visible", "sorting_enabled", "sort_column", "sort_order", "selection_mode"};
     }
     if (cls == "TreeView")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "header_visible", "sorting_enabled", "sort_column", "sort_order", "selection_mode", "indentation"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "header_visible", "sorting_enabled", "sort_column", "sort_order", "selection_mode", "indentation"};
     }
     if (cls == "Widget")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override"};
     }
     if (cls == "TabWidget")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "current_index"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "current_index"};
     }
     if (cls == "Splitter")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "orientation", "sizes"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "orientation", "sizes"};
     }
     if (cls == "ScrollArea")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "fit_width"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "fit_width"};
     }
     if (cls == "PaintBox")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "cached"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "cached"};
     }
     if (cls == "Timer")
     {
@@ -6425,7 +6755,7 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "MenuBar")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override"};
     }
     if (cls == "Menu")
     {
@@ -6433,11 +6763,11 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "ToolBar")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "button_style"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "button_style"};
     }
     if (cls == "StatusBar")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "text"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "text"};
     }
     if (cls == "Tab")
     {

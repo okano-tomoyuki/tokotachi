@@ -104,6 +104,7 @@ export class Canvas {
    * @param options.placeholders 中身が空の入れ物に最小の大きさを与える(デザイナーで使う。placeholders.ts)
    * @param options.tabs 表示するタブ(TabWidget の名前 → 位置。デザイナーで、選んだ部品が入っているタブを出す)
    * @param options.images 定義ファイルが参照する画像の中身(正規化したパス → 中身)。無い画像は描かない
+   * @param options.themeOverride アプリケーションのテーマに重ねる上書き(プロジェクトの theme.override。検証済みのもの)
    */
   render(
     doc: TtuiDocument,
@@ -112,6 +113,7 @@ export class Canvas {
       placeholders?: boolean;
       tabs?: Readonly<Record<string, number>>;
       images?: ReadonlyMap<string, Uint8Array>;
+      themeOverride?: Readonly<Record<string, unknown>> | undefined;
     } = {},
   ): RenderResult {
     const target = options.placeholders === true ? withPlaceholders(doc) : doc;
@@ -136,6 +138,7 @@ export class Canvas {
     const request = {
       window_class: target.window.class,
       color_scheme: options.colorScheme ?? 'LIGHT',
+      ...(options.themeOverride !== undefined ? { theme_override: options.themeOverride } : {}),
       images,
       ops: [...ops, ...show],
     };

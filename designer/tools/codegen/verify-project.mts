@@ -31,6 +31,7 @@ function write(path: string, text: string): void {
 const doc: TtprojDocument = {
   format_version: 1,
   codegen: { comment_locale: 'ja', namespace: 'app', header_dir: 'include', source_dir: 'src' },
+  theme: { color_scheme: 'LIGHT', override: { colors: { ACCENT: '#7C3AED' }, field_radius: 2 } },
   main_window: 'ui/main_window.ttui.json',
   windows: ['ui/main_window.ttui.json', 'ui/settings_dialog.ttui.json'],
 };

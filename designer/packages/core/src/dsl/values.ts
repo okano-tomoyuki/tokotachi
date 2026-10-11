@@ -7,6 +7,7 @@ import type { PrimitiveType, PropertyType } from '../catalog/types.ts';
 import { l10n } from '../l10n.ts';
 import { IMAGE_EXTENSIONS, isImagePath } from './images.ts';
 import type { PropertyValue } from './schema.ts';
+import { checkThemeOverride } from './themeOverride.ts';
 
 /** 型の表示(メッセージ用)。 */
 export function describeType(type: PropertyType): string {
@@ -135,6 +136,9 @@ export function checkValue(type: PropertyType, value: PropertyValue): string | n
       'Expected a relative path from this file to an image file ({0}), separated by "/"',
       IMAGE_EXTENSIONS.join(', '),
     );
+  }
+  if (name === 'ThemeOverride') {
+    return checkThemeOverride(value);
   }
   // Margins は 4 辺に同じ値を数値 1 つで書ける
   if (name === 'Margins' && typeof value === 'number') {

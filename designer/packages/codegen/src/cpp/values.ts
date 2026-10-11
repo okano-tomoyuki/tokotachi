@@ -4,6 +4,7 @@
 import {
   COLOR_PATTERN,
   getCatalog,
+  parseThemeOverride,
   type PrimitiveType,
   type PropertyType,
   type PropertyValue,
@@ -79,8 +80,25 @@ function color(hex: string): string {
   return `tokotachi::Color(${parts.join(', ')})`;
 }
 
+/** テーマの上書きを 1 つの式に(`tokotachi::ThemeOverride().set(...).set_radius(0)`。docs/adr/0042)。 */
+export function themeOverrideValue(value: unknown): string {
+  const parsed = parseThemeOverride(value);
+  const calls = [
+    ...parsed.colors.map(({ role, light, dark }) =>
+      light === dark
+        ? `.set(${enumValue('ColorRole', role)}, ${color(light)})`
+        : `.set(${enumValue('ColorRole', role)}, ${color(light)}, ${color(dark)})`,
+    ),
+    ...parsed.dimensions.map(({ name, value: v }) => `.set_${name}(${number(v, 'float')})`),
+  ];
+  return `tokotachi::ThemeOverride()${calls.join('')}`;
+}
+
 /** 値の型(Margins・Size 等)。 */
 function valueType(name: string, value: PropertyValue): string {
+  if (name === 'ThemeOverride') {
+    return themeOverrideValue(value);
+  }
   if (name === 'ThemeColor') {
     const text = scalarText(value);
     return COLOR_PATTERN.test(text) ? color(text) : enumValue('ColorRole', text);

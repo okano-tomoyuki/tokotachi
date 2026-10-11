@@ -12,6 +12,7 @@ import {
   type PropertyValue,
 } from '@tokotachi-designer/core';
 import { useEffect, useState } from 'react';
+import { ThemeOverrideField } from './ThemeOverrideField.tsx';
 
 interface Props {
   readonly name: string;
@@ -211,6 +212,9 @@ export function PropertyField(props: Props) {
         )}
       </div>
     );
+  }
+  if (typeof t === 'object' && 'value' in t && t.value === 'ThemeOverride') {
+    return <ThemeOverrideField value={value} onCommit={onCommit} />;
   }
   if (typeof t === 'object' && 'value' in t && t.value === 'Image') {
     // 定義ファイルからの相対パス。「…」でファイルを選ぶ

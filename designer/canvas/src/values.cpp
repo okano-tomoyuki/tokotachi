@@ -221,6 +221,84 @@ bool from_json(const Json& j, tokotachi::ThemeColor& out)
     return true;
 }
 
+namespace
+{
+// "#RRGGBB"・"#RRGGBBAA"(役割の名前は受け付けない)。
+bool hex_color(const Json& j, tokotachi::Color& out)
+{
+    tokotachi::ThemeColor c;
+    if (!j.is_string() || j.as_string().empty() || j.as_string()[0] != '#' || !from_json(j, c))
+    {
+        return false;
+    }
+    out = c.color();
+    return true;
+}
+}  // namespace
+
+bool from_json(const Json& j, tokotachi::ThemeOverride& out)
+{
+    if (!j.is_object())
+    {
+        return false;
+    }
+    tokotachi::ThemeOverride t;
+    const std::vector<std::pair<std::string, Json> >& members = j.members();
+    for (std::size_t i = 0; i < members.size(); ++i)
+    {
+        const std::string& key = members[i].first;
+        const Json& v = members[i].second;
+        float f = 0;
+        if (key == "colors")
+        {
+            if (!v.is_object())
+            {
+                return false;
+            }
+            for (std::size_t k = 0; k < v.members().size(); ++k)
+            {
+                tokotachi::ColorRole role;
+                tokotachi::Color light, dark;
+                const Json& c = v.members()[k].second;
+                if (!from_json(Json(v.members()[k].first), role))
+                {
+                    return false;
+                }
+                if (hex_color(c, light))
+                {
+                    t.set(role, light);
+                }
+                else if (c.is_object() && hex_color(c["light"], light) && hex_color(c["dark"], dark))
+                {
+                    t.set(role, light, dark);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        else if (key == "radius" && from_json(v, f))
+        {
+            t.set_radius(f);
+        }
+        else if (key == "field_radius" && from_json(v, f))
+        {
+            t.set_field_radius(f);
+        }
+        else if (key == "field_padding" && from_json(v, f))
+        {
+            t.set_field_padding(f);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    out = t;
+    return true;
+}
+
 bool from_json(const Json& j, tokotachi::Shortcut& out)
 {
     if (!j.is_string())
@@ -353,6 +431,47 @@ Json to_json(const tokotachi::Color& v)
 Json to_json(const tokotachi::ThemeColor& v)
 {
     return v.is_role() ? to_json(v.role()) : to_json(v.color());
+}
+
+Json to_json(const tokotachi::ThemeOverride& v)
+{
+    Json out = Json::object();
+    Json colors = Json::object();
+    bool any = false;
+    for (int i = 0; i < tokotachi::COLOR_ROLE_COUNT; ++i)
+    {
+        const tokotachi::ColorRole role = static_cast<tokotachi::ColorRole>(i);
+        if (!v.has(role))
+        {
+            continue;
+        }
+        Json c = to_json(v.light(role));
+        if (v.light(role) != v.dark(role))
+        {
+            c = Json::object();
+            c.set("light", to_json(v.light(role)));
+            c.set("dark", to_json(v.dark(role)));
+        }
+        colors.set(to_json(role).as_string(), c);
+        any = true;
+    }
+    if (any)
+    {
+        out.set("colors", colors);
+    }
+    if (v.radius() >= 0)
+    {
+        out.set("radius", to_json(v.radius()));
+    }
+    if (v.field_radius() >= 0)
+    {
+        out.set("field_radius", to_json(v.field_radius()));
+    }
+    if (v.field_padding() >= 0)
+    {
+        out.set("field_padding", to_json(v.field_padding()));
+    }
+    return out;
 }
 
 Json to_json(const tokotachi::Shortcut& v)

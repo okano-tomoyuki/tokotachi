@@ -79,6 +79,12 @@
         "icon": "$(star-full)"
       },
       {
+        "command": "tokotachiDesigner.chooseColorScheme",
+        "title": "%command.chooseColorScheme.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(color-mode)"
+      },
+      {
         "command": "tokotachiDesigner.addToProject",
         "title": "%command.addToProject.title%",
         "category": "Tokotachi Designer",
@@ -156,6 +162,10 @@
         },
         {
           "command": "tokotachiDesigner.generateProject",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
+        },
+        {
+          "command": "tokotachiDesigner.chooseColorScheme",
           "when": "view == tokotachiDesigner.projects && viewItem == project"
         },
         {

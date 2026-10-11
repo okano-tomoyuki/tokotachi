@@ -81,7 +81,7 @@ export interface ClassInfo {
 export interface ValueTypeInfo {
   /** メンバとその型(専用の書き方の型には無い)。 */
   members?: Record<string, PrimitiveType | { enum: string }>;
-  /** メンバではなく専用の書き方で表す(ThemeColor・Shortcut)。 */
+  /** メンバではなく専用の書き方で表す(ThemeColor・Shortcut・Image・ThemeOverride)。 */
   special?: true;
   doc?: string;
 }

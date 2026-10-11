@@ -28,19 +28,18 @@ describe('applyCommand', () => {
       target: SEARCH_BUTTON,
       properties: { text: '探す', style: 'SECONDARY' },
     });
+    const original = (SAMPLE as any).window.layout.items[0].widget.layout.items[1].widget
+      .properties;
     expect(doc.window.layout.items[0].widget.layout.items[1].widget.properties).toEqual({
+      ...original,
       text: '探す',
       style: 'SECONDARY',
     });
-    expect((SAMPLE as any).window.layout.items[0].widget.layout.items[1].widget.properties).toEqual(
-      {
-        text: '検索',
-      },
-    );
+    expect(original.text).toBe('検索');
     const cleared = apply({
       kind: 'setProperties',
       target: SEARCH_BUTTON,
-      properties: { text: null },
+      properties: { text: null, theme_override: null },
     });
     expect(cleared.window.layout.items[0].widget.layout.items[1].widget.properties).toBeUndefined();
   });

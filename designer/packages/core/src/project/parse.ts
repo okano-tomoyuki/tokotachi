@@ -4,6 +4,7 @@
 import { isValidIdentifier } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { Diagnostic } from '../dsl/diagnostics.ts';
+import { checkThemeOverride } from '../dsl/themeOverride.ts';
 import { isValidWindowPath, normalizePath, sameWindowPath } from './paths.ts';
 import { PROJECT_FORMAT_VERSION, TtprojDocument } from './schema.ts';
 
@@ -58,6 +59,13 @@ export function validateProject(project: TtprojDocument): Diagnostic[] {
     const dir = codegen?.[key];
     if (dir !== undefined && !isValidDirectory(dir)) {
       error(l10n.t('Write a relative path (separator: /)'), ['codegen', key]);
+    }
+  }
+  const override = project.theme?.override;
+  if (override !== undefined) {
+    const problem = checkThemeOverride(override);
+    if (problem !== null) {
+      error(problem, ['theme', 'override']);
     }
   }
   // ヘッダ・ソースのフォルダを 1 つにまとめるとき、同じ名前のウィンドウがあると出力先が重なる
@@ -125,7 +133,14 @@ export function parseProject(text: string): ProjectParseResult {
   return { project: result.data, diagnostics: validateProject(result.data) };
 }
 
-/** 決まった形で書き出す(キーの順は $schema・format_version・codegen・main_window・windows。一覧は 1 行に 1 つ)。 */
+/** JSON の値を、深さ depth(2 文字ずつ)の位置に書く形にする。 */
+function indented(value: unknown, depth: number): string {
+  return JSON.stringify(value, null, 2)
+    .split('\n')
+    .join(`\n${' '.repeat(depth * 2)}`);
+}
+
+/** 決まった形で書き出す(キーの順は $schema・format_version・codegen・theme・main_window・windows。一覧は 1 行に 1 つ)。 */
 export function serializeProject(project: TtprojDocument): string {
   const lines: string[] = ['{'];
   const entries: string[] = [];
@@ -150,6 +165,15 @@ export function serializeProject(project: TtprojDocument): string {
     entries.push(
       codegen.length === 0 ? '  "codegen": {}' : `  "codegen": {\n${codegen.join(',\n')}\n  }`,
     );
+  }
+  if (project.theme !== undefined) {
+    const theme = {
+      ...(project.theme.color_scheme !== undefined
+        ? { color_scheme: project.theme.color_scheme }
+        : {}),
+      ...(project.theme.override !== undefined ? { override: project.theme.override } : {}),
+    };
+    entries.push(`  "theme": ${indented(theme, 1)}`);
   }
   if (project.main_window !== undefined) {
     entries.push(`  "main_window": ${JSON.stringify(project.main_window)}`);

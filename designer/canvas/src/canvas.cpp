@@ -524,6 +524,18 @@ EMSCRIPTEN_KEEPALIVE const char* ttc_render(const char* request_text)
     }
     g_app->color_scheme =
         request["color_scheme"].as_string() == "DARK" ? tokotachi::ColorScheme::DARK : tokotachi::ColorScheme::LIGHT;
+    // プロジェクトのテーマの上書き(生成する main.cpp と同じく、標準のライト・ダークに重ねる)
+    tokotachi::ThemeOverride app_override;
+    if (request.has("theme_override"))
+    {
+        from_json(request["theme_override"], app_override);
+    }
+    tokotachi::Theme light = tokotachi::Theme::light();
+    tokotachi::Theme dark = tokotachi::Theme::dark();
+    app_override.apply_to(light);
+    app_override.apply_to(dark);
+    g_app->light_theme = light;
+    g_app->dark_theme = dark;
     set_images(request["images"]);
 
     const std::string window_class = request["window_class"].as_string();

@@ -106,6 +106,7 @@ void MainWindow::tokotachi_setup_ui()
     row_search_layout->add(line_edit_search, 1);
 
     button_search = new tokotachi::Button(row_search);
+    button_search->theme_override = tokotachi::ThemeOverride().set(tokotachi::ColorRole::ACCENT, tokotachi::Color(0x05, 0x96, 0x69), tokotachi::Color(0x34, 0xD3, 0x99)).set(tokotachi::ColorRole::ON_ACCENT, tokotachi::Color(0xFF, 0xFF, 0xFF)).set_radius(0);
     button_search->text = "検索";
     button_search->on_click = [this](tokotachi::Object* sender) { search(sender); };
     row_search_layout->add(button_search);
@@ -182,7 +183,7 @@ void MainWindow::tokotachi_setup_ui()
 
     window_layout->add(row_buttons);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="453c1dd4">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="707bf125">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)

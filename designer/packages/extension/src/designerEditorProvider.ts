@@ -8,10 +8,12 @@ import type {
   WebviewToExtensionMessage,
 } from '@tokotachi-designer/core';
 import {
+  checkThemeOverride,
   hasErrors,
   IMAGE_EXTENSIONS,
   isImagePath,
   parseDocument,
+  PROJECT_EXTENSION,
   relativePath,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
@@ -19,6 +21,7 @@ import { applyEditCommand } from './applyEditCommand.ts';
 import { renderCanvas } from './canvasService.ts';
 import { generateWindowCode, readImages } from './generateCode.ts';
 import { goToHandler } from './goToHandler.ts';
+import { projectOf } from './projects.ts';
 import { colorScheme, SECTION } from './settings.ts';
 
 export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
@@ -75,13 +78,20 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       }
       try {
         const images = await readImages(vscode.Uri.joinPath(document.uri, '..'), parsed.document);
+        // プロジェクトに属していれば、そのテーマで描く(project-spec.md §4.1)
+        const theme = (await projectOf(document.uri))?.project.doc.theme;
+        const override =
+          theme?.override !== undefined && checkThemeOverride(theme.override) === null
+            ? theme.override
+            : undefined;
         const frame = await renderCanvas(
           this.context,
           parsed.document,
           document.version,
-          colorScheme(),
+          colorScheme(theme?.color_scheme),
           tabs,
           images,
+          override,
         );
         await post({ type: 'canvas', frame });
       } catch (e) {
@@ -182,6 +192,12 @@ export class DesignerEditorProvider implements vscode.CustomTextEditorProvider {
       }),
       vscode.window.onDidChangeActiveColorTheme(() => {
         scheduleRender();
+      }),
+      // プロジェクトのテーマが変わったら描き直す(保存していない変更も)
+      vscode.workspace.onDidChangeTextDocument((e) => {
+        if (e.document.uri.path.endsWith(PROJECT_EXTENSION)) {
+          scheduleRender();
+        }
       }),
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(`${SECTION}.canvas`)) {

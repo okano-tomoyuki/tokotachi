@@ -16,6 +16,7 @@
   "view.projects.welcome": "Create a project to design windows and generate C++ code (main.cpp and CMakeLists.txt are generated too).\n[New Project](command:tokotachiDesigner.newProject)",
   "command.newProject.title": "New Project...",
   "command.generateProject.title": "Generate Project",
+  "command.chooseColorScheme.title": "Choose Color Scheme",
   "command.setMainWindow.title": "Set as Main Window",
   "command.addToProject.title": "Add to Project...",
   "command.refreshProjects.title": "Refresh"

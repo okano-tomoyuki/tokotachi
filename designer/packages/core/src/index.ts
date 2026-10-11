@@ -29,6 +29,14 @@ export { serializeDocument } from './dsl/serialize.ts';
 export * from './dsl/tree.ts';
 export { validateDocument } from './dsl/validate.ts';
 export { checkValue, COLOR_PATTERN, isEnumValue, isShortcut } from './dsl/values.ts';
+export {
+  checkThemeOverride,
+  colorRoles,
+  parseThemeOverride,
+  THEME_DIMENSIONS,
+  type ParsedThemeOverride,
+  type ThemeDimension,
+} from './dsl/themeOverride.ts';
 export * from './dsl/outline.ts';
 export { bindingOf, isBindable, variableTypeOf } from './dsl/bindings.ts';
 export {

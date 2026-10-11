@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { DesignerEditorProvider } from './designerEditorProvider.ts';
 import { registerDiagnostics } from './diagnostics.ts';
 import { generateProjectCode, generateWindowCode, registerGenerateOnSave } from './generateCode.ts';
-import { addToProject, newProject, setMainWindow } from './projectCommands.ts';
+import { addToProject, chooseColorScheme, newProject, setMainWindow } from './projectCommands.ts';
 import { registerProjectsView } from './projectsView.ts';
 import { newWindow } from './newWindow.ts';
 
@@ -46,6 +46,15 @@ export function activate(context: vscode.ExtensionContext): void {
         await setMainWindow(uri);
       }
     }),
+    vscode.commands.registerCommand(
+      'tokotachiDesigner.chooseColorScheme',
+      async (arg?: unknown) => {
+        const uri = uriOf(arg) ?? vscode.window.activeTextEditor?.document.uri;
+        if (uri?.path.endsWith('.ttproj.json')) {
+          await chooseColorScheme(uri);
+        }
+      },
+    ),
     vscode.commands.registerCommand('tokotachiDesigner.addToProject', async (arg?: unknown) => {
       const uri = uriOf(arg);
       if (uri) {

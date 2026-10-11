@@ -75,6 +75,10 @@ int main(int argc, char** argv)
     check(window.label_size->color.get().is_role() &&
               window.label_size->color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
           "theme color");
+    check(window.button_search->theme_override.get().radius() == 0 &&
+              window.button_search->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Color(0x05, 0x96, 0x69) &&
+              window.line_edit_search->theme.get()[tokotachi::ColorRole::ACCENT] != tokotachi::Color(0x05, 0x96, 0x69),
+          "theme override");
     check(window.action_open->shortcut.get() == tokotachi::Shortcut("Ctrl+O"), "shortcut");
     check(window.action_open->icon.get().width() == 16 && window.action_open->icon.get().height() == 16,
           "embedded image");

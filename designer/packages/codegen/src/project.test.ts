@@ -96,4 +96,33 @@ describe('project', () => {
       ),
     ).toHaveProperty('error');
   });
+
+  it('テーマを Application に設定する(配色と、標準のライト・ダークに重ねる上書き)', () => {
+    const main = text(
+      generateProject(
+        {
+          ...PROJECT,
+          theme: { color_scheme: 'DARK', override: { colors: { ACCENT: '#DC2626' }, radius: 0 } },
+        },
+        'my_app.ttproj.json',
+        WINDOWS,
+        () => undefined,
+      ),
+      'main.cpp',
+    );
+    expect(main).toContain('    app.color_scheme = tokotachi::ColorScheme::DARK;');
+    expect(main).toContain(
+      '    const tokotachi::ThemeOverride theme_override = tokotachi::ThemeOverride().set(tokotachi::ColorRole::ACCENT, tokotachi::Color(0xDC, 0x26, 0x26)).set_radius(0);',
+    );
+    expect(main).toContain(
+      '    theme_override.apply_to(dark_theme);\n    app.dark_theme = dark_theme;',
+    );
+    // テーマが無ければ何も書かない
+    const plain = text(
+      generateProject(PROJECT, 'my_app.ttproj.json', WINDOWS, () => undefined),
+      'main.cpp',
+    );
+    expect(plain).not.toContain('color_scheme');
+    expect(plain).not.toContain('ThemeOverride');
+  });
 });

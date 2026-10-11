@@ -257,6 +257,7 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 | `Font` | メンバの名前のオブジェクト | `{ "size": 18 }` |
 | `ThemeColor` | 役割の名前、または `"#RRGGBB"`・`"#RRGGBBAA"` | `"ACCENT"`、`"#FF8000"`(§10 Q7) |
 | `Shortcut` | 表記の文字列(`Shortcut(const char*)` と同じ) | `"Ctrl+S"` |
+| `ThemeOverride` | `colors`(役割の名前 → 色か `{ "light", "dark" }`)と寸法(`radius`・`field_radius`・`field_padding`)のオブジェクト(§5.3) | `{ "colors": { "ACCENT": "#DC2626" }, "radius": 0 }` |
 | `std::vector<std::string>` | 文字列の配列 | `["小", "中", "大"]` |
 | `std::vector<float>` | 数値の配列 | `[160, 360]` |
 | 部品・Action・メニューへのポインタ | 同じファイルのノードの `name` | `"action_open"` |
@@ -284,6 +285,25 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 - 結びつけられるのは、型が `bool`・`int`・`float`・`double`・`string` のプロパティで、Variable の型と同じもの(`bind` は同じ型どうしだけ)。
 - 位置と大きさ(`x`・`y`・`width`・`height`)は結びつけられない(レイアウト・デザイナーのつまみで決めるため)。
 - Variable を消すと、結びつけていたプロパティには Variable の初期値を書く(見た目は変わらない)。名前を変えると、結びつけも書き換える。
+
+### 5.3 テーマの上書き(`theme_override`)
+
+部品の `theme_override`([ADR 0042](../adr/0042-widget-theme-override.md))は、その部品と子孫に効くテーマの一部の上書き。
+
+```json
+"theme_override": {
+  "colors": {
+    "ACCENT": { "light": "#059669", "dark": "#34D399" },
+    "ON_ACCENT": "#FFFFFF"
+  },
+  "radius": 0
+}
+```
+
+- `colors` は役割(`ColorRole` の値)から色へ。色は `"#RRGGBB"`・`"#RRGGBBAA"`(ライト・ダークで同じ)か、`{ "light": ..., "dark": ... }`。
+- 寸法は 0 以上の数(dp)。書いていない役割・寸法は親から継ぐ。
+- 生成するコードは 1 つの式にする(`tokotachi::ThemeOverride().set(...).set_radius(0)`)。キャンバスも同じ値を設定して描く。
+- プロジェクトのテーマの上書き(project-spec.md §4.1)も同じ書き方。
 
 ## 6. ハンドラ
 

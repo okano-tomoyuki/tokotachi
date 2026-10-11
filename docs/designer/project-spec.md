@@ -39,6 +39,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | `$schema` | | JSON Schema の場所(エディタの補完用) |
 | `format_version` | ○ | `1` |
 | `codegen` | | コード生成の設定(§4) |
+| `theme` | | アプリケーションのテーマ(§4.1) |
 | `main_window` | | 起動したときに開くウィンドウ。`windows` のどれか(class が `Window` のもの) |
 | `windows` | | プロジェクトに属するウィンドウの定義ファイル |
 
@@ -56,7 +57,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | `codegen.header_dir`・`source_dir` が相対パスであること | エラー |
 | `header_dir`・`source_dir` を使うとき、同じファイル名のウィンドウがないこと(出力先が重なる) | エラー |
 
-書き出しの形: キーの順は `$schema`・`format_version`・`codegen`・`main_window`・`windows`。一覧は 1 行に 1 つ。インデントは 2 文字、改行は LF、末尾に改行。
+書き出しの形: キーの順は `$schema`・`format_version`・`codegen`・`theme`・`main_window`・`windows`。一覧は 1 行に 1 つ。インデントは 2 文字、改行は LF、末尾に改行。
 
 ## 4. コード生成の設定(`codegen`)
 
@@ -67,6 +68,25 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | `namespace` | なし | 生成するクラスの名前空間(`app::ui` は `namespace app { namespace ui {` と 1 つずつ書く) |
 | `include_guard_prefix` | なし | インクルードガードのマクロの名前の先頭に付ける文字 |
 | `header_dir`・`source_dir` | ウィンドウと同じフォルダ | ウィンドウのヘッダ・ソースを置くフォルダ(プロジェクトのフォルダからの相対パス) |
+
+### 4.1 テーマ(`theme`)
+
+```json
+"theme": {
+  "color_scheme": "DARK",
+  "override": { "colors": { "ACCENT": "#7C3AED" }, "field_radius": 2 }
+}
+```
+
+| キー | 既定 | 内容 |
+|---|---|---|
+| `color_scheme` | `SYSTEM` | ライト・ダークの選び方(`SYSTEM`: OS の設定に従う・`LIGHT`・`DARK`) |
+| `override` | なし | 標準のテーマ(ライト・ダーク)に重ねる上書き(部品の `theme_override` と同じ書き方。dsl-spec.md §5.3) |
+
+- 生成する main.cpp で、`app.color_scheme` を設定し、`Theme::light()`・`Theme::dark()` に上書きを重ねて `app.light_theme`・`app.dark_theme` にする。
+- デザイナーのキャンバスは、プロジェクトに属するウィンドウをこのテーマで描く。`color_scheme` が `SYSTEM`(か、プロジェクトに属さない)なら、
+  実行するまで OS の設定は分からないので、拡張の設定 `tokotachiDesigner.canvas.colorScheme`(既定は VS Code の配色テーマに合わせる)で決める。
+- `override` の役割・色・寸法の誤りはエラーにする(JSON Schema でも補完する)。
 
 ## 5. 起動部分と CMakeLists.txt
 
@@ -84,7 +104,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 
 - **プロジェクトのビュー**(アクティビティバーの Tokotachi Designer): プロジェクトごとにウィンドウを並べ、メインのウィンドウに ★ を付ける。
   どのプロジェクトにも属さないウィンドウは「プロジェクトに属さないウィンドウ」にまとめる。ファイルを作る・消す・変えると描き直す。
-  - プロジェクト: 開く、プロジェクトのコードを生成(すべてのウィンドウと起動部分)。
+  - プロジェクト: 開く、プロジェクトのコードを生成(すべてのウィンドウと起動部分)、アプリケーションの配色を選ぶ(`theme.color_scheme`)。
   - ウィンドウ: デザイナーで開く、コードを生成、メインのウィンドウに設定(プロジェクトのウィンドウ)、プロジェクトに追加(属さないウィンドウ)。
   - プロジェクトが無いときは「新しいプロジェクト」のボタンを出す。
 - **新しいプロジェクト**: 名前(CMake のターゲットの名前にもなる。英字・数字・`_`・`-`)と作る場所を入力してもらい、

@@ -12,9 +12,10 @@ import {
   type TtprojDocument,
   type TtuiDocument,
   PROJECT_EXTENSION,
+  parseThemeOverride,
 } from '@tokotachi-designer/core';
 import { cppSyntax } from './cpp/syntax.ts';
-import { cppString } from './cpp/values.ts';
+import { cppString, enumValue, themeOverrideValue } from './cpp/values.ts';
 import type { GenerateResult, OutputFile } from './index.ts';
 import { DEFAULT_CPP_OPTIONS, fileNameOf, resolveCppTarget, type CppOptions } from './names.ts';
 import { createFile, mergeFile, type GeneratedCode, type LanguageSyntax } from './region.ts';
@@ -115,6 +116,31 @@ const COMMENTS: Readonly<Record<'en' | 'ja', Comments>> = {
  * 起動部分(main.cpp)と CMakeLists.txt を生成する。
  * @param readExisting プロジェクトのフォルダからのパスの、既存の内容(無ければ undefined)
  */
+/** プロジェクトのテーマを Application に設定する文(project-spec.md §4.1)。 */
+function themeStatements(project: TtprojDocument): string[] {
+  const out: string[] = [];
+  const scheme = project.theme?.color_scheme;
+  if (scheme !== undefined) {
+    out.push(`    app.color_scheme = ${enumValue('ColorScheme', scheme)};`);
+  }
+  const override = project.theme?.override;
+  const parsed = parseThemeOverride(override);
+  if (parsed.colors.length > 0 || parsed.dimensions.length > 0) {
+    // 標準のライト・ダークに同じ上書きを重ねる(色はライト・ダークで別にできる)
+    out.push(
+      `    const tokotachi::ThemeOverride theme_override = ${themeOverrideValue(override)};`,
+    );
+    for (const kind of ['light', 'dark'] as const) {
+      out.push(
+        `    tokotachi::Theme ${kind}_theme = tokotachi::Theme::${kind}();`,
+        `    theme_override.apply_to(${kind}_theme);`,
+        `    app.${kind}_theme = ${kind}_theme;`,
+      );
+    }
+  }
+  return out;
+}
+
 export function generateProject(
   project: TtprojDocument,
   projectFileName: string,
@@ -155,6 +181,7 @@ export function generateProject(
         indent: 1,
         content: [
           '    tokotachi::Application app(argc, argv);',
+          ...themeStatements(project),
           `    ${qualified} window;`,
           '    window.visible = true;',
           '    return app.exec();',

@@ -97,6 +97,13 @@
                     "name": "button_search",
                     "class": "Button",
                     "properties": {
+                      "theme_override": {
+                        "colors": {
+                          "ACCENT": { "light": "#059669", "dark": "#34D399" },
+                          "ON_ACCENT": "#FFFFFF"
+                        },
+                        "radius": 0
+                      },
                       "text": "検索"
                     },
                     "events": { "on_click": "search" }

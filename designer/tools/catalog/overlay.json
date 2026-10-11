@@ -71,5 +71,5 @@
   "extra_enums": ["Align", "Anchor", "DialogButton", "ColorRole"],
   "extra_values": ["Placement", "Color"],
   "$comment_special_values": "メンバではなく専用の書き方で表す値の型(docs/designer/dsl-spec.md §5)。",
-  "special_values": ["ThemeColor", "Shortcut", "Image"]
+  "special_values": ["ThemeColor", "Shortcut", "Image", "ThemeOverride"]
 }

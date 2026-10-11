@@ -57,6 +57,8 @@
     "save_png",
     "showing",
     "status_bar",
+    "theme",
+    "theme_override",
     "title",
     "tool_bar",
     "tooltip",
@@ -151,6 +153,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "title": {
           "type": "string",
@@ -309,6 +319,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "title": {
           "type": "string",
@@ -472,6 +490,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "text": {
           "type": "string",
@@ -643,6 +669,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "text": {
           "type": "string",
@@ -816,6 +850,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "text": {
           "type": "string",
@@ -997,6 +1039,14 @@
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
         },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
         "text": {
           "type": "string",
           "declared_in": "TextInputBase",
@@ -1170,6 +1220,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "text": {
           "type": "string",
@@ -1345,6 +1403,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "minimum": {
           "type": "double",
@@ -1530,6 +1596,14 @@
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
         },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
         "minimum": {
           "type": "double",
           "declared_in": "RangeBase",
@@ -1714,6 +1788,14 @@
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
         },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
         "items": {
           "type": {
             "array": "string"
@@ -1889,6 +1971,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "text": {
           "type": "string",
@@ -2070,6 +2160,14 @@
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
         },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
         "minimum": {
           "type": "double",
           "declared_in": "ProgressBar",
@@ -2239,6 +2337,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "header_visible": {
           "type": "bool",
@@ -2429,6 +2535,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "header_visible": {
           "type": "bool",
@@ -2621,6 +2735,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         }
       },
       "handlers": {
@@ -2767,6 +2889,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "current_index": {
           "type": "int",
@@ -2925,6 +3055,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "orientation": {
           "type": {
@@ -3093,6 +3231,14 @@
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
         },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
         "fit_width": {
           "type": "bool",
           "declared_in": "ScrollArea",
@@ -3241,6 +3387,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "cached": {
           "type": "bool",
@@ -3575,6 +3729,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         }
       },
       "handlers": {
@@ -3731,6 +3893,14 @@
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
         },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
+        },
         "button_style": {
           "type": {
             "enum": "ToolButtonStyle"
@@ -3875,6 +4045,14 @@
           "declared_in": "Widget",
           "doc": "ポインタを少し止めたときに出す説明(空なら出さない。docs/adr/0022)。",
           "default": ""
+        },
+        "theme_override": {
+          "type": {
+            "value": "ThemeOverride"
+          },
+          "declared_in": "Widget",
+          "doc": "テーマの一部の上書き(docs/adr/0042)。自分と子孫に効く(ポップアップは開いた元のウィジェットのものを継ぐ)。",
+          "default": {}
         },
         "text": {
           "type": "string",
@@ -4084,6 +4262,10 @@
     "ThemeColor": {
       "special": true,
       "doc": "色の指定: テーマの役割か、具体的な色のどちらか。役割で指定した色は、テーマを切り替えると変わる。"
+    },
+    "ThemeOverride": {
+      "special": true,
+      "doc": "テーマの一部の上書き(値の型。docs/adr/0042)。ウィジェットの theme_override に設定すると、そのウィジェットと子孫に効く。 上書きしていない役割・寸法は、親(ウィンドウはアプリケーション、ポップアップは開いた元のウィジェット)から継ぐ。 色は、ライトとダークで同じにも、別々にもできる(どちらを使うかは、継いだテーマの dark_colors で決める)。"
     }
   },
   "enums": {

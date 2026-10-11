@@ -31,6 +31,8 @@ bool from_json(const Json& j, tokotachi::Color& out);
 bool from_json(const Json& j, tokotachi::ThemeColor& out);
 bool from_json(const Json& j, tokotachi::Shortcut& out);
 bool from_json(const Json& j, tokotachi::Placement& out);
+/// テーマの上書き({"colors": {"ACCENT": "#RRGGBB" | {"light", "dark"}}, "radius": 0, ...}。docs/adr/0042)。
+bool from_json(const Json& j, tokotachi::ThemeOverride& out);
 /// 画像は、定義ファイルに書いたパス(正規化したもの)を set_images で渡した画像に変える。無いパスは空の画像。
 bool from_json(const Json& j, tokotachi::Image& out);
 
@@ -49,6 +51,7 @@ Json to_json(const tokotachi::Font& v);
 Json to_json(const tokotachi::Color& v);
 Json to_json(const tokotachi::ThemeColor& v);
 Json to_json(const tokotachi::Shortcut& v);
+Json to_json(const tokotachi::ThemeOverride& v);
 /// 画像は値で表せないので null。
 Json to_json(const tokotachi::Image& v);
 
