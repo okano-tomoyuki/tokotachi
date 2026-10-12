@@ -10,6 +10,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [../include/tokotachi/](../include/tokotachi/) | 公開のヘッダ(API の説明はヘッダのコメント)。役割ごとのディレクトリに分ける([ADR 0035](adr/0035-header-directories.md)) | 随時追加 |
 | [../spike/](../spike/) | 技術検証のコード(ライブラリには引き継がない) | マイルストーン1 |
 | [designer/](designer/) | デザイナー(VS Code の拡張)の設計([ADR 0039](adr/0039-designer.md)) | 草案 |
+| [bindings/](bindings/) | C の API と Python のバインディングの使い方([ADR 0041](adr/0041-c-api-and-python-bindings.md)) | 随時追加 |
 
 `docs/` には、目的と設計判断(ADR)のように、あとから覆りにくい・背景ごと残したい情報を置く。
 
@@ -57,6 +58,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0038](adr/0038-reference-site.md) | リファレンスは Doxygen でヘッダから作り、手引き・サンプルの一覧とともに GitHub Pages に出す | 承認 |
 | [0039](adr/0039-designer.md) | デザイナーを VS Code の拡張として本リポジトリに作り、キャンバスは WebAssembly にした Tokotachi で描く | 承認 |
 | [0040](adr/0040-designer-canvas-ops.md) | キャンバスとコード生成は同じ「部品を組む操作の並び」を使い、ウィンドウの画素を Window::capture で取り出す | 承認 |
+| [0041](adr/0041-c-api-and-python-bindings.md) | C の API を仕様から生成して単独の共有ライブラリで配り、Python のバインディングはその上に ctypes で作る | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

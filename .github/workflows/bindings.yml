@@ -1,0 +1,150 @@
+# C の API と Python のバインディングの CI(docs/adr/0041)。
+#   generated: 生成したファイル(C のヘッダ・C++ の実装・Python の宣言)が bindings/c/api.py と合っているか
+#   linux:     ライブラリ・C の API をビルドし、C++・C のテストと、Python の各版でのテストを動かす
+#   wheel:     pip で wheel を作り、入れたパッケージでテストを動かす
+name: バインディング
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    paths:
+      - 'bindings/**'
+      - 'include/**'
+      - 'src/**'
+      - 'deps/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/bindings.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bindings-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generated:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: 生成したファイルが仕様と合っているか
+        run: python3 bindings/c/generate.py --check
+
+  linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.13']
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: 開発用のパッケージ・フォント
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libwayland-dev libxkbcommon-dev libdecor-0-dev libegl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libdrm-dev libgbm-dev libfontconfig-dev \
+            fonts-noto-cjk
+
+      # 依存ライブラリのビルドは数分かかるので、deps/ が変わらない限り使い回す(リファレンスの CI と同じキー)
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/linux-x86_64
+            deps/download
+          key: deps-linux-x86_64-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - name: ビルド
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DTOKOTACHI_BUILD_EXAMPLES=OFF
+          cmake --build build
+
+      - name: C++ と C のテスト
+        run: ctest --test-dir build --output-on-failure -E tokotachi_python_tests
+
+      - name: Python のテスト
+        env:
+          SDL_VIDEO_DRIVER: offscreen
+          TOKOTACHI_C_LIBRARY: ${{ github.workspace }}/build/bindings/c/libtokotachi_c.so
+          PYTHONPATH: ${{ github.workspace }}/bindings/python/src
+        run: |
+          python --version
+          python -m unittest discover -s bindings/python/tests -v
+          python bindings/python/examples/hello.py --screenshot hello-python.png
+
+      # 公開するのは tokotachi_* の C の関数だけ
+      - name: 公開しているシンボル
+        run: |
+          lib=build/bindings/c/libtokotachi_c.so
+          others=$(nm -D --defined-only "$lib" | awk '{print $3}' | grep -v '^tokotachi_' || true)
+          if [ -n "$others" ]; then
+            echo "::error::tokotachi_* 以外のシンボルを公開している"
+            echo "$others" | head -20
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hello-python-${{ matrix.python }}
+          path: hello-python.png
+          if-no-files-found: ignore
+
+  wheel:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: 開発用のパッケージ・フォント
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libwayland-dev libxkbcommon-dev libdecor-0-dev libegl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libdrm-dev libgbm-dev libfontconfig-dev \
+            fonts-noto-cjk
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/linux-x86_64
+            deps/download
+          key: deps-linux-x86_64-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      # 依存ライブラリは、キャッシュにあればそれを使う(無ければ CMake がビルドの中で作る)
+      - name: wheel を作る
+        run: |
+          args=""
+          if [ -d deps/install/linux-x86_64/lib/cmake ]; then
+            args="--config-settings=cmake.define.TOKOTACHI_DEPS_PREFIX=$PWD/deps/install/linux-x86_64"
+          fi
+          python -m pip wheel ./bindings/python -w dist --no-deps $args
+          python -m zipfile -l dist/*.whl
+
+      - name: 入れたパッケージでテスト
+        env:
+          SDL_VIDEO_DRIVER: offscreen
+        run: |
+          python -m venv venv
+          venv/bin/pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$GITHUB_WORKSPACE/venv/bin/python" -m unittest discover -s "$GITHUB_WORKSPACE/bindings/python/tests" -v
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheel-linux-x86_64
+          path: dist/*.whl
+          if-no-files-found: error

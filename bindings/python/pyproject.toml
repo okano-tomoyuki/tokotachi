@@ -1,0 +1,31 @@
+# Python のバインディング(docs/bindings/python.md)。
+# pip install bindings/python で、C API の共有ライブラリ(tokotachi_c)を CMake でビルドしてパッケージに入れる
+# (初めては依存ライブラリのビルドに数分かかる)。リポジトリの中からビルドする(ライブラリのソースを使うため)。
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "tokotachi"
+dynamic = ["version"]
+description = "Python bindings of Tokotachi, a cross-platform GUI library built on SDL3"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: Software Development :: User Interfaces",
+]
+
+[tool.scikit-build]
+cmake.build-type = "Release"
+wheel.packages = ["src/tokotachi"]
+# ctypes で読むので、Python の版に依らない(プラットフォームごとの wheel になる)
+wheel.py-api = "py3"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "../../include/tokotachi/core/version.hpp"
+regex = '#define TOKOTACHI_VERSION_STRING "(?P<value>[^"]+)"'
