@@ -22,6 +22,11 @@
 
 依存ライブラリ(WebAssembly 版・ネイティブ版)のビルドは、`deps/` が変わらない限りキャッシュを使い回す。
 
+拡張には他者のソフトウェア(WebAssembly にした Tokotachi の依存・Emscripten・musl・Lucide・まとめた JavaScript のパッケージ)が入るので、
+そのライセンスを `packages/extension/THIRD_PARTY_LICENSES.txt` に入れる。`pnpm licenses` で作り直し、`pnpm check` の `licenses:check` が
+古くなったことに気づく(依存の版を変えたら作り直す)。Emscripten・musl の文は `packages/extension/licenses/` に写してある
+(emsdk の版を上げたら写し直す)。
+
 最初の実行(2026-10-10、プルリクエスト #1)で、check・canvas・package がすべて通った。canvas では、生成したコードの確認 39 項目がすべて通り、
 キャンバスとネイティブの画像は見本 2 つとも画素が一致した(キャッシュが無いときの canvas は約 6 分)。
 

@@ -6,6 +6,14 @@
   "private": true,
   "publisher": "okano-tomoyuki",
   "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1E2A5A",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/okano-tomoyuki/tokotachi/tree/master/designer/packages/extension#readme",
+  "bugs": {
+    "url": "https://github.com/okano-tomoyuki/tokotachi/issues"
+  },
   "license": "MIT",
   "preview": true,
   "repository": {
@@ -23,7 +31,11 @@
     "tokotachi",
     "gui",
     "designer",
-    "c++"
+    "c++",
+    "cpp",
+    "ui",
+    "form designer",
+    "wysiwyg"
   ],
   "main": "./dist/extension.cjs",
   "activationEvents": [

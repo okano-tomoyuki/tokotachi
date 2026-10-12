@@ -141,13 +141,43 @@ describe('generateCpp', () => {
     expect(out).toContain('#include <cstdio>\n');
     expect(out).toContain('    std::puts("search");\n');
     expect(out).toContain('button_search->text = "探す";');
+    // 足した雛形は、新しく作ったときと同じ位置(生成する順)・同じ空行で並ぶ
+    const fresh = text(
+      gen(TtuiDocument.parse(doc), 'main_window.ttui.json', () => undefined),
+      'main_window.cpp',
+    )
+      .replace(
+        '#include "main_window.hpp"\n// <tokotachi-designer:end id="tokotachi_source_begin" hash="27964efa">\n',
+        '#include "main_window.hpp"\n// <tokotachi-designer:end id="tokotachi_source_begin" hash="27964efa">\n#include <cstdio>\n',
+      )
+      .replace(
+        'void MainWindow::search(tokotachi::Object* sender)\n{\n}',
+        'void MainWindow::search(tokotachi::Object* sender)\n{\n    std::puts("search");\n}',
+      );
+    expect(out).toBe(fresh);
     expect(out).toContain(
-      '// <tokotachi-designer:handler-stubs>\n\nvoid MainWindow::clear_recent(tokotachi::Object* sender)\n{\n}\n',
+      'void MainWindow::action_open_trigger(tokotachi::Object* sender)\n{\n}\n\nvoid MainWindow::clear_recent(tokotachi::Object* sender)\n{\n}\n\n',
     );
     expect(r.files[1]?.result).toMatchObject({ addedStubs: ['clear_recent'] });
     expect(text(r, 'main_window.hpp')).toContain(
       '    void clear_recent(tokotachi::Object* sender);',
     );
+  });
+
+  it('消えた雛形は、並びの最初・途中・最後のどこでも、新しく作ったときと同じ位置に足す', () => {
+    const golden = lf(goldenCpp);
+    for (const stub of [
+      'void MainWindow::action_open_trigger(tokotachi::Object* sender)\n{\n}\n\n',
+      'void MainWindow::search(tokotachi::Object* sender)\n{\n}\n\n',
+      'void MainWindow::button_close_click(tokotachi::Object* sender)\n{\n}\n\n',
+    ]) {
+      expect(golden).toContain(stub);
+      const removed = golden.replace(stub, '');
+      const r = gen(MAIN_WINDOW, 'main_window.ttui.json', (path) =>
+        path === 'main_window.cpp' ? removed : lf(goldenHpp),
+      );
+      expect(text(r, 'main_window.cpp')).toBe(golden);
+    }
   });
 
   it('区間の中を手で変えたことに気づく(整形の違いは除く)', () => {

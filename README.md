@@ -18,6 +18,8 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [examples/](examples/) | サンプル(`hello/` は全体、`gallery/` は部品ごと) |
 | [tests/](tests/) | テスト(SDL の offscreen のビデオドライバで、画面なしで動く) |
 | [spike/](spike/) | 技術検証のコード(ライブラリには引き継がない) |
+| [designer/](designer/README.md) | 画面を見ながらウィンドウを組み、C++ のクラスを生成する GUI デザイナー(VS Code の拡張 [Tokotachi Designer](designer/packages/extension/README.ja.md)) |
+| [tools/](tools/) | ライブラリのソースを作る道具(よく使うアイコンの線画を Lucide から作る `icons/generate.mjs`) |
 
 | グループ | 内容 |
 |---|---|
