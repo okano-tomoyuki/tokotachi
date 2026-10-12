@@ -1466,7 +1466,7 @@ void dispatch_key(tokotachi::Window& window, SDL_Keycode key, bool down = true, 
     e.key.key = key;
     e.key.mod = mod;
     e.key.down = down;
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 void dispatch_click(tokotachi::Window& window, const tokotachi::Point& p)
@@ -1483,7 +1483,7 @@ void dispatch_click(tokotachi::Window& window, const tokotachi::Point& p)
         e.button.clicks = 1;
         e.button.x = p.x * k;
         e.button.y = p.y * k;
-        tokotachi::Application::instance()->impl()->dispatch(e);
+        tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
     }
 }
 
@@ -1500,7 +1500,7 @@ TEST(popup_opens_relative_to_owner)
     CHECK(popup->visible);
     CHECK(popup->impl()->window != nullptr);
     CHECK(near(popup->width, 120) && near(popup->height, 60));
-    CHECK(tokotachi::Application::instance()->impl()->open_menus.size() == 1);
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.size() == 1);
     int x = 0, y = 0;
     SDL_GetWindowPosition(popup->impl()->window, &x, &y);
     int px = 0, py = 0;
@@ -1518,7 +1518,7 @@ TEST(popup_opens_relative_to_owner)
     dispatch_click(window, tokotachi::Point(250, 150));  // 外側を押すと閉じる(押したことは捨てる)
     CHECK(!popup->visible);
     CHECK(closed == 1);
-    CHECK(tokotachi::Application::instance()->impl()->open_menus.empty());
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.empty());
     delete button;  // 持ち主と一緒に破棄される(ぶら下がらない)
 }
 
@@ -1612,7 +1612,7 @@ TEST(menu_keyboard_and_submenu)
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_click(window, tokotachi::Point(350, 250));  // 外側を押すと閉じる
     CHECK(!menu->is_open());
-    CHECK(tokotachi::Application::instance()->impl()->open_menus.empty());
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.empty());
 }
 
 TEST(tooltip_property)
@@ -1687,7 +1687,7 @@ void dispatch_text(tokotachi::Window& window, const char* text)
     e.type = SDL_EVENT_TEXT_INPUT;
     e.text.windowID = SDL_GetWindowID(window.impl()->window);
     e.text.text = text;
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 TEST(range_base_clamps_and_moves_bounds)
@@ -2156,7 +2156,7 @@ void dispatch_mouse(tokotachi::Window& window, SDL_EventType type, const tokotac
         e.button.x = p.x * k;
         e.button.y = p.y * k;
     }
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 void click_with(tokotachi::Window& window, const tokotachi::Point& p, SDL_Keymod mod, int clicks = 1)
@@ -2265,7 +2265,7 @@ void dispatch_drop(tokotachi::Window& window, SDL_EventType type, const tokotach
     e.drop.x = p.x * k;
     e.drop.y = p.y * k;
     e.drop.data = data;
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 TEST(drag_and_drop_in_window_and_from_outside)
@@ -3244,7 +3244,7 @@ TEST(delete_later_and_post)
     {
         while (SDL_PollEvent(&e))
         {
-            tokotachi::Application::instance()->impl()->dispatch(e);
+            tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
         }
     }
     CHECK(posted);
@@ -3253,8 +3253,8 @@ TEST(delete_later_and_post)
     tokotachi::Widget* x = new tokotachi::Widget(&window);
     x->delete_later();
     delete x;
-    tokotachi::Application::instance()->impl()->flush_doomed();
-    CHECK(tokotachi::Application::instance()->impl()->doomed.empty());
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->flush_doomed();
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->doomed.empty());
 }
 
 bool accept_button_first()
@@ -3326,21 +3326,21 @@ TEST(message_dialog_show_finishes_and_deletes)
 {
     tokotachi::Window window("t", 400, 300);
     window.visible = true;
-    const std::size_t windows_before = tokotachi::Application::instance()->impl()->windows.size();
+    const std::size_t windows_before = tokotachi::detail::impl_of(tokotachi::Application::instance())->windows.size();
     tokotachi::DialogButton answer = tokotachi::DialogButton::NONE;
     tokotachi::MessageDialog* d = tokotachi::MessageDialog::show(
         &window, "確認", "保存しますか？ 長い文はダイアログの幅で折り返す。長い文はダイアログの幅で折り返す。",
         std::vector<tokotachi::DialogButton>{tokotachi::DialogButton::SAVE, tokotachi::DialogButton::DISCARD, tokotachi::DialogButton::CANCEL},
         [&](tokotachi::Object* sender) { answer = static_cast<tokotachi::Dialog*>(sender)->result; }, tokotachi::MessageType::QUESTION);
     CHECK(d->visible && d->text.get().find("保存") == 0 && d->type == tokotachi::MessageType::QUESTION);
-    CHECK(d->width <= 560 && tokotachi::Application::instance()->impl()->windows.size() == windows_before + 1);
+    CHECK(d->width <= 560 && tokotachi::detail::impl_of(tokotachi::Application::instance())->windows.size() == windows_before + 1);
     if (const char* dir = std::getenv("TOKOTACHI_TEST_SHOTS"))
     {
         d->save_png(std::string(dir) + "/message_dialog.png");
     }
     dispatch_key(*d, SDLK_ESCAPE);  // ダイアログは dispatch の終わりに破棄される
     CHECK(answer == tokotachi::DialogButton::CANCEL);
-    CHECK(tokotachi::Application::instance()->impl()->windows.size() == windows_before);
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->windows.size() == windows_before);
 
     // OK だけのお知らせは、Esc でも閉じる。
     answer = tokotachi::DialogButton::NONE;
@@ -3360,7 +3360,7 @@ void pump_events()
     {
         while (SDL_PollEvent(&e))
         {
-            tokotachi::Application::instance()->impl()->dispatch(e);
+            tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
         }
     }
 }
@@ -3455,7 +3455,7 @@ bool run_until(F done, int timeout_ms = 5000)
     {
         if (SDL_WaitEventTimeout(&e, 20))
         {
-            tokotachi::Application::instance()->impl()->dispatch(e);
+            tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
         }
     }
     return done();

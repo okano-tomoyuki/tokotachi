@@ -67,24 +67,10 @@ protected:
     bool launch(const std::function<void(TaskContext&)>& body, const std::function<void()>& deliver);
 
 private:
-    friend struct TaskAccess;
-
-    bool get_running() const { return shared_ != nullptr; }
-    double get_progress() const { return progress_; }
-    bool get_cancelled() const { return cancelled_; }
-    std::string get_error() const { return error_; }
-
-    /// メインスレッドで呼ぶ。
-    void progress_arrived(const std::shared_ptr<detail::TaskShared>& run);
-    void finished(const std::shared_ptr<detail::TaskShared>& run, const std::function<void()>& deliver,
-                  const std::string& failure);
-
-    std::shared_ptr<detail::TaskShared> shared_;  ///< 動いている実行(無ければ nullptr)
-    double progress_;
-    bool cancelled_;
-    std::string error_;
-    NotifyHandler on_progress_;
-    NotifyHandler on_finish_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 /// 別のスレッドで行う、終わりのある仕事(docs/adr/0029)。結果・進み具合・取り消し・例外をメインスレッドで受け取る。

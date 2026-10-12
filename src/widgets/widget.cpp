@@ -7,6 +7,7 @@
 #include <tokotachi/windows/popup.hpp>
 #include <tokotachi/windows/window.hpp>
 
+#include "../core/object_impl.hpp"
 #include "../layout/layout_access.hpp"
 #include "../windows/window_impl.hpp"
 #include "../actions/action_access.hpp"
@@ -194,7 +195,7 @@ void Widget::set_parent(Widget* const& p)
         old_window->impl()->widget_hidden(this);
     }
     parent_ = p;
-    change_owner(p);
+    detail::change_owner(this, p);
     if (parent_)
     {
         parent_->children_.push_back(this);

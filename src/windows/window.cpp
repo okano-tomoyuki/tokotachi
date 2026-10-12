@@ -14,6 +14,7 @@
 #include <tokotachi/windows/tool_bar.hpp>
 #include <tokotachi/windows/popup.hpp>
 
+#include "../core/object_impl.hpp"
 #include "../layout/layout_access.hpp"
 #include "../actions/menu_access.hpp"
 #include "../actions/action_access.hpp"
@@ -225,7 +226,7 @@ WindowImpl::~WindowImpl()
 {
     if (Application* app = Application::instance())
     {
-        std::vector<WindowImpl*>& modals = app->impl()->modal_dialogs;
+        std::vector<WindowImpl*>& modals = detail::impl_of(app)->modal_dialogs;
         modals.erase(std::remove(modals.begin(), modals.end(), this), modals.end());
         for (std::size_t i = 0; i < modals.size(); ++i)
         {
@@ -1422,7 +1423,7 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
     }
     d_->update_scale();
     d_->request_size(Size(width_dp, height_dp));
-    app->impl()->windows.push_back(d_);
+    detail::impl_of(app)->windows.push_back(d_);
 }
 
 Window::~Window()
@@ -1431,7 +1432,7 @@ Window::~Window()
     delete_owned();
     if (Application* app = Application::instance())
     {
-        std::vector<detail::WindowImpl*>& ws = app->impl()->windows;
+        std::vector<detail::WindowImpl*>& ws = detail::impl_of(app)->windows;
         ws.erase(std::remove(ws.begin(), ws.end(), d_), ws.end());
     }
     detail::WidgetAccess::set_is_window(this, false);
@@ -1470,12 +1471,12 @@ Window::Window(Object* owner_object)
 {
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
-    change_owner(owner_object);
+    detail::change_owner(this, owner_object);
     d_ = new detail::WindowImpl(this);
     d_->popup = true;
     if (Application* app = Application::instance())
     {
-        app->impl()->windows.push_back(d_);
+        detail::impl_of(app)->windows.push_back(d_);
     }
 }
 
@@ -1484,7 +1485,7 @@ void Window::close()
     visible = false;
     if (Application* app = Application::instance())
     {
-        app->impl()->quit_if_no_window();
+        detail::impl_of(app)->quit_if_no_window();
     }
 }
 

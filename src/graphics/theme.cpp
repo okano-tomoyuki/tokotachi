@@ -220,7 +220,7 @@ const Theme& application_theme()
 {
     if (Application* app = Application::instance())
     {
-        return app->impl()->current_theme;
+        return detail::impl_of(app)->current_theme;
     }
     static const Theme fallback;
     return fallback;

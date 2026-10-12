@@ -29,7 +29,7 @@ Popup::~Popup()
 {
     if (Application* app = Application::instance())
     {
-        std::vector<detail::WindowImpl*>& menus = app->impl()->open_menus;
+        std::vector<detail::WindowImpl*>& menus = detail::impl_of(app)->open_menus;
         menus.erase(std::remove(menus.begin(), menus.end(), impl()), menus.end());
     }
 }
@@ -69,7 +69,7 @@ void Popup::open(const Rect& anchor, const Size& size, PopupPlacement placement)
     }
     if (kind_ == PopupKind::MENU)
     {
-        std::vector<detail::WindowImpl*>& menus = Application::instance()->impl()->open_menus;
+        std::vector<detail::WindowImpl*>& menus = detail::impl_of(Application::instance())->open_menus;
         if (std::find(menus.begin(), menus.end(), impl()) == menus.end())
         {
             menus.push_back(impl());
@@ -83,7 +83,7 @@ void Popup::close()
     if (Application* app = Application::instance())
     {
         // このポップアップから後に開いたもの(サブメニューなど)を先に閉じる。
-        std::vector<detail::WindowImpl*>& menus = app->impl()->open_menus;
+        std::vector<detail::WindowImpl*>& menus = detail::impl_of(app)->open_menus;
         std::vector<detail::WindowImpl*>::iterator self = std::find(menus.begin(), menus.end(), impl());
         if (self != menus.end())
         {

@@ -41,6 +41,8 @@ struct TOKOTACHI_API Liveness
     bool alive;
     Liveness() : alive(true) {}
 };
+/// o の生きているかの目印(初めて求められたときに作る。WeakRef が使う)。メインスレッドで呼ぶ。
+TOKOTACHI_API std::shared_ptr<Liveness> liveness_of(Object* o);
 }  // namespace detail
 
 template <typename T>
@@ -211,9 +213,6 @@ protected:
     /// (呼ばなければ Object のデストラクタが破棄する)。
     void delete_owned();
 
-    /// 所有者を new_owner に移す(Widget の親の付け替えに使う。docs/adr/0018)。
-    void change_owner(Object* new_owner);
-
     /// プロパティの値が変わったことを知らせる(docs/adr/0016)。値が変わったときだけ呼ぶ。
     /// 書き込みの関数を自分で書くとき・利用者の操作など書き込みの関数を通らずに値が変わったときに呼ぶ。
     template <typename T>
@@ -229,15 +228,10 @@ protected:
     }
 
 private:
-    template <typename T>
-    friend class WeakRef;
-
-    static Object* get_owner(Object* self) { return self->owner_; }
-
-    Object* owner_;
-    std::vector<Object*> owned_;
-    /// WeakRef が作られたときだけ持つ。破棄するときに alive を false にする。
-    std::shared_ptr<detail::Liveness> liveness_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 /// std::string のプロパティを std::string の演算子と直接組み合わせる

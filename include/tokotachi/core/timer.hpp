@@ -43,18 +43,8 @@ protected:
     virtual void timeout();
 
 private:
-    void set_interval(const int& v);
-    void set_repeat(const bool& v);
-    void set_enabled(const bool& v);
-    void start();
-    void stop();
-    void fired();
-
-    int interval_;
-    bool repeat_;
-    bool enabled_;
-    NotifyHandler on_timer_;
-    int id_;  ///< Application の内部のタイマーの番号(止まっていれば 0)
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

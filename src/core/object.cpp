@@ -6,39 +6,42 @@
 
 #include "application_impl.hpp"
 #include "binding_registry.hpp"
+#include "object_impl.hpp"
 
 namespace tokotachi
 {
 
-Object::Object(Object* owner_object) : owner(this, &Object::get_owner), owner_(owner_object)
+Object::Object(Object* owner_object)
+    : TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Object*, owner), d_(new Impl(this, owner_object))
 {
-    if (owner_)
+    if (owner_object)
     {
-        owner_->owned_.push_back(this);
+        owner_object->d_->owned_.push_back(this);
     }
 }
 
 Object::~Object()
 {
-    if (liveness_)
+    if (d_->liveness_)
     {
-        liveness_->alive = false;
+        d_->liveness_->alive = false;
     }
     if (Application* app = Application::instance())
     {
-        std::vector<Object*>& doomed = app->impl()->doomed;
+        std::vector<Object*>& doomed = detail::impl_of(app)->doomed;
         if (!doomed.empty())
         {
             doomed.erase(std::remove(doomed.begin(), doomed.end(), this), doomed.end());
         }
     }
     delete_owned();
-    if (owner_)
+    if (d_->owner_)
     {
-        std::vector<Object*>& siblings = owner_->owned_;
+        std::vector<Object*>& siblings = d_->owner_->d_->owned_;
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
     }
     detail::remove_bindings_of(this);
+    delete d_;
 }
 
 void Object::delete_later()
@@ -49,14 +52,14 @@ void Object::delete_later()
         delete this;
         return;
     }
-    std::vector<Object*>& doomed = app->impl()->doomed;
+    std::vector<Object*>& doomed = detail::impl_of(app)->doomed;
     if (std::find(doomed.begin(), doomed.end(), this) == doomed.end())
     {
         doomed.push_back(this);
     }
 }
 
-void Object::change_owner(Object* new_owner)
+void Object::Impl::change_owner(Object* new_owner)
 {
     if (new_owner == owner_)
     {
@@ -64,23 +67,38 @@ void Object::change_owner(Object* new_owner)
     }
     if (owner_)
     {
-        std::vector<Object*>& siblings = owner_->owned_;
-        siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
+        std::vector<Object*>& siblings = owner_->d_->owned_;
+        siblings.erase(std::remove(siblings.begin(), siblings.end(), q), siblings.end());
     }
     owner_ = new_owner;
     if (owner_)
     {
-        owner_->owned_.push_back(this);
+        owner_->d_->owned_.push_back(q);
     }
 }
 
 void Object::delete_owned()
 {
     // 所有しているオブジェクトのデストラクタが、自分を一覧から外す。
-    while (!owned_.empty())
+    while (!d_->owned_.empty())
     {
-        delete owned_.back();
+        delete d_->owned_.back();
     }
 }
+
+namespace detail
+{
+
+std::shared_ptr<Liveness> liveness_of(Object* o)
+{
+    std::shared_ptr<Liveness>& l = ImplAccess<Object>::of(o)->liveness_;
+    if (!l)
+    {
+        l = std::make_shared<Liveness>();
+    }
+    return l;
+}
+
+}  // namespace detail
 
 }  // namespace tokotachi

@@ -47,12 +47,7 @@ public:
     {
         if (object)
         {
-            Object* o = object;
-            if (!o->liveness_)
-            {
-                o->liveness_ = std::make_shared<detail::Liveness>();
-            }
-            liveness_ = o->liveness_;
+            liveness_ = detail::liveness_of(object);
         }
     }
 

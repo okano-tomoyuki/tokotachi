@@ -10,6 +10,7 @@
 #include <tokotachi/core/application.hpp>
 #include <tokotachi/layout/layout.hpp>
 
+#include "../core/object_impl.hpp"
 #include "../core/application_impl.hpp"
 #include "../core/locale.hpp"
 #include "../core/property_impl.hpp"
@@ -122,7 +123,7 @@ Dialog::Dialog(Window* parent, const std::string& title_text)
       result_(DialogButton::NONE),
       running_(false)
 {
-    change_owner(parent);
+    detail::change_owner(this, parent);
 }
 
 Dialog::~Dialog()
@@ -133,7 +134,7 @@ Dialog::~Dialog()
         running_ = false;
         if (Application* app = Application::instance())
         {
-            std::vector<detail::WindowImpl*>& modals = app->impl()->modal_dialogs;
+            std::vector<detail::WindowImpl*>& modals = detail::impl_of(app)->modal_dialogs;
             modals.erase(std::remove(modals.begin(), modals.end(), impl()), modals.end());
         }
     }
@@ -287,7 +288,7 @@ void Dialog::open()
     detail::WindowImpl* parent_impl = parent_window_ ? parent_window_->impl() : nullptr;
     if (app)
     {
-        app->impl()->close_menus();
+        detail::impl_of(app)->close_menus();
     }
     // 大きさを中身に合わせる: 幅を決めてから配置し(折り返す文字の高さが決まる)、高さを決める。
     // OS のウィンドウの大きさは最後に 1 回だけ変える。
@@ -333,7 +334,7 @@ void Dialog::open()
     running_ = true;
     if (app)
     {
-        app->impl()->modal_dialogs.push_back(d);
+        detail::impl_of(app)->modal_dialogs.push_back(d);
     }
     visible = true;
     // フォーカスが無ければ、最初のフォーカスを受けるウィジェット(無ければ決定のボタン)へ。
@@ -354,7 +355,7 @@ void Dialog::finish(DialogButton r)
     detail::WindowImpl* d = impl();
     if (Application* app = Application::instance())
     {
-        std::vector<detail::WindowImpl*>& modals = app->impl()->modal_dialogs;
+        std::vector<detail::WindowImpl*>& modals = detail::impl_of(app)->modal_dialogs;
         modals.erase(std::remove(modals.begin(), modals.end(), d), modals.end());
     }
     if (d && d->window && d->modal_parent)

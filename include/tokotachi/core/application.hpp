@@ -13,11 +13,6 @@
 namespace tokotachi
 {
 
-namespace detail
-{
-struct ApplicationImpl;
-}
-
 /// アプリケーション: SDL3 の初期化とイベントループ(docs/adr/0010)。1 つのプロセスに 1 つだけ作る。
 ///
 /// @ingroup core_objects
@@ -51,25 +46,11 @@ public:
     int exec();
     void quit(int code = 0);
 
-    detail::ApplicationImpl* impl() const { return d_; }
-
 private:
-    friend struct detail::ApplicationImpl;
-
-    ColorScheme get_color_scheme() const;
-    void set_color_scheme(const ColorScheme& v);
-    Theme get_light_theme() const;
-    void set_light_theme(const Theme& v);
-    Theme get_dark_theme() const;
-    void set_dark_theme(const Theme& v);
-    bool get_dark() const;
-    Theme get_theme() const;
-    std::string get_language() const { return language_; }
-    void set_language(const std::string& v) { language_ = v; }
-
-    detail::ApplicationImpl* d_;
-    std::string language_;
-    NotifyHandler on_theme_change_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

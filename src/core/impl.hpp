@@ -65,6 +65,19 @@ struct ImplAccess
     static const Impl* of(const C* c) { return c->d_; }
 };
 
+// c の実装のクラス(C::Impl。C の窓口を通す)。
+template <typename C>
+typename ImplAccess<C>::Impl* impl_of(C* c)
+{
+    return ImplAccess<C>::of(c);
+}
+
+template <typename C>
+const typename ImplAccess<C>::Impl* impl_of(const C* c)
+{
+    return ImplAccess<C>::of(c);
+}
+
 template <typename I, typename T, T I::*M>
 T read_impl_member(Object* o)
 {
