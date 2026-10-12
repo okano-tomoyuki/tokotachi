@@ -29,6 +29,7 @@ class TOKOTACHI_API GridLayout : public Layout
 {
 public:
     explicit GridLayout(Widget* target);
+    ~GridLayout() override;
 
     /// 行の間隔・列の間隔(dp、既定 8)。
     Property<float> row_spacing;
@@ -51,34 +52,8 @@ protected:
     void widget_removed(Widget* w) override;
 
 private:
-    struct Item
-    {
-        Widget* widget;
-        int row, column, row_span, column_span;
-        Align horizontal, vertical;
-    };
-
-    /// 1 つの向き(行または列)の設定。
-    struct Track
-    {
-        int stretch;
-        float minimum;
-    };
-
-    float get_row_spacing() const { return row_spacing_; }
-    void set_row_spacing(const float& v);
-    float get_column_spacing() const { return column_spacing_; }
-    void set_column_spacing(const float& v);
-    Track& track(std::vector<Track>& tracks, int index);
-    /// 1 つの向きの、各行(列)の望む大きさ・最小の大きさと、使われているか(項目か最小の大きさがあるか)を求める。
-    void measure(bool columns, std::vector<float>& preferred, std::vector<float>& minimum, std::vector<bool>& used) const;
-    int count(bool columns) const;
-
-    float row_spacing_;
-    float column_spacing_;
-    std::vector<Item> items_;
-    std::vector<Track> rows_;
-    std::vector<Track> columns_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -60,6 +60,7 @@ class TOKOTACHI_API PlaceLayout : public Layout
 {
 public:
     explicit PlaceLayout(Widget* target);
+    ~PlaceLayout() override;
 
     /// w(target の子)を置く。すでに置いていれば置き方を変える。
     void add(Widget* w, const Placement& placement);
@@ -71,13 +72,8 @@ protected:
     void widget_removed(Widget* w) override;
 
 private:
-    struct Item
-    {
-        Widget* widget;
-        Placement placement;
-    };
-
-    std::vector<Item> items_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

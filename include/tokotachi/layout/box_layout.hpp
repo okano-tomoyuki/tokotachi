@@ -27,6 +27,7 @@ class TOKOTACHI_API BoxLayout : public Layout
 {
 public:
     explicit BoxLayout(Widget* target, Orientation orientation = Orientation::VERTICAL);
+    ~BoxLayout() override;
 
     Property<Orientation> orientation;
     /// 項目の間隔(dp、既定 8)。
@@ -49,27 +50,8 @@ protected:
     void widget_removed(Widget* w) override;
 
 private:
-    struct Item
-    {
-        Widget* widget;  ///< nullptr なら空き
-        float space;     ///< 固定の空き(widget が nullptr のとき)
-        int stretch;
-        Align align;
-    };
-
-    Orientation get_orientation() const { return orientation_; }
-    void set_orientation(const Orientation& v);
-    float get_spacing() const { return spacing_; }
-    void set_spacing(const float& v);
-    Item* find(Widget* w);
-    /// 並べる向きの長さ・直交する向きの長さを、大きさから取り出す。
-    float main_of(const Size& s) const;
-    float cross_of(const Size& s) const;
-    Size total(bool minimum) const;
-
-    Orientation orientation_;
-    float spacing_;
-    std::vector<Item> items_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

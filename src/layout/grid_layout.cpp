@@ -4,31 +4,70 @@
 
 #include <tokotachi/widgets/widget.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "distribute.hpp"
 
 namespace tokotachi
 {
 
+class GridLayout::Impl
+{
+    TOKOTACHI_IMPL(GridLayout);
+
+    explicit Impl(GridLayout* object) : q(object) {}
+
+    struct Item
+    {
+        Widget* widget;
+        int row, column, row_span, column_span;
+        Align horizontal, vertical;
+    };
+
+    /// 1 つの向き(行または列)の設定。
+    struct Track
+    {
+        int stretch;
+        float minimum;
+    };
+
+    float get_row_spacing() const { return row_spacing_; }
+    void set_row_spacing(const float& v);
+    float get_column_spacing() const { return column_spacing_; }
+    void set_column_spacing(const float& v);
+    Track& track(std::vector<Track>& tracks, int index);
+    /// 1 つの向きの、各行(列)の望む大きさ・最小の大きさと、使われているか(項目か最小の大きさがあるか)を求める。
+    void measure(bool columns, std::vector<float>& preferred, std::vector<float>& minimum, std::vector<bool>& used) const;
+    int count(bool columns) const;
+
+    float row_spacing_;
+    float column_spacing_;
+    std::vector<Item> items_;
+    std::vector<Track> rows_;
+    std::vector<Track> columns_;
+};
+
 GridLayout::GridLayout(Widget* target)
     : Layout(target),
-      TOKOTACHI_PROPERTY_GETTER(GridLayout, float, row_spacing),
-      TOKOTACHI_PROPERTY_GETTER(GridLayout, float, column_spacing),
-      row_spacing_(8),
-      column_spacing_(8)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, float, row_spacing),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, float, column_spacing),
+      d_(new Impl(this))
 {
+    d_->row_spacing_ = 8;
+    d_->column_spacing_ = 8;
 }
 
-void GridLayout::set_row_spacing(const float& v)
+GridLayout::~GridLayout() { delete d_; }
+
+void GridLayout::Impl::set_row_spacing(const float& v)
 {
     row_spacing_ = v;
-    request_layout();
+    q->request_layout();
 }
 
-void GridLayout::set_column_spacing(const float& v)
+void GridLayout::Impl::set_column_spacing(const float& v)
 {
     column_spacing_ = v;
-    request_layout();
+    q->request_layout();
 }
 
 void GridLayout::add(Widget* w, int row, int column, int row_span, int column_span, Align horizontal, Align vertical)
@@ -37,21 +76,21 @@ void GridLayout::add(Widget* w, int row, int column, int row_span, int column_sp
     {
         return;
     }
-    const Item item = {w, row, column, std::max(1, row_span), std::max(1, column_span), horizontal, vertical};
-    for (std::size_t i = 0; i < items_.size(); ++i)
+    const Impl::Item item = {w, row, column, std::max(1, row_span), std::max(1, column_span), horizontal, vertical};
+    for (std::size_t i = 0; i < d_->items_.size(); ++i)
     {
-        if (items_[i].widget == w)
+        if (d_->items_[i].widget == w)
         {
-            items_[i] = item;
+            d_->items_[i] = item;
             request_layout();
             return;
         }
     }
-    items_.push_back(item);
+    d_->items_.push_back(item);
     request_layout();
 }
 
-GridLayout::Track& GridLayout::track(std::vector<Track>& tracks, int index)
+GridLayout::Impl::Track& GridLayout::Impl::track(std::vector<Track>& tracks, int index)
 {
     if (tracks.size() <= static_cast<std::size_t>(index))
     {
@@ -65,7 +104,7 @@ void GridLayout::set_row_stretch(int row, int stretch)
 {
     if (row >= 0)
     {
-        track(rows_, row).stretch = stretch;
+        d_->track(d_->rows_, row).stretch = stretch;
         request_layout();
     }
 }
@@ -74,7 +113,7 @@ void GridLayout::set_column_stretch(int column, int stretch)
 {
     if (column >= 0)
     {
-        track(columns_, column).stretch = stretch;
+        d_->track(d_->columns_, column).stretch = stretch;
         request_layout();
     }
 }
@@ -83,7 +122,7 @@ void GridLayout::set_row_minimum(int row, float size)
 {
     if (row >= 0)
     {
-        track(rows_, row).minimum = size;
+        d_->track(d_->rows_, row).minimum = size;
         request_layout();
     }
 }
@@ -92,24 +131,24 @@ void GridLayout::set_column_minimum(int column, float size)
 {
     if (column >= 0)
     {
-        track(columns_, column).minimum = size;
+        d_->track(d_->columns_, column).minimum = size;
         request_layout();
     }
 }
 
 void GridLayout::widget_removed(Widget* w)
 {
-    for (std::size_t i = 0; i < items_.size(); ++i)
+    for (std::size_t i = 0; i < d_->items_.size(); ++i)
     {
-        if (items_[i].widget == w)
+        if (d_->items_[i].widget == w)
         {
-            items_.erase(items_.begin() + static_cast<std::ptrdiff_t>(i));
+            d_->items_.erase(d_->items_.begin() + static_cast<std::ptrdiff_t>(i));
             return;
         }
     }
 }
 
-int GridLayout::count(bool columns) const
+int GridLayout::Impl::count(bool columns) const
 {
     int n = static_cast<int>(columns ? columns_.size() : rows_.size());
     for (std::size_t i = 0; i < items_.size(); ++i)
@@ -144,7 +183,7 @@ void spread(std::vector<float>& sizes, const std::vector<int>& stretches, int fi
 
 }  // namespace
 
-void GridLayout::measure(bool columns, std::vector<float>& preferred, std::vector<float>& minimum,
+void GridLayout::Impl::measure(bool columns, std::vector<float>& preferred, std::vector<float>& minimum,
                          std::vector<bool>& used) const
 {
     const int n = count(columns);
@@ -163,7 +202,7 @@ void GridLayout::measure(bool columns, std::vector<float>& preferred, std::vecto
     for (std::size_t i = 0; i < items_.size(); ++i)
     {
         const Item& it = items_[i];
-        if (!is_managed_visible(it.widget))
+        if (!q->is_managed_visible(it.widget))
         {
             continue;
         }
@@ -180,7 +219,7 @@ void GridLayout::measure(bool columns, std::vector<float>& preferred, std::vecto
         for (std::size_t i = 0; i < items_.size(); ++i)
         {
             const Item& it = items_[i];
-            if (!is_managed_visible(it.widget))
+            if (!q->is_managed_visible(it.widget))
             {
                 continue;
             }
@@ -190,7 +229,7 @@ void GridLayout::measure(bool columns, std::vector<float>& preferred, std::vecto
             {
                 continue;
             }
-            const Size p = preferred_of(it.widget), m = minimum_of(it.widget);
+            const Size p = q->preferred_of(it.widget), m = q->minimum_of(it.widget);
             const float want_p = columns ? p.width : p.height, want_m = columns ? m.width : m.height;
             if (span == 1)
             {
@@ -241,18 +280,18 @@ Size GridLayout::compute_preferred_size() const
 {
     std::vector<float> cp, cm, rp, rm;
     std::vector<bool> cu, ru;
-    measure(true, cp, cm, cu);
-    measure(false, rp, rm, ru);
-    return Size(sum_with_spacing(cp, cu, column_spacing_), sum_with_spacing(rp, ru, row_spacing_));
+    d_->measure(true, cp, cm, cu);
+    d_->measure(false, rp, rm, ru);
+    return Size(sum_with_spacing(cp, cu, d_->column_spacing_), sum_with_spacing(rp, ru, d_->row_spacing_));
 }
 
 Size GridLayout::compute_minimum_size() const
 {
     std::vector<float> cp, cm, rp, rm;
     std::vector<bool> cu, ru;
-    measure(true, cp, cm, cu);
-    measure(false, rp, rm, ru);
-    return Size(sum_with_spacing(cm, cu, column_spacing_), sum_with_spacing(rm, ru, row_spacing_));
+    d_->measure(true, cp, cm, cu);
+    d_->measure(false, rp, rm, ru);
+    return Size(sum_with_spacing(cm, cu, d_->column_spacing_), sum_with_spacing(rm, ru, d_->row_spacing_));
 }
 
 void GridLayout::arrange(const Rect& area)
@@ -263,9 +302,9 @@ void GridLayout::arrange(const Rect& area)
         const bool columns = d == 0;
         std::vector<float> preferred, minimum;
         std::vector<bool> used;
-        measure(columns, preferred, minimum, used);
-        const std::vector<Track>& tracks = columns ? columns_ : rows_;
-        const float spacing = columns ? column_spacing_ : row_spacing_;
+        d_->measure(columns, preferred, minimum, used);
+        const std::vector<Impl::Track>& tracks = columns ? d_->columns_ : d_->rows_;
+        const float spacing = columns ? d_->column_spacing_ : d_->row_spacing_;
         std::vector<int> stretches(preferred.size(), 0);
         for (std::size_t i = 0; i < tracks.size() && i < stretches.size(); ++i)
         {
@@ -298,9 +337,9 @@ void GridLayout::arrange(const Rect& area)
             any = any || used[i];
         }
     }
-    for (std::size_t i = 0; i < items_.size(); ++i)
+    for (std::size_t i = 0; i < d_->items_.size(); ++i)
     {
-        const Item& it = items_[i];
+        const Impl::Item& it = d_->items_[i];
         if (!is_managed_visible(it.widget))
         {
             continue;
