@@ -94,6 +94,7 @@ export {
   type AlignOperation,
   type AlignTarget,
 } from './edit/align.ts';
+export { moveSiblings } from './edit/menus.ts';
 export { endOfLayout, outermostPaths, slotAfter } from './edit/slots.ts';
 export { minimalTextEdit, type TextEdit } from './edit/textEdit.ts';
 export { variableValue } from './edit/variables.ts';

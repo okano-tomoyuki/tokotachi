@@ -3136,6 +3136,13 @@
           "declared_in": "Label",
           "doc": "icon を描く大きさ(論理座標の幅・高さ。既定 16)。",
           "default": 16
+        },
+        "buddy": {
+          "type": {
+            "ref": "Widget"
+          },
+          "declared_in": "Label",
+          "doc": "ニーモニックで移る先(既定 nullptr: タブの順でラベルの次の部品)。その部品か子孫の最初の部品へ移る。 タブの順は作った順なので、入力欄をラベルより先に作ったときは、これを指定する。 破棄されると nullptr に戻る。"
         }
       },
       "handlers": {

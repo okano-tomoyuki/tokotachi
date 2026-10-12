@@ -254,6 +254,7 @@
   "Hidden (visible is false)": "非表示(visible が false)",
   "Not shown because a parent is hidden": "親が非表示のため表示されません",
   "Hidden": "非表示",
+  "Partly outside of {0}, so the outside part is not shown": "{0} の外にはみ出していて、外の部分は表示されません",
   "{0} to {1}": "{0}〜{1}",
   "{0} or more": "{0} 以上",
   "{0} or less": "{0} 以下",

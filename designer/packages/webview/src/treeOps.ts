@@ -8,6 +8,7 @@ import {
   findClass,
   getCatalog,
   l10n,
+  moveSiblings,
   newName,
   valueAt,
   type EditCommand,
@@ -15,7 +16,13 @@ import {
   type OutlineNode,
 } from '@tokotachi-designer/core';
 import { copySelection, duplicateSelection, pasteFromClipboard } from './clipboard.ts';
-import { selectedNode, selectedNodes, sendEdit, useDesigner, type MenuItem } from './store.ts';
+import {
+  selectedNodes,
+  sendEdit,
+  sendEditSelectingIds,
+  useDesigner,
+  type MenuItem,
+} from './store.ts';
 
 interface Json {
   readonly [key: string]: unknown;
@@ -226,12 +233,33 @@ export function removeSelected(): void {
   }
 }
 
-/** 選んでいるノードを、同じ並びの中で動かす(delta は -1 で前へ、1 で後ろへ)。 */
+/**
+ * 選んでいるノードを、同じ並びの中で動かす(delta は -1 で前へ、1 で後ろへ)。複数選択ならまとめて動かし、動かした後も選んだままにする。
+ */
 export function moveSelected(delta: -1 | 1): void {
-  const node = selectedNode(useDesigner.getState());
-  if (node && movable(node)) {
-    sendEdit({ kind: 'moveSibling', target: node.path, delta });
+  const state = useDesigner.getState();
+  const doc = state.document;
+  // 主に選んでいるものを先にする(動かした後も主にする)
+  const nodes = selectedNodes(state)
+    .filter(movable)
+    .sort((a, b) => (a.id === state.selection ? -1 : b.id === state.selection ? 1 : 0));
+  if (!doc || nodes.length === 0) {
+    return;
   }
+  const targets = nodes.map((n) => n.path);
+  // 写しで動かして、動かした後の位置を求める
+  let moved: JsonPath[];
+  try {
+    moved = moveSiblings(JSON.parse(JSON.stringify(doc)) as typeof doc, targets, delta);
+  } catch {
+    return;
+  }
+  const ids = moved.map((p) => p.join('/'));
+  if (ids.every((id, i) => id === nodes[i]?.id)) {
+    // どれも端に着いていて動かない
+    return;
+  }
+  sendEditSelectingIds({ kind: 'moveSiblings', targets, delta }, ids);
 }
 
 /** ノードの右クリックのメニュー(足す操作、並べ替え、削除)。 */
@@ -273,6 +301,26 @@ export function nodeMenu(node: OutlineNode): MenuItem[] {
       run: duplicateSelection,
     },
   );
+  // 並べ替え(複数選択なら、選んでいるものをまとめて)
+  if (multiple ? selectedNodes(state).some(movable) : movable(node)) {
+    items.push(
+      {
+        label: l10n.t('Move up'),
+        shortcut: 'Alt+↑',
+        separator: items.length > 0,
+        run: () => {
+          moveSelected(-1);
+        },
+      },
+      {
+        label: l10n.t('Move down'),
+        shortcut: 'Alt+↓',
+        run: () => {
+          moveSelected(1);
+        },
+      },
+    );
+  }
   if (multiple) {
     items.push({
       label: l10n.t('Delete {0} items', selectedPaths(canRemove).length),
@@ -282,25 +330,6 @@ export function nodeMenu(node: OutlineNode): MenuItem[] {
       run: removeSelected,
     });
     return items;
-  }
-  if (movable(node)) {
-    items.push(
-      {
-        label: l10n.t('Move up'),
-        shortcut: 'Alt+↑',
-        separator: items.length > 0,
-        run: () => {
-          sendEdit({ kind: 'moveSibling', target: node.path, delta: -1 });
-        },
-      },
-      {
-        label: l10n.t('Move down'),
-        shortcut: 'Alt+↓',
-        run: () => {
-          sendEdit({ kind: 'moveSibling', target: node.path, delta: 1 });
-        },
-      },
-    );
   }
   if (canRemove(node)) {
     items.push({

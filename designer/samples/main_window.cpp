@@ -125,6 +125,9 @@ void MainWindow::tokotachi_setup_ui()
     list_view_files = new tokotachi::ListView(tab_widget_files);
     list_view_files->sorting_enabled = true;
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+    list_view_files->drag_enabled = true;
+    list_view_files->drop_enabled = true;
+    list_view_files->on_drop = [this](tokotachi::Object* sender, tokotachi::DragEvent& e) { list_view_files_drop(sender, e); };
     list_view_files->on_activate = [this](tokotachi::Object* sender) { list_view_files_activate(sender); };
     list_view_files->add_column("名前", 200);
     tokotachi::Column* list_view_files_column_2 = list_view_files->add_column("大きさ", 80);
@@ -138,7 +141,7 @@ void MainWindow::tokotachi_setup_ui()
     page_detail_layout->set_column_stretch(1, 1);
 
     label_name = new tokotachi::Label(page_detail);
-    label_name->text = "名前";
+    label_name->text = "名前(&N)";
     page_detail_layout->add(label_name, 0, 0);
 
     line_edit_name = new tokotachi::LineEdit(page_detail);
@@ -146,7 +149,7 @@ void MainWindow::tokotachi_setup_ui()
     page_detail_layout->add(line_edit_name, 0, 1);
 
     label_size = new tokotachi::Label(page_detail);
-    label_size->text = "大きさ";
+    label_size->text = "大きさ(&S)";
     label_size->color = tokotachi::ColorRole::TEXT_SECONDARY;
     page_detail_layout->add(label_size, 1, 0);
 
@@ -182,8 +185,11 @@ void MainWindow::tokotachi_setup_ui()
     row_buttons_layout->add(button_close);
 
     window_layout->add(row_buttons);
+
+    label_name->buddy = line_edit_name;
+    label_size->buddy = spin_box_size;
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="707bf125">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="2bb9c300">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)
@@ -211,6 +217,10 @@ void MainWindow::search(tokotachi::Object* sender)
 }
 
 void MainWindow::tab_widget_files_change(tokotachi::Object* sender)
+{
+}
+
+void MainWindow::list_view_files_drop(tokotachi::Object* sender, tokotachi::DragEvent& e)
 {
 }
 

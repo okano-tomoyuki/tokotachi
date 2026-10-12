@@ -13,7 +13,8 @@ import {
   type OutlineNode,
   valueAt,
 } from '@tokotachi-designer/core';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { bandContainer, bandSelection, boxOf, outsideParent, type Box } from '../canvasGeometry.ts';
 import { beginDrag } from '../dragController.ts';
 import { dropTarget } from '../dropTarget.ts';
 import { widgetGhost } from '../ghost.ts';
@@ -62,6 +63,9 @@ export function CanvasView() {
   const ref = useRef<HTMLCanvasElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const zoom = useDesigner((s) => s.zoom);
+  // 範囲で囲んで選んでいる四角(キャンバスの座標)。囲み終えた直後のクリックは、選択を変えない
+  const [band, setBand] = useState<Box | undefined>(undefined);
+  const bandClicked = useRef(false);
 
   useEffect(() => {
     // Ctrl+ホイールで倍率を変える(React の wheel は passive なので、既定の動作を止めるために直接つなぐ)
@@ -134,6 +138,64 @@ export function CanvasView() {
     return { x: (e.clientX - box.left) / sx, y: (e.clientY - box.top) / sy };
   };
 
+  /**
+   * 範囲で囲んで選び始める(空いた所か、Ctrl・Shift を押して押したとき)。少し動かすまでは始めない(ただのクリックは onClick で扱う)。
+   * additive なら、今の選択に足す。
+   */
+  const beginBand = (
+    e: React.MouseEvent,
+    from: OutlineNode | undefined,
+    additive: boolean,
+  ): void => {
+    e.preventDefault();
+    const surface = e.currentTarget;
+    const start = point(e);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const container = bandContainer(roots, from);
+    const base = additive ? useDesigner.getState().selected.filter((id) => id !== 'window') : [];
+    let active = false;
+    const toCanvas = (ev: MouseEvent): { x: number; y: number } => {
+      const box = surface.getBoundingClientRect();
+      const sx = box.width > 0 ? box.width / width : 1;
+      const sy = box.height > 0 ? box.height / height : 1;
+      return { x: (ev.clientX - box.left) / sx, y: (ev.clientY - box.top) / sy };
+    };
+    const move = (ev: MouseEvent): void => {
+      if (!active && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 4) {
+        return;
+      }
+      active = true;
+      const p = toCanvas(ev);
+      const b = boxOf(start.x, start.y, p.x, p.y);
+      setBand(b);
+      // 囲んでいる間も、選ぶものを見せる
+      const ids = bandSelection(roots, frame.rects, container, b);
+      const selected = [...base, ...ids.filter((id) => !base.includes(id))];
+      useDesigner.setState({
+        selected: selected.length > 0 ? selected : ['window'],
+        selection: selected[0] ?? 'window',
+      });
+    };
+    const up = (): void => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+      if (active) {
+        setBand(undefined);
+        // この後に届くクリックで選び直さない(届かないこともあるので、すぐ戻す)
+        bandClicked.current = true;
+        setTimeout(() => {
+          bandClicked.current = false;
+        }, 0);
+      }
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  // 入れ物の外にはみ出した部品(入れ物の外は描かれない)
+  const outside = outsideParent(roots, frame.rects, { x: 0, y: 0, width, height });
+
   const selectionRect = rectOf(selected, roots, frame.rects);
   // 選んでいるものすべての枠(複数選択)
   const selectedRects = selectedIds.flatMap((id) => {
@@ -165,31 +227,33 @@ export function CanvasView() {
               }
               const p = point(e);
               const node = hit(p.x, p.y);
-              if (node?.kind === 'widget') {
-                const r = node.variable === undefined ? undefined : frame.rects[node.variable];
-                const ghost = r ? widgetGhost(frame, r, p.x - r.x, p.y - r.y) : undefined;
-                // 選んでいる部品をつかんだら、選んでいる部品をまとめて移す(中に入っているものは親ごと)
-                const group = selectedIds.includes(node.id)
-                  ? selectedNodes(useDesigner.getState())
-                      .filter((n) => n.kind === 'widget')
-                      .filter(
-                        (n, _, all) => !all.some((o) => o !== n && n.id.startsWith(`${o.id}/`)),
-                      )
-                  : [];
-                beginDrag(
-                  {
-                    kind: 'move',
-                    path: node.path,
-                    id: node.id,
-                    ...(group.length > 1
-                      ? { group: group.map((n) => ({ path: n.path, id: n.id })) }
-                      : {}),
-                  },
-                  e,
-                  undefined,
-                  ghost,
-                );
+              // 空いた所・レイアウトの上からか、Ctrl・Shift を押してドラッグしたら、範囲で囲んで選ぶ
+              const additive = e.ctrlKey || e.metaKey || e.shiftKey;
+              if (additive || node?.kind !== 'widget') {
+                beginBand(e, node, additive);
+                return;
               }
+              const r = node.variable === undefined ? undefined : frame.rects[node.variable];
+              const ghost = r ? widgetGhost(frame, r, p.x - r.x, p.y - r.y) : undefined;
+              // 選んでいる部品をつかんだら、選んでいる部品をまとめて移す(中に入っているものは親ごと)
+              const group = selectedIds.includes(node.id)
+                ? selectedNodes(useDesigner.getState())
+                    .filter((n) => n.kind === 'widget')
+                    .filter((n, _, all) => !all.some((o) => o !== n && n.id.startsWith(`${o.id}/`)))
+                : [];
+              beginDrag(
+                {
+                  kind: 'move',
+                  path: node.path,
+                  id: node.id,
+                  ...(group.length > 1
+                    ? { group: group.map((n) => ({ path: n.path, id: n.id })) }
+                    : {}),
+                },
+                e,
+                undefined,
+                ghost,
+              );
             }}
             onMouseMove={(e) => {
               if (!drag || !document) {
@@ -212,6 +276,9 @@ export function CanvasView() {
               }
             }}
             onClick={(e) => {
+              if (bandClicked.current) {
+                return;
+              }
               const p = point(e);
               const id = hit(p.x, p.y)?.id ?? 'window';
               // Ctrl・Shift+クリックで選択に足す・外す
@@ -255,6 +322,14 @@ export function CanvasView() {
               </div>
             ))}
             {!drag &&
+              outside.map(({ id, rect: r }) => (
+                <div
+                  key={`outside-${id}`}
+                  className="outside-parent"
+                  style={{ left: r.x, top: r.y, width: r.width, height: r.height }}
+                />
+              ))}
+            {!drag &&
               selectedRects.map((r, i) => (
                 <div
                   key={i}
@@ -264,6 +339,12 @@ export function CanvasView() {
               ))}
             {selectionRect && !drag && selected && selectedIds.length <= 1 && (
               <ResizeHandles node={selected} rect={selectionRect} />
+            )}
+            {band && (
+              <div
+                className="rubber-band"
+                style={{ left: band.x, top: band.y, width: band.width, height: band.height }}
+              />
             )}
             {target && (
               <>

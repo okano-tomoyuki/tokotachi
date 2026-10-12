@@ -389,6 +389,27 @@ textarea.invalid {
   outline-style: dashed;
 }
 
+/* 範囲で囲んで選ぶときの四角 */
+.rubber-band {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--vscode-focusBorder);
+  background: color-mix(in srgb, var(--vscode-focusBorder) 15%, transparent);
+}
+
+/* 入れ物の外にはみ出した部品(入れ物の外は描かれないので、本来の位置を点線で示す) */
+.outside-parent {
+  position: absolute;
+  pointer-events: none;
+  outline: 1px dashed var(--vscode-editorWarning-foreground);
+  outline-offset: -1px;
+}
+
+.tree-warning {
+  margin-left: 4px;
+  color: var(--vscode-editorWarning-foreground);
+}
+
 .problems {
   margin: 0;
   padding: 6px 12px;

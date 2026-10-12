@@ -203,7 +203,8 @@
                                 "name": "label_name",
                                 "class": "Label",
                                 "properties": {
-                                  "text": "名前"
+                                  "text": "名前(&N)",
+                                  "buddy": "line_edit_name"
                                 }
                               }
                             },
@@ -225,8 +226,9 @@
                                 "name": "label_size",
                                 "class": "Label",
                                 "properties": {
-                                  "text": "大きさ",
-                                  "color": "TEXT_SECONDARY"
+                                  "text": "大きさ(&S)",
+                                  "color": "TEXT_SECONDARY",
+                                  "buddy": "spin_box_size"
                                 }
                               }
                             },

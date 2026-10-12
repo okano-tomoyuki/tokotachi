@@ -164,7 +164,8 @@ function freeName(name: string, taken: ReadonlySet<string>): string {
  */
 export function preparePaste(doc: TtuiDocument, items: readonly ClipboardItem[]): ClipboardItem[] {
   const taken = new Set([...namedNodes(doc).map((n) => n.name), doc.window.name]);
-  return items.map((item) => {
+  const renamed = new Map<string, string>();
+  const copies = items.map((item) => {
     const copy = clone(item);
     for (const { name, path } of namedPaths(copy)) {
       if (!taken.has(name)) {
@@ -173,6 +174,7 @@ export function preparePaste(doc: TtuiDocument, items: readonly ClipboardItem[])
       }
       const next = freeName(name, taken);
       taken.add(next);
+      renamed.set(name, next);
       const node = valueAt(copy.node, path) as Json;
       node['name'] = next;
       const properties = node['properties'];
@@ -182,6 +184,38 @@ export function preparePaste(doc: TtuiDocument, items: readonly ClipboardItem[])
     }
     return copy;
   });
+  // 一緒に貼り付ける部品を指す参照のプロパティ(Label の buddy 等)は、改名した写しを指すようにする
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    if (!isObject(node)) {
+      return;
+    }
+    const props = node['properties'];
+    const info = typeof node['class'] === 'string' ? findClass(node['class']) : undefined;
+    if (isObject(props) && info) {
+      for (const [name, value] of Object.entries(props)) {
+        const type = info.properties[name]?.type;
+        const to = typeof value === 'string' ? renamed.get(value) : undefined;
+        if (to !== undefined && typeof type === 'object' && 'ref' in type) {
+          props[name] = to;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (key !== 'properties' && key !== 'events') {
+        visit(value);
+      }
+    }
+  };
+  for (const copy of copies) {
+    if (copy.kind === 'widget') {
+      visit(copy.node);
+    }
+  }
+  return copies;
 }
 
 /** path の値を消す(配列の要素なら詰める)。 */

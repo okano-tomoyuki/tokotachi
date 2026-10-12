@@ -213,6 +213,12 @@ private:
             scroll->content = dynamic_cast<tokotachi::Widget*>(value);
             return;
         }
+        tokotachi::Label* label = dynamic_cast<tokotachi::Label*>(object);
+        if (label && property == "buddy")
+        {
+            label->buddy = dynamic_cast<tokotachi::Widget*>(value);
+            return;
+        }
         error("cannot set reference " + property);
     }
 

@@ -4,7 +4,8 @@
  * 足す・並べ替える・消す操作は、行の右クリックのメニューに出す(treeOps.ts)。
  */
 import { flattenOutline, l10n, type OutlineNode } from '@tokotachi-designer/core';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { outsideParent } from '../canvasGeometry.ts';
 import { dragWith } from '../pointerDrag.ts';
 import { nodeMenu } from '../treeOps.ts';
 import { openContextMenu, useDesigner } from '../store.ts';
@@ -44,7 +45,10 @@ function label(node: OutlineNode): string {
   }
 }
 
-function Row({ node, depth }: { node: OutlineNode; depth: number }) {
+/** 入れ物の外にはみ出した部品の id と、その入れ物の名前。 */
+type Outside = ReadonlyMap<string, string>;
+
+function Row({ node, depth, outside }: { node: OutlineNode; depth: number; outside: Outside }) {
   const selected = useDesigner((s) => s.selected.includes(node.id));
   const primary = useDesigner((s) => s.selection === node.id);
   const select = useDesigner((s) => s.select);
@@ -54,6 +58,7 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
   const [open, setOpen] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const hasChildren = node.children.length > 0;
+  const outsideOf = outside.get(node.id);
   useEffect(() => {
     // キャンバスで選んだときも、選んだ行が見えるようにする
     if (primary) {
@@ -70,7 +75,9 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
             ? l10n.t('Hidden (visible is false)')
             : hidden === 'ancestor'
               ? l10n.t('Not shown because a parent is hidden')
-              : undefined
+              : outsideOf !== undefined
+                ? l10n.t('Partly outside of {0}, so the outside part is not shown', outsideOf)
+                : undefined
         }
         style={{ paddingLeft: depth * 12 + 4 }}
         onClick={(e) => {
@@ -112,8 +119,10 @@ function Row({ node, depth }: { node: OutlineNode; depth: number }) {
           </span>
         )}
         {hidden === 'self' && <span className="tree-hidden">{l10n.t('Hidden')}</span>}
+        {outsideOf !== undefined && <span className="tree-warning">⚠</span>}
       </div>
-      {open && node.children.map((c) => <Row key={c.id} node={c} depth={depth + 1} />)}
+      {open &&
+        node.children.map((c) => <Row key={c.id} node={c} depth={depth + 1} outside={outside} />)}
     </>
   );
 }
@@ -133,16 +142,32 @@ function GroupSection({ group, node }: { group: Group; node: OutlineNode | undef
         <span className="tree-label">{groupLabel(group)}</span>
         {children.length > 0 && <span className="tree-count">{children.length}</span>}
       </div>
-      {open && children.map((c) => <Row key={c.id} node={c} depth={1} />)}
+      {open && children.map((c) => <Row key={c.id} node={c} depth={1} outside={NONE} />)}
     </>
   );
 }
+
+const NONE: Outside = new Map();
 
 const MIN_RATIO = 0.1;
 const MAX_RATIO = 0.9;
 
 export function Tree() {
   const roots = useDesigner((s) => s.outline);
+  const frame = useDesigner((s) => s.frame);
+  // キャンバスで描いた位置から、入れ物の外にはみ出した部品を求める
+  const outside = useMemo<Outside>(() => {
+    if (!frame) {
+      return NONE;
+    }
+    const window = {
+      x: 0,
+      y: 0,
+      width: frame.width / frame.scale,
+      height: frame.height / frame.scale,
+    };
+    return new Map(outsideParent(roots, frame.rects, window).map((o) => [o.id, o.parent]));
+  }, [roots, frame]);
   const ratio = useDesigner((s) => s.sidebar.groupsRatio);
   const setSidebar = useDesigner((s) => s.setSidebar);
   const ref = useRef<HTMLDivElement>(null);
@@ -152,7 +177,7 @@ export function Tree() {
         {roots
           .filter((r) => r.kind !== 'group')
           .map((r) => (
-            <Row key={r.id} node={r} depth={0} />
+            <Row key={r.id} node={r} depth={0} outside={outside} />
           ))}
       </div>
       {/* ウィンドウの木が長くても隠れないよう、下に分けて置く。間の仕切りで高さの割合を変える */}

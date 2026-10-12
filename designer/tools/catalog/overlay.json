@@ -55,7 +55,6 @@
     "TextInputBase": ["cursor_position"],
     "ScrollArea": ["content", "scroll_position"],
     "ItemView": ["model", "current"],
-    "Label": ["buddy"],
     "TableView": ["current_column"],
     "Window": ["menu_bar", "tool_bar", "status_bar"]
   },

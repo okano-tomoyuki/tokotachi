@@ -185,10 +185,20 @@ let nextRequestId = 1;
 /** 足した・移した部品の名前。ドキュメントが届いたら、その部品を選ぶ(複数なら最初を主にする)。 */
 let pendingSelection: readonly string[] | undefined;
 
+/** 並べ替えた後に選ぶノードの id(名前の無いノードも選び直せるように、位置で渡す)。最初を主にする。 */
+let pendingIds: readonly string[] | undefined;
+
 export function sendEdit(command: EditCommand, select?: string | readonly string[]): void {
   pendingSelection =
     select === undefined ? undefined : typeof select === 'string' ? [select] : select;
+  pendingIds = undefined;
   postMessage({ type: 'edit', requestId: nextRequestId++, command });
+}
+
+/** 編集して、届いたドキュメントで ids のノードを選ぶ(ids の最初を主にする)。 */
+export function sendEditSelectingIds(command: EditCommand, ids: readonly string[]): void {
+  sendEdit(command);
+  pendingIds = ids;
 }
 
 /** 選んでいるノードすべて(構造の木の順)。 */
@@ -247,6 +257,23 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
           (s.selection !== undefined && findOutlineNode(tree, s.selection)
             ? s.selection
             : 'window');
+        // 並べ替えたものを、新しい位置で選び直す
+        const ids = pendingIds?.filter((id) => findOutlineNode(tree, id) !== undefined) ?? [];
+        pendingIds = undefined;
+        if (ids.length > 0 && ids[0] !== undefined) {
+          return {
+            version: message.version,
+            fileName: message.fileName,
+            document,
+            diagnostics,
+            outline: tree,
+            selected: ids,
+            hidden: document
+              ? hiddenOutlineNodes(document, tree)
+              : new Map<string, OutlineHidden>(),
+            selection: ids[0],
+          };
+        }
         // 足した・移したものを選んだら、ほかの選択は解く。無くなったノードは選択から外す
         const kept = s.selected.filter((id) => findOutlineNode(tree, id) !== undefined);
         const selected =
@@ -282,6 +309,7 @@ export function handleMessage(message: ExtensionToWebviewMessage): void {
       break;
     case 'editResult':
       if (!message.ok) {
+        pendingIds = undefined;
         useDesigner.setState({ editError: message.error });
         if (errorTimer !== undefined) {
           clearTimeout(errorTimer);

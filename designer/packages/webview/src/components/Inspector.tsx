@@ -366,6 +366,7 @@ function NodeEditor({ node }: { node: OutlineNode }) {
                         name={name}
                         info={p}
                         value={value}
+                        self={json.name}
                         range={propertyRange(node.class ?? '', p, json)}
                         onCommit={(v) => {
                           sendEdit({

@@ -35,6 +35,7 @@ import {
   addEntry,
   addMenu,
   moveSibling,
+  moveSiblings,
   removeActionReferences,
   setEntryAction,
   setMenuTitle,
@@ -142,6 +143,8 @@ export type EditCommand =
     }
   /** 同じ並びの中で前(-1)・後ろ(1)へ動かす。 */
   | { readonly kind: 'moveSibling'; readonly target: JsonPath; readonly delta: number }
+  /** 複数を、それぞれ同じ並びの中でまとめて前後に動かす(端に着いたものは動かさず、ほかのものも追い越さない)。 */
+  | { readonly kind: 'moveSiblings'; readonly targets: readonly JsonPath[]; readonly delta: number }
   /** コピーしたものを貼り付ける(clipboard.ts)。部品は slot に入れ、名前が重なるものは改名する。 */
   | {
       readonly kind: 'paste';
@@ -354,6 +357,45 @@ function renameReferences(doc: Json, from: string, to: string): void {
   visit(doc, []);
 }
 
+/** 消えた名前を指す参照のプロパティ(Label の buddy 等)を消す(参照が切れて検証のエラーにならないように)。 */
+function removeReferences(doc: Json, names: ReadonlySet<string>): void {
+  const visit = (node: unknown, path: JsonPath): void => {
+    if (Array.isArray(node)) {
+      node.forEach((v, i) => {
+        visit(v, [...path, i]);
+      });
+      return;
+    }
+    if (!isObject(node)) {
+      return;
+    }
+    const props = node['properties'];
+    if (isObject(props) && typeof node['class'] === 'string') {
+      const info = findClass(node['class']);
+      for (const [name, value] of Object.entries(props)) {
+        const type = info?.properties[name]?.type;
+        if (
+          typeof value === 'string' &&
+          names.has(value) &&
+          typeof type === 'object' &&
+          'ref' in type
+        ) {
+          Reflect.deleteProperty(props, name);
+        }
+      }
+      if (Object.keys(props).length === 0) {
+        Reflect.deleteProperty(node, 'properties');
+      }
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (key !== 'properties' && key !== 'events') {
+        visit(value, [...path, key]);
+      }
+    }
+  };
+  visit(doc, []);
+}
+
 function rename(doc: TtuiDocument, path: JsonPath, name: string): void {
   const root = doc as unknown as Json;
   const node = nodeAt(root, path);
@@ -424,7 +466,13 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
           t.length === 2 && t[0] === 'variables' ? doc.variables?.[Number(t[1])] : undefined;
         return v ? [{ name: v.name, value: variableValue(v.type, v.value) }] : [];
       });
+      const named = new Set(namedNodes(doc).map((n) => n.name));
       removeNodes(doc, command.targets);
+      // 消した部品を指す参照のプロパティも消す
+      for (const n of namedNodes(doc)) {
+        named.delete(n.name);
+      }
+      removeReferences(doc, named);
       for (const name of actions) {
         removeActionReferences(doc, name);
       }
@@ -462,6 +510,9 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
       return;
     case 'moveSibling':
       moveSibling(doc, command.target, command.delta);
+      return;
+    case 'moveSiblings':
+      moveSiblings(doc, command.targets, command.delta);
       return;
     case 'addSpacer':
       addSpacer(doc, command.layout, command.index, command.spacer);

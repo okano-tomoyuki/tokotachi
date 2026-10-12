@@ -141,7 +141,7 @@ void MainWindow::tokotachi_setup_ui()
     page_detail_layout->set_column_stretch(1, 1);
 
     label_name = new tokotachi::Label(page_detail);
-    label_name->text = "名前";
+    label_name->text = "名前(&N)";
     page_detail_layout->add(label_name, 0, 0);
 
     line_edit_name = new tokotachi::LineEdit(page_detail);
@@ -149,7 +149,7 @@ void MainWindow::tokotachi_setup_ui()
     page_detail_layout->add(line_edit_name, 0, 1);
 
     label_size = new tokotachi::Label(page_detail);
-    label_size->text = "大きさ";
+    label_size->text = "大きさ(&S)";
     label_size->color = tokotachi::ColorRole::TEXT_SECONDARY;
     page_detail_layout->add(label_size, 1, 0);
 
@@ -185,8 +185,11 @@ void MainWindow::tokotachi_setup_ui()
     row_buttons_layout->add(button_close);
 
     window_layout->add(row_buttons);
+
+    label_name->buddy = line_edit_name;
+    label_size->buddy = spin_box_size;
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="62701c94">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="2bb9c300">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)
