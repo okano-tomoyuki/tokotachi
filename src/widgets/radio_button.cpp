@@ -1,5 +1,6 @@
 #include <tokotachi/widgets/radio_button.hpp>
 
+#include <tokotachi/widgets/draw.hpp>
 #include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/impl.hpp"
@@ -96,24 +97,9 @@ void RadioButton::paint(Canvas& canvas)
     const Rect r = local_rect;
     const Rect box = detail::toggle_indicator_rect(r);
     const bool enabled_now = effectively_enabled;
-    const Point c = box.center();
-    const float radius = box.width / 2;
-    Path outer;
-    outer.add_ellipse(c, radius, radius);
-    if (d_->get_checked())
-    {
-        canvas.fill_path(outer, enabled_now ? theme::accent() : theme::accent_disabled());
-        Path dot;
-        dot.add_ellipse(c, radius * 0.4f, radius * 0.4f);
-        canvas.fill_path(dot, theme::on_accent());
-    }
-    else
-    {
-        canvas.fill_path(outer, enabled_now ? theme::field() : theme::field_disabled());
-        Path ring;
-        ring.add_ellipse(c, radius - 0.5f, radius - 0.5f);
-        canvas.stroke_path(ring, 1, enabled_now && is_hovered() ? theme::accent() : theme::border());
-    }
+    ControlState st = state();
+    st.checked = d_->get_checked();
+    draw::radio_mark(canvas, box, st);
     const Point at = detail::paint_toggle_text(canvas, text_layout(), r, focused, enabled_now);
     paint_mnemonic(canvas, at, enabled_now ? theme::text() : theme::text_disabled());
     Widget::paint(canvas);

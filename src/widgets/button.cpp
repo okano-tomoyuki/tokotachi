@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include <tokotachi/widgets/draw.hpp>
 #include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/impl.hpp"
@@ -94,43 +95,13 @@ Size Button::compute_preferred_size() const
 void Button::paint(Canvas& canvas)
 {
     const Rect r = local_rect;
-    const bool enabled_now = effectively_enabled;
-    Color fg = theme::on_accent();
-    if (d_->style_ == ButtonStyle::PRIMARY)
+    const ControlState st = state();
+    const bool enabled_now = st.enabled;
+    draw::button_face(canvas, r, st, d_->style_);
+    const Color fg = draw::button_text_color(st, d_->style_);
+    if (st.focused)
     {
-        Color fill = theme::accent();
-        if (!enabled_now)
-        {
-            fill = theme::accent_disabled();
-        }
-        else if (is_pressed())
-        {
-            fill = theme::accent_pressed();
-        }
-        else if (is_hovered())
-        {
-            fill = theme::accent_hover();
-        }
-        canvas.fill_round_rect(r, theme::radius(), fill);
-    }
-    else
-    {
-        Color fill = enabled_now ? theme::field() : theme::field_disabled();
-        if (enabled_now && is_pressed())
-        {
-            fill = theme::selection_inactive();
-        }
-        else if (enabled_now && is_hovered())
-        {
-            fill = theme::selection_inactive().with_alpha(128);
-        }
-        canvas.fill_round_rect(r, theme::radius(), fill);
-        canvas.stroke_round_rect(r, theme::radius(), 1, enabled_now && is_hovered() ? theme::accent() : theme::border());
-        fg = enabled_now ? theme::text() : theme::text_disabled();
-    }
-    if (focused)
-    {
-        canvas.stroke_round_rect(r.adjusted(2, 2, 2, 2), theme::radius() - 2, 1.5f, theme::focus_ring());
+        draw::focus_ring(canvas, r);
     }
 
     // 画像と文字をひとまとまりとして中ほどに置く

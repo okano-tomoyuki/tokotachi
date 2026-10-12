@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include <tokotachi/widgets/draw.hpp>
 #include <tokotachi/graphics/canvas.hpp>
 
 #include "text_input_impl.hpp"
@@ -56,11 +57,10 @@ Size LineEdit::compute_minimum_size() const { return Size(48, compute_preferred_
 
 void LineEdit::paint(Canvas& canvas)
 {
-    const bool has_focus = focused;
-    const Rect r = local_rect;
-    canvas.fill_round_rect(r, theme::field_radius(), effectively_enabled ? theme::field() : theme::field_disabled());
-    canvas.stroke_round_rect(r, theme::field_radius(), has_focus ? 2.0f : 1.0f,
-                             has_focus ? theme::accent() : theme::border());
+    ControlState st;
+    st.enabled = effectively_enabled;
+    st.focused = focused;
+    draw::field_frame(canvas, local_rect, st);
     detail::ImplAccess<TextInputBase>::of(this)->paint_text(canvas);
     Widget::paint(canvas);
 }

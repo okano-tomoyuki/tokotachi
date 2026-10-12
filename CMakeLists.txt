@@ -135,6 +135,7 @@ add_library(tokotachi_objects OBJECT
     src/widgets/color_button.cpp
     src/widgets/combo_box.cpp
     src/widgets/date_edit.cpp
+    src/widgets/draw.cpp
     src/widgets/group_box.cpp
     src/widgets/image_box.cpp
     src/widgets/label.cpp

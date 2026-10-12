@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include <tokotachi/widgets/draw.hpp>
 #include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/impl.hpp"
@@ -61,21 +62,9 @@ void CheckBox::paint(Canvas& canvas)
     const Rect r = local_rect;
     const Rect box = detail::toggle_indicator_rect(r);
     const bool enabled_now = effectively_enabled;
-    if (d_->checked_)
-    {
-        canvas.fill_round_rect(box, 3, enabled_now ? theme::accent() : theme::accent_disabled());
-        // チェックの印
-        Path mark;
-        mark.move_to(box.x + box.width * 0.22f, box.y + box.height * 0.52f);
-        mark.line_to(box.x + box.width * 0.42f, box.y + box.height * 0.72f);
-        mark.line_to(box.x + box.width * 0.78f, box.y + box.height * 0.30f);
-        canvas.stroke_path(mark, 2, theme::on_accent(), LineCap::ROUND);
-    }
-    else
-    {
-        canvas.fill_round_rect(box, 3, enabled_now ? theme::field() : theme::field_disabled());
-        canvas.stroke_round_rect(box, 3, 1, enabled_now && is_hovered() ? theme::accent() : theme::border());
-    }
+    ControlState st = state();
+    st.checked = d_->checked_;
+    draw::check_mark(canvas, box, st);
     const Point at = detail::paint_toggle_text(canvas, text_layout(), r, focused, enabled_now);
     paint_mnemonic(canvas, at, enabled_now ? theme::text() : theme::text_disabled());
     Widget::paint(canvas);

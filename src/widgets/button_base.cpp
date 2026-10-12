@@ -60,6 +60,16 @@ bool ButtonBase::is_hovered() const { return d_->hovered_; }
 
 bool ButtonBase::is_pressed() const { return d_->pressed_in_; }
 
+ControlState ButtonBase::state() const
+{
+    ControlState s;
+    s.enabled = effectively_enabled;
+    s.hovered = d_->hovered_;
+    s.pressed = d_->pressed_in_;
+    s.focused = focused;
+    return s;
+}
+
 void ButtonBase::Impl::set_text(const std::string& v)
 {
     if (v == text_)

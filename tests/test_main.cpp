@@ -463,6 +463,71 @@ TEST(line_edit_strips_control_characters)
     CHECK(edit->text == "12");
 }
 
+namespace
+{
+
+// 標準の見た目を描く関数だけで描く、自作のボタン(docs/adr/0058)。
+class FaceOnlyButton : public tokotachi::ButtonBase
+{
+public:
+    FaceOnlyButton(tokotachi::Widget* parent, tokotachi::ButtonStyle style) : tokotachi::ButtonBase(parent), style_(style) {}
+
+protected:
+    void paint(tokotachi::Canvas& canvas) override
+    {
+        const tokotachi::ControlState s = state();
+        tokotachi::draw::button_face(canvas, local_rect, s, style_);
+        if (s.focused)
+        {
+            tokotachi::draw::focus_ring(canvas, local_rect);
+        }
+    }
+
+private:
+    tokotachi::ButtonStyle style_;
+};
+
+}  // namespace
+
+TEST(draw_functions_match_built_in_look)
+{
+    // 文字の無い Button と、draw::button_face で描く自作のボタンは、同じ絵になる(テーマの上書きにも従う)。
+    const tokotachi::ButtonStyle styles[] = {tokotachi::ButtonStyle::PRIMARY, tokotachi::ButtonStyle::SECONDARY};
+    for (int i = 0; i < 2; ++i)
+    {
+        tokotachi::Window window("t", 200, 60);
+        tokotachi::ThemeOverride o;
+        o.set(tokotachi::ColorRole::ACCENT, tokotachi::Color(200, 30, 120));
+        window.theme_override = o;
+        tokotachi::Button* button = new tokotachi::Button(&window);
+        button->style = styles[i];
+        button->bounds = tokotachi::Rect(10, 10, 80, 32);
+        FaceOnlyButton* custom = new FaceOnlyButton(&window, styles[i]);
+        custom->bounds = tokotachi::Rect(110, 10, 80, 32);
+        custom->enabled = button->enabled = i == 0;
+        window.visible = true;
+        const tokotachi::Bitmap b = window.capture();
+        const int s = b.width() / 200;
+        int different = 0;
+        for (int y = 10 * s; y < 42 * s; ++y)
+        {
+            for (int x = 10 * s; x < 90 * s; ++x)
+            {
+                different += !(b.pixel(x, y) == b.pixel(x + 100 * s, y));
+            }
+        }
+        CHECK(different == 0);
+    }
+    // 部品の外(Bitmap)にも描ける(チェックの付いた印は強調の色で塗る)
+    tokotachi::Bitmap mark(16, 16);
+    {
+        tokotachi::ControlState s;
+        s.checked = true;
+        tokotachi::draw::check_mark(mark.canvas(), tokotachi::Rect(0, 0, 16, 16), s);
+    }
+    CHECK(mark.pixel(2, 8).a == 255);
+}
+
 TEST(button_click_by_key)
 {
     tokotachi::Window window("t", 300, 100);

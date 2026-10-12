@@ -7,6 +7,7 @@
 
 #include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
+#include "control_state.hpp"
 #include "widget.hpp"
 
 namespace tokotachi
@@ -47,6 +48,9 @@ protected:
     /// 描画のための状態。
     bool is_hovered() const;
     bool is_pressed() const;
+    /// 描画のための状態をまとめたもの(有効・ホバー・押下・フォーカス。checked は false)。標準の見た目を描く関数
+    /// (tokotachi::draw)にそのまま渡せる。
+    ControlState state() const;
     /// 表示する文字(text から & を除いたもの)のレイアウト。
     const TextLayout& text_layout() const;
     /// text_layout() を at に描いたときの、ニーモニックの下線(Alt を押している間だけ)。

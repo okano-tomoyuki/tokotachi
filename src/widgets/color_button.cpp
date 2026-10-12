@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include <tokotachi/widgets/draw.hpp>
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/windows/color_dialog.hpp>
 
@@ -131,7 +132,7 @@ void ColorButton::paint(Canvas& canvas)
     canvas.stroke_round_rect(r, theme::radius(), 1, enabled_now && is_hovered() ? theme::accent() : theme::border());
     if (focused)
     {
-        canvas.stroke_round_rect(r.adjusted(2, 2, 2, 2), theme::radius() - 2, 1.5f, theme::focus_ring());
+        draw::focus_ring(canvas, r);
     }
     // 色の見本(透過は市松模様の上に)
     const Rect swatch(PADDING, std::floor((r.height - SWATCH_H) / 2), SWATCH_W, SWATCH_H);
