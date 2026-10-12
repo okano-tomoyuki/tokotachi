@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../graphics/image.hpp"
 #include "../graphics/text_layout.hpp"
 #include "../graphics/theme.hpp"
@@ -21,7 +22,7 @@ class TreeModel;
 namespace detail
 {
 /// 項目を持つモデル(内部)。項目の値が変わったことを受け取る。
-class ItemHost
+class TOKOTACHI_API ItemHost
 {
 public:
     virtual void item_changed(Item* item) = 0;
@@ -43,7 +44,7 @@ protected:
 /// 値を変えると、表示しているビューが描き直す。
 ///
 /// @ingroup views
-class Item : public Object
+class TOKOTACHI_API Item : public Object
 {
 public:
     /// 1 列目の文字。

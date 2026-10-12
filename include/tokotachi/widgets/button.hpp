@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_BUTTON_HPP
 #define TOKOTACHI_WIDGETS_BUTTON_HPP
 
+#include "../core/export.hpp"
 #include "../graphics/image.hpp"
 #include "button_base.hpp"
 
@@ -21,7 +22,7 @@ enum class ButtonStyle
 /// @image html widget_button.png
 ///
 /// @ingroup widgets_input
-class Button : public ButtonBase
+class TOKOTACHI_API Button : public ButtonBase
 {
 public:
     explicit Button(Widget* parent = nullptr, const std::string& text = std::string());

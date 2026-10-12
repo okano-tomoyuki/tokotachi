@@ -8,6 +8,7 @@
 #include <string>
 
 #include "event.hpp"
+#include "export.hpp"
 #include "property.hpp"
 
 namespace tokotachi
@@ -20,7 +21,7 @@ struct TaskShared;
 
 /// 仕事の関数に渡す。どのスレッドから呼んでもよい。
 /// @ingroup core_threads
-class TaskContext
+class TOKOTACHI_API TaskContext
 {
 public:
     /// cancel が頼まれたか(仕事はなるべく早く戻る)。
@@ -36,7 +37,7 @@ private:
 
 /// Task の型によらない部分。
 /// @ingroup core_threads
-class TaskBase : public Object
+class TOKOTACHI_API TaskBase : public Object
 {
 public:
     /// 破棄すると取り消しを頼み、仕事の結果は捨てる(仕事の関数が戻るまで待たない)。

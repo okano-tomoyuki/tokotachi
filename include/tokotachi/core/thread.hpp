@@ -20,17 +20,18 @@
 #include <functional>
 #include <memory>
 
+#include "export.hpp"
 #include "property.hpp"
 
 namespace tokotachi
 {
 
 /// 今のスレッドがメインスレッド(Application を作ったスレッド)か。
-bool is_main_thread();
+TOKOTACHI_API bool is_main_thread();
 
 /// どのスレッドからでも呼べる: fn をメインスレッドで呼ぶよう頼む。Application が無い・終わった後なら頼まずに false を返す。
 /// Application が終わるまでに呼ばれなかった fn は、呼ばずに捨てる。
-bool post(const std::function<void()>& fn);
+TOKOTACHI_API bool post(const std::function<void()>& fn);
 
 /// Object への弱い参照: 指す Object が破棄されたかを確かめられる。
 /// 作るのと get はメインスレッドで行う。コピー・破棄はどのスレッドからでもよい(別のスレッドへ渡すために使う)。

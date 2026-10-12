@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../core/geometry.hpp"
 #include "icon.hpp"
 
@@ -30,7 +31,7 @@ struct ImageData;
 /// 作った後は変更しない値として扱う(コピーは安い。画素は共有する)。
 ///
 /// @ingroup graphics
-class Image
+class TOKOTACHI_API Image
 {
 public:
     /// 空の画像(is_null() が true)。

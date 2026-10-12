@@ -5,6 +5,7 @@
 
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "widget.hpp"
 
@@ -15,7 +16,7 @@ class Splitter;
 
 /// 1 つの区画。Splitter が作り、所有する。
 /// @ingroup widgets_container
-class SplitterPane : public Object
+class TOKOTACHI_API SplitterPane : public Object
 {
 public:
     /// Splitter の大きさが変わったときの伸び縮みの比率(0 なら大きさを保つ。すべて 0 なら最後の区画が受け持つ)。
@@ -65,7 +66,7 @@ private:
 /// たたんだ区画の部品の visible は変えない(showing が false になる)。
 ///
 /// @ingroup widgets_container
-class Splitter : public Widget
+class TOKOTACHI_API Splitter : public Widget
 {
 public:
     explicit Splitter(Widget* parent = nullptr, Orientation orientation = Orientation::HORIZONTAL);

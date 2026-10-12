@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "../core/thread.hpp"
 #include "../graphics/image.hpp"
@@ -29,7 +30,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup widgets_display
-class Label : public Widget
+class TOKOTACHI_API Label : public Widget
 {
 public:
     explicit Label(Widget* parent = nullptr, const std::string& text = std::string());

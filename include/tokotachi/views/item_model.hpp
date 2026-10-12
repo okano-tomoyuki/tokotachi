@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../core/drag.hpp"
 #include "../graphics/image.hpp"
 #include "../graphics/text_layout.hpp"
@@ -21,7 +22,7 @@ class ItemView;
 /// モデルの中の項目の位置: 親の中での行の番号と、モデルが決める識別子(TreeModel・ListModel では項目のアドレス)。
 /// 項目を加える・除くと行の番号はずれるので、長く持たない(ビューは知らせを受けて直す)。
 /// @ingroup views
-class ModelIndex
+class TOKOTACHI_API ModelIndex
 {
 public:
     ModelIndex() : row_(-1), id_(nullptr) {}
@@ -72,7 +73,7 @@ enum class SortOrder
 /// 手軽に使うときは、項目をオブジェクトで持つ ListModel・TreeModel(list_model.hpp・tree_model.hpp)を使う。
 ///
 /// @ingroup views
-class ItemModel : public Object
+class TOKOTACHI_API ItemModel : public Object
 {
 public:
     ~ItemModel();

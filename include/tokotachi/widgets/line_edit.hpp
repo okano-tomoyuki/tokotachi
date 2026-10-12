@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "text_input_base.hpp"
 
 namespace tokotachi
@@ -16,7 +17,7 @@ namespace tokotachi
 /// @image html widget_line_edit.png
 ///
 /// @ingroup widgets_input
-class LineEdit : public TextInputBase
+class TOKOTACHI_API LineEdit : public TextInputBase
 {
 public:
     explicit LineEdit(Widget* parent = nullptr, const std::string& text = std::string());

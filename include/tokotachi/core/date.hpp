@@ -5,6 +5,8 @@
 
 #include <string>
 
+#include "export.hpp"
+
 namespace tokotachi
 {
 
@@ -32,7 +34,7 @@ enum class DayOfWeek
 /// 年・月・日がすべて 0 の値は「空」(is_null)。範囲は 1 年 1 月 1 日から 9999 年 12 月 31 日。
 ///
 /// @ingroup core_values
-struct Date
+struct TOKOTACHI_API Date
 {
     int year;
     int month;  ///< 1〜12

@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_VIEWS_TREE_VIEW_HPP
 #define TOKOTACHI_VIEWS_TREE_VIEW_HPP
 
+#include "../core/export.hpp"
 #include "item_view.hpp"
 
 namespace tokotachi
@@ -25,7 +26,7 @@ namespace tokotachi
 /// 選び方・列・見出し・キーの操作は ItemView(item_view.hpp)を参照。
 ///
 /// @ingroup views
-class TreeView : public ItemView
+class TOKOTACHI_API TreeView : public ItemView
 {
 public:
     explicit TreeView(Widget* parent = nullptr);

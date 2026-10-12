@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../actions/action.hpp"
+#include "../core/export.hpp"
 #include "../widgets/widget.hpp"
 
 namespace tokotachi
@@ -45,7 +46,7 @@ enum class ToolButtonStyle
 /// ウィンドウの tool_bar の Action のショートカットは、ウィンドウ全体で効く。
 ///
 /// @ingroup windows
-class ToolBar : public Widget
+class TOKOTACHI_API ToolBar : public Widget
 {
 public:
     explicit ToolBar(Widget* parent = nullptr);

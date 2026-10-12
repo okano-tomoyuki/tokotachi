@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "../graphics/bitmap.hpp"
 #include "../graphics/theme.hpp"
 #include "../widgets/widget.hpp"
@@ -27,7 +28,7 @@ struct WindowImpl;
 /// @image html window.png
 ///
 /// @ingroup windows
-class Window : public Widget
+class TOKOTACHI_API Window : public Widget
 {
 public:
     /// 大きさは dp。Application を作った後に作る。

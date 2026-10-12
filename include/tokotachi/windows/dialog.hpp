@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../widgets/button.hpp"
 #include "window.hpp"
 
@@ -48,7 +49,7 @@ enum class DialogButton
 /// 大きさは開くときに中身に合わせる(幅は 320〜560dp。minimum_size で広げられる)。
 ///
 /// @ingroup windows
-class Dialog : public Window
+class TOKOTACHI_API Dialog : public Window
 {
 public:
     /// parent の上に出すダイアログ(parent が所有する)。

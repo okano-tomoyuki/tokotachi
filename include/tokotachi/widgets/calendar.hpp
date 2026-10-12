@@ -4,6 +4,7 @@
 #define TOKOTACHI_WIDGETS_CALENDAR_HPP
 
 #include "../core/date.hpp"
+#include "../core/export.hpp"
 #include "widget.hpp"
 
 namespace tokotachi
@@ -24,7 +25,7 @@ namespace tokotachi
 /// minimum〜maximum の外の日は選べない。今日の日は輪で示す。
 ///
 /// @ingroup widgets_input
-class Calendar : public Widget
+class TOKOTACHI_API Calendar : public Widget
 {
 public:
     explicit Calendar(Widget* parent = nullptr);

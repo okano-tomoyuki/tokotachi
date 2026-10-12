@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_PROGRESS_BAR_HPP
 #define TOKOTACHI_WIDGETS_PROGRESS_BAR_HPP
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
 #include "../core/timer.hpp"
 #include "widget.hpp"
@@ -23,7 +24,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup widgets_display
-class ProgressBar : public Widget
+class TOKOTACHI_API ProgressBar : public Widget
 {
 public:
     explicit ProgressBar(Widget* parent = nullptr);

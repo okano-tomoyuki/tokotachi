@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "item_view.hpp"
 
 namespace tokotachi
@@ -40,7 +41,7 @@ namespace tokotachi
 /// selection(ItemView)は、選んでいるセルのある行の項目。行の数・並びが変わると、セルの範囲は current のセルだけになる。
 ///
 /// @ingroup views
-class TableView : public ItemView
+class TOKOTACHI_API TableView : public ItemView
 {
 public:
     explicit TableView(Widget* parent = nullptr);

@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_LAYOUT_PLACE_LAYOUT_HPP
 #define TOKOTACHI_LAYOUT_PLACE_LAYOUT_HPP
 
+#include "../core/export.hpp"
 #include "layout.hpp"
 
 namespace tokotachi
@@ -25,7 +26,7 @@ enum class Anchor
 /// PlaceLayout の項目の位置と大きさ(固定の dp と、入れ物に対する割合)。
 ///
 /// @ingroup layout
-struct Placement
+struct TOKOTACHI_API Placement
 {
     float x, y;  ///< dp
     float relative_x, relative_y;  ///< 親の大きさに対する割合
@@ -55,7 +56,7 @@ struct Placement
 /// レイアウトを付けない自由配置(bounds を利用者が決める)とは違い、親の大きさが変わると置き直す。
 ///
 /// @ingroup layout
-class PlaceLayout : public Layout
+class TOKOTACHI_API PlaceLayout : public Layout
 {
 public:
     explicit PlaceLayout(Widget* target);

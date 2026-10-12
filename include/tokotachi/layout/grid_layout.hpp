@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_LAYOUT_GRID_LAYOUT_HPP
 #define TOKOTACHI_LAYOUT_GRID_LAYOUT_HPP
 
+#include "../core/export.hpp"
 #include "layout.hpp"
 
 namespace tokotachi
@@ -24,7 +25,7 @@ namespace tokotachi
 /// 項目が無く最小の大きさも決めていない行・列は、大きさ 0 で、間隔も入れない。
 ///
 /// @ingroup layout
-class GridLayout : public Layout
+class TOKOTACHI_API GridLayout : public Layout
 {
 public:
     explicit GridLayout(Widget* target);

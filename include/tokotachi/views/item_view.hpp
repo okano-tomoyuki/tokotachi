@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "item_model.hpp"
 #include "../graphics/text_layout.hpp"
@@ -37,7 +38,7 @@ enum class SelectionBehavior
 
 /// 表のセルの矩形の範囲(行・列の番号。両端を含む)。
 /// @ingroup views
-struct CellRange
+struct TOKOTACHI_API CellRange
 {
     int first_row;
     int first_column;
@@ -63,7 +64,7 @@ struct CellRange
 
 /// ビューの 1 つの列。ItemView が作り、所有する。
 /// @ingroup views
-class Column : public Object
+class TOKOTACHI_API Column : public Object
 {
 public:
     /// 見出しの文字。
@@ -105,7 +106,7 @@ private:
 /// @endcode
 ///
 /// @ingroup views
-class ItemView : public Widget
+class TOKOTACHI_API ItemView : public Widget
 {
 public:
     ~ItemView();

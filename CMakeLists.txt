@@ -165,6 +165,12 @@ target_include_directories(tokotachi_objects PUBLIC ${CMAKE_CURRENT_LIST_DIR}/in
 # C++11(docs/adr/0003)。利用者が新しい規格でビルドしてもよいよう、公開のヘッダは C++20 でも通るように書く。
 target_compile_features(tokotachi_objects PUBLIC cxx_std_11)
 set_target_properties(tokotachi_objects PROPERTIES CXX_EXTENSIONS OFF POSITION_INDEPENDENT_CODE ON)
+# 公開するのは TOKOTACHI_API を付けたクラス・関数だけ(docs/adr/0057。include/tokotachi/core/export.hpp)。
+# Linux などは既定で隠し、MinGW は dllexport を付けたものだけを公開する(自動の公開をしない)。
+set_target_properties(tokotachi_objects PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+if(TOKOTACHI_SHARED)
+    target_compile_definitions(tokotachi_objects PRIVATE TOKOTACHI_BUILDING_SHARED)
+endif()
 target_compile_options(tokotachi_objects PRIVATE -Wall -Wextra -pedantic)
 target_link_libraries(tokotachi_objects PRIVATE Threads::Threads SDL3::SDL3-static plutovg::plutovg harfbuzz::harfbuzz
                                                 Freetype::Freetype unibreak::unibreak SheenBidi::SheenBidi)
@@ -210,7 +216,7 @@ endif()
 if(TOKOTACHI_SHARED)
     # 中に入れた静的ライブラリ(SDL3・FreeType など)のシンボルを公開しない。利用者が別の版の SDL3 を使っても衝突せず、
     # Linux ではシステムの libfontconfig がシステムの libfreetype ではなくこちらの FreeType を呼ぶこともない(docs/adr/0005)。
-    # このライブラリ自身のシンボルは、Linux では既定の可視性で、MinGW では自動で、すべて公開する。
+    # このライブラリ自身のシンボルは、TOKOTACHI_API を付けたものだけを公開する(上の tokotachi_objects の設定)。
     target_link_options(tokotachi PRIVATE -Wl,--exclude-libs,ALL)
 else()
     # 依存ライブラリの静的ライブラリを libtokotachi.a にまとめる。利用者は tokotachi と OS のライブラリだけをリンクする。

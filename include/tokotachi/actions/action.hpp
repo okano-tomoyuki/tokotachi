@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../core/event.hpp"
 #include "../graphics/image.hpp"
 #include "../core/property.hpp"
@@ -41,7 +42,7 @@ struct ActionAccess;
 /// text の「&」の次の文字はニーモニック(メニューを開いているときに押すと選ぶ。「&&」は「&」そのもの)。
 ///
 /// @ingroup actions
-class Action : public Object
+class TOKOTACHI_API Action : public Object
 {
 public:
     explicit Action(Object* owner = nullptr, const std::string& text = std::string());

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../windows/popup.hpp"
 #include "../graphics/text_layout.hpp"
 #include "widget.hpp"
@@ -35,7 +36,7 @@ class ScrollArea;
 /// Enter で決め、Esc で閉じる。
 ///
 /// @ingroup widgets_input
-class ComboBox : public Widget
+class TOKOTACHI_API ComboBox : public Widget
 {
 public:
     explicit ComboBox(Widget* parent = nullptr);

@@ -8,6 +8,7 @@
 
 #include "../core/drag.hpp"
 #include "../core/event.hpp"
+#include "../core/export.hpp"
 #include "../core/geometry.hpp"
 #include "../core/property.hpp"
 #include "../graphics/theme.hpp"
@@ -55,7 +56,7 @@ enum class MouseCursor
 /// ハンドラを呼ぶために基底の実装を呼ぶ。
 ///
 /// @ingroup widgets_base
-class Widget : public Object
+class TOKOTACHI_API Widget : public Object
 {
 public:
     explicit Widget(Widget* parent = nullptr);

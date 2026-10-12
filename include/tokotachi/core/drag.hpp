@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "event.hpp"
+#include "export.hpp"
 
 namespace tokotachi
 {
@@ -40,7 +41,7 @@ enum class DropAction
 
 /// ドラッグするデータ(値)。
 /// @ingroup core_events
-class DragData
+class TOKOTACHI_API DragData
 {
 public:
     DragData() : source_(nullptr), outside_(false) {}
@@ -66,7 +67,7 @@ private:
 
 /// ドラッグの位置での知らせ(drag_move・drop)。位置は受け取るウィジェットの左上を原点とする dp。
 /// @ingroup core_events
-struct DragEvent
+struct TOKOTACHI_API DragEvent
 {
     Point pos;
     const DragData& data;

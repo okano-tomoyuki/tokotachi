@@ -77,7 +77,9 @@
 ### 公開するシンボル
 
 - 公開のクラス・関数に `TOKOTACHI_API` を付け、それ以外は公開しない(Linux は `-fvisibility=hidden`・`-fvisibility-inlines-hidden`、
-  MinGW は自動の公開をやめて `__declspec(dllexport)`/`dllimport`)。静的ライブラリでは印は空。
+  MinGW は自動の公開をやめて、共有ライブラリをビルドするときだけ `__declspec(dllexport)`)。利用する側では Windows の印は空にし、
+  MinGW の自動の読み込み(auto-import。今までと同じ)に任せる。`dllimport` を付けないので、利用する側は共有か静的かを知らせずに済む
+  (CMake のパッケージ・pkg-config に定義を足さない)。印は `include/tokotachi/core/export.hpp` で定める。
 - 公開のヘッダのテンプレート・インラインの関数から呼ぶ `detail` の関数(`detail::add_binding` など)にも付ける(付けないと利用者の
   コードがリンクできない)。
 - テストは、今と同じく内部のライブラリ(依存ライブラリごと静的にリンクしたもの)を使うので、印の影響を受けない。

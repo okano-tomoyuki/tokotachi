@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP
 #define TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP
 
+#include "../core/export.hpp"
 #include "button_base.hpp"
 
 namespace tokotachi
@@ -23,7 +24,7 @@ namespace tokotachi
 /// 押すと group_value に自分の value を入れ、結んだ変数を通じて他のボタンの選択が外れる。
 ///
 /// @ingroup widgets_input
-class RadioButton : public ButtonBase
+class TOKOTACHI_API RadioButton : public ButtonBase
 {
 public:
     explicit RadioButton(Widget* parent = nullptr, const std::string& text = std::string(), int value = 0);

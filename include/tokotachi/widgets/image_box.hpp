@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_IMAGE_BOX_HPP
 #define TOKOTACHI_WIDGETS_IMAGE_BOX_HPP
 
+#include "../core/export.hpp"
 #include "../graphics/image.hpp"
 #include "widget.hpp"
 
@@ -31,7 +32,7 @@ enum class ImageFit
 /// 画像の 1 ピクセルを、論理座標の 1(倍率 2 の画面では 2 ピクセル)として描く。望む大きさは画像の大きさ。
 ///
 /// @ingroup widgets_display
-class ImageBox : public Widget
+class TOKOTACHI_API ImageBox : public Widget
 {
 public:
     explicit ImageBox(Widget* parent = nullptr, const Image& image = Image());

@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WINDOWS_POPUP_HPP
 #define TOKOTACHI_WINDOWS_POPUP_HPP
 
+#include "../core/export.hpp"
 #include "window.hpp"
 
 namespace tokotachi
@@ -35,7 +36,7 @@ enum class PopupPlacement
 /// 外側を押すと閉じる(押したことは、外側のウィンドウには送らない)。
 ///
 /// @ingroup windows
-class Popup : public Window
+class TOKOTACHI_API Popup : public Window
 {
 public:
     /// owner_widget(ウィンドウに属するウィジェット)のウィンドウの上に出す。owner_widget が破棄されると一緒に破棄される。

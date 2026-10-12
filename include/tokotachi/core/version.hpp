@@ -8,6 +8,8 @@
 #ifndef TOKOTACHI_CORE_VERSION_HPP
 #define TOKOTACHI_CORE_VERSION_HPP
 
+#include "export.hpp"
+
 #define TOKOTACHI_VERSION_MAJOR 0
 #define TOKOTACHI_VERSION_MINOR 1
 #define TOKOTACHI_VERSION_PATCH 0
@@ -23,7 +25,7 @@ namespace tokotachi
 {
 
 /// 実行時に読み込まれたライブラリの版(共有ライブラリが、コンパイルに使ったヘッダと違う版のこともある)。
-const char* version();
+TOKOTACHI_API const char* version();
 
 }  // namespace tokotachi
 

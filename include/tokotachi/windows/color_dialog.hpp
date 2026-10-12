@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "dialog.hpp"
 
 namespace tokotachi
@@ -39,7 +40,7 @@ class ColorSwatches;
 /// show は開いたダイアログを返し、閉じたら on_finish を呼んでから破棄する。
 ///
 /// @ingroup windows
-class ColorDialog : public Dialog
+class TOKOTACHI_API ColorDialog : public Dialog
 {
 public:
     /// title が空なら、言語に合わせた標準の題(「色の選択」)。OK・キャンセルのボタンを持つ。

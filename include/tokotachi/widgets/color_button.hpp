@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "button_base.hpp"
 
 namespace tokotachi
@@ -23,7 +24,7 @@ namespace tokotachi
 /// 左に色の見本(透過は市松模様の上に)を、右に text(空なら色の 16 進数)を出す。
 ///
 /// @ingroup widgets_input
-class ColorButton : public ButtonBase
+class TOKOTACHI_API ColorButton : public ButtonBase
 {
 public:
     explicit ColorButton(Widget* parent = nullptr, const Color& color = Color(0, 0, 0));

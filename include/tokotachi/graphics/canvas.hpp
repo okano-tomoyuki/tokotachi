@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../core/geometry.hpp"
 
 namespace tokotachi
@@ -18,7 +19,7 @@ struct Font;
 /// 図形の輪郭(直線・ベジェ曲線・矩形・楕円・弧を組み合わせる)。Canvas::fill_path・stroke_path で描く。
 ///
 /// @ingroup graphics
-class Path
+class TOKOTACHI_API Path
 {
 public:
     enum class Op
@@ -60,7 +61,7 @@ private:
 /// グラデーションの色の位置(offset は 0〜1)。
 ///
 /// @ingroup graphics
-struct GradientStop
+struct TOKOTACHI_API GradientStop
 {
     float offset;
     Color color;
@@ -71,7 +72,7 @@ struct GradientStop
 
 /// 塗り(単色・線形グラデーション・放射グラデーション)。
 /// @ingroup graphics
-struct Paint
+struct TOKOTACHI_API Paint
 {
     enum class Type
     {
@@ -110,7 +111,7 @@ enum class LineJoin
 
 /// 線の形。
 /// @ingroup graphics
-struct StrokeStyle
+struct TOKOTACHI_API StrokeStyle
 {
     float width;                ///< 太さ(dp)
     LineCap cap;                ///< 端の形
@@ -151,7 +152,7 @@ struct StrokeStyle
 /// @endcode
 ///
 /// @ingroup graphics
-class Canvas
+class TOKOTACHI_API Canvas
 {
 public:
     virtual ~Canvas() {}

@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 #define TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 
+#include "../core/export.hpp"
 #include "button_base.hpp"
 
 namespace tokotachi
@@ -18,7 +19,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup widgets_input
-class CheckBox : public ButtonBase
+class TOKOTACHI_API CheckBox : public ButtonBase
 {
 public:
     explicit CheckBox(Widget* parent = nullptr, const std::string& text = std::string());

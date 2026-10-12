@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_VIEWS_LIST_MODEL_HPP
 #define TOKOTACHI_VIEWS_LIST_MODEL_HPP
 
+#include "../core/export.hpp"
 #include "item.hpp"
 #include "item_model.hpp"
 
@@ -20,7 +21,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup views
-class ListModel : public ItemModel, private detail::ItemHost
+class TOKOTACHI_API ListModel : public ItemModel, private detail::ItemHost
 {
 public:
     explicit ListModel(Object* owner = nullptr);

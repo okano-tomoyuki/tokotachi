@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
 #include "widget.hpp"
 
@@ -24,7 +25,7 @@ namespace tokotachi
 /// title の「&」の次の文字はニーモニック。Alt と一緒に押すと、中の最初の部品へフォーカスを移す。
 ///
 /// @ingroup widgets_container
-class GroupBox : public Widget
+class TOKOTACHI_API GroupBox : public Widget
 {
 public:
     explicit GroupBox(Widget* parent = nullptr, const std::string& title = std::string());

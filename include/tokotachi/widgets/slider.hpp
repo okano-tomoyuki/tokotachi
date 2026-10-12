@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_SLIDER_HPP
 #define TOKOTACHI_WIDGETS_SLIDER_HPP
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "range_base.hpp"
 
@@ -24,7 +25,7 @@ namespace tokotachi
 /// フォーカスがあるときはホイールでも動かす(フォームをスクロールしているときに、うっかり値を変えないように)。
 ///
 /// @ingroup widgets_input
-class Slider : public RangeBase
+class TOKOTACHI_API Slider : public RangeBase
 {
 public:
     explicit Slider(Widget* parent = nullptr, Orientation orientation = Orientation::HORIZONTAL);

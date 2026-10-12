@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "action.hpp"
 #include "../core/geometry.hpp"
 
@@ -43,7 +44,7 @@ struct MenuAccess;
 /// (ウィンドウに所有させればよい)。
 ///
 /// @ingroup actions
-class Menu : public Object
+class TOKOTACHI_API Menu : public Object
 {
 public:
     explicit Menu(Object* owner = nullptr, const std::string& title = std::string());

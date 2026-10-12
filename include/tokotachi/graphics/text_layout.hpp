@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "../core/geometry.hpp"
 
@@ -24,7 +25,7 @@ namespace tokotachi
 /// label_title->font = tokotachi::Font(18, true);  // 18dp の太字
 /// @endcode
 /// @ingroup graphics
-struct Font
+struct TOKOTACHI_API Font
 {
     float size;  ///< dp
     bool bold;
@@ -47,7 +48,7 @@ struct TextLayoutData;
 
 /// 作った後は変更しない値として扱う(コピーは安い)。テキスト・フォント・倍率・折り返しの幅が変わったら作り直す。
 /// @ingroup graphics
-class TextLayout
+class TOKOTACHI_API TextLayout
 {
 public:
     TextLayout();

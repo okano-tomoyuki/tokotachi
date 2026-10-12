@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
 #define TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "widget.hpp"
 
@@ -21,7 +22,7 @@ namespace tokotachi
 /// つまみのドラッグ、溝のクリック(1 ページ分)、ホイール(single_step × 目盛り)で動かす。
 ///
 /// @ingroup widgets_base
-class ScrollBar : public Widget
+class TOKOTACHI_API ScrollBar : public Widget
 {
 public:
     explicit ScrollBar(Widget* parent = nullptr, Orientation orientation = Orientation::VERTICAL);

@@ -13,6 +13,7 @@
 #ifndef TOKOTACHI_CORE_BINDING_HPP
 #define TOKOTACHI_CORE_BINDING_HPP
 
+#include "export.hpp"
 #include "property.hpp"
 
 namespace tokotachi
@@ -21,7 +22,7 @@ namespace tokotachi
 namespace detail
 {
 
-struct PropertyAccess
+struct TOKOTACHI_API PropertyAccess
 {
     template <typename T>
     static Object* owner(const Property<T>& p)
@@ -54,14 +55,14 @@ struct PropertyAccess
     }
 };
 
-struct BindingEnd
+struct TOKOTACHI_API BindingEnd
 {
     Object* owner;
     const void* property;
 };
 
 /// 結びつき(内部)。どちらかの端が設定されたら、もう一方の端へ値を書き込む。
-class BindingBase
+class TOKOTACHI_API BindingBase
 {
 public:
     BindingBase(const BindingEnd& a_, const BindingEnd& b_) : a(a_), b(b_), active(false) {}
@@ -116,9 +117,9 @@ private:
 };
 
 /// 結びつきを登録し、第 1 の端を第 2 の端の値にそろえる。同じ組がすでにあれば何もしない(false)。
-bool add_binding(BindingBase* binding);
-void remove_bindings(Object* owner, const void* property);
-void remove_binding_pair(const void* a, const void* b);
+TOKOTACHI_API bool add_binding(BindingBase* binding);
+TOKOTACHI_API void remove_bindings(Object* owner, const void* property);
+TOKOTACHI_API void remove_binding_pair(const void* a, const void* b);
 
 }  // namespace detail
 

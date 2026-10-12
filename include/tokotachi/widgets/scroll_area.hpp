@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
 #define TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
 
+#include "../core/export.hpp"
 #include "scroll_bar.hpp"
 #include "widget.hpp"
 
@@ -25,7 +26,7 @@ namespace tokotachi
 /// スクロールバーを出す。ScrollArea 自身にレイアウトを付けてはいけない(子の配置は ScrollArea が決める)。
 ///
 /// @ingroup widgets_container
-class ScrollArea : public Widget
+class TOKOTACHI_API ScrollArea : public Widget
 {
 public:
     explicit ScrollArea(Widget* parent = nullptr);

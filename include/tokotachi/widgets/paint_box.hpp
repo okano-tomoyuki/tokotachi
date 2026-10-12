@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_PAINT_BOX_HPP
 #define TOKOTACHI_WIDGETS_PAINT_BOX_HPP
 
+#include "../core/export.hpp"
 #include "../graphics/bitmap.hpp"
 #include "../graphics/image.hpp"
 #include "widget.hpp"
@@ -26,7 +27,7 @@ namespace tokotachi
 /// 呼ばない(画面の描き直しでは覚えた絵を貼るだけ)。on_paint の Canvas は、そのときは画面ではなく Bitmap に描く。
 ///
 /// @ingroup widgets_drawing
-class PaintBox : public Widget
+class TOKOTACHI_API PaintBox : public Widget
 {
 public:
     explicit PaintBox(Widget* parent = nullptr);

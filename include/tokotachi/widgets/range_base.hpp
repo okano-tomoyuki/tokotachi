@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 #define TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 
+#include "../core/export.hpp"
 #include "widget.hpp"
 
 namespace tokotachi
@@ -18,7 +19,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup widgets_base
-class RangeBase : public Widget
+class TOKOTACHI_API RangeBase : public Widget
 {
 public:
     /// 範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。

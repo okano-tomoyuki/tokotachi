@@ -64,6 +64,10 @@ function runDoxygen(outDir: string): string {
     'EXTRACT_ALL = YES',
     'EXTRACT_PRIVATE = NO',
     'EXCLUDE_SYMBOLS = tokotachi::detail tokotachi::detail::*',
+    // 公開の印(TOKOTACHI_API。docs/adr/0057)は空にして読む
+    'MACRO_EXPANSION = YES',
+    'EXPAND_ONLY_PREDEF = YES',
+    'PREDEFINED = TOKOTACHI_API=',
     'GENERATE_HTML = NO',
     'GENERATE_LATEX = NO',
     'GENERATE_XML = YES',

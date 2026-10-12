@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../actions/menu.hpp"
+#include "../core/export.hpp"
 #include "../widgets/widget.hpp"
 
 namespace tokotachi
@@ -34,7 +35,7 @@ struct MenuBarAccess;
 /// Esc で戻る。開いたメニューの中の ←→ は隣のメニューへ移る。Alt を押している間は、ニーモニックの下線を出す。
 ///
 /// @ingroup windows
-class MenuBar : public Widget
+class TOKOTACHI_API MenuBar : public Widget
 {
 public:
     explicit MenuBar(Widget* parent = nullptr);

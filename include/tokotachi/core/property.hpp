@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include "export.hpp"
+
 namespace tokotachi
 {
 
@@ -28,10 +30,10 @@ namespace detail
 struct PropertyAccess;
 /// owner の property(Property・ReadOnlyProperty のアドレス)の値が変わったことを知らせる。
 /// 結びつけた相手のプロパティへ値を伝える(docs/adr/0016)。
-void property_changed(Object* owner, const void* property);
+TOKOTACHI_API void property_changed(Object* owner, const void* property);
 
 /// Object が生きているかの目印(WeakRef が共有する。docs/adr/0029)。メインスレッドだけで読み書きする。
-struct Liveness
+struct TOKOTACHI_API Liveness
 {
     bool alive;
     Liveness() : alive(true) {}
@@ -186,7 +188,7 @@ private:
 /// owner が nullptr なら利用者が寿命を管理する(スタック・メンバ変数にも置ける)。
 /// owner を持つオブジェクトをスタックに置いてはいけない(二重に破棄される)。
 /// @ingroup core_objects
-class Object
+class TOKOTACHI_API Object
 {
 public:
     explicit Object(Object* owner_object = nullptr);

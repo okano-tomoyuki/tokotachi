@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "export.hpp"
 #include "event.hpp"
 #include "property.hpp"
 #include "../graphics/theme.hpp"
@@ -20,7 +21,7 @@ struct ApplicationImpl;
 /// アプリケーション: SDL3 の初期化とイベントループ(docs/adr/0010)。1 つのプロセスに 1 つだけ作る。
 ///
 /// @ingroup core_objects
-class Application : public Object
+class TOKOTACHI_API Application : public Object
 {
 public:
     Application(int argc, char** argv);

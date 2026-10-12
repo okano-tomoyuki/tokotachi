@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
 #define TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
 
+#include "../core/export.hpp"
 #include "layout.hpp"
 
 namespace tokotachi
@@ -22,7 +23,7 @@ namespace tokotachi
 /// 並べる向きと直交する向きは、項目ごとのそろえ方(既定は FILL)に従う。
 ///
 /// @ingroup layout
-class BoxLayout : public Layout
+class TOKOTACHI_API BoxLayout : public Layout
 {
 public:
     explicit BoxLayout(Widget* target, Orientation orientation = Orientation::VERTICAL);

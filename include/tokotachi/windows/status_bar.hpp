@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
 #include "../core/timer.hpp"
 #include "../widgets/widget.hpp"
@@ -26,7 +27,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup windows
-class StatusBar : public Widget
+class TOKOTACHI_API StatusBar : public Widget
 {
 public:
     explicit StatusBar(Widget* parent = nullptr);

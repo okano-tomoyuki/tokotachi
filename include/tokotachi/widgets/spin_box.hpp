@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "range_base.hpp"
 #include "../core/timer.hpp"
 
@@ -33,7 +34,7 @@ class SpinEdit;
 /// ボタンを押し続けると繰り返す。フォーカスは中の入力欄が受ける。
 ///
 /// @ingroup widgets_input
-class SpinBox : public RangeBase
+class TOKOTACHI_API SpinBox : public RangeBase
 {
 public:
     explicit SpinBox(Widget* parent = nullptr);

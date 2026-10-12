@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../core/event.hpp"
+#include "../core/export.hpp"
 #include "../core/property.hpp"
 
 namespace tokotachi
@@ -23,7 +24,7 @@ enum class FileDialogMode
 
 /// ファイルの種類の絞り込み。pattern は拡張子を ; でつなぐ("png;jpg")。"*" はすべて。
 /// @ingroup windows
-struct FileFilter
+struct TOKOTACHI_API FileFilter
 {
     std::string name;
     std::string pattern;
@@ -52,7 +53,7 @@ struct FileFilter
 /// on_finish はメインスレッドで、イベントの処理の中で呼ぶ。開いている間に FileDialog を破棄したら、結果は捨てる。
 ///
 /// @ingroup windows
-class FileDialog : public Object
+class TOKOTACHI_API FileDialog : public Object
 {
 public:
     /// parent の上に出す(parent が所有する。nullptr なら親を持たない)。

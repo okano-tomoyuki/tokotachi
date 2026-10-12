@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../core/date.hpp"
+#include "../core/export.hpp"
 #include "widget.hpp"
 
 namespace tokotachi
@@ -36,7 +37,7 @@ class DateText;
 /// Alt+↓・F4 で暦を開き、暦では矢印で日を動かし、Enter・クリックで決め、Esc で閉じる。
 ///
 /// @ingroup widgets_input
-class DateEdit : public Widget
+class TOKOTACHI_API DateEdit : public Widget
 {
 public:
     explicit DateEdit(Widget* parent = nullptr);

@@ -5,14 +5,16 @@
 
 #include <string>
 
+#include "export.hpp"
+
 namespace tokotachi
 {
 namespace clipboard
 {
 
-std::string text();
-void set_text(const std::string& text);
-bool has_text();
+TOKOTACHI_API std::string text();
+TOKOTACHI_API void set_text(const std::string& text);
+TOKOTACHI_API bool has_text();
 
 }  // namespace clipboard
 }  // namespace tokotachi

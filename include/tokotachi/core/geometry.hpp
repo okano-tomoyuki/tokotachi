@@ -6,13 +6,15 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "export.hpp"
+
 namespace tokotachi
 {
 
 /// 点(dp)。
 ///
 /// @ingroup core_values
-struct Point
+struct TOKOTACHI_API Point
 {
     float x, y;
 
@@ -28,7 +30,7 @@ struct Point
 /// 大きさ(dp)。
 ///
 /// @ingroup core_values
-struct Size
+struct TOKOTACHI_API Size
 {
     float width, height;
 
@@ -42,7 +44,7 @@ struct Size
 /// 矩形(左上の点と大きさ。dp)。
 ///
 /// @ingroup core_values
-struct Rect
+struct TOKOTACHI_API Rect
 {
     float x, y, width, height;
 
@@ -101,7 +103,7 @@ struct Rect
 /// 色(sRGB の 8 ビットの成分と、アルファ。アルファは乗算していない)。
 ///
 /// @ingroup core_values
-struct Color
+struct TOKOTACHI_API Color
 {
     std::uint8_t r, g, b, a;
 

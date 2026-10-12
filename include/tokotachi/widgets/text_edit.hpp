@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "scroll_bar.hpp"
 #include "text_input_base.hpp"
 
@@ -25,7 +26,7 @@ namespace tokotachi
 /// 編集・選択・クリップボード・IME・変更の通知は TextInputBase が受け持つ。
 ///
 /// @ingroup widgets_input
-class TextEdit : public TextInputBase
+class TOKOTACHI_API TextEdit : public TextInputBase
 {
 public:
     explicit TextEdit(Widget* parent = nullptr, const std::string& text = std::string());

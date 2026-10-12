@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_VIEWS_TREE_MODEL_HPP
 #define TOKOTACHI_VIEWS_TREE_MODEL_HPP
 
+#include "../core/export.hpp"
 #include "item.hpp"
 #include "item_model.hpp"
 
@@ -14,7 +15,7 @@ class TreeModel;
 /// TreeModel の 1 つの項目(子を持てる)。
 ///
 /// @ingroup views
-class TreeItem : public Item
+class TOKOTACHI_API TreeItem : public Item
 {
 public:
     /// 親の項目(一番上なら nullptr)・子の項目(並んだ順)。
@@ -50,7 +51,7 @@ private:
 /// @endcode
 ///
 /// @ingroup views
-class TreeModel : public ItemModel, private detail::ItemHost
+class TOKOTACHI_API TreeModel : public ItemModel, private detail::ItemHost
 {
 public:
     explicit TreeModel(Object* owner = nullptr);

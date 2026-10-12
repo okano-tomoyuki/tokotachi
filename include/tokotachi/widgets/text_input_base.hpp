@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <string>
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
 #include "../core/timer.hpp"
 #include "widget.hpp"
@@ -18,7 +19,7 @@ namespace tokotachi
 /// 派生クラスは、文字を描く矩形(text_area)・折り返しの幅(wrap_width)と、枠の描画を決める。
 ///
 /// @ingroup widgets_base
-class TextInputBase : public Widget
+class TOKOTACHI_API TextInputBase : public Widget
 {
 public:
     /// 1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を \n にそろえ、タブは空白にし、その他の制御文字を取り除く。

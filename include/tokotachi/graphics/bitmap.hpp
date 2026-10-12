@@ -5,6 +5,7 @@
 
 #include <cstdint>
 
+#include "../core/export.hpp"
 #include "canvas.hpp"
 #include "../core/geometry.hpp"
 #include "image.hpp"
@@ -28,7 +29,7 @@ namespace tokotachi
 /// 1 つの Bitmap は、同時に 1 つのスレッドからだけ使う。別のスレッドでは、ウィジェット・テーマの色には触らない(色は渡す)。
 ///
 /// @ingroup graphics
-class Bitmap
+class TOKOTACHI_API Bitmap
 {
 public:
     /// 空の画像(is_null() が true)。

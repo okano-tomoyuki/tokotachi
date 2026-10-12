@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
 #include "widget.hpp"
 
@@ -16,7 +17,7 @@ class TabWidget;
 
 /// 1 つのタブ。TabWidget が作り、所有する。
 /// @ingroup widgets_container
-class Tab : public Object
+class TOKOTACHI_API Tab : public Object
 {
 public:
     Property<std::string> title;
@@ -61,7 +62,7 @@ private:
 /// Ctrl+Page Up/Down で選べる。
 ///
 /// @ingroup widgets_container
-class TabWidget : public Widget
+class TOKOTACHI_API TabWidget : public Widget
 {
 public:
     explicit TabWidget(Widget* parent = nullptr);

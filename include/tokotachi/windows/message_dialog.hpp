@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "dialog.hpp"
 
 namespace tokotachi
@@ -46,7 +47,7 @@ enum class MessageType
 /// 自分で作るとき(new MessageDialog)は、add_button でボタンを加えて open する(破棄は持ち主の親のウィンドウに任せる)。
 ///
 /// @ingroup windows
-class MessageDialog : public Dialog
+class TOKOTACHI_API MessageDialog : public Dialog
 {
 public:
     MessageDialog(Window* parent, const std::string& title, const std::string& text,

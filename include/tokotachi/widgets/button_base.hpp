@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
 #include "widget.hpp"
 
@@ -15,7 +16,7 @@ namespace tokotachi
 /// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、フォーカスを得て押したことになる(「&」は「&&」)。
 ///
 /// @ingroup widgets_base
-class ButtonBase : public Widget
+class TOKOTACHI_API ButtonBase : public Widget
 {
 public:
     explicit ButtonBase(Widget* parent = nullptr, const std::string& text = std::string());

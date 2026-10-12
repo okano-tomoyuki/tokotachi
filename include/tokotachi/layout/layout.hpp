@@ -5,6 +5,7 @@
 
 #include <vector>
 
+#include "../core/export.hpp"
 #include "alignment.hpp"
 #include "../core/geometry.hpp"
 #include "../core/property.hpp"
@@ -21,7 +22,7 @@ struct LayoutAccess;
 
 /// レイアウトの内側の余白(dp)。
 /// @ingroup layout
-struct Margins
+struct TOKOTACHI_API Margins
 {
     float left, top, right, bottom;
 
@@ -51,7 +52,7 @@ struct Margins
 /// 実際の大きさを受け取って子の bounds を決める(上から下)。配置のやり直しは印を付けるだけにし、描画の直前にまとめて行う。
 ///
 /// @ingroup layout
-class Layout : public Object
+class TOKOTACHI_API Layout : public Object
 {
 public:
     /// target のレイアウトになる(target が所有する)。target がすでにレイアウトを持っていれば、それは破棄される。

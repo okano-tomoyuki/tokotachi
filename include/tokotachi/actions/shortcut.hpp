@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../core/event.hpp"
+#include "../core/export.hpp"
 
 namespace tokotachi
 {
@@ -23,7 +24,7 @@ namespace tokotachi
 /// Home・End・PageUp・PageDown。読めない文字なら空のショートカットになる。
 ///
 /// @ingroup actions
-struct Shortcut
+struct TOKOTACHI_API Shortcut
 {
     Key key;
     Modifiers modifiers;

@@ -4,6 +4,7 @@
 #ifndef TOKOTACHI_GRAPHICS_THEME_HPP
 #define TOKOTACHI_GRAPHICS_THEME_HPP
 
+#include "../core/export.hpp"
 #include "../core/geometry.hpp"
 
 namespace tokotachi
@@ -54,7 +55,7 @@ const int COLOR_ROLE_COUNT = static_cast<int>(ColorRole::ON_TOOLTIP) + 1;
 /// label_note->color = Color::rgb(0xdc2626);        // 固定の色
 /// @endcode
 /// @ingroup graphics
-class ThemeColor
+class TOKOTACHI_API ThemeColor
 {
 public:
     /// 既定は役割の TEXT。
@@ -89,7 +90,7 @@ private:
 /// app.light_theme = t;
 /// @endcode
 /// @ingroup graphics
-class Theme
+class TOKOTACHI_API Theme
 {
 public:
     /// ライトのテーマで初期化する。
@@ -124,7 +125,7 @@ private:
 /// area_danger->theme_override = danger;
 /// @endcode
 /// @ingroup graphics
-class ThemeOverride
+class TOKOTACHI_API ThemeOverride
 {
 public:
     /// 何も上書きしない。

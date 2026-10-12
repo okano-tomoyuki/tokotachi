@@ -4,6 +4,7 @@
 #define TOKOTACHI_CORE_TIMER_HPP
 
 #include "event.hpp"
+#include "export.hpp"
 #include "property.hpp"
 
 namespace tokotachi
@@ -22,7 +23,7 @@ namespace tokotachi
 /// 管理する(スタック・メンバ変数にも置ける)。破棄すると止まる。Application を作った後に enabled にする。
 ///
 /// @ingroup core_objects
-class Timer : public Object
+class TOKOTACHI_API Timer : public Object
 {
 public:
     explicit Timer(Object* owner_object = nullptr);
