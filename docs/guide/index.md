@@ -49,6 +49,7 @@ int main(int argc, char** argv)
 | @subpage windows_guide | メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
 | @subpage views_guide | ListView・TreeView・TableView とモデル |
 | @subpage drawing_guide | Canvas・PaintBox・Bitmap・変換・透過 |
+| @subpage custom_widgets_guide | 自作の部品: どのクラスから作るか・上書きする口・プロパティ・標準の見た目を描く関数 |
 | @subpage threads_guide | メインスレッドの決まり・post・WeakRef・Task |
 | @subpage gallery | 部品ごとのサンプルと画面 |
 

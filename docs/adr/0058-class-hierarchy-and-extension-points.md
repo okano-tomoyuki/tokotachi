@@ -133,3 +133,21 @@ Qt・VCL は、どちらも**振る舞いだけを持つ基底を、派生して
   手引きに「自作の部品の作り方」(Widget・ButtonBase・RangeBase・PaintBox のどれから作るか、標準の見た目を描く関数)を加える。
 - 完成した部品から派生している利用者のコード(デザイナーの自作部品など)はそのまま使える。内部のための仮想関数(`child_removed` など)を
   上書きしているコードは直す必要がある(1.0 の前の変更)。
+
+## 実装(2026-10-12)
+
+- **内部のフック**: `detail::WidgetHooks`(`src/widgets/widget_access.hpp`)。部品の実装のクラスが継いで上書きし、部品のコンストラクタで
+  `install` する。前に差し込まれていたもの(基底の部品の分)は `base_` で呼べ、実装のクラスが破棄されると自分を外す(コンストラクタ・
+  デストラクタの中で基底の振る舞いになるのは、仮想関数と同じ)。`mark_layout_dirty`・`update_input_method`・`mnemonic_cues` は
+  Widget の実装に移し、内部からは `WidgetAccess` を通して呼ぶ。
+- **入力欄**: LineEdit・TextEdit が上書きしていた `text_area`・`wrap_width`・`submit`・`scroll_changed` は `detail::TextInputHooks`
+  (`src/widgets/text_input_impl.hpp`)に、`paint_text` などの補助は TextInputBase の実装に移した。
+- **一覧・木・表**: ItemView の内部の関数(`expand`・表の選択・`copy_cells`・`cells_changed` など)は実装に移し、TreeView・TableView の
+  公開の関数は窓口を通して呼ぶ。ListModel・TreeModel が継いでいた `detail::ItemHost` は、実装のクラスが継ぐ(定義も内部へ)。
+- **派生の制限**: ItemView・TextInputBase のコンストラクタは `const detail::InternalTag&` を取る(公開のヘッダでは不完全型。
+  ライブラリの中では `detail::internal_tag()` を渡す)。
+- **標準の見た目**: `<tokotachi/widgets/draw.hpp>` の `tokotachi::draw::button_face`・`button_text_color`・`check_mark`・`radio_mark`・
+  `focus_ring`・`field_frame` と、状態をまとめた `ControlState`(`<tokotachi/widgets/control_state.hpp>`)。`ButtonBase::state()` を
+  足した。組み込みの部品も同じ関数で描き、リファレンスの部品の画像が前と画素まで同じことを確かめた。
+- **手引き**: 「自作の部品」(`docs/guide/custom_widgets.md`)を加えた。中のコード例は、シンボルを隠した共有ライブラリに対して
+  コンパイル・リンクできることを確かめた。

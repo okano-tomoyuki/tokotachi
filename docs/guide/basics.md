@@ -41,7 +41,7 @@ line_edit_name->on_key_down = [](tokotachi::Object* sender, tokotachi::KeyEvent&
 
 1 つのハンドラを複数の部品で共有し、`sender` で区別できます。ハンドラを外すときは空の関数を代入します。
 
-自作の部品(Widget の派生クラス)は、`paint`・`mouse_down`・`key_down` などの protected の仮想関数を上書きします。
+自作の部品(Widget の派生クラス)は、`paint`・`mouse_down`・`key_down` などの protected の仮想関数を上書きします(@ref custom_widgets_guide)。
 
 ## 変数と結びつけ
 
