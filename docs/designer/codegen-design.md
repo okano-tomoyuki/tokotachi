@@ -67,7 +67,7 @@
 class MainWindow : public tokotachi::Window
 {
 public:
-    MainWindow();
+    explicit MainWindow(tokotachi::Window* owner = nullptr);
 
     // <tokotachi-designer:begin id="declarations">
     tokotachi::Widget* row_search;
@@ -110,8 +110,8 @@ private:
 // <tokotachi-designer:begin id="tokotachi_namespace_begin">
 // <tokotachi-designer:end id="tokotachi_namespace_begin" hash="...">
 
-MainWindow::MainWindow()
-    : tokotachi::Window(std::string())
+MainWindow::MainWindow(tokotachi::Window* owner)
+    : tokotachi::Window(owner, std::string())
 {
     tokotachi_setup_ui();
 }
@@ -197,8 +197,10 @@ void MainWindow::button_search_click(tokotachi::Object* sender)
 // <tokotachi-designer:end id="tokotachi_namespace_end" hash="...">
 ```
 
-`Dialog` のときは、コンストラクタが親のウィンドウを受け取る(`explicit SettingsDialog(tokotachi::Window* parent);`、
-`: tokotachi::Dialog(parent, std::string())`)。
+`Window` のときは、コンストラクタが所有者のウィンドウを任意で受け取る(既定 nullptr。渡さなければ Application が所有し、渡せば
+そのウィンドウの上に出て一緒に破棄される。docs/adr/0062)。`Dialog` のときは、コンストラクタが親のウィンドウを受け取る
+(`explicit SettingsDialog(tokotachi::Window* parent);`、`: tokotachi::Dialog(parent, std::string())`)。
+コンストラクタは区間の外にあるので、この形は新しく生成するファイルにだけ効く(既に生成したファイルは利用者が直す)。
 
 利用側(プロジェクトの起動部分。§8):
 

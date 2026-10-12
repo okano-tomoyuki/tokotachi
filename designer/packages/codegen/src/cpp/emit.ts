@@ -157,15 +157,19 @@ export function namespaceEnd(namespace: readonly string[]): string {
     .join('\n');
 }
 
-/** コンストラクタの引数(Dialog は持ち主のウィンドウ、部品ファイルは親の部品)。 */
-function constructorParams(base: string): string {
+/**
+ * コンストラクタの引数(Dialog は持ち主のウィンドウ、部品ファイルは親の部品、Window は任意の所有者のウィンドウ。docs/adr/0062)。
+ * withDefault なら既定の引数を付ける(ヘッダの宣言)。
+ */
+function constructorParams(base: string, withDefault: boolean): string {
   switch (base) {
     case 'Dialog':
       return 'tokotachi::Window* parent';
     case 'Widget':
       return 'tokotachi::Widget* parent';
     default:
-      return '';
+      // 所有者のウィンドウを渡せば、その上に出て一緒に破棄される。渡さなければ Application が所有する
+      return withDefault ? 'tokotachi::Window* owner = nullptr' : 'tokotachi::Window* owner';
   }
 }
 
@@ -176,7 +180,7 @@ function baseInitializer(base: string): string {
     case 'Widget':
       return 'tokotachi::Widget(parent)';
     default:
-      return 'tokotachi::Window(std::string())';
+      return 'tokotachi::Window(owner, std::string())';
   }
 }
 
@@ -256,8 +260,7 @@ export function emitCpp(
     indent: 0,
     content: `#endif  // ${includeGuard}`,
   };
-  const params = constructorParams(base);
-  const constructor = params === '' ? `${className}();` : `explicit ${className}(${params});`;
+  const constructor = `explicit ${className}(${constructorParams(base, true)});`;
 
   const header: GeneratedCode = {
     regions: [headerBegin, nsBegin, declarations, nsEnd, headerEnd],
@@ -328,7 +331,7 @@ export function emitCpp(
         '',
         rendered('tokotachi_namespace_begin'),
         '',
-        `${className}::${className}(${params})`,
+        `${className}::${className}(${constructorParams(base, false)})`,
         init,
         '{',
         `${INDENT}tokotachi_setup_ui();`,

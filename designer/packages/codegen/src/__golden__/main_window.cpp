@@ -5,8 +5,8 @@
 // <tokotachi-designer:begin id="tokotachi_namespace_begin">
 // <tokotachi-designer:end id="tokotachi_namespace_begin" hash="811c9dc5">
 
-MainWindow::MainWindow()
-    : tokotachi::Window(std::string())
+MainWindow::MainWindow(tokotachi::Window* owner)
+    : tokotachi::Window(owner, std::string())
 {
     tokotachi_setup_ui();
 }

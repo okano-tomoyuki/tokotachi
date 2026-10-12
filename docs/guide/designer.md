@@ -27,7 +27,7 @@ cmake --build build
 class MainWindow : public tokotachi::Window
 {
 public:
-    MainWindow();
+    explicit MainWindow(tokotachi::Window* owner = nullptr);   // 所有者のウィンドウ(任意)
 
     // <tokotachi-designer:begin id="declarations">
     tokotachi::LineEdit* line_edit_search;        // 名前を付けた部品は、メンバとして使える
@@ -72,7 +72,15 @@ void MainWindow::button_settings_click(tokotachi::Object* sender)
 }
 ```
 
-`Window` の定義ファイルのクラスは、引数を取らずに作ります(`Application` が所有します)。生成する `main.cpp` は、プロジェクトの
+`Window` の定義ファイルのクラスは、所有者のウィンドウを任意で受け取ります。渡さなければ `Application` が所有し、渡せば
+そのウィンドウの上に出て、一緒に隠れ・破棄されます(ツールのウィンドウなど)。
+
+```cpp
+ToolWindow* window_tool = new ToolWindow(this);   // this(このウィンドウ)が所有する
+window_tool->visible = true;
+```
+
+生成する `main.cpp` は、プロジェクトの
 メインのウィンドウを作り、`app.main_window` に決めて表示します(閉じたら終わります。@ref windows_guide)。
 
 ## プロジェクト

@@ -124,6 +124,8 @@
 | `buttons` | | ボタンの配列 | `class` が `Dialog` のときだけ書ける。`{ "button": "OK" }`・`{ "button": "CANCEL", "text": "やめる" }`(`Dialog::add_button`) |
 
 - `width`・`height` はウィンドウの中身(枠・タイトルバーを含まない)の大きさ。メニューバー・ツールバー・ステータスバーは、その中に含まれる。
+- `Window` の生成するクラスは、コンストラクタで所有者のウィンドウを任意で受け取る(`Window(Window* owner, const std::string& title)`。
+  既定 nullptr で、そのときは Application が所有する)。
 - `Dialog` の生成するクラスは、コンストラクタで親のウィンドウを受け取る(`Dialog(Window* parent, const std::string& title)`)。
   Dialog は開くときに大きさを中身に合わせるので、大きさは `width`・`height` ではなく `minimum_size` で決める。
 

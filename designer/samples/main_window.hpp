@@ -12,7 +12,7 @@
 class MainWindow : public tokotachi::Window
 {
 public:
-    MainWindow();
+    explicit MainWindow(tokotachi::Window* owner = nullptr);
 
     // <tokotachi-designer:begin id="declarations">
     tokotachi::Action* action_open;

@@ -108,3 +108,6 @@ int main(int argc, char** argv)
   呼ぶので、破棄は `on_finish` の後になる。
 - テスト: 所有(Application・所有者のウィンドウ)と一緒に隠す・破棄する、終わり方の 3 つの決まりとメインのウィンドウの破棄、閉じたら破棄する
   (ウィンドウ・ダイアログ)。サンプル `examples/gallery/windows.cpp` を加えた。
+- デザイナーが生成する Window のクラスは、所有者のウィンドウを任意で受け取る(`explicit MainWindow(tokotachi::Window* owner = nullptr)`、
+  `: tokotachi::Window(owner, std::string())`)。利用者が、Application に持たせるか所有者のウィンドウに持たせるかを決める。
+  コンストラクタは生成の区間の外にあるので、既に生成したファイルは利用者が直す。

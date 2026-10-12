@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Window ownership** (Tokotachi ADR 0062): the generated `main.cpp` creates the main window with `new` and sets it as
+  `app.main_window`, so closing it quits the application. Generated window classes take an optional owner window
+  (`explicit MainWindow(tokotachi::Window* owner = nullptr)`); pass one to show the window above its owner and destroy it
+  together. The constructor is outside the generated regions, so existing files keep their constructor until you edit it.
+- The generated `CMakeLists.txt` asks for the library version the designer was built for (`find_package(tokotachi 0.2)`).
+- Windows and dialogs have the `destroy_on_close` property in the inspector.
+
 ## 0.2.0 (preview)
 
 - **Selection and editing**: select several items (Ctrl/Shift+click, rubber band on the canvas), then delete, move,
