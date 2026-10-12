@@ -5,9 +5,12 @@
 #define TOKOTACHI_SRC_GRAPHICS_RASTER_CANVAS_HPP
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <tokotachi/graphics/canvas.hpp>
+
+#include "canvas_impl.hpp"
 
 struct plutovg_surface;
 struct plutovg_canvas;
@@ -26,7 +29,7 @@ struct PixelRect
     bool empty() const { return x1 <= x0 || y1 <= y0; }
 };
 
-class RasterCanvas : public Canvas
+class RasterCanvas : public ImplAccess<Canvas>::Impl
 {
 public:
     RasterCanvas();
@@ -43,8 +46,8 @@ public:
     void begin(const PixelRect& clip);
     void end();
 
-    using Canvas::draw_text;
-    using Canvas::stroke_path;
+    /// この描画先に描く公開の Canvas(部品の paint に渡す)。
+    Canvas& api() { return *api_; }
 
     float scale() const override { return scale_; }
     void save() override;
@@ -64,9 +67,10 @@ public:
     void stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint) override;
     void draw_text(const TextLayout& layout, const Point& pos, const Color& color) override;
     void draw_image(const Image& image, const Rect& dst, float opacity) override;
-    using Canvas::draw_image;
 
 private:
+    std::unique_ptr<Canvas> api_;
+
     struct State
     {
         // dp の座標の変換(x' = a x + c y + e、y' = b x + d y + f)。ピクセルはこれに倍率を掛けたもの。

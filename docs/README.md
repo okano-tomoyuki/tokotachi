@@ -76,6 +76,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0057](adr/0057-compatibility-abi-and-c-layer.md) | 1.0 からの互換の約束と pimpl・ABI・公開するシンボル・将来の C の層の方針 | 承認 |
 | [0058](adr/0058-class-hierarchy-and-extension-points.md) | クラスの階層を整理し、利用者が派生してよいクラス(拡張点)と標準の見た目を描く関数を決める | 承認 |
 | [0059](adr/0059-api-review-before-1-0.md) | 1.0 の前に公開の API を見直し、名前・状態の表し方を揃える | 承認 |
+| [0060](adr/0060-canvas-without-virtual-functions.md) | Canvas を仮想関数を持たない具体的なクラスにし、描画先を内部に隠す | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

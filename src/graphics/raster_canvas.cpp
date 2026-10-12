@@ -62,7 +62,8 @@ void extend(float x, float y, float& x0, float& y0, float& x1, float& y1)
 }  // namespace
 
 RasterCanvas::RasterCanvas()
-    : surface_(nullptr), canvas_(nullptr), buffer_(nullptr), width_(0), height_(0), origin_x_(0), origin_y_(0), scale_(1)
+    : api_(ImplAccess<Canvas>::create(this)),
+      surface_(nullptr), canvas_(nullptr), buffer_(nullptr), width_(0), height_(0), origin_x_(0), origin_y_(0), scale_(1)
 {
     state_.a = state_.d = 1;
     state_.b = state_.c = state_.e = state_.f = 0;
@@ -534,7 +535,7 @@ void RasterCanvas::draw_image(const Image& image, const Rect& dst, float opacity
     if (image.is_icon())
     {
         // アイコンは線画で描く(色を決めていなければ黒)
-        Canvas::draw_image(image, dst, Color(0, 0, 0), opacity);
+        api_->draw_image(image, dst, Color(0, 0, 0), opacity);
         return;
     }
     plutovg_matrix_t m;

@@ -16,6 +16,12 @@ class Image;
 class TextLayout;
 struct Font;
 
+namespace detail
+{
+template <typename C>
+struct ImplAccess;
+}
+
 /// 図形の輪郭(直線・ベジェ曲線・矩形・楕円・弧を組み合わせる)。Canvas::fill_path・stroke_path で描く。
 ///
 /// @ingroup graphics
@@ -125,7 +131,7 @@ struct TOKOTACHI_API StrokeStyle
     }
 };
 
-/// 描画の抽象(docs/adr/0006、0032)。
+/// 描く面(docs/adr/0006、0032、0060)。ライブラリが作って渡すので、利用者は作らない・派生させない。
 ///
 /// 使い方: ウィジェットの on_paint、または Widget の派生クラスの paint(Canvas&) の中で描く。
 ///
@@ -155,41 +161,39 @@ struct TOKOTACHI_API StrokeStyle
 class TOKOTACHI_API Canvas
 {
 public:
-    virtual ~Canvas() {}
-
     /// dp からピクセルへの倍率。
-    virtual float scale() const = 0;
+    float scale() const;
 
     // ---- 状態 ----
     /// 変換とクリップを積む・戻す。
-    virtual void save() = 0;
-    virtual void restore() = 0;
+    void save();
+    void restore();
     /// 変換: 以後の座標を、今の座標系で移動・拡大・回転(ラジアン。正の向きは時計回り)する。
-    virtual void translate(float dx, float dy) = 0;
-    virtual void scale_by(float sx, float sy) = 0;
-    virtual void rotate(float radians) = 0;
+    void translate(float dx, float dy);
+    void scale_by(float sx, float sy);
+    void rotate(float radians);
     /// 現在のクリップと r(または path の内側)の共通部分に描画を限る。
-    virtual void clip_rect(const Rect& r) = 0;
-    virtual void clip_path(const Path& path) = 0;
+    void clip_rect(const Rect& r);
+    void clip_path(const Path& path);
     /// 現在のクリップを囲む矩形(dp、今の座標系)。
-    virtual Rect clip_bounds() const = 0;
+    Rect clip_bounds() const;
     /// グループの透過: begin_layer から end_layer までに描いたものを、一時的な画像に描いてから opacity(0〜1)で重ねる
     /// (重なった部分も濃くならない)。対で呼ぶ(入れ子にできる)。begin_layer は save も兼ね、end_layer で変換とクリップも戻る。
-    virtual void begin_layer(float opacity) = 0;
-    virtual void end_layer() = 0;
+    void begin_layer(float opacity);
+    void end_layer();
 
     // ---- 基本の描画 ----
-    virtual void fill_rect(const Rect& r, const Color& color) = 0;
-    virtual void fill_round_rect(const Rect& r, float radius, const Paint& paint) = 0;
+    void fill_rect(const Rect& r, const Color& color);
+    void fill_round_rect(const Rect& r, float radius, const Paint& paint);
     /// 線を r の内側に描く(線の外側の辺が r に一致する)。
-    virtual void stroke_round_rect(const Rect& r, float radius, float width, const Color& color) = 0;
-    virtual void fill_path(const Path& path, const Paint& paint) = 0;
-    virtual void stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint) = 0;
+    void stroke_round_rect(const Rect& r, float radius, float width, const Color& color);
+    void fill_path(const Path& path, const Paint& paint);
+    void stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint);
     /// pos はレイアウトの左上(ベースラインは pos.y + layout.ascent())。
-    virtual void draw_text(const TextLayout& layout, const Point& pos, const Color& color) = 0;
+    void draw_text(const TextLayout& layout, const Point& pos, const Color& color);
     /// 画像を矩形 dst(dp)に合わせて伸縮して描く。opacity は 0〜1(無効な部品のアイコンを薄くするときなど)。
     /// アイコン(Image::icon)は、色を決めていなければ黒で塗る(部品の文字の色で塗るには、下の tint を渡す形を使う)。
-    virtual void draw_image(const Image& image, const Rect& dst, float opacity = 1) = 0;
+    void draw_image(const Image& image, const Rect& dst, float opacity = 1);
 
     // ---- 手軽な描画(上の関数で描く) ----
     void stroke_path(const Path& path, float width, const Paint& paint, LineCap cap = LineCap::BUTT);
@@ -206,6 +210,17 @@ public:
     /// 画像を描く。アイコン(Image::icon)は tint で塗り、dst の大きさに合わせて線を引く(色を決めたアイコンはその色)。
     /// ほかの画像は tint を使わない。部品は文字の色を渡す。
     void draw_image(const Image& image, const Rect& dst, const Color& tint, float opacity = 1);
+
+private:
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    /// ライブラリの中だけで作る(描画先は backend。所有しない)。
+    explicit Canvas(Impl* backend) : d_(backend) {}
+    Canvas(const Canvas&) = delete;
+    Canvas& operator=(const Canvas&) = delete;
+
+    Impl* d_;
 };
 
 }  // namespace tokotachi

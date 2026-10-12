@@ -332,7 +332,7 @@ void WindowImpl::paint_tree(Widget* w)
     canvas.clip_rect(w->local_rect);
     if (!canvas.clip_bounds().is_empty())
     {
-        WidgetAccess::paint(w, canvas);
+        WidgetAccess::paint(w, canvas.api());
         const std::vector<Widget*>& children = WidgetAccess::children(w);
         for (std::size_t i = 0; i < children.size(); ++i)
         {
