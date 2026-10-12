@@ -1,4 +1,4 @@
-# C の API と Python のバインディングの CI(docs/adr/0041)。
+# C の API と Python のバインディングの CI(docs/adr/0065)。
 #   generated: 生成したファイル(C のヘッダ・C++ の実装・Python の宣言)が bindings/c/api.py と合っているか
 #   linux:     ライブラリ・C の API をビルドし、C++・C のテストと、Python の各版でのテストを動かす
 #   wheel:     pip で wheel を作り、入れたパッケージでテストを動かす

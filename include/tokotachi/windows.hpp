@@ -3,6 +3,7 @@
 #ifndef TOKOTACHI_WINDOWS_HPP
 #define TOKOTACHI_WINDOWS_HPP
 
+#include "windows/color_dialog.hpp"
 #include "windows/dialog.hpp"
 #include "windows/file_dialog.hpp"
 #include "windows/menu_bar.hpp"

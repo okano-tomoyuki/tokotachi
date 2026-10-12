@@ -1,6 +1,6 @@
 # Python のバインディング
 
-Tokotachi を Python から使う([ADR 0041](../adr/0041-c-api-and-python-bindings.md))。パッケージ `tokotachi`
+Tokotachi を Python から使う([ADR 0065](../adr/0065-c-api-and-python-bindings.md))。パッケージ `tokotachi`
 ([bindings/python/](../../bindings/python/))は、C の API([c-api.md](c-api.md))の共有ライブラリ `tokotachi_c` を ctypes で読む。
 Python 3.9 以上。
 
@@ -46,6 +46,7 @@ tt.bind(edit, 'text', name, 'value')          # 入力欄と Variable を結ぶ
 tt.bind(greeting, 'text', name, 'value')
 button.on_click = lambda sender: window.close()
 
+app.main_window = window                      # 閉じたら終える
 window.visible = True
 app.exec()
 ```
@@ -56,14 +57,14 @@ app.exec()
 
 | C++ | Python |
 |---|---|
-| `new tokotachi::Label(&window, "abc")` | `tt.Label(window, 'abc')`(親・所有者は省略できる) |
+| `new tokotachi::Label(window, "abc")` | `tt.Label(window, 'abc')`(親・所有者は省略できる) |
 | `label->text = "abc"` / `std::string s = label->text` | `label.text = 'abc'` / `s = label.text`(読み取り専用に代入すると AttributeError) |
 | `button->on_click = [](tokotachi::Object* sender) { ... }` | `button.on_click = lambda sender: ...`(None で外す) |
 | `on_mouse_down`(`MouseEvent& e`) | `def f(sender, e)`。`e.pos`・`e.button`・`e.accepted = False` など |
 | `on_paint`(`Canvas& canvas`) | `def f(sender, canvas)`。canvas はハンドラの中だけで使える |
 | `on_close`(`bool& can_close`) | `def f(sender, e)`。`e.can_close = False` で閉じない |
 | `tokotachi::Rect(0, 0, 10, 10)`・`Color::rgb(0x336699)` | `tt.Rect(0, 0, 10, 10)`(タプルも可)・`tt.Color.rgb(0x336699)` |
-| `label->color = ColorRole::TEXT_SECONDARY` | `label.color = tt.ColorRole.TEXT_SECONDARY`(Color も可) |
+| `label->color = ColorRole::TEXT_SECONDARY` | `label.text_color = tt.ColorRole.TEXT_SECONDARY`(Color も可) |
 | `label->font = Font(22)`・`layout->margins = Margins(24)` | `label.font = 22`・`layout.margins = 24`(数でもよい) |
 | `action->shortcut = "Ctrl+S"` | `action.shortcut = 'Ctrl+S'` |
 | `tokotachi::bind(edit->text, name->value)` | `tt.bind(edit, 'text', name, 'value')` |
@@ -79,10 +80,13 @@ app.exec()
 - C++ の Object 1 つに、Python の Object は 1 つ(`label.parent is window`)。
 - **所有者のある Object**(親のあるウィジェット・レイアウト・所有者を渡した Timer など)は、C++ の所有者が寿命を決める。Python の変数が
   無くなっても残り、`window.children` などから同じ Python の Object(付けた属性ごと)が返る。
-- **Python で作った所有者の無い Object**(Window・親の無いウィジェット・所有者を渡さない Timer など)は、Python の Object が無くなったときに
-  破棄する(PyQt と同じ)。ウィンドウを開いている間は、変数に入れておく。
+- **ウィンドウ**は、所有者を渡さなければ Application が、`tt.Window(owner, '題', 360, 120)` なら owner が所有する
+  ([ADR 0062](../adr/0062-window-ownership-and-quit.md))。Python の変数が無くなっても残る。閉じた後に破棄するときは
+  `destroy_on_close = True`、閉じたら終えるウィンドウは `app.main_window` に入れる。
+- **Python で作った所有者の無い Object**(親の無いウィジェット・所有者を渡さない Timer など)は、Python の Object が無くなったときに
+  破棄する(PyQt と同じ)。
 - `obj.delete()` ですぐに破棄する。C++ の Object が破棄された後に触ると `RuntimeError`(`obj.is_deleted` で確かめられる)。
-- Python が終わるときに、所有者の無い Object を破棄してから Application を破棄する。
+- Python が終わるときに、所有者の無い Object を破棄してから Application を破棄する(残っているウィンドウも一緒に破棄される)。
 
 ## 失敗とスレッド
 

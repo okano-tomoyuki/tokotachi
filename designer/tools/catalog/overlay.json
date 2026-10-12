@@ -12,11 +12,17 @@
     "SpinBox": { "kind": "widget", "category": "input" },
     "Slider": { "kind": "widget", "category": "input" },
     "ComboBox": { "kind": "widget", "category": "input" },
+    "DateEdit": { "kind": "widget", "category": "input" },
+    "ColorButton": { "kind": "widget", "category": "input" },
+    "Calendar": { "kind": "widget", "category": "input" },
     "Label": { "kind": "widget", "category": "display" },
     "ProgressBar": { "kind": "widget", "category": "display" },
+    "ImageBox": { "kind": "widget", "category": "display" },
     "ListView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "TreeView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
+    "TableView": { "kind": "widget", "category": "view", "child_keys": ["columns"] },
     "Widget": { "kind": "widget", "category": "container", "accepts_children": true },
+    "GroupBox": { "kind": "widget", "category": "container", "accepts_children": true },
     "TabWidget": { "kind": "widget", "category": "container", "child_keys": ["tabs"] },
     "Splitter": { "kind": "widget", "category": "container", "child_keys": ["panes"] },
     "ScrollArea": { "kind": "widget", "category": "container", "child_keys": ["content"] },
@@ -49,6 +55,7 @@
     "TextInputBase": ["cursor_position"],
     "ScrollArea": ["content", "scroll_position"],
     "ItemView": ["model", "current"],
+    "TableView": ["current_column"],
     "Window": ["menu_bar", "tool_bar", "status_bar"]
   },
   "designable": {},
@@ -61,6 +68,26 @@
     "TabWidget": ["current_index"],
     "Splitter": ["sizes"]
   },
+  "$comment_range": "数値のプロパティの範囲(ヘッダの説明に書いたもの)。min・max は数値か、同じ部品のプロパティ({ \"property\": 名前 })か、配列のプロパティ・子の数に offset を足したもの({ \"count\": 名前, \"offset\": -1 })。インスペクタは確定した値を範囲に収め、検証は範囲の外を警告する。",
+  "range": {
+    "Widget.width": { "min": 0 },
+    "Widget.height": { "min": 0 },
+    "RangeBase.value": { "min": { "property": "minimum" }, "max": { "property": "maximum" } },
+    "RangeBase.single_step": { "min": 0 },
+    "RangeBase.page_step": { "min": 0 },
+    "ProgressBar.value": { "min": { "property": "minimum" }, "max": { "property": "maximum" } },
+    "SpinBox.decimals": { "min": 0, "max": 10 },
+    "ComboBox.current_index": { "min": -1, "max": { "count": "items", "offset": -1 } },
+    "TabWidget.current_index": { "min": -1, "max": { "count": "tabs", "offset": -1 } },
+    "ItemView.sort_column": { "min": -1, "max": { "count": "columns", "offset": -1 } },
+    "TreeView.indentation": { "min": 8 },
+    "Timer.interval": { "min": 0 },
+    "BoxLayout.spacing": { "min": 0 },
+    "GridLayout.row_spacing": { "min": 0 },
+    "GridLayout.column_spacing": { "min": 0 },
+    "SplitterPane.stretch": { "min": 0 },
+    "Column.width": { "min": 24 }
+  },
   "editor": {
     "TextEdit.text": "multiline",
     "Label.text": "multiline",
@@ -71,5 +98,5 @@
   "extra_enums": ["Align", "Anchor", "DialogButton", "ColorRole"],
   "extra_values": ["Placement", "Color"],
   "$comment_special_values": "メンバではなく専用の書き方で表す値の型(docs/designer/dsl-spec.md §5)。",
-  "special_values": ["ThemeColor", "Shortcut", "Image"]
+  "special_values": ["ThemeColor", "Shortcut", "Image", "ThemeOverride", "Date"]
 }

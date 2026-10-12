@@ -34,7 +34,7 @@ def main():
     row_box.add(edit, 1)
     column.add(row)
     greeting = tt.Label(window)
-    greeting.color = tt.ColorRole.TEXT_SECONDARY
+    greeting.text_color = tt.ColorRole.TEXT_SECONDARY
     column.add(greeting)
     tt.bind(edit, 'text', name, 'value')
     name.on_change = lambda sender: status_bar.show_message('名前を変えました', 2000)

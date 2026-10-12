@@ -4,6 +4,7 @@
 import {
   COLOR_PATTERN,
   getCatalog,
+  parseThemeOverride,
   type PrimitiveType,
   type PropertyType,
   type PropertyValue,
@@ -79,14 +80,49 @@ function color(hex: string): string {
   return `tokotachi::Color(${parts.join(', ')})`;
 }
 
+/** プロジェクトに登録したテーマの関数の呼び出し(project-spec.md §4.2)。 */
+export function themeFunction(preset: string): string {
+  return `${preset}_theme()`;
+}
+
+/** テーマの上書きを 1 つの式に(`tokotachi::ThemeOverride().set(...).set_radius(0)`。docs/adr/0042)。 */
+export function themeOverrideValue(value: unknown): string {
+  const parsed = parseThemeOverride(value);
+  const calls = [
+    ...parsed.colors.map(({ role, light, dark }) =>
+      light === dark
+        ? `.set(${enumValue('ColorRole', role)}, ${color(light)})`
+        : `.set(${enumValue('ColorRole', role)}, ${color(light)}, ${color(dark)})`,
+    ),
+    ...parsed.dimensions.map(({ name, value: v }) => `.set_${name}(${number(v, 'float')})`),
+  ];
+  // プロジェクトに登録したテーマは、共通のヘッダの関数(<名前>_theme())から始める
+  const base =
+    parsed.preset === undefined ? 'tokotachi::ThemeOverride()' : themeFunction(parsed.preset);
+  return `${base}${calls.join('')}`;
+}
+
 /** 値の型(Margins・Size 等)。 */
 function valueType(name: string, value: PropertyValue): string {
+  if (name === 'ThemeOverride') {
+    return themeOverrideValue(value);
+  }
   if (name === 'ThemeColor') {
     const text = scalarText(value);
     return COLOR_PATTERN.test(text) ? color(text) : enumValue('ColorRole', text);
   }
   if (name === 'Shortcut') {
     return `tokotachi::Shortcut(${cppString(scalarText(value))})`;
+  }
+  if (name === 'Date') {
+    // 「2026-10-11」→ Date(2026, 10, 11)。空なら空の日付
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(scalarText(value));
+    return m
+      ? `tokotachi::Date(${String(Number(m[1]))}, ${String(Number(m[2]))}, ${String(Number(m[3]))})`
+      : 'tokotachi::Date()';
+  }
+  if (name === 'Color' && typeof value === 'string') {
+    return color(value);
   }
   if (name === 'Margins' && typeof value === 'number') {
     return `tokotachi::Margins(${number(value, 'float')})`;
@@ -101,10 +137,24 @@ function valueType(name: string, value: PropertyValue): string {
       return `tokotachi::Point(${floats([member(o, 'x', 0), member(o, 'y', 0)])})`;
     case 'Rect':
       return `tokotachi::Rect(${floats(['x', 'y', 'width', 'height'].map((m) => member(o, m, 0)))})`;
-    case 'Font':
-      return 'size' in o
-        ? `tokotachi::Font(${floats([member(o, 'size', 0)])})`
-        : 'tokotachi::Font()';
+    case 'Color':
+      return `tokotachi::Color(${['r', 'g', 'b', 'a'].map((m) => String(Math.round(member(o, m, m === 'a' ? 255 : 0)))).join(', ')})`;
+    case 'Font': {
+      // 後ろの既定値(太字・斜体でない)は省く: Font(18)・Font(18, true)・Font(18, false, true)
+      const bold = o['bold'] === true;
+      const italic = o['italic'] === true;
+      if (!('size' in o) && !bold && !italic) {
+        return 'tokotachi::Font()';
+      }
+      const args = [floats([member(o, 'size', 14)])];
+      if (bold || italic) {
+        args.push(String(bold));
+      }
+      if (italic) {
+        args.push('true');
+      }
+      return `tokotachi::Font(${args.join(', ')})`;
+    }
     default:
       throw new Error(`unsupported value type: ${name}`);
   }

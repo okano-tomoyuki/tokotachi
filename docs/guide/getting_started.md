@@ -23,12 +23,19 @@ SDL3・FreeType・HarfBuzz などの依存ライブラリは、Tokotachi がソ�
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(tokotachi GIT_REPOSITORY <リポジトリ> GIT_TAG <タグ>)
+FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.3.0)
 FetchContent_MakeAvailable(tokotachi)
 
 add_executable(app main.cpp)
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
+
+### ビルドしたパッケージを使う
+
+[GitHub の Release](https://github.com/okano-tomoyuki/tokotachi/releases) に、Linux(x86_64・aarch64)と Windows(MSYS2 の MINGW64)の
+パッケージがあります(`-shared` が共有ライブラリ、`-static` が静的ライブラリ)。展開したフォルダを `<prefix>` として、下の
+`find_package` か pkg-config で使います。ビルドした環境(コンパイラ・glibc)はパッケージの `BUILD_INFO.txt` にあります。C++ のライブラリなので、
+同じ系統のコンパイラで使ってください(Windows は MSYS2 の MINGW64 の GCC)。
 
 ### インストールして使う
 
@@ -39,7 +46,7 @@ cmake --install build --prefix <prefix>
 ```
 
 ```cmake
-find_package(tokotachi 0.1 REQUIRED)          # -DCMAKE_PREFIX_PATH=<prefix>
+find_package(tokotachi 0.3 REQUIRED)          # -DCMAKE_PREFIX_PATH=<prefix>
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
 
@@ -64,16 +71,19 @@ exe 1 つで配りたいときは `-DTOKOTACHI_SHARED=OFF` で静的ライブラ
 
 int main(int argc, char** argv)
 {
-    tokotachi::Application app(argc, argv);          // 最初に 1 つ作る
-    tokotachi::Window window("最初のウィンドウ", 400, 200);
-    new tokotachi::Label(&window, "こんにちは");     // window が所有する(delete しない)
-    window.visible = true;
-    return app.exec();                               // 最後のウィンドウを閉じると戻る
+    tokotachi::Application app(argc, argv);          // 最初に 1 つ作る(これだけスタックに置く)
+    tokotachi::Window* window_main = new tokotachi::Window("最初のウィンドウ", 400, 200);   // app が所有する
+    new tokotachi::Label(window_main, "こんにちは");     // window_main が所有する(delete しない)
+    app.main_window = window_main;                   // このウィンドウを閉じると exec() から戻る
+    window_main->visible = true;
+    return app.exec();
 }
 ```
 
-- `Application` を最初に作り、`exec()` でイベントループを回します。
-- 部品は親を渡して `new` で作ります。親が破棄されると子も破棄されるので、`delete` は書きません。
+- `Application` を最初に作り、`exec()` でイベントループを回します。`Application` は main の中でスタックに置きます。
+- ウィンドウ・部品は `new` で作ります。ウィンドウは `Application` が、部品は親が所有し、所有者が破棄されると一緒に破棄されるので、
+  `delete` は書きません(@ref basics)。
+- `main_window` を決めると、そのウィンドウを閉じたときに `exec()` から戻ります。決めなければ、最後のウィンドウを閉じたときに戻ります。
 - 大きさと位置の単位は dp(倍率 1 のときのピクセル)です。高 DPI の画面では自動で拡大されます。
 
 ## 版を調べる

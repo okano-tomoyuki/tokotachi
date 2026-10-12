@@ -1,5 +1,19 @@
 /// @file
-/// スクロールバー(docs/adr/0021)。value は 0 から maximum まで。
+/// tokotachi::ScrollBar の宣言。
+#ifndef TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
+#define TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
+
+#include "../core/export.hpp"
+#include "../layout/alignment.hpp"
+#include "range_base.hpp"
+
+namespace tokotachi
+{
+
+/// スクロールバー(docs/adr/0021)。値・範囲・刻みは RangeBase のもの(docs/adr/0058)。
+///
+/// value は minimum(既定 0)から maximum まで。maximum は動かせる量(中身の長さ - 見えている長さ。既定 0 で、動かせない)、
+/// page_step は見えている長さ(つまみの大きさと、溝のクリックで動く量)、single_step はホイールの 1 目盛りで動く量(dp、既定 48)。
 ///
 /// @code
 /// tokotachi::ScrollBar* scroll_bar = new tokotachi::ScrollBar(panel, tokotachi::Orientation::VERTICAL);
@@ -9,32 +23,17 @@
 /// @endcode
 ///
 /// つまみのドラッグ、溝のクリック(1 ページ分)、ホイール(single_step × 目盛り)で動かす。
-#ifndef TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
-#define TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
-
-#include "../layout/alignment.hpp"
-#include "widget.hpp"
-
-namespace tokotachi
-{
-
-class ScrollBar : public Widget
+///
+/// @ingroup widgets_base
+class TOKOTACHI_API ScrollBar : public RangeBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ScrollBar(Widget* parent = nullptr, Orientation orientation = Orientation::VERTICAL);
+    ~ScrollBar() override;
 
+    /// 向き。
     Property<Orientation> orientation;
-    /// 位置(0 から maximum。範囲の外の値は丸める)。
-    Property<float> value;
-    /// 動かせる量(中身の長さ - 見えている長さ。0 なら動かせない)。小さくすると value も丸める。
-    Property<float> maximum;
-    /// 見えている長さ(つまみの大きさと、溝のクリックで動く量)。
-    Property<float> page_step;
-    /// ホイールの 1 目盛りで動く量(dp、既定 48)。
-    Property<float> single_step;
-
-    /// value が変わった(利用者の操作・代入のどちらでも)。
-    Property<NotifyHandler> on_change;
 
     /// スクロールバーの太さ(dp)。
     static const float THICKNESS;
@@ -51,32 +50,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    Orientation get_orientation() const { return orientation_; }
-    void set_orientation(const Orientation& v);
-    float get_value() const { return value_; }
-    void set_value(const float& v);
-    float get_maximum() const { return maximum_; }
-    void set_maximum(const float& v);
-    float get_page_step() const { return page_step_; }
-    void set_page_step(const float& v);
-    float get_single_step() const { return single_step_; }
-    void set_single_step(const float& v);
-
-    /// 溝の長さ・つまみの位置と長さ(並ぶ向き、dp)。
-    float track_length() const;
-    void thumb(float& pos, float& len) const;
-    /// 並ぶ向きの座標。
-    float along(const Point& p) const;
-
-    Orientation orientation_;
-    float value_;
-    float maximum_;
-    float page_step_;
-    float single_step_;
-    NotifyHandler on_change_;
-    bool hovered_;
-    bool dragging_;
-    float drag_offset_;  ///< つまみの始めから、押した位置まで
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

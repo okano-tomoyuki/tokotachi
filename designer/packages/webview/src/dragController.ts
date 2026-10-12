@@ -4,12 +4,15 @@
  * 動かさずに離したら、クリックとして扱う(パレットなら、選んでいる部品の後ろ・入れ物の終わりに足す)。
  */
 import {
+  endOfLayout,
   findOutlineNode,
+  newComponentWidget,
   newWidget,
   valueAt,
   type OutlineNode,
   type Slot,
   type TtuiDocument,
+  type JsonPath,
 } from '@tokotachi-designer/core';
 import type { Drag } from './dropTarget.ts';
 import { sendEdit, useDesigner, type Ghost } from './store.ts';
@@ -85,7 +88,10 @@ function drop(): void {
 function insert(document: TtuiDocument, drag: Drag, slot: Slot): void {
   switch (drag.kind) {
     case 'new': {
-      const widget = newWidget(document, drag.class);
+      const widget =
+        drag.component === undefined
+          ? newWidget(document, drag.class)
+          : newComponentWidget(document, drag.component);
       sendEdit({ kind: 'addWidget', slot, widget }, widget.name);
       return;
     }
@@ -100,8 +106,20 @@ function insert(document: TtuiDocument, drag: Drag, slot: Slot): void {
       }
       return;
     case 'move': {
-      const name = (valueAt(document, drag.path) as { name?: string } | undefined)?.name;
-      sendEdit({ kind: 'moveWidget', target: drag.path, slot }, name);
+      const nameOf = (path: JsonPath): string | undefined =>
+        (valueAt(document, path) as { name?: string } | undefined)?.name;
+      if (drag.group && drag.group.length > 1) {
+        // 移した後も同じ部品を選ぶ(主に選んでいた、つかんだ部品を最初に)
+        const names = [drag.path, ...drag.group.map((g) => g.path)].flatMap((p) => {
+          const n = nameOf(p);
+          return n === undefined ? [] : [n];
+        });
+        sendEdit({ kind: 'moveWidgets', targets: drag.group.map((g) => g.path), slot }, [
+          ...new Set(names),
+        ]);
+        return;
+      }
+      sendEdit({ kind: 'moveWidget', target: drag.path, slot }, nameOf(drag.path));
       return;
     }
   }
@@ -111,31 +129,11 @@ interface Json {
   readonly [key: string]: unknown;
 }
 
-/** レイアウトの終わりのスロット(GridLayout は新しい行の 0 列)。 */
-function endOf(document: TtuiDocument, layoutPath: readonly (string | number)[]): Slot | undefined {
-  const layout = valueAt(document, layoutPath) as Json | undefined;
-  if (!layout) {
-    return undefined;
-  }
-  const items = (layout['items'] as Json[] | undefined) ?? [];
-  if (layout['class'] === 'GridLayout') {
-    const row = items.reduce(
-      (m, i) => Math.max(m, Number(i['row'] ?? 0) + Number(i['row_span'] ?? 1)),
-      0,
-    );
-    return { kind: 'item', layout: layoutPath, index: items.length, row, column: 0 };
-  }
-  if (layout['class'] === 'PlaceLayout') {
-    return { kind: 'item', layout: layoutPath, index: items.length, x: 8, y: 8 };
-  }
-  return { kind: 'item', layout: layoutPath, index: items.length };
-}
-
 /**
  * クリックで足す場所: 選んでいるのがレイアウトの中の部品(BoxLayout)ならその後ろ、レイアウトを持つ入れ物ならその終わり、
  * それ以外はウィンドウのレイアウトの終わり(レイアウトが無ければ左上)。
  */
-function slotForClick(
+export function slotForClick(
   document: TtuiDocument,
   roots: readonly OutlineNode[],
   selection: string | undefined,
@@ -144,10 +142,10 @@ function slotForClick(
   const path = node?.path ?? ['window'];
   const json = valueAt(document, path) as Json | undefined;
   if (json?.['layout'] !== undefined) {
-    return endOf(document, [...path, 'layout']);
+    return endOfLayout(document, [...path, 'layout']);
   }
   if (node?.kind === 'layout') {
-    return endOf(document, path);
+    return endOfLayout(document, path);
   }
   if (path[path.length - 1] === 'widget' && path[path.length - 3] === 'items') {
     const layoutPath = path.slice(0, -3);
@@ -155,10 +153,10 @@ function slotForClick(
     if (layout?.['class'] === 'BoxLayout') {
       return { kind: 'item', layout: layoutPath, index: Number(path[path.length - 2]) + 1 };
     }
-    return endOf(document, layoutPath);
+    return endOfLayout(document, layoutPath);
   }
   if (document.window.layout) {
-    return endOf(document, ['window', 'layout']);
+    return endOfLayout(document, ['window', 'layout']);
   }
   return { kind: 'child', parent: ['window'], x: 8, y: 8 };
 }

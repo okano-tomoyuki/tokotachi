@@ -1,4 +1,4 @@
-# C API(docs/adr/0041)。ライブラリの C++ のオブジェクトと依存ライブラリを中に入れた、単独の共有ライブラリ tokotachi_c を作る。
+# C API(docs/adr/0065)。ライブラリの C++ のオブジェクトと依存ライブラリを中に入れた、単独の共有ライブラリ tokotachi_c を作る。
 # 公開するのは tokotachi_* の C の関数だけ(C++ の ABI に依らないので、Python などのバインディングから読み込める)。
 #
 # ヘッダ(include/tokotachi/tokotachi.h)と src/generated.cpp は api.py から generate.py で作る(手で書き換えない)。
@@ -11,7 +11,8 @@ add_library(tokotachi_c SHARED
 add_library(tokotachi::tokotachi_c ALIAS tokotachi_c)
 target_include_directories(tokotachi_c PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_include_directories(tokotachi_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
+# 破棄の通知(src/core/object_impl.hpp の detail::add_destroy_observer。docs/adr/0057)を使う。
+target_include_directories(tokotachi_c PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
 target_compile_features(tokotachi_c PRIVATE cxx_std_11)
 target_compile_options(tokotachi_c PRIVATE -Wall -Wextra -pedantic)
 # C API の実装の関数は TOKOTACHI_C_API の付いたものだけを公開する。

@@ -1,8 +1,27 @@
 /// @file
+/// tokotachi::Action の宣言。
+#ifndef TOKOTACHI_ACTIONS_ACTION_HPP
+#define TOKOTACHI_ACTIONS_ACTION_HPP
+
+#include <string>
+#include <vector>
+
+#include "../core/export.hpp"
+#include "../core/event.hpp"
+#include "../graphics/image.hpp"
+#include "../core/property.hpp"
+#include "shortcut.hpp"
+
+namespace tokotachi
+{
+
+class Menu;
+class Widget;
+
 /// 利用者が実行できる操作(docs/adr/0027)。メニューの項目・ショートカットのキーが同じ Action を指す。
 ///
 /// @code
-/// tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
+/// tokotachi::Action* action_save = new tokotachi::Action(window_main, "保存(&S)");
 /// action_save->shortcut = "Ctrl+S";
 /// action_save->on_trigger = [](tokotachi::Object*) { ... };
 /// menu_file->add_action(action_save);   // メニューバーのメニューに入れると、Ctrl+S もウィンドウ全体で効く
@@ -16,37 +35,20 @@
 /// 右クリックのメニューに入れただけの Action のショートカットは、表示だけで、キーでは実行しない。
 ///
 /// text の「&」の次の文字はニーモニック(メニューを開いているときに押すと選ぶ。「&&」は「&」そのもの)。
-#ifndef TOKOTACHI_ACTIONS_ACTION_HPP
-#define TOKOTACHI_ACTIONS_ACTION_HPP
-
-#include <string>
-#include <vector>
-
-#include "../core/event.hpp"
-#include "../graphics/image.hpp"
-#include "../core/property.hpp"
-#include "shortcut.hpp"
-
-namespace tokotachi
-{
-
-class Menu;
-class Widget;
-
-namespace detail
-{
-struct ActionAccess;
-}
-
-class Action : public Object
+///
+/// @ingroup actions
+class TOKOTACHI_API Action : public Object
 {
 public:
+    /// 所有者と文字から作る。
     explicit Action(Object* owner = nullptr, const std::string& text = std::string());
     ~Action();
 
+    /// メニューの項目・ツールバーのボタンに出す文字(& でニーモニック)。
     Property<std::string> text;
+    /// ショートカット(Action を加えたウィジェットの中にフォーカスがあるときに効く)。
     Property<Shortcut> shortcut;
-    /// ツールバーのボタンに出す画像(メニューには出さない)。
+    /// ツールバーのボタン・メニューの項目に出す画像(メニューでは文字の前。checkable でチェックしているなら画像を枠で囲む)。
     Property<Image> icon;
     /// ツールバーのボタンのツールチップ(空なら、text とショートカットから作る)。
     Property<std::string> tooltip;
@@ -54,6 +56,7 @@ public:
     Property<bool> enabled;
     /// checkable なら、実行するたびに checked を反転する(メニューではチェックの印を出す)。
     Property<bool> checkable;
+    /// チェックしているか(checkable のとき)。
     Property<bool> checked;
 
     /// 実行された(メニューで選んだ・ショートカットを押した・trigger を呼んだ)。checked は反転した後。
@@ -63,28 +66,10 @@ public:
     void trigger();
 
 private:
-    friend struct detail::ActionAccess;
-
-    void set_text(const std::string& v);
-    void set_shortcut(const Shortcut& v);
-    void set_icon(const Image& v);
-    void set_tooltip(const std::string& v);
-    void set_enabled(const bool& v);
-    void set_checkable(const bool& v);
-    void set_checked(const bool& v);
-    void changed();
-
-    std::string text_;
-    Shortcut shortcut_;
-    Image icon_;
-    std::string tooltip_;
-    bool enabled_;
-    bool checkable_;
-    bool checked_;
-    NotifyHandler on_trigger_;
-    /// この Action を入れたメニュー・ウィジェット(破棄するときに外すため)。
-    std::vector<Menu*> menus_;
-    std::vector<Widget*> widgets_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

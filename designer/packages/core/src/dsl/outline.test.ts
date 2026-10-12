@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SAMPLE } from '../testing.ts';
-import { findOutlineNode, flattenOutline, outline } from './outline.ts';
+import { findOutlineNode, flattenOutline, hiddenOutlineNodes, outline } from './outline.ts';
 
 describe('outline', () => {
   const roots = outline(SAMPLE);
@@ -47,5 +47,30 @@ describe('outline', () => {
       'action_quit',
       'action_details',
     ]);
+  });
+
+  it('visible を false と書いた部品と、その子孫を非表示とする(ウィンドウは除く)', () => {
+    const doc = JSON.parse(JSON.stringify(SAMPLE)) as {
+      window: {
+        properties?: Record<string, unknown>;
+        layout: { items: { widget: { properties?: Record<string, unknown> } }[] };
+      };
+    };
+    doc.window.properties = { ...doc.window.properties, visible: false };
+    const row = doc.window.layout.items[0]?.widget;
+    if (!row) {
+      throw new Error('row_search');
+    }
+    row.properties = { ...row.properties, visible: false };
+    const tree = outline(doc as never);
+    const hidden = hiddenOutlineNodes(doc as never, tree);
+    expect(hidden.get('window/layout/items/0/widget')).toBe('self');
+    const descendants = flattenOutline(
+      findOutlineNode(tree, 'window/layout/items/0/widget')?.children ?? [],
+    );
+    expect(descendants.length).toBeGreaterThan(0);
+    expect(descendants.every((n) => hidden.get(n.id) === 'ancestor')).toBe(true);
+    expect(hidden.has('window')).toBe(false);
+    expect(hiddenOutlineNodes(SAMPLE, outline(SAMPLE)).size).toBe(0);
   });
 });

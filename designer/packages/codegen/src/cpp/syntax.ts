@@ -10,6 +10,11 @@ export function cppSyntax(className: string): LanguageSyntax {
     blankLinesBeforeAppended: 1,
     // className とハンドラの名前は識別子の検証を通っているので、正規表現の特殊文字を含まない
     hasHandler: (text, name) => new RegExp(`\\b${className}::${name}\\s*\\(`).test(text),
+    // 定義の行(`void MainWindow::button_ok_click(...)`)
+    handlerLine: (lines, name) => {
+      const re = new RegExp(`^\\s*void\\s+${className}::${name}\\s*\\(`);
+      return lines.findIndex((l) => re.test(l));
+    },
     // stubs のマーカーが無ければ、名前空間の終わりの区間の前(無ければ末尾)に足す
     fallbackStubLine: (lines) => {
       const end = lines.findIndex((l) =>

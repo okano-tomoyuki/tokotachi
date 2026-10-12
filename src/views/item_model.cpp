@@ -4,18 +4,25 @@
 
 #include <tokotachi/views/item_view.hpp>
 
+#include "item_model_impl.hpp"
+#include "item_view_impl.hpp"
+#include "../core/impl.hpp"
+
 namespace tokotachi
 {
 
-ItemModel::ItemModel(Object* owner_object) : Object(owner_object) {}
+ItemModel::ItemModel(Object* owner_object) : Object(owner_object),
+      d_(new Impl(this))
+{}
 
 ItemModel::~ItemModel()
 {
     // ビューは model を nullptr にする(views_ から自分を除く)。
-    while (!views_.empty())
+    while (!d_->views_.empty())
     {
-        views_.back()->model_destroyed();
+        d_->views_.back()->d_->model_destroyed();
     }
+    delete d_;
 }
 
 ModelIndex ItemModel::index(int row, const ModelIndex& parent) const
@@ -38,6 +45,22 @@ bool ItemModel::checkable(const ModelIndex&) const { return false; }
 bool ItemModel::checked(const ModelIndex&) const { return false; }
 
 void ItemModel::set_checked(const ModelIndex&, bool) {}
+
+ThemeColor ItemModel::text_color(const ModelIndex&, int) const { return ThemeColor(); }
+
+Font ItemModel::font(const ModelIndex&, int) const { return Font(); }
+
+bool ItemModel::editable(const ModelIndex&, int) const { return false; }
+
+void ItemModel::set_text(const ModelIndex&, int, const std::string&) {}
+
+bool ItemModel::can_move_rows(const std::vector<ModelIndex>&, const ModelIndex&, int) const { return false; }
+
+bool ItemModel::move_rows(const std::vector<ModelIndex>&, const ModelIndex&, int) { return false; }
+
+bool ItemModel::can_drop(const DragData&, const ModelIndex&, int) const { return false; }
+
+bool ItemModel::drop_data(const DragData&, DropAction, const ModelIndex&, int) { return false; }
 
 void ItemModel::sort(int, SortOrder) {}
 
@@ -64,27 +87,27 @@ void for_each_view(const std::vector<ItemView*>& views, F call)
 
 void ItemModel::notify_rows_inserted(const ModelIndex& parent, int first, int count)
 {
-    for_each_view(views_, [&](ItemView* v) { v->model_rows_inserted(parent, first, count); });
+    for_each_view(d_->views_, [&](ItemView* v) { v->d_->model_rows_inserted(parent, first, count); });
 }
 
 void ItemModel::notify_rows_removing(const ModelIndex& parent, int first, int count)
 {
-    for_each_view(views_, [&](ItemView* v) { v->model_rows_removing(parent, first, count); });
+    for_each_view(d_->views_, [&](ItemView* v) { v->d_->model_rows_removing(parent, first, count); });
 }
 
 void ItemModel::notify_data_changed(const ModelIndex& index)
 {
-    for_each_view(views_, [&](ItemView* v) { v->model_data_changed(index); });
+    for_each_view(d_->views_, [&](ItemView* v) { v->d_->model_data_changed(index); });
 }
 
 void ItemModel::notify_layout_changed()
 {
-    for_each_view(views_, [](ItemView* v) { v->model_layout_changed(); });
+    for_each_view(d_->views_, [](ItemView* v) { v->d_->model_layout_changed(); });
 }
 
 void ItemModel::notify_reset()
 {
-    for_each_view(views_, [](ItemView* v) { v->model_reset(); });
+    for_each_view(d_->views_, [](ItemView* v) { v->d_->model_reset(); });
 }
 
 }  // namespace tokotachi

@@ -1,4 +1,4 @@
-"""Python のバインディングの土台(docs/adr/0041・docs/bindings/python.md)。
+"""Python のバインディングの土台(docs/adr/0065・docs/bindings/python.md)。
 
 C API の共有ライブラリ(tokotachi_c)を ctypes で読み、値の変換・Object の寿命・ハンドラ・描画の型を受け持つ。
 クラスとプロパティは _api.py(api.py から生成したもの)にある。
@@ -1146,8 +1146,8 @@ class Path:
         _lib.tokotachi_path_add_polyline(self._p, array, len(points), close)
         return self
 
-    def empty(self):
-        return bool(_lib.tokotachi_path_empty(self._p))
+    def is_empty(self):
+        return bool(_lib.tokotachi_path_is_empty(self._p))
 
 
 class TextLayout:
@@ -1351,6 +1351,32 @@ class _ApplicationMixin:
     @staticmethod
     def instance():
         return _wrap(_lib.tokotachi_application_instance())
+
+
+class _WindowMixin:
+    """Window(title, width, height) は Application が、Window(owner, title, width, height) は owner が所有する(docs/adr/0062)。
+
+    参照が無くなっても破棄しない。閉じた後に破棄するときは destroy_on_close を True にするか、delete() を呼ぶ。
+    """
+
+    def __init__(self, *args, **kwargs):
+        owner = None
+        if args and isinstance(args[0], _CLASSES['Window']):
+            owner, args = args[0], args[1:]
+        elif 'owner' in kwargs:
+            owner = kwargs.pop('owner')
+        params = dict(zip(('title', 'width', 'height'), args))
+        params.update(kwargs)
+        title = params.pop('title', '')
+        width = params.pop('width', 640)
+        height = params.pop('height', 480)
+        if params:
+            raise TypeError('unexpected arguments: %s' % ', '.join(params))
+        if owner is None:
+            p = _lib.tokotachi_window_new(_in_string(title), width, height)
+        else:
+            p = _lib.tokotachi_window_new_owned(_in_obj(owner, 'Window'), _in_string(title), width, height)
+        self._attach(p, True)
 
 
 class _MessageDialogMixin:

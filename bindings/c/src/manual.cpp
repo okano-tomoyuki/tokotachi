@@ -3,8 +3,11 @@
 
 #include <SDL3/SDL.h>
 
+#include "core/object_impl.hpp"
+
 #include <cstdlib>
 #include <cstring>
+#include <map>
 
 namespace c = tokotachi::c;
 using tokotachi::Object;
@@ -43,77 +46,35 @@ const tokotachi::TextLayout& layout_of(const tokotachi_text_layout* layout)
 
 // ---- 利用者のデータ(tokotachi_object_set_user_data) ----
 
-/// 対象の Object が所有する、見えない Object。対象と一緒に破棄されるときに destroy を呼ぶ。
-class UserDataHolder : public Object
+struct UserDataEntry
 {
-public:
-    UserDataHolder(Object* target, void* data, tokotachi_destroy_fn destroy)
-        : Object(target), data_(data), destroy_(destroy)
-    {
-    }
-
-    ~UserDataHolder()
-    {
-        if (destroy_)
-        {
-            destroy_(data_);
-        }
-    }
-
-    void* data() const { return data_; }
-
-private:
-    void* data_;
-    tokotachi_destroy_fn destroy_;
+    void* data;
+    tokotachi_destroy_fn destroy;
 };
 
-/// target の UserDataHolder(登録の表。Object は所有しているものを外に見せないため)。
-std::vector<std::pair<Object*, UserDataHolder*> >& holders()
+/// Object ごとの利用者のデータ(メインスレッドだけで触る)。
+std::map<Object*, UserDataEntry>& user_data()
 {
-    static std::vector<std::pair<Object*, UserDataHolder*> >* list =
-        new std::vector<std::pair<Object*, UserDataHolder*> >();
-    return *list;
+    static std::map<Object*, UserDataEntry>* entries = new std::map<Object*, UserDataEntry>();
+    return *entries;
 }
 
-UserDataHolder* holder_of(Object* target)
+/// Object の破棄の通知(docs/adr/0057 の detail::add_destroy_observer)。利用者のデータがあれば destroy を呼ぶ。
+void object_destroyed(Object* object, void*)
 {
-    std::vector<std::pair<Object*, UserDataHolder*> >& list = holders();
-    for (std::size_t i = 0; i < list.size(); ++i)
+    std::map<Object*, UserDataEntry>& entries = user_data();
+    std::map<Object*, UserDataEntry>::iterator it = entries.find(object);
+    if (it == entries.end())
     {
-        if (list[i].first == target)
-        {
-            return list[i].second;
-        }
+        return;
     }
-    return nullptr;
+    const UserDataEntry e = it->second;
+    entries.erase(it);
+    if (e.destroy)
+    {
+        e.destroy(e.data);
+    }
 }
-
-/// 表から外す UserDataHolder。
-class TrackedHolder : public UserDataHolder
-{
-public:
-    TrackedHolder(Object* target, void* data, tokotachi_destroy_fn destroy)
-        : UserDataHolder(target, data, destroy), target_(target)
-    {
-        holders().push_back(std::make_pair(target, static_cast<UserDataHolder*>(this)));
-    }
-
-    ~TrackedHolder()
-    {
-        std::vector<std::pair<Object*, UserDataHolder*> >& list = holders();
-        for (std::size_t i = 0; i < list.size(); ++i)
-        {
-            if (list[i].second == this)
-            {
-                list.erase(list.begin() + static_cast<std::ptrdiff_t>(i));
-                break;
-            }
-        }
-    }
-
-private:
-    Object* target_;
-};
 
 // ---- Variable ----
 
@@ -223,8 +184,25 @@ TOKOTACHI_C_API void tokotachi_object_set_user_data(tokotachi_object* object, vo
     try
     {
         Object* target = c::self_as<Object>(object, __func__);
-        delete holder_of(target);
-        new TrackedHolder(target, data, destroy);
+        static bool observing = false;
+        if (!observing)
+        {
+            observing = true;
+            tokotachi::detail::add_destroy_observer(&object_destroyed, nullptr);
+        }
+        std::map<Object*, UserDataEntry>& entries = user_data();
+        std::map<Object*, UserDataEntry>::iterator it = entries.find(target);
+        if (it != entries.end())
+        {
+            const UserDataEntry old = it->second;
+            entries.erase(it);
+            if (old.destroy)
+            {
+                old.destroy(old.data);
+            }
+        }
+        const UserDataEntry e = {data, destroy};
+        entries[target] = e;
     }
     TOKOTACHI_C_CATCH()
 }
@@ -233,8 +211,9 @@ TOKOTACHI_C_API void* tokotachi_object_get_user_data(tokotachi_object* object)
 {
     try
     {
-        UserDataHolder* h = holder_of(c::self_as<Object>(object, __func__));
-        return h ? h->data() : nullptr;
+        std::map<Object*, UserDataEntry>& entries = user_data();
+        std::map<Object*, UserDataEntry>::iterator it = entries.find(c::self_as<Object>(object, __func__));
+        return it != entries.end() ? it->second.data : nullptr;
     }
     TOKOTACHI_C_CATCH(nullptr)
 }
@@ -726,11 +705,11 @@ TOKOTACHI_C_API void tokotachi_path_add_polyline(tokotachi_path* path, const tok
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API bool tokotachi_path_empty(const tokotachi_path* path)
+TOKOTACHI_C_API bool tokotachi_path_is_empty(const tokotachi_path* path)
 {
     try
     {
-        return path_of(path).empty();
+        return path_of(path).is_empty();
     }
     TOKOTACHI_C_CATCH(true)
 }
@@ -1017,7 +996,18 @@ TOKOTACHI_C_API void tokotachi_canvas_draw_image(tokotachi_canvas* canvas, const
     TOKOTACHI_C_CATCH()
 }
 
-// ---- Application・MessageDialog ----
+// ---- Application・Window・MessageDialog ----
+
+TOKOTACHI_C_API tokotachi_window* tokotachi_window_new_owned(tokotachi_window* owner, const char* title, float width,
+                                                             float height)
+{
+    try
+    {
+        return c::handle(
+            new tokotachi::Window(c::self_as<tokotachi::Window>(owner, __func__), c::str(title), width, height));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
 
 TOKOTACHI_C_API tokotachi_application* tokotachi_application_instance(void)
 {

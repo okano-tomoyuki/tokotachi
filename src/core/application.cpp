@@ -14,7 +14,7 @@
 #include <tokotachi/core/thread.hpp>
 
 #include "application_impl.hpp"
-#include "property_impl.hpp"
+#include "locale.hpp"
 #include "../windows/window_impl.hpp"
 
 namespace tokotachi
@@ -68,10 +68,9 @@ bool SDLCALL event_watch(void* userdata, SDL_Event* e)
 
 }  // namespace
 
-namespace detail
-{
+using namespace detail;
 
-WindowImpl* ApplicationImpl::find_window(SDL_Window* w) const
+WindowImpl* Application::Impl::find_window(SDL_Window* w) const
 {
     if (!w)
     {
@@ -87,8 +86,20 @@ WindowImpl* ApplicationImpl::find_window(SDL_Window* w) const
     return nullptr;
 }
 
-void ApplicationImpl::quit_if_no_window()
+void Application::Impl::quit_if_done()
 {
+    if (!auto_quit_enabled_)
+    {
+        return;
+    }
+    if (main_window_)
+    {
+        if (!detail::window_impl_of(main_window_)->shown)
+        {
+            running = false;
+        }
+        return;
+    }
     for (std::size_t i = 0; i < windows.size(); ++i)
     {
         if (windows[i]->shown && !windows[i]->popup)
@@ -99,7 +110,21 @@ void ApplicationImpl::quit_if_no_window()
     running = false;
 }
 
-void ApplicationImpl::update_theme()
+void Application::Impl::window_destroyed(Window* w)
+{
+    if (w != main_window_)
+    {
+        return;
+    }
+    main_window_ = nullptr;
+    detail::property_changed(q, &q->main_window);
+    if (auto_quit_enabled_)
+    {
+        running = false;
+    }
+}
+
+void Application::Impl::update_theme()
 {
     const bool next_dark =
         color_scheme == ColorScheme::DARK || (color_scheme == ColorScheme::SYSTEM && system_dark);
@@ -121,16 +146,19 @@ void ApplicationImpl::update_theme()
         windows[i]->theme_changed();
     }
     Object* sender = q;
-    fire(q->on_theme_change_, sender);
+    fire(on_theme_change_, sender);
 }
 
-void ApplicationImpl::close_menus()
+void Application::Impl::close_menus()
 {
     while (!open_menus.empty())
     {
         open_menus.front()->q->close();  // 開いた順の先頭を閉じると、それから開いたものも閉じる
     }
 }
+
+namespace detail
+{
 
 bool trace_enabled()
 {
@@ -238,9 +266,11 @@ void trace_event(const SDL_Event& e, const WindowImpl* w, std::size_t open_menus
 
 }  // namespace
 
-void ApplicationImpl::post(const std::function<void()>& fn) { tokotachi::post(fn); }
+}  // namespace detail
 
-void ApplicationImpl::flush_doomed()
+void Application::Impl::post(const std::function<void()>& fn) { tokotachi::post(fn); }
+
+void Application::Impl::flush_doomed()
 {
     while (!doomed.empty())
     {
@@ -250,7 +280,7 @@ void ApplicationImpl::flush_doomed()
     }
 }
 
-WindowImpl* ApplicationImpl::modal_blocker(const WindowImpl* w) const
+WindowImpl* Application::Impl::modal_blocker(const WindowImpl* w) const
 {
     // 後に開いたものから: w がダイアログの親(またはその祖先)なら止める。
     for (std::size_t i = modal_dialogs.size(); i-- > 0;)
@@ -266,13 +296,13 @@ WindowImpl* ApplicationImpl::modal_blocker(const WindowImpl* w) const
     return nullptr;
 }
 
-void ApplicationImpl::dispatch(const SDL_Event& e)
+void Application::Impl::dispatch(const SDL_Event& e)
 {
     dispatch_event(e);
     flush_doomed();
 }
 
-void ApplicationImpl::dispatch_event(const SDL_Event& e)
+void Application::Impl::dispatch_event(const SDL_Event& e)
 {
     if (e.type == g_call_event)
     {
@@ -357,7 +387,7 @@ void ApplicationImpl::dispatch_event(const SDL_Event& e)
     w->handle(e);
 }
 
-int ApplicationImpl::start_timer(int interval_ms, const std::function<void()>& fn, bool repeat)
+int Application::Impl::start_timer(int interval_ms, const std::function<void()>& fn, bool repeat)
 {
     const int id = ++next_timer_id;
     Timer t;
@@ -370,7 +400,7 @@ int ApplicationImpl::start_timer(int interval_ms, const std::function<void()>& f
     return id;
 }
 
-void ApplicationImpl::stop_timer(int id)
+void Application::Impl::stop_timer(int id)
 {
     std::map<int, Timer>::iterator it = timers.find(id);
     if (it == timers.end())
@@ -381,16 +411,17 @@ void ApplicationImpl::stop_timer(int id)
     timers.erase(it);
 }
 
-}  // namespace detail
-
 Application::Application(int, char**)
-    : TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, ColorScheme, color_scheme),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, light_theme),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(Application, Theme, dark_theme),
-      TOKOTACHI_READONLY_PROPERTY(Application, bool, dark),
-      TOKOTACHI_READONLY_PROPERTY(Application, Theme, theme),
-      TOKOTACHI_HANDLER_PROPERTY(Application, NotifyHandler, on_theme_change),
-      d_(new detail::ApplicationImpl(this))
+    : TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, ColorScheme, color_scheme),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, Theme, light_theme),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, Theme, dark_theme),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, dark),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Theme, theme),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, language),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Window*, main_window),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, auto_quit_enabled),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_theme_change),
+      d_(new Impl(this))
 {
     g_instance = this;
 #if defined(__linux__)
@@ -409,6 +440,7 @@ Application::Application(int, char**)
         std::fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         std::exit(1);
     }
+    d_->language = detail::system_language();
     g_timer_event = SDL_RegisterEvents(1);
     g_call_event = SDL_RegisterEvents(1);
     g_main_thread = SDL_GetCurrentThreadID();
@@ -423,7 +455,10 @@ Application::Application(int, char**)
 
 Application::~Application()
 {
-    for (std::map<int, detail::ApplicationImpl::Timer>::iterator it = d_->timers.begin(); it != d_->timers.end();
+    // 所有するもの(所有者を渡さずに作ったウィンドウ・Application を所有者にしたタイマーなど)を、SDL を終える前に破棄する
+    // (docs/adr/0062)。破棄の中で Application::instance() を使えるように、g_instance はまだ残す。
+    delete_owned();
+    for (std::map<int, Impl::Timer>::iterator it = d_->timers.begin(); it != d_->timers.end();
          ++it)
     {
         SDL_RemoveTimer(it->second.sdl_id);
@@ -450,54 +485,44 @@ Application::~Application()
 
 Application* Application::instance() { return g_instance; }
 
-ColorScheme Application::get_color_scheme() const { return d_->color_scheme; }
-
-void Application::set_color_scheme(const ColorScheme& v)
+void Application::Impl::set_color_scheme(const ColorScheme& v)
 {
-    if (v == d_->color_scheme)
+    if (v == color_scheme)
     {
         return;
     }
-    d_->color_scheme = v;
-    detail::property_changed(this, &color_scheme);
-    d_->update_theme();
+    color_scheme = v;
+    detail::property_changed(q, &q->color_scheme);
+    update_theme();
 }
 
-Theme Application::get_light_theme() const { return d_->light_theme; }
-
-void Application::set_light_theme(const Theme& v)
+void Application::Impl::set_light_theme(const Theme& v)
 {
-    if (v == d_->light_theme)
+    if (v == light_theme)
     {
         return;
     }
-    d_->light_theme = v;
-    detail::property_changed(this, &light_theme);
-    d_->update_theme();
+    light_theme = v;
+    detail::property_changed(q, &q->light_theme);
+    update_theme();
 }
 
-Theme Application::get_dark_theme() const { return d_->dark_theme; }
-
-void Application::set_dark_theme(const Theme& v)
+void Application::Impl::set_dark_theme(const Theme& v)
 {
-    if (v == d_->dark_theme)
+    if (v == dark_theme)
     {
         return;
     }
-    d_->dark_theme = v;
-    detail::property_changed(this, &dark_theme);
-    d_->update_theme();
+    dark_theme = v;
+    detail::property_changed(q, &q->dark_theme);
+    update_theme();
 }
-
-bool Application::get_dark() const { return d_->dark; }
-
-Theme Application::get_theme() const { return d_->current_theme; }
 
 int Application::exec()
 {
     // 待機型のループ: イベントが来るまで眠り、溜まったイベントを処理してから、無効になった領域を描く(docs/adr/0010)。
     d_->running = true;
-    d_->quit_if_no_window();
+    d_->quit_if_done();
     while (d_->running)
     {
         SDL_Event e;

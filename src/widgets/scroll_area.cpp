@@ -2,34 +2,60 @@
 
 #include <algorithm>
 
-#include "../core/property_impl.hpp"
+#include "widget_access.hpp"
+#include "../core/impl.hpp"
 
 namespace tokotachi
 {
 
+class ScrollArea::Impl
+{
+    TOKOTACHI_IMPL(ScrollArea);
+
+    explicit Impl(ScrollArea* object) : q(object) {}
+
+    Widget* get_content() const;
+    void set_content(Widget* const& v);
+    bool get_fit_width() const { return fit_width_; }
+    void set_fit_width(const bool& v);
+    Point get_scroll_position() const;
+    void set_scroll_position(const Point& p);
+    /// スクロールバーの値に合わせて中身を動かす。
+    void place_content();
+
+    Widget* viewport_;
+    ScrollBar* vertical_;
+    ScrollBar* horizontal_;
+    Widget* content_;
+    bool fit_width_;
+};
+
 ScrollArea::ScrollArea(Widget* parent_widget)
     : Widget(parent_widget),
-      TOKOTACHI_PROPERTY_GETTER(ScrollArea, Widget*, content),
-      TOKOTACHI_PROPERTY_GETTER(ScrollArea, bool, fit_width),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ScrollArea, Point, scroll_position),
-      viewport_(new Widget(this)),
-      vertical_(new ScrollBar(this, Orientation::VERTICAL)),
-      horizontal_(new ScrollBar(this, Orientation::HORIZONTAL)),
-      content_(nullptr),
-      fit_width_(true)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, Widget*, content),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, fit_width),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, Point, scroll_position),
+      d_(new Impl(this))
 {
-    vertical_->visible = false;
-    horizontal_->visible = false;
+    d_->viewport_ = new Widget(this);
+    d_->vertical_ = new ScrollBar(this, Orientation::VERTICAL);
+    d_->horizontal_ = new ScrollBar(this, Orientation::HORIZONTAL);
+    d_->content_ = nullptr;
+    d_->fit_width_ = true;
+    d_->vertical_->visible = false;
+    d_->horizontal_->visible = false;
     const NotifyHandler moved = [this](Object*)
     {
-        place_content();
+        d_->place_content();
         notify_changed(scroll_position);
     };
-    vertical_->on_change = moved;
-    horizontal_->on_change = moved;
+    d_->vertical_->on_change = moved;
+    d_->horizontal_->on_change = moved;
 }
 
-Widget* ScrollArea::get_content() const
+ScrollArea::~ScrollArea() { delete d_; }
+
+Widget* ScrollArea::Impl::get_content() const
 {
     // 中身が利用者に破棄されていたら、無いものとして扱う。
     if (content_)
@@ -43,7 +69,7 @@ Widget* ScrollArea::get_content() const
     return content_;
 }
 
-void ScrollArea::set_content(Widget* const& v)
+void ScrollArea::Impl::set_content(Widget* const& v)
 {
     Widget* old = get_content();
     if (v == old)
@@ -56,19 +82,19 @@ void ScrollArea::set_content(Widget* const& v)
         v->parent = viewport_;
     }
     delete old;
-    mark_layout_dirty();
-    request_layout();
+    detail::WidgetAccess::mark_layout_dirty(q);
+    q->request_layout();
 }
 
-void ScrollArea::set_fit_width(const bool& v)
+void ScrollArea::Impl::set_fit_width(const bool& v)
 {
     fit_width_ = v;
-    mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
 }
 
-Point ScrollArea::get_scroll_position() const { return Point(horizontal_->value, vertical_->value); }
+Point ScrollArea::Impl::get_scroll_position() const { return Point(horizontal_->value, vertical_->value); }
 
-void ScrollArea::set_scroll_position(const Point& p)
+void ScrollArea::Impl::set_scroll_position(const Point& p)
 {
     // スクロールバーの on_change が中身を動かし、scroll_position の変更を知らせる。
     horizontal_->value = p.x;
@@ -77,8 +103,8 @@ void ScrollArea::set_scroll_position(const Point& p)
 
 void ScrollArea::scroll_to_visible(const Rect& r)
 {
-    const Rect view = viewport_->local_rect;
-    Point p = get_scroll_position();
+    const Rect view = d_->viewport_->local_rect;
+    Point p = d_->get_scroll_position();
     if (r.right() > p.x + view.width)
     {
         p.x = r.right() - view.width;
@@ -95,10 +121,10 @@ void ScrollArea::scroll_to_visible(const Rect& r)
     {
         p.y = r.y;
     }
-    set_scroll_position(p);
+    d_->set_scroll_position(p);
 }
 
-void ScrollArea::place_content()
+void ScrollArea::Impl::place_content()
 {
     if (Widget* c = get_content())
     {
@@ -111,7 +137,7 @@ void ScrollArea::arrange_children()
 {
     const Rect area = local_rect;
     const float bar = ScrollBar::THICKNESS;
-    Widget* c = get_content();
+    Widget* c = d_->get_content();
     const Size pref = c ? c->preferred_size.get() : Size();
 
     // 収まらない向きにだけスクロールバーを出す。片方を出すと見えている範囲が狭まり、もう片方が要ることがあるので 2 回確かめる。
@@ -119,27 +145,27 @@ void ScrollArea::arrange_children()
     bool need_v = false, need_h = false;
     for (int i = 0; i < 2; ++i)
     {
-        const float content_w = fit_width_ ? view_w : std::max(pref.width, view_w);
+        const float content_w = d_->fit_width_ ? view_w : std::max(pref.width, view_w);
         need_v = pref.height > view_h;
-        need_h = !fit_width_ && content_w > view_w;
+        need_h = !d_->fit_width_ && content_w > view_w;
         view_w = area.width - (need_v ? bar : 0);
         view_h = area.height - (need_h ? bar : 0);
     }
-    const float content_w = fit_width_ ? view_w : std::max(pref.width, view_w);
+    const float content_w = d_->fit_width_ ? view_w : std::max(pref.width, view_w);
     const float content_h = std::max(pref.height, view_h);
 
-    viewport_->bounds = Rect(0, 0, view_w, view_h);
-    vertical_->visible = need_v;
-    horizontal_->visible = need_h;
-    vertical_->bounds = Rect(view_w, 0, bar, view_h);
-    horizontal_->bounds = Rect(0, view_h, view_w, bar);
-    vertical_->page_step = view_h;
-    horizontal_->page_step = view_w;
-    vertical_->maximum = need_v ? content_h - view_h : 0;
-    horizontal_->maximum = need_h ? content_w - view_w : 0;
+    d_->viewport_->bounds = Rect(0, 0, view_w, view_h);
+    d_->vertical_->visible = need_v;
+    d_->horizontal_->visible = need_h;
+    d_->vertical_->bounds = Rect(view_w, 0, bar, view_h);
+    d_->horizontal_->bounds = Rect(0, view_h, view_w, bar);
+    d_->vertical_->page_step = view_h;
+    d_->horizontal_->page_step = view_w;
+    d_->vertical_->maximum = need_v ? content_h - view_h : 0;
+    d_->horizontal_->maximum = need_h ? content_w - view_w : 0;
     if (c)
     {
-        c->bounds = Rect(-horizontal_->value.get(), -vertical_->value.get(), content_w, content_h);
+        c->bounds = Rect(-d_->horizontal_->value.get(), -d_->vertical_->value.get(), content_w, content_h);
     }
 }
 
@@ -151,8 +177,8 @@ void ScrollArea::mouse_wheel(WheelEvent& e)
         return;  // 利用者のハンドラが受け取った
     }
     // 縦に動かせれば縦(Shift を押していれば横)、縦に動かせなければ横。
-    const bool sideways = e.has_modifier(MODIFIER_SHIFT) || e.delta.x != 0 || vertical_->maximum.get() <= 0;
-    ScrollBar* bar = sideways ? horizontal_ : vertical_;
+    const bool sideways = e.has_modifier(MODIFIER_SHIFT) || e.delta.x != 0 || d_->vertical_->maximum.get() <= 0;
+    ScrollBar* bar = sideways ? d_->horizontal_ : d_->vertical_;
     if (bar->maximum.get() <= 0)
     {
         return;  // 動かせなければ親へ送る
@@ -165,7 +191,7 @@ void ScrollArea::mouse_wheel(WheelEvent& e)
 Size ScrollArea::compute_preferred_size() const
 {
     // 余裕があれば中身をすべて見せる大きさ。
-    Widget* c = get_content();
+    Widget* c = d_->get_content();
     return c ? c->preferred_size.get() : Size();
 }
 

@@ -176,6 +176,7 @@ export function LayoutSection({ node }: { node: OutlineNode }) {
     node.kind === 'window' ||
     (node.kind === 'widget' &&
       node.class !== undefined &&
+      node.component === undefined &&
       findClass(node.class)?.accepts_children === true);
   if (!inItem && !container) {
     return null;

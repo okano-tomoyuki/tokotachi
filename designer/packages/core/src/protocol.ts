@@ -2,7 +2,9 @@
  * 拡張と Webview の間で交わすメッセージの型(docs/designer/editor-design.md §2。Bethany と同じ考え方)。
  * 両者はこの型を介してだけ通信し、互いのコードを直接 import しない。
  */
+import type { ClassInfo } from './catalog/types.ts';
 import type { EditCommand } from './edit/commands.ts';
+import type { TtprojDocument } from './project/schema.ts';
 
 /** キャンバスの部品の位置と大きさ(ウィンドウの座標。dp)。 */
 export interface CanvasRect {
@@ -37,9 +39,44 @@ export type ExtensionToWebviewMessage =
     }
   /** キャンバスの描画の結果。document の後に届く(検証のエラーがあれば描かない)。 */
   | { readonly type: 'canvas'; readonly frame: CanvasFrame }
+  /**
+   * 開いている定義ファイルが属するプロジェクトの自作部品(docs/adr/0044。カタログに足す)。変わったときに送る。
+   * Webview は受け取ったら、今の内容を検証し直す。
+   */
+  | { readonly type: 'customClasses'; readonly classes: Readonly<Record<string, ClassInfo>> }
+  /**
+   * パレットに出す部品ファイル(docs/adr/0043。ワークスペースの、根が Widget の定義ファイル。開いているものは除く)。
+   * path は定義ファイルのフォルダからの相対パス。
+   */
+  | {
+      readonly type: 'components';
+      readonly items: readonly { readonly path: string; readonly className: string }[];
+    }
+  /** ウィンドウが属するプロジェクトに登録したテーマの名前(属さなければ空)。描くたびに送る。 */
+  | { readonly type: 'themePresets'; readonly names: readonly string[] }
   /** キャンバスを描けなかった理由(WebAssembly のモジュールが無い等)。 */
   | { readonly type: 'canvasError'; readonly message: string }
-  /** edit の処理の結果。document の送信より後に届く。 */
+  /**
+   * プロジェクトの設定画面(*.ttproj.json)へ: プロジェクトファイルの周りの情報。document の後に送る。
+   * candidates はプロジェクトに加えられるウィンドウ(ワークスペースの定義ファイルのうち、まだ属さないもの。
+   * プロジェクトのフォルダからの相対パス)、presetUsage は登録したテーマを参照している部品の数。
+   */
+  | {
+      readonly type: 'projectInfo';
+      readonly candidates: readonly string[];
+      readonly presetUsage: Readonly<Record<string, number>>;
+      /** プロジェクトのウィンドウ・候補のうち、部品ファイル(docs/adr/0043。メインのウィンドウにできない)のもの。 */
+      readonly components: readonly string[];
+    }
+  /** プロジェクトの設定画面へ: テーマの見本のウィンドウを描いた結果(ライトとダーク)。target は previewTheme のもの。 */
+  | {
+      readonly type: 'themePreview';
+      readonly target: string | null;
+      readonly light?: CanvasFrame;
+      readonly dark?: CanvasFrame;
+      readonly error?: string;
+    }
+  /** edit・editProject などの処理の結果。document の送信より後に届く。 */
   | {
       readonly type: 'editResult';
       readonly requestId: number;
@@ -56,6 +93,8 @@ export type WebviewToExtensionMessage =
   | { readonly type: 'goToHandler'; readonly handler: string }
   /** テキストエディタで開く。 */
   | { readonly type: 'openAsText' }
+  /** 置いた部品ファイル(定義ファイルのフォルダからの相対パス)をデザイナーで開く(docs/adr/0043)。 */
+  | { readonly type: 'openComponent'; readonly path: string }
   /**
    * 画像のファイルを選んでもらい、ノードのプロパティに定義ファイルからの相対パスを設定する
    * (選ばなければ何もしない。設定は edit と同じく 1 回の変更)。
@@ -69,4 +108,23 @@ export type WebviewToExtensionMessage =
    * キャンバスの表示だけの設定(定義ファイルは変えない)。選んだ部品が入っているタブを表示する
    * (TabWidget の名前 → タブの位置)。
    */
-  | { readonly type: 'view'; readonly tabs: Readonly<Record<string, number>> };
+  | { readonly type: 'view'; readonly tabs: Readonly<Record<string, number>> }
+  // ---- プロジェクトの設定画面(*.ttproj.json)から ----
+  /** プロジェクトファイルを、この内容に書き換える(決まった形で書き出し、変わった範囲だけを置き換える)。 */
+  | { readonly type: 'editProject'; readonly requestId: number; readonly project: TtprojDocument }
+  /**
+   * 登録したテーマを改名する(to が文字列)か消す(to が null)。プロジェクトのウィンドウの参照(preset)も一緒に書き換える
+   * (消すときは参照を外す。参照があれば確かめてから)。
+   */
+  | {
+      readonly type: 'renamePreset';
+      readonly requestId: number;
+      readonly from: string;
+      readonly to: string | null;
+    }
+  /** テーマの見本を描く(target は登録したテーマの名前。null ならプロジェクトのテーマそのもの)。 */
+  | { readonly type: 'previewTheme'; readonly target: string | null }
+  /** プロジェクトのコード(すべてのウィンドウと起動部分)を生成する。 */
+  | { readonly type: 'generateProject' }
+  /** プロジェクトのウィンドウをデザイナーで開く(プロジェクトのフォルダからの相対パス)。 */
+  | { readonly type: 'openWindow'; readonly path: string };

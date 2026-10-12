@@ -1,27 +1,32 @@
 /// @file
-/// タイマー: 一定の間隔で on_timer をメインスレッドで呼ぶ(docs/adr/0014)。
-///
-/// @code
-/// tokotachi::Timer timer;
-/// timer.interval = 500;                          // ミリ秒
-/// timer.on_timer = [&](tokotachi::Object* sender) { ... };
-/// timer.enabled = true;                          // 動かす(false で止める)
-/// @endcode
-///
-/// 所有者を渡すと所有者と一緒に破棄される(new tokotachi::Timer(&window)。docs/adr/0015)。所有者が無ければ利用者が寿命を
-/// 管理する(スタック・メンバ変数にも置ける)。破棄すると止まる。Application を作った後に enabled にする。
+/// tokotachi::Timer の宣言。
 #ifndef TOKOTACHI_CORE_TIMER_HPP
 #define TOKOTACHI_CORE_TIMER_HPP
 
 #include "event.hpp"
+#include "export.hpp"
 #include "property.hpp"
 
 namespace tokotachi
 {
 
-class Timer : public Object
+/// タイマー: 一定の間隔で on_timeout をメインスレッドで呼ぶ(docs/adr/0014)。
+///
+/// @code
+/// tokotachi::Timer* timer_clock = new tokotachi::Timer(window_main);   // window_main が所有する
+/// timer_clock->interval = 500;                                          // ミリ秒
+/// timer_clock->on_timeout = [=](tokotachi::Object* sender) { ... };
+/// timer_clock->enabled = true;                                          // 動かす(false で止める)
+/// @endcode
+///
+/// 所有者を渡すと所有者と一緒に破棄される(docs/adr/0015)。所有者が無ければ利用者が破棄する(docs/adr/0062)。
+/// 破棄すると止まる。Application を作った後に enabled にする。
+///
+/// @ingroup core_objects
+class TOKOTACHI_API Timer : public Object
 {
 public:
+    /// 所有者を渡す(所有者と一緒に破棄される)。止まった状態で作る。
     explicit Timer(Object* owner_object = nullptr);
     ~Timer();
 
@@ -32,25 +37,16 @@ public:
     /// 動いているか(既定 false)。true を代入すると動き始め、false を代入すると止まる。
     Property<bool> enabled;
 
-    Property<NotifyHandler> on_timer;
+    /// 間隔が経った(メインスレッドで呼ぶ)。
+    Property<NotifyHandler> on_timeout;
 
 protected:
-    /// 間隔が経った。on_timer を呼ぶ。
+    /// 間隔が経った。on_timeout を呼ぶ。
     virtual void timeout();
 
 private:
-    void set_interval(const int& v);
-    void set_repeat(const bool& v);
-    void set_enabled(const bool& v);
-    void start();
-    void stop();
-    void fired();
-
-    int interval_;
-    bool repeat_;
-    bool enabled_;
-    NotifyHandler on_timer_;
-    int id_;  ///< Application の内部のタイマーの番号(止まっていれば 0)
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

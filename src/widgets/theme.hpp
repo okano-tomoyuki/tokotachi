@@ -7,10 +7,32 @@
 
 namespace tokotachi
 {
+class Widget;
+
 namespace detail
 {
-// 今のアプリケーションのテーマ(Application が無ければ Theme::light())。
+// アプリケーションのテーマ(Application が無ければ Theme::light())。
+const Theme& application_theme();
+// 今のテーマ: ThemeScope の中ならそのウィジェットに効いているテーマ、外ならアプリケーションのテーマ(docs/adr/0042)。
 const Theme& current_theme();
+// ThemeScope が今のテーマを切り替える(nullptr でアプリケーションのテーマ)。前のものを返す。
+const Theme* swap_scoped_theme(const Theme* theme);
+
+// w に効いているテーマ(w と祖先の theme_override をアプリケーションのテーマに重ねたもの)を、生きている間だけ今のテーマにする。
+// 描く・配置する・イベントを処理するときに、ウィンドウの処理が作る。メインスレッドだけで使う。
+class ThemeScope
+{
+public:
+    explicit ThemeScope(const Widget* w);
+    ~ThemeScope() { swap_scoped_theme(previous_); }
+
+private:
+    ThemeScope(const ThemeScope&);
+    ThemeScope& operator=(const ThemeScope&);
+
+    Theme theme_;
+    const Theme* previous_;
+};
 }  // namespace detail
 
 namespace theme

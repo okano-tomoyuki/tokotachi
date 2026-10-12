@@ -6,10 +6,13 @@
 import {
   bindingOf,
   findClass,
+  isIconValue,
+  isImageType,
   layoutVariable,
   MENU_BAR_VARIABLE,
   menuVariable,
   namedNodes,
+  normalizePath,
   paneVariable,
   STATUS_BAR_VARIABLE,
   tabVariable,
@@ -50,13 +53,15 @@ export interface Result {
 
 /** target が undefined の操作は、ウィンドウ自身に対するもの。 */
 export type Op =
-  /** `variable = new tokotachi::Class(parent)`。 */
+  /** `variable = new tokotachi::Class(parent)`(部品ファイルを置いた部品なら `new Component(parent)`)。 */
   | {
       readonly op: 'new';
       readonly variable: string;
       readonly class: string;
       readonly declare: boolean;
       readonly parent?: string | undefined;
+      /** 部品ファイルのクラスの名前(docs/adr/0043。C++ の書き出しだけ)。 */
+      readonly component?: string | undefined;
     }
   /** `target->property = value`(値は定義ファイルの書き方のまま。参照なら相手の変数の名前)。 */
   | {
@@ -142,8 +147,98 @@ function trimDefaults(args: readonly Arg[], defaults: readonly (Arg | undefined)
   return args.slice(0, n);
 }
 
-export function buildSetup(doc: TtuiDocument): SetupModel {
-  return new SetupBuilder(doc).build();
+/** 読んだ部品ファイル(docs/adr/0043)。 */
+export interface ResolvedComponent {
+  readonly document: TtuiDocument;
+  /** 部品ファイルの中で置いている部品ファイルを読む(パスは部品ファイルのフォルダからの相対パス)。 */
+  readonly resolve?: ComponentResolver | undefined;
+}
+
+/** 部品ファイルを読む(パスは定義ファイルに書いたまま)。読めなければ undefined(Widget として作る)。 */
+export type ComponentResolver = (path: string) => ResolvedComponent | undefined;
+
+export interface SetupOptions {
+  readonly resolve?: ComponentResolver | undefined;
+  /**
+   * 部品ファイルの中身を展開する(キャンバス)。置いた部品は Widget として作り、部品ファイルの操作の並びを、
+   * 変数の名前の前に `置いた部品の名前.` を付けて続ける。false なら部品ファイルのクラスを作る(C++)。
+   */
+  readonly inline?: boolean | undefined;
+}
+
+/** 部品ファイルの入れ子の深さの上限(循環していても止まるように。循環は拡張がエラーにする)。 */
+const MAX_COMPONENT_DEPTH = 16;
+
+export function buildSetup(doc: TtuiDocument, options: SetupOptions = {}): SetupModel {
+  return new SetupBuilder(doc, options, 0).build();
+}
+
+/** 部品ファイルの根(Widget)の、生成するコードに書かないプロパティ(置いた側のレイアウトが決める)。 */
+export const COMPONENT_ROOT_SKIP: readonly string[] = ['width', 'height'];
+
+/**
+ * 部品ファイルの操作の並びを、置いた部品の中身にする。変数の名前を rename で付け替え、ウィンドウ自身(`this`・target 無し)を
+ * self にする。ハンドラはつながない。画像のパスは dir(部品ファイルのフォルダ。置いた側のフォルダからの相対パス)からたどる。
+ */
+export function inlineOps(
+  ops: readonly Op[],
+  self: string,
+  rename: (name: string) => string,
+  dir = '',
+): Op[] {
+  const name = (n: string): string => (n === 'this' ? self : rename(n));
+  const target = (t: string | undefined): string => (t === undefined ? self : name(t));
+  return ops.flatMap((op): Op[] => {
+    switch (op.op) {
+      case 'new':
+        return [
+          {
+            ...op,
+            variable: rename(op.variable),
+            parent: op.parent === undefined ? undefined : name(op.parent),
+          },
+        ];
+      case 'set': {
+        const isRef = typeof op.type === 'object' && 'ref' in op.type;
+        const value =
+          isRef && typeof op.value === 'string'
+            ? name(op.value)
+            : isImageType(op.type) &&
+                typeof op.value === 'string' &&
+                !isIconValue(op.value) &&
+                dir !== ''
+              ? normalizePath(`${dir}/${op.value}`)
+              : op.value;
+        return [{ ...op, target: target(op.target), value }];
+      }
+      case 'variable':
+        return [{ ...op, variable: rename(op.variable) }];
+      case 'bind':
+        return [{ ...op, target: target(op.target), variable: name(op.variable) }];
+      case 'connect':
+        return [];
+      case 'call':
+        return [
+          {
+            ...op,
+            target: target(op.target),
+            args: op.args.map((a) => (a.kind === 'ref' ? { ...a, name: name(a.name) } : a)),
+            result: op.result ? { ...op.result, variable: rename(op.result.variable) } : undefined,
+          },
+        ];
+      case 'place':
+        return [{ ...op, layout: name(op.layout), widget: name(op.widget) }];
+      case 'blank':
+        return [op];
+    }
+  });
+}
+
+/** パスのフォルダの部分(`parts/search_bar.ttui.json` → `parts`)。 */
+function dirOf(path: string): string {
+  const normalized = normalizePath(path);
+  const index = normalized.lastIndexOf('/');
+  return index < 0 ? '' : normalized.slice(0, index);
 }
 
 class SetupBuilder {
@@ -154,9 +249,14 @@ class SetupBuilder {
   private readonly named: ReadonlyMap<string, NamedNode>;
   /** ほかの部品への参照(すべての部品を作った後に設定する)。 */
   private readonly deferred: Op[] = [];
+  private readonly options: SetupOptions;
+  /** 部品ファイルの入れ子の深さ。 */
+  private readonly depth: number;
 
-  constructor(doc: TtuiDocument) {
+  constructor(doc: TtuiDocument, options: SetupOptions, depth: number) {
     this.doc = doc;
+    this.options = options;
+    this.depth = depth;
     this.named = new Map(namedNodes(doc).map((n) => [n.name, n]));
   }
 
@@ -180,7 +280,13 @@ class SetupBuilder {
       this.events(v.name, 'Variable', v.events);
       this.blank();
     }
-    this.properties(undefined, w.class, w.properties);
+    this.properties(
+      undefined,
+      w.class,
+      w.properties,
+      false,
+      w.class === 'Widget' ? COMPONENT_ROOT_SKIP : [],
+    );
     this.events(undefined, w.class, w.events);
     for (const b of w.buttons ?? []) {
       const button: Arg = { kind: 'enum', enum: 'DialogButton', value: b.button };
@@ -361,7 +467,32 @@ class SetupBuilder {
    */
   private widget(node: WidgetNode, parent: string): void {
     const name = node.name;
-    this.add({ op: 'new', variable: name, class: node.class, declare: false, parent });
+    const component =
+      node.component !== undefined && this.depth < MAX_COMPONENT_DEPTH
+        ? this.options.resolve?.(node.component)
+        : undefined;
+    this.add({
+      op: 'new',
+      variable: name,
+      class: node.class,
+      declare: false,
+      parent,
+      ...(component && this.options.inline !== true
+        ? { component: component.document.window.name }
+        : {}),
+    });
+    if (component && this.options.inline === true && node.component !== undefined) {
+      // 部品ファイルの設定が先(生成するコードでは部品ファイルのクラスのコンストラクタ)、置いた側の設定が後
+      const inner = new SetupBuilder(
+        component.document,
+        { ...this.options, resolve: component.resolve },
+        this.depth + 1,
+      ).build();
+      const dir = dirOf(node.component);
+      this.ops.push(
+        ...inlineOps(inner.ops, name, (n) => `${name}.${n}`, dir).filter((op) => op.op !== 'blank'),
+      );
+    }
     this.properties(name, node.class, node.properties);
     this.events(name, node.class, node.events);
     for (const a of node.actions ?? []) {

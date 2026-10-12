@@ -4,34 +4,66 @@
 
 #include <tokotachi/widgets/widget.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "distribute.hpp"
 
 namespace tokotachi
 {
 
+class BoxLayout::Impl
+{
+    TOKOTACHI_IMPL(BoxLayout);
+
+    explicit Impl(BoxLayout* object) : q(object) {}
+
+    struct Item
+    {
+        Widget* widget;  ///< nullptr なら空き
+        float space;     ///< 固定の空き(widget が nullptr のとき)
+        int stretch;
+        Align align;
+    };
+
+    Orientation get_orientation() const { return orientation_; }
+    void set_orientation(const Orientation& v);
+    float get_spacing() const { return spacing_; }
+    void set_spacing(const float& v);
+    Item* find(Widget* w);
+    /// 並べる向きの長さ・直交する向きの長さを、大きさから取り出す。
+    float main_of(const Size& s) const;
+    float cross_of(const Size& s) const;
+    Size total(bool minimum) const;
+
+    Orientation orientation_;
+    float spacing_;
+    std::vector<Item> items_;
+};
+
 BoxLayout::BoxLayout(Widget* target, Orientation initial_orientation)
     : Layout(target),
-      TOKOTACHI_PROPERTY_GETTER(BoxLayout, Orientation, orientation),
-      TOKOTACHI_PROPERTY_GETTER(BoxLayout, float, spacing),
-      orientation_(initial_orientation),
-      spacing_(8)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, Orientation, orientation),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, float, spacing),
+      d_(new Impl(this))
 {
+    d_->orientation_ = initial_orientation;
+    d_->spacing_ = 8;
 }
 
-void BoxLayout::set_orientation(const Orientation& v)
+BoxLayout::~BoxLayout() { delete d_; }
+
+void BoxLayout::Impl::set_orientation(const Orientation& v)
 {
     orientation_ = v;
-    request_layout();
+    q->request_layout();
 }
 
-void BoxLayout::set_spacing(const float& v)
+void BoxLayout::Impl::set_spacing(const float& v)
 {
     spacing_ = v;
-    request_layout();
+    q->request_layout();
 }
 
-BoxLayout::Item* BoxLayout::find(Widget* w)
+BoxLayout::Impl::Item* BoxLayout::Impl::find(Widget* w)
 {
     for (std::size_t i = 0; i < items_.size(); ++i)
     {
@@ -49,11 +81,11 @@ void BoxLayout::add(Widget* w, int stretch, Align cross_alignment)
     {
         return;
     }
-    Item* item = find(w);
+    Impl::Item* item = d_->find(w);
     if (!item)
     {
-        const Item it = {w, 0, stretch, cross_alignment};
-        items_.push_back(it);
+        const Impl::Item it = {w, 0, stretch, cross_alignment};
+        d_->items_.push_back(it);
     }
     else
     {
@@ -65,21 +97,21 @@ void BoxLayout::add(Widget* w, int stretch, Align cross_alignment)
 
 void BoxLayout::add_spacing(float size)
 {
-    const Item it = {nullptr, size, 0, Align::FILL};
-    items_.push_back(it);
+    const Impl::Item it = {nullptr, size, 0, Align::FILL};
+    d_->items_.push_back(it);
     request_layout();
 }
 
 void BoxLayout::add_stretch(int stretch)
 {
-    const Item it = {nullptr, 0, stretch, Align::FILL};
-    items_.push_back(it);
+    const Impl::Item it = {nullptr, 0, stretch, Align::FILL};
+    d_->items_.push_back(it);
     request_layout();
 }
 
 void BoxLayout::set_stretch(Widget* w, int stretch)
 {
-    if (Item* item = find(w))
+    if (Impl::Item* item = d_->find(w))
     {
         item->stretch = stretch;
         request_layout();
@@ -88,7 +120,7 @@ void BoxLayout::set_stretch(Widget* w, int stretch)
 
 void BoxLayout::set_alignment(Widget* w, Align cross_alignment)
 {
-    if (Item* item = find(w))
+    if (Impl::Item* item = d_->find(w))
     {
         item->align = cross_alignment;
         request_layout();
@@ -97,28 +129,28 @@ void BoxLayout::set_alignment(Widget* w, Align cross_alignment)
 
 void BoxLayout::widget_removed(Widget* w)
 {
-    for (std::size_t i = 0; i < items_.size(); ++i)
+    for (std::size_t i = 0; i < d_->items_.size(); ++i)
     {
-        if (items_[i].widget == w)
+        if (d_->items_[i].widget == w)
         {
-            items_.erase(items_.begin() + static_cast<std::ptrdiff_t>(i));
+            d_->items_.erase(d_->items_.begin() + static_cast<std::ptrdiff_t>(i));
             return;
         }
     }
 }
 
-float BoxLayout::main_of(const Size& s) const { return orientation_ == Orientation::HORIZONTAL ? s.width : s.height; }
+float BoxLayout::Impl::main_of(const Size& s) const { return orientation_ == Orientation::HORIZONTAL ? s.width : s.height; }
 
-float BoxLayout::cross_of(const Size& s) const { return orientation_ == Orientation::HORIZONTAL ? s.height : s.width; }
+float BoxLayout::Impl::cross_of(const Size& s) const { return orientation_ == Orientation::HORIZONTAL ? s.height : s.width; }
 
-Size BoxLayout::total(bool minimum) const
+Size BoxLayout::Impl::total(bool minimum) const
 {
     float main = 0, cross = 0;
     int count = 0;
     for (std::size_t i = 0; i < items_.size(); ++i)
     {
         const Item& it = items_[i];
-        if (it.widget && !is_managed_visible(it.widget))
+        if (it.widget && !q->is_managed_visible(it.widget))
         {
             continue;
         }
@@ -128,7 +160,7 @@ Size BoxLayout::total(bool minimum) const
             main += it.space;
             continue;
         }
-        const Size s = minimum ? minimum_of(it.widget) : preferred_of(it.widget);
+        const Size s = minimum ? q->minimum_of(it.widget) : q->preferred_of(it.widget);
         main += main_of(s);
         cross = std::max(cross, cross_of(s));
     }
@@ -139,19 +171,19 @@ Size BoxLayout::total(bool minimum) const
     return orientation_ == Orientation::HORIZONTAL ? Size(main, cross) : Size(cross, main);
 }
 
-Size BoxLayout::compute_preferred_size() const { return total(false); }
+Size BoxLayout::compute_preferred_size() const { return d_->total(false); }
 
-Size BoxLayout::compute_minimum_size() const { return total(true); }
+Size BoxLayout::compute_minimum_size() const { return d_->total(true); }
 
 void BoxLayout::arrange(const Rect& area)
 {
-    const bool horizontal = orientation_ == Orientation::HORIZONTAL;
-    std::vector<const Item*> shown;
+    const bool horizontal = d_->orientation_ == Orientation::HORIZONTAL;
+    std::vector<const Impl::Item*> shown;
     std::vector<float> sizes, minimums, maximums;
     std::vector<int> stretches;
-    for (std::size_t i = 0; i < items_.size(); ++i)
+    for (std::size_t i = 0; i < d_->items_.size(); ++i)
     {
-        const Item& it = items_[i];
+        const Impl::Item& it = d_->items_[i];
         if (it.widget && !is_managed_visible(it.widget))
         {
             continue;
@@ -159,9 +191,9 @@ void BoxLayout::arrange(const Rect& area)
         shown.push_back(&it);
         if (it.widget)
         {
-            sizes.push_back(main_of(preferred_of(it.widget)));
-            minimums.push_back(main_of(minimum_of(it.widget)));
-            maximums.push_back(main_of(maximum_of(it.widget)));
+            sizes.push_back(d_->main_of(preferred_of(it.widget)));
+            minimums.push_back(d_->main_of(minimum_of(it.widget)));
+            maximums.push_back(d_->main_of(maximum_of(it.widget)));
         }
         else
         {
@@ -175,7 +207,7 @@ void BoxLayout::arrange(const Rect& area)
     {
         return;
     }
-    const float gaps = spacing_ * static_cast<float>(shown.size() - 1);
+    const float gaps = d_->spacing_ * static_cast<float>(shown.size() - 1);
     const float available = (horizontal ? area.width : area.height) - gaps;
     detail::distribute(sizes, minimums, maximums, stretches, available);
 
@@ -193,7 +225,7 @@ void BoxLayout::arrange(const Rect& area)
                 place_in_cell(w, Rect(area.x, pos, area.width, sizes[i]), shown[i]->align, Align::FILL);
             }
         }
-        pos += sizes[i] + spacing_;
+        pos += sizes[i] + d_->spacing_;
     }
 }
 

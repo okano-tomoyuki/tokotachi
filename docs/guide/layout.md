@@ -10,7 +10,7 @@
 縦または横に一列に並べます。
 
 ```cpp
-tokotachi::BoxLayout* column = new tokotachi::BoxLayout(&window);                       // 縦
+tokotachi::BoxLayout* column = new tokotachi::BoxLayout(window_main);                       // 縦
 column->margins = tokotachi::Margins(16);
 column->spacing = 8;
 column->add(label_title);                                   // 望む大きさで
@@ -26,8 +26,8 @@ column->add_stretch();                                // 余白
 表のように行と列に並べます。項目名と入力欄のフォームに向いています。
 
 ```cpp
-tokotachi::GridLayout* grid = new tokotachi::GridLayout(&window);
-grid->add(new tokotachi::Label(&window, "名前"), 0, 0);
+tokotachi::GridLayout* grid = new tokotachi::GridLayout(window_main);
+grid->add(new tokotachi::Label(window_main, "名前"), 0, 0);
 grid->add(line_edit_name, 0, 1);
 grid->add(text_edit_note, 1, 0, 1, 2);          // 1 行目から 1 行・2 列にまたがる
 grid->set_column_stretch(1, 1);       // 2 列目が幅を受け持つ
@@ -37,14 +37,25 @@ grid->set_column_stretch(1, 1);       // 2 列目が幅を受け持つ
 
 親の大きさに対する割合や、端からの距離で置きます(重ねる・隅に置く)。
 
+## 見出しの付いた枠
+
+`GroupBox` は、関係する部品を見出しの付いた枠でまとめます。付けたレイアウトは、枠と見出しの内側(`content_rect`)に並べます。
+
+```cpp
+tokotachi::GroupBox* group_box_output = new tokotachi::GroupBox(window_main, "出力(&O)");
+tokotachi::BoxLayout* box_output = new tokotachi::BoxLayout(group_box_output);
+box_output->add(new tokotachi::CheckBox(group_box_output, "上書きする"));
+```
+
 ## スクロールと分割
 
 - `ScrollArea`: 中身が見える範囲より大きいとき、スクロールして見せます(`content` に中身を代入)。
 - `Splitter`: 区画を並べ、境目をドラッグして大きさを変えます。`add_widget(部品, stretch)` の stretch 0 の区画は、ウィンドウの大きさが
   変わっても大きさを保ちます。区画は端まで寄せるとたためます。`sizes` で大きさを保存・復元できます。
+  境目をダブルクリックすると、隣の区画をたたむ・戻します(`SplitterPane::collapsed` でも)。境目を押した後は、矢印キーで動かせます。
 
 ```cpp
-tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);
+tokotachi::Splitter* splitter_main = new tokotachi::Splitter(window_main);
 splitter_main->add_widget(tree_view_folders, 0);
 splitter_main->add_widget(list_view_files, 1);
 splitter_main->sizes = std::vector<float>{200, 400};

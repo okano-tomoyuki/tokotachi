@@ -1,24 +1,5 @@
 /// @file
-/// モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。
-///
-/// @code
-/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(&window, "名前の変更");    // 親のウィンドウが所有する
-/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_rename);                 // 中身はレイアウトで並べる
-/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(dialog_rename);
-/// box->add(line_edit_name);
-/// dialog_rename->add_button(tokotachi::DialogButton::OK);
-/// dialog_rename->add_button(tokotachi::DialogButton::CANCEL);
-/// dialog_rename->on_finish = [=](tokotachi::Object*)
-/// {
-///     if (dialog_rename->result == tokotachi::DialogButton::OK) { ... line_edit_name->text ... }
-/// };
-/// dialog_rename->open();   // すぐに戻る。結果は on_finish で受け取る
-/// @endcode
-///
-/// ボタンは下端に、OS の慣習の順に並べる(Windows・KDE は「OK キャンセル」、GNOME などは「キャンセル OK」)。
-/// Enter は最初の決定のボタン(OK・はい・保存)を、Esc・ウィンドウの閉じるボタンは取り消しのボタン(キャンセル・閉じる。
-/// ボタンが 1 つだけならそのボタン)を押す。
-/// 大きさは開くときに中身に合わせる(幅は 320〜560dp。minimum_size で広げられる)。
+/// tokotachi::Dialog の宣言。
 #ifndef TOKOTACHI_WINDOWS_DIALOG_HPP
 #define TOKOTACHI_WINDOWS_DIALOG_HPP
 
@@ -26,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../widgets/button.hpp"
 #include "window.hpp"
 
@@ -45,7 +27,29 @@ enum class DialogButton
     CLOSE     ///< 取り消し
 };
 
-class Dialog : public Window
+/// モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。
+///
+/// @code
+/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(window_main, "名前の変更");    // 親のウィンドウが所有する
+/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_rename);                 // 中身はレイアウトで並べる
+/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(dialog_rename);
+/// box->add(line_edit_name);
+/// dialog_rename->add_button(tokotachi::DialogButton::OK);
+/// dialog_rename->add_button(tokotachi::DialogButton::CANCEL);
+/// dialog_rename->on_finish = [=](tokotachi::Object*)
+/// {
+///     if (dialog_rename->result == tokotachi::DialogButton::OK) { ... line_edit_name->text ... }
+/// };
+/// dialog_rename->open();   // すぐに戻る。結果は on_finish で受け取る
+/// @endcode
+///
+/// ボタンは下端に、OS の慣習の順に並べる(Windows・KDE は「OK キャンセル」、GNOME などは「キャンセル OK」)。
+/// Enter は最初の決定のボタン(OK・はい・保存)を、Esc・ウィンドウの閉じるボタンは取り消しのボタン(キャンセル・閉じる。
+/// ボタンが 1 つだけならそのボタン)を押す。
+/// 大きさは開くときに中身に合わせる(幅は 320〜560dp。minimum_size で広げられる)。
+///
+/// @ingroup windows
+class TOKOTACHI_API Dialog : public Window
 {
 public:
     /// parent の上に出すダイアログ(parent が所有する)。
@@ -70,25 +74,12 @@ public:
 protected:
     void key_down(KeyEvent& e) override;
     void arrange_children() override;
-    void child_removed(Widget* child) override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
 
 private:
-    DialogButton get_result() const { return result_; }
-    /// 並べる順に並べたボタン。
-    std::vector<std::pair<DialogButton, Button*> > ordered_buttons() const;
-    Button* button_for(DialogButton role) const;
-    /// Esc・閉じるボタンのときの結果。
-    DialogButton cancel_result() const;
-    float button_row_height() const;
-    float button_row_width() const;
-
-    Window* parent_window_;
-    std::vector<std::pair<DialogButton, Button*> > buttons_;
-    DialogButton result_;
-    NotifyHandler on_finish_;
-    bool running_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

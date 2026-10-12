@@ -6,44 +6,46 @@
 #include "menu_access.hpp"
 #include "action_access.hpp"
 #include "../widgets/widget_access.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 
 namespace tokotachi
 {
 
 Action::Action(Object* owner_object, const std::string& initial_text)
     : Object(owner_object),
-      TOKOTACHI_PROPERTY_MEMBER(Action, std::string, text),
-      TOKOTACHI_PROPERTY_MEMBER(Action, Shortcut, shortcut),
-      TOKOTACHI_PROPERTY_MEMBER(Action, Image, icon),
-      TOKOTACHI_PROPERTY_MEMBER(Action, std::string, tooltip),
-      TOKOTACHI_PROPERTY_MEMBER(Action, bool, enabled),
-      TOKOTACHI_PROPERTY_MEMBER(Action, bool, checkable),
-      TOKOTACHI_PROPERTY_MEMBER(Action, bool, checked),
-      TOKOTACHI_HANDLER_PROPERTY(Action, NotifyHandler, on_trigger),
-      text_(initial_text),
-      enabled_(true),
-      checkable_(false),
-      checked_(false)
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, text),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Shortcut, shortcut),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Image, icon),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, tooltip),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, enabled),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, checkable),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, checked),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_trigger),
+      d_(new Impl(this))
 {
+    d_->text_ = initial_text;
+    d_->enabled_ = true;
+    d_->checkable_ = false;
+    d_->checked_ = false;
 }
 
 Action::~Action()
 {
     // 入れてあるメニュー・ウィジェットから外す(それぞれが自分の一覧を書き換えるので、写しを回す)。
-    const std::vector<Menu*> menus = menus_;
+    const std::vector<Menu*> menus = d_->menus_;
     for (std::size_t i = 0; i < menus.size(); ++i)
     {
         detail::MenuAccess::forget_action(menus[i], this);
     }
-    const std::vector<Widget*> widgets = widgets_;
+    const std::vector<Widget*> widgets = d_->widgets_;
     for (std::size_t i = 0; i < widgets.size(); ++i)
     {
         widgets[i]->remove_action(this);
     }
+    delete d_;
 }
 
-void Action::changed()
+void Action::Impl::changed()
 {
     for (std::size_t i = 0; i < menus_.size(); ++i)
     {
@@ -52,47 +54,47 @@ void Action::changed()
     const std::vector<Widget*> widgets = widgets_;
     for (std::size_t i = 0; i < widgets.size(); ++i)
     {
-        detail::WidgetAccess::action_changed(widgets[i], this);
+        detail::WidgetAccess::action_changed(widgets[i], q);
     }
 }
 
-void Action::set_text(const std::string& v)
+void Action::Impl::set_text(const std::string& v)
 {
     text_ = v;
     changed();
 }
 
-void Action::set_shortcut(const Shortcut& v)
+void Action::Impl::set_shortcut(const Shortcut& v)
 {
     shortcut_ = v;
     changed();
 }
 
-void Action::set_icon(const Image& v)
+void Action::Impl::set_icon(const Image& v)
 {
     icon_ = v;
     changed();
 }
 
-void Action::set_tooltip(const std::string& v)
+void Action::Impl::set_tooltip(const std::string& v)
 {
     tooltip_ = v;
     changed();
 }
 
-void Action::set_enabled(const bool& v)
+void Action::Impl::set_enabled(const bool& v)
 {
     enabled_ = v;
     changed();
 }
 
-void Action::set_checkable(const bool& v)
+void Action::Impl::set_checkable(const bool& v)
 {
     checkable_ = v;
     changed();
 }
 
-void Action::set_checked(const bool& v)
+void Action::Impl::set_checked(const bool& v)
 {
     checked_ = v;
     changed();
@@ -100,16 +102,16 @@ void Action::set_checked(const bool& v)
 
 void Action::trigger()
 {
-    if (!enabled_)
+    if (!d_->enabled_)
     {
         return;
     }
-    if (checkable_)
+    if (d_->checkable_)
     {
-        checked = !checked_;
+        checked = !d_->checked_;
     }
     Object* self = this;
-    detail::fire(on_trigger_, self);
+    detail::fire(d_->on_trigger_, self);
 }
 
 }  // namespace tokotachi

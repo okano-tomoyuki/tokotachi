@@ -1,4 +1,14 @@
 /// @file
+/// tokotachi::BoxLayout の宣言。
+#ifndef TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
+#define TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
+
+#include "../core/export.hpp"
+#include "layout.hpp"
+
+namespace tokotachi
+{
+
 /// 子を横または縦に並べるレイアウト(cpp_tk の pack に当たる。docs/adr/0017)。
 ///
 /// @code
@@ -11,19 +21,16 @@
 /// 余った長さは、伸びる割合(stretch)に応じて項目に分ける。どの項目も伸びなければ、余りは末尾に残る。
 /// 足りないときは、各項目を最小の大きさまで、望む大きさとの差に応じて縮める。
 /// 並べる向きと直交する向きは、項目ごとのそろえ方(既定は FILL)に従う。
-#ifndef TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
-#define TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
-
-#include "layout.hpp"
-
-namespace tokotachi
-{
-
-class BoxLayout : public Layout
+///
+/// @ingroup layout
+class TOKOTACHI_API BoxLayout : public Layout
 {
 public:
+    /// target のレイアウトになる(target が所有する)。
     explicit BoxLayout(Widget* target, Orientation orientation = Orientation::VERTICAL);
+    ~BoxLayout() override;
 
+    /// 並べる向き(既定 VERTICAL)。
     Property<Orientation> orientation;
     /// 項目の間隔(dp、既定 8)。
     Property<float> spacing;
@@ -35,7 +42,9 @@ public:
     /// 伸びる空きを末尾に加える。
     void add_stretch(int stretch = 1);
 
+    /// w の伸びる割合を変える(余った大きさを、割合に応じて分ける)。
     void set_stretch(Widget* w, int stretch);
+    /// w の、並べる向きと直交する向きのそろえ方を変える。
     void set_alignment(Widget* w, Align cross_alignment);
 
 protected:
@@ -45,27 +54,8 @@ protected:
     void widget_removed(Widget* w) override;
 
 private:
-    struct Item
-    {
-        Widget* widget;  ///< nullptr なら空き
-        float space;     ///< 固定の空き(widget が nullptr のとき)
-        int stretch;
-        Align align;
-    };
-
-    Orientation get_orientation() const { return orientation_; }
-    void set_orientation(const Orientation& v);
-    float get_spacing() const { return spacing_; }
-    void set_spacing(const float& v);
-    Item* find(Widget* w);
-    /// 並べる向きの長さ・直交する向きの長さを、大きさから取り出す。
-    float main_of(const Size& s) const;
-    float cross_of(const Size& s) const;
-    Size total(bool minimum) const;
-
-    Orientation orientation_;
-    float spacing_;
-    std::vector<Item> items_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

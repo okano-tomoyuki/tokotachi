@@ -19,6 +19,7 @@ import type {
   HandlerParam,
   PrimitiveType,
   PropertyInfo,
+  PropertyRange,
   PropertyType,
   ValueTypeInfo,
 } from '../../packages/core/src/catalog/types.ts';
@@ -46,6 +47,7 @@ interface Overlay {
   geometry: Record<string, string[]>;
   after_children: Record<string, string[]>;
   editor: Record<string, EditorKind>;
+  range: Record<string, PropertyRange>;
   extra_enums: string[];
   extra_values: string[];
   special_values: string[];
@@ -62,6 +64,10 @@ function runDoxygen(outDir: string): string {
     'EXTRACT_ALL = YES',
     'EXTRACT_PRIVATE = NO',
     'EXCLUDE_SYMBOLS = tokotachi::detail tokotachi::detail::*',
+    // 公開の印(TOKOTACHI_API)と非推奨の印(TOKOTACHI_DEPRECATED。docs/adr/0057)は空にして読む
+    'MACRO_EXPANSION = YES',
+    'EXPAND_ONLY_PREDEF = YES',
+    'PREDEFINED = TOKOTACHI_API= "TOKOTACHI_DEPRECATED(message)="',
     'GENERATE_HTML = NO',
     'GENERATE_LATEX = NO',
     'GENERATE_XML = YES',
@@ -386,6 +392,9 @@ class Builder {
         const editor = chain
           .map((k) => this.overlay.editor[`${k.name}.${v.name}`])
           .find((e) => e !== undefined);
+        const range = chain
+          .map((k) => this.overlay.range[`${k.name}.${v.name}`])
+          .find((r) => r !== undefined);
         properties[v.name] = {
           type,
           declared_in: c.name,
@@ -395,6 +404,7 @@ class Builder {
             ? { after_children: true as const }
             : {}),
           ...(editor ? { editor } : {}),
+          ...(range ? { range } : {}),
         };
       }
     }

@@ -20,20 +20,22 @@
 #include <functional>
 #include <memory>
 
+#include "export.hpp"
 #include "property.hpp"
 
 namespace tokotachi
 {
 
 /// 今のスレッドがメインスレッド(Application を作ったスレッド)か。
-bool is_main_thread();
+TOKOTACHI_API bool is_main_thread();
 
 /// どのスレッドからでも呼べる: fn をメインスレッドで呼ぶよう頼む。Application が無い・終わった後なら頼まずに false を返す。
 /// Application が終わるまでに呼ばれなかった fn は、呼ばずに捨てる。
-bool post(const std::function<void()>& fn);
+TOKOTACHI_API bool post(const std::function<void()>& fn);
 
 /// Object への弱い参照: 指す Object が破棄されたかを確かめられる。
 /// 作るのと get はメインスレッドで行う。コピー・破棄はどのスレッドからでもよい(別のスレッドへ渡すために使う)。
+/// @ingroup core_threads
 template <typename T>
 class WeakRef
 {
@@ -45,17 +47,13 @@ public:
     {
         if (object)
         {
-            Object* o = object;
-            if (!o->liveness_)
-            {
-                o->liveness_ = std::make_shared<detail::Liveness>();
-            }
-            liveness_ = o->liveness_;
+            liveness_ = detail::liveness_of(object);
         }
     }
 
     /// 指す Object(破棄されていれば nullptr)。メインスレッドで呼ぶ。
     T* get() const { return liveness_ && liveness_->alive ? object_ : nullptr; }
+    /// 指す Object が破棄されたか(nullptr を指していたときも true)。メインスレッドで呼ぶ。
     bool expired() const { return get() == nullptr; }
 
 private:

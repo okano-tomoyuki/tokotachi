@@ -9,6 +9,7 @@ import {
   serializeDocument,
   serializeProject,
   type TtprojDocument,
+  type ProjectTheme,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
 import { generateProjectCode } from './generateCode.ts';
@@ -152,4 +153,33 @@ export async function addToNearestProject(window: vscode.Uri): Promise<void> {
   if (nearest) {
     await addWindowToProject(nearest.uri, window);
   }
+}
+
+/** プロジェクトのテーマの配色を選んでもらう(project-spec.md §4.1)。 */
+export async function chooseColorScheme(project: vscode.Uri): Promise<void> {
+  const current = (await findProjects()).find((p) => p.uri.toString() === project.toString())?.doc
+    ?.theme?.color_scheme;
+  const items: (vscode.QuickPickItem & { value: NonNullable<ProjectTheme['color_scheme']> })[] = [
+    { label: 'SYSTEM', value: 'SYSTEM', description: vscode.l10n.t('Follow the OS setting') },
+    { label: 'LIGHT', value: 'LIGHT', description: vscode.l10n.t('Always light') },
+    { label: 'DARK', value: 'DARK', description: vscode.l10n.t('Always dark') },
+  ];
+  const picked = await vscode.window.showQuickPick(
+    items.map((i) => ({ ...i, picked: i.value === (current ?? 'SYSTEM') })),
+    { title: vscode.l10n.t('Color scheme of the application') },
+  );
+  if (!picked) {
+    return;
+  }
+  await updateProject(project, (doc) => {
+    // SYSTEM は既定なので書かない
+    const theme: ProjectTheme = {
+      ...(picked.value !== 'SYSTEM' ? { color_scheme: picked.value } : {}),
+      ...(doc.theme?.override !== undefined ? { override: doc.theme.override } : {}),
+      ...(doc.theme?.presets !== undefined ? { presets: doc.theme.presets } : {}),
+    };
+    const rest = { ...doc };
+    Reflect.deleteProperty(rest, 'theme');
+    return Object.keys(theme).length === 0 ? rest : { ...rest, theme };
+  });
 }

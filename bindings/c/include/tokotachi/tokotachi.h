@@ -1,4 +1,4 @@
-/* Tokotachi の C API(docs/adr/0041・docs/bindings/c-api.md)。
+/* Tokotachi の C API(docs/adr/0065・docs/bindings/c-api.md)。
  * api.py から generate.py で作ったファイル。手で書き換えない(bindings/c/api.py・bindings/c/generate.py)。
  *
  * 決まり:
@@ -7,8 +7,9 @@
  * - Object の派生(ウィジェット・レイアウト・Action など)は、どれも tokotachi_object へのポインタで指す
  *   (tokotachi_widget などはその別名)。基底のクラスの関数(tokotachi_widget_set_x など)に、そのまま派生のものを渡せる。
  *   型が違うものを渡すと何もせずに失敗する。
- * - 所有は C++ と同じ(docs/adr/0015)。所有者のあるものは所有者と一緒に破棄される。所有者の無いもの(Window・Application など)は
- *   tokotachi_object_delete で破棄する。Application は最後に破棄する。
+ * - 所有は C++ と同じ(docs/adr/0015・0062)。所有者のあるものは所有者と一緒に破棄される。所有者を渡さずに作った Window は
+ *   Application が所有する。所有者の無いもの(Application・所有者を渡さない Timer など)は tokotachi_object_delete で破棄する。
+ *   Application は最後に破棄する(残っているウィンドウも一緒に破棄される)。
  * - 文字列は UTF-8。返された char* は tokotachi_free で、char** は tokotachi_strv_free で解放する。
  * - 読み取りだけの並びは size_t f(self, out, capacity) の形で、全体の数を返し、out に capacity 個まで書く。
  * - ハンドラは関数・利用者のデータ・解放の関数(NULL でもよい)を渡す。ハンドラが外れる・置き換わる・Object が破棄されるときに
@@ -39,7 +40,7 @@ extern "C" {
 
 /* C API の版(ライブラリの版と同じ) */
 #define TOKOTACHI_C_VERSION_MAJOR 0
-#define TOKOTACHI_C_VERSION_MINOR 1
+#define TOKOTACHI_C_VERSION_MINOR 3
 #define TOKOTACHI_C_VERSION_PATCH 0
 
 /* ---- 列挙(値は C++ の enum class と同じ順) ---- */
@@ -578,7 +579,7 @@ TOKOTACHI_C_API void tokotachi_object_delete_later(tokotachi_object* object);
 /* この API が知っている最も派生したクラスの名前("Label" など。解放しない) */
 TOKOTACHI_C_API const char* tokotachi_object_class_name(tokotachi_object* object);
 /* Object に利用者のデータを 1 つ付ける。Object が破棄されるとき・付け替えたときに destroy(data) を呼ぶ
- * (破棄の途中で呼ぶので、destroy の中で Object に触ってはいけない) */
+ * (破棄の始め、所有しているものより先に呼ぶ。destroy の中で Object に触ってはいけない) */
 TOKOTACHI_C_API void tokotachi_object_set_user_data(tokotachi_object* object, void* data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void* tokotachi_object_get_user_data(tokotachi_object* object);
 /* target のプロパティと source のプロパティを結ぶ(C++ の tokotachi::bind。docs/adr/0016)。名前で指す("text" など)。
@@ -641,7 +642,7 @@ TOKOTACHI_C_API void tokotachi_path_add_round_rect(tokotachi_path* path, tokotac
 TOKOTACHI_C_API void tokotachi_path_add_ellipse(tokotachi_path* path, tokotachi_point center, float rx, float ry);
 TOKOTACHI_C_API void tokotachi_path_add_arc(tokotachi_path* path, tokotachi_point center, float rx, float ry, float start_angle, float sweep_angle, bool new_figure);
 TOKOTACHI_C_API void tokotachi_path_add_polyline(tokotachi_path* path, const tokotachi_point* points, size_t count, bool close);
-TOKOTACHI_C_API bool tokotachi_path_empty(const tokotachi_path* path);
+TOKOTACHI_C_API bool tokotachi_path_is_empty(const tokotachi_path* path);
 TOKOTACHI_C_API tokotachi_text_layout* tokotachi_text_layout_new(const char* text, tokotachi_font font, float scale, float wrap_width, tokotachi_align alignment);
 TOKOTACHI_C_API void tokotachi_text_layout_free(tokotachi_text_layout* layout);
 TOKOTACHI_C_API float tokotachi_text_layout_width(const tokotachi_text_layout* layout);
@@ -693,6 +694,13 @@ TOKOTACHI_C_API void tokotachi_application_get_dark_theme(tokotachi_application*
 TOKOTACHI_C_API void tokotachi_application_set_dark_theme(tokotachi_application* self, const tokotachi_theme* value);
 TOKOTACHI_C_API bool tokotachi_application_get_dark(tokotachi_application* self);
 TOKOTACHI_C_API void tokotachi_application_get_theme(tokotachi_application* self, tokotachi_theme* out);
+TOKOTACHI_C_API char* tokotachi_application_get_language(tokotachi_application* self);
+TOKOTACHI_C_API void tokotachi_application_set_language(tokotachi_application* self, const char* value);
+/* 閉じたら(隠れたら・破棄されたら)アプリケーションを終えるウィンドウ */
+TOKOTACHI_C_API tokotachi_window* tokotachi_application_get_main_window(tokotachi_application* self);
+TOKOTACHI_C_API void tokotachi_application_set_main_window(tokotachi_application* self, tokotachi_window* value);
+TOKOTACHI_C_API bool tokotachi_application_get_auto_quit_enabled(tokotachi_application* self);
+TOKOTACHI_C_API void tokotachi_application_set_auto_quit_enabled(tokotachi_application* self, bool value);
 TOKOTACHI_C_API void tokotachi_application_set_on_theme_change(tokotachi_application* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 /* イベントループを回し、quit で抜ける。戻り値は quit に渡した値 */
 TOKOTACHI_C_API int tokotachi_application_exec(tokotachi_application* self);
@@ -707,7 +715,7 @@ TOKOTACHI_C_API bool tokotachi_timer_get_repeat(tokotachi_timer* self);
 TOKOTACHI_C_API void tokotachi_timer_set_repeat(tokotachi_timer* self, bool value);
 TOKOTACHI_C_API bool tokotachi_timer_get_enabled(tokotachi_timer* self);
 TOKOTACHI_C_API void tokotachi_timer_set_enabled(tokotachi_timer* self, bool value);
-TOKOTACHI_C_API void tokotachi_timer_set_on_timer(tokotachi_timer* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_timer_set_on_timeout(tokotachi_timer* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 
 /* ======== Widget(include/tokotachi/widgets/widget.hpp。基底は Object) ======== */
 /* ウィジェットの基底。tokotachi_widget_new は中身の無い入れ物を作る */
@@ -816,7 +824,7 @@ TOKOTACHI_C_API void tokotachi_combo_box_set_font(tokotachi_combo_box* self, tok
 TOKOTACHI_C_API void tokotachi_combo_box_set_on_change(tokotachi_combo_box* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_combo_box_open_popup(tokotachi_combo_box* self);
 TOKOTACHI_C_API void tokotachi_combo_box_close_popup(tokotachi_combo_box* self);
-TOKOTACHI_C_API bool tokotachi_combo_box_is_popup_open(tokotachi_combo_box* self);
+TOKOTACHI_C_API bool tokotachi_combo_box_get_popup_open(tokotachi_combo_box* self);
 
 /* ======== Label(include/tokotachi/widgets/label.hpp。基底は Widget) ======== */
 TOKOTACHI_C_API tokotachi_label* tokotachi_label_new(tokotachi_widget* parent, const char* text);
@@ -824,8 +832,8 @@ TOKOTACHI_C_API char* tokotachi_label_get_text(tokotachi_label* self);
 TOKOTACHI_C_API void tokotachi_label_set_text(tokotachi_label* self, const char* value);
 TOKOTACHI_C_API tokotachi_font tokotachi_label_get_font(tokotachi_label* self);
 TOKOTACHI_C_API void tokotachi_label_set_font(tokotachi_label* self, tokotachi_font value);
-TOKOTACHI_C_API tokotachi_theme_color tokotachi_label_get_color(tokotachi_label* self);
-TOKOTACHI_C_API void tokotachi_label_set_color(tokotachi_label* self, tokotachi_theme_color value);
+TOKOTACHI_C_API tokotachi_theme_color tokotachi_label_get_text_color(tokotachi_label* self);
+TOKOTACHI_C_API void tokotachi_label_set_text_color(tokotachi_label* self, tokotachi_theme_color value);
 TOKOTACHI_C_API tokotachi_align tokotachi_label_get_alignment(tokotachi_label* self);
 TOKOTACHI_C_API void tokotachi_label_set_alignment(tokotachi_label* self, tokotachi_align value);
 TOKOTACHI_C_API bool tokotachi_label_get_word_wrap(tokotachi_label* self);
@@ -844,7 +852,7 @@ TOKOTACHI_C_API bool tokotachi_text_input_base_get_has_selection(tokotachi_text_
 TOKOTACHI_C_API char* tokotachi_text_input_base_get_selected_text(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_set_on_change(tokotachi_text_input_base* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_text_input_base_select_all(tokotachi_text_input_base* self);
-TOKOTACHI_C_API void tokotachi_text_input_base_deselect(tokotachi_text_input_base* self);
+TOKOTACHI_C_API void tokotachi_text_input_base_clear_selection(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_cut(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_copy(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_paste(tokotachi_text_input_base* self);
@@ -966,7 +974,7 @@ TOKOTACHI_C_API tokotachi_tab* tokotachi_tab_widget_insert_tab(tokotachi_tab_wid
 TOKOTACHI_C_API tokotachi_widget* tokotachi_tab_widget_remove_tab(tokotachi_tab_widget* self, tokotachi_tab* tab);
 
 /* ======== Window(include/tokotachi/windows/window.hpp。基底は Widget) ======== */
-/* Application を作った後に作る。所有者を持たない(利用者が破棄する) */
+/* Application を作った後に作る。Application が所有する(docs/adr/0062) */
 TOKOTACHI_C_API tokotachi_window* tokotachi_window_new(const char* title, float width, float height);
 TOKOTACHI_C_API char* tokotachi_window_get_title(tokotachi_window* self);
 TOKOTACHI_C_API void tokotachi_window_set_title(tokotachi_window* self, const char* value);
@@ -979,8 +987,13 @@ TOKOTACHI_C_API tokotachi_tool_bar* tokotachi_window_get_tool_bar(tokotachi_wind
 TOKOTACHI_C_API void tokotachi_window_set_tool_bar(tokotachi_window* self, tokotachi_tool_bar* value);
 TOKOTACHI_C_API tokotachi_status_bar* tokotachi_window_get_status_bar(tokotachi_window* self);
 TOKOTACHI_C_API void tokotachi_window_set_status_bar(tokotachi_window* self, tokotachi_status_bar* value);
+/* true なら、閉じた後に破棄する */
+TOKOTACHI_C_API bool tokotachi_window_get_destroy_on_close(tokotachi_window* self);
+TOKOTACHI_C_API void tokotachi_window_set_destroy_on_close(tokotachi_window* self, bool value);
 TOKOTACHI_C_API void tokotachi_window_set_on_close(tokotachi_window* self, tokotachi_close_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_window_close(tokotachi_window* self);
+/* owner が所有し、その上に出すウィンドウ(docs/adr/0062) */
+TOKOTACHI_C_API tokotachi_window* tokotachi_window_new_owned(tokotachi_window* owner, const char* title, float width, float height);
 TOKOTACHI_C_API bool tokotachi_window_save_png(tokotachi_window* self, const char* path);
 /* 全体を描いて Bitmap にする(tokotachi_bitmap_free で解放する) */
 TOKOTACHI_C_API tokotachi_bitmap* tokotachi_window_capture(tokotachi_window* self);
@@ -1015,8 +1028,8 @@ TOKOTACHI_C_API char** tokotachi_file_dialog_get_filters(tokotachi_file_dialog* 
 TOKOTACHI_C_API void tokotachi_file_dialog_set_filters(tokotachi_file_dialog* self, const char* const* value, size_t value_count);
 TOKOTACHI_C_API char* tokotachi_file_dialog_get_location(tokotachi_file_dialog* self);
 TOKOTACHI_C_API void tokotachi_file_dialog_set_location(tokotachi_file_dialog* self, const char* value);
-TOKOTACHI_C_API bool tokotachi_file_dialog_get_allow_many(tokotachi_file_dialog* self);
-TOKOTACHI_C_API void tokotachi_file_dialog_set_allow_many(tokotachi_file_dialog* self, bool value);
+TOKOTACHI_C_API bool tokotachi_file_dialog_get_multi_enabled(tokotachi_file_dialog* self);
+TOKOTACHI_C_API void tokotachi_file_dialog_set_multi_enabled(tokotachi_file_dialog* self, bool value);
 TOKOTACHI_C_API char** tokotachi_file_dialog_get_paths(tokotachi_file_dialog* self);
 TOKOTACHI_C_API char* tokotachi_file_dialog_get_error(tokotachi_file_dialog* self);
 TOKOTACHI_C_API int tokotachi_file_dialog_get_selected_filter(tokotachi_file_dialog* self);
@@ -1122,7 +1135,7 @@ TOKOTACHI_C_API void tokotachi_menu_add_separator(tokotachi_menu* self);
 TOKOTACHI_C_API tokotachi_menu* tokotachi_menu_add_submenu(tokotachi_menu* self, const char* title);
 TOKOTACHI_C_API void tokotachi_menu_popup(tokotachi_menu* self, tokotachi_widget* anchor_widget, tokotachi_point at);
 TOKOTACHI_C_API void tokotachi_menu_close(tokotachi_menu* self);
-TOKOTACHI_C_API bool tokotachi_menu_is_open(tokotachi_menu* self);
+TOKOTACHI_C_API bool tokotachi_menu_get_opened(tokotachi_menu* self);
 
 /* ======== ItemModel(include/tokotachi/views/item_model.hpp。基底は Object) ======== */
 /* 一覧・木のモデルの基底。独自のモデルは tokotachi_custom_model_new で作る */

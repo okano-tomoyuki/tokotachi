@@ -8,7 +8,7 @@
 
 #include <tokotachi/core/thread.hpp>
 
-#include "property_impl.hpp"
+#include "impl.hpp"
 
 namespace tokotachi
 {
@@ -30,18 +30,28 @@ struct TaskShared
 
 }  // namespace detail
 
-struct TaskAccess
+class TaskBase::Impl
 {
-    static void progress_arrived(TaskBase* t, const std::shared_ptr<detail::TaskShared>& run)
-    {
-        t->progress_arrived(run);
-    }
+    TOKOTACHI_IMPL(TaskBase);
 
-    static void finished(TaskBase* t, const std::shared_ptr<detail::TaskShared>& run,
-                         const std::function<void()>& deliver, const std::string& failure)
-    {
-        t->finished(run, deliver, failure);
-    }
+    explicit Impl(TaskBase* task) : q(task), progress_(0), cancelled_(false) {}
+
+    bool get_running() const { return shared_ != nullptr; }
+    double get_progress() const { return progress_; }
+    bool get_cancelled() const { return cancelled_; }
+    std::string get_error() const { return error_; }
+
+    /// メインスレッドで呼ぶ。
+    void progress_arrived(const std::shared_ptr<detail::TaskShared>& run);
+    void finished(const std::shared_ptr<detail::TaskShared>& run, const std::function<void()>& deliver,
+                  const std::string& failure);
+
+    std::shared_ptr<detail::TaskShared> shared_;  ///< 動いている実行(無ければ nullptr)
+    double progress_;
+    bool cancelled_;
+    std::string error_;
+    NotifyHandler on_progress_;
+    NotifyHandler on_finish_;
 };
 
 bool TaskContext::cancel_requested() const { return shared_->cancel.load(); }
@@ -62,43 +72,43 @@ void TaskContext::report_progress(double value)
     {
         // 届くまでに知らせた値は、届いたときに最後の値だけを読む(間引く)。
         const std::shared_ptr<detail::TaskShared> run = shared_;
-        post(run->owner, [run](TaskBase* t) { TaskAccess::progress_arrived(t, run); });
+        post(run->owner, [run](TaskBase* t) { detail::impl_of(t)->progress_arrived(run); });
     }
 }
 
 TaskBase::TaskBase(Object* owner_object)
     : Object(owner_object),
-      TOKOTACHI_READONLY_PROPERTY(TaskBase, bool, running),
-      TOKOTACHI_READONLY_PROPERTY(TaskBase, double, progress),
-      TOKOTACHI_READONLY_PROPERTY(TaskBase, bool, cancelled),
-      TOKOTACHI_READONLY_PROPERTY(TaskBase, std::string, error),
-      TOKOTACHI_HANDLER_PROPERTY(TaskBase, NotifyHandler, on_progress),
-      TOKOTACHI_HANDLER_PROPERTY(TaskBase, NotifyHandler, on_finish),
-      progress_(0),
-      cancelled_(false)
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, running),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, double, progress),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, cancelled),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, error),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_progress),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_finish),
+      d_(new Impl(this))
 {
 }
 
 TaskBase::~TaskBase()
 {
     // 結果は、この Object が破棄されたので届けない(WeakRef が止める)。仕事には戻るよう頼む。
-    if (shared_)
+    if (d_->shared_)
     {
-        shared_->cancel = true;
+        d_->shared_->cancel = true;
     }
+    delete d_;
 }
 
 void TaskBase::cancel()
 {
-    if (shared_)
+    if (d_->shared_)
     {
-        shared_->cancel = true;
+        d_->shared_->cancel = true;
     }
 }
 
 bool TaskBase::launch(const std::function<void(TaskContext&)>& body, const std::function<void()>& deliver)
 {
-    if (shared_ || !body)
+    if (d_->shared_ || !body)
     {
         return false;
     }
@@ -127,7 +137,7 @@ bool TaskBase::launch(const std::function<void(TaskContext&)>& body, const std::
                 {
                     failure = "unknown exception";
                 }
-                post(run->owner, [run, deliver, failure](TaskBase* t) { TaskAccess::finished(t, run, deliver, failure); });
+                post(run->owner, [run, deliver, failure](TaskBase* t) { detail::impl_of(t)->finished(run, deliver, failure); });
             })
             .detach();
     }
@@ -135,13 +145,13 @@ bool TaskBase::launch(const std::function<void(TaskContext&)>& body, const std::
     {
         return false;  // スレッドを作れなかった
     }
-    shared_ = run;
-    const bool had_progress = progress_ != 0;
-    const bool had_cancelled = cancelled_;
-    const bool had_error = !error_.empty();
-    progress_ = 0;
-    cancelled_ = false;
-    error_.clear();
+    d_->shared_ = run;
+    const bool had_progress = d_->progress_ != 0;
+    const bool had_cancelled = d_->cancelled_;
+    const bool had_error = !d_->error_.empty();
+    d_->progress_ = 0;
+    d_->cancelled_ = false;
+    d_->error_.clear();
     notify_changed(running);
     if (had_progress)
     {
@@ -158,7 +168,7 @@ bool TaskBase::launch(const std::function<void(TaskContext&)>& body, const std::
     return true;
 }
 
-void TaskBase::progress_arrived(const std::shared_ptr<detail::TaskShared>& run)
+void TaskBase::Impl::progress_arrived(const std::shared_ptr<detail::TaskShared>& run)
 {
     if (run != shared_)
     {
@@ -175,13 +185,13 @@ void TaskBase::progress_arrived(const std::shared_ptr<detail::TaskShared>& run)
         return;
     }
     progress_ = value;
-    notify_changed(progress);
-    Object* self = this;
+    q->notify_changed(q->progress);
+    Object* self = q;
     detail::fire(on_progress_, self);
 }
 
-void TaskBase::finished(const std::shared_ptr<detail::TaskShared>& run, const std::function<void()>& deliver,
-                        const std::string& failure)
+void TaskBase::Impl::finished(const std::shared_ptr<detail::TaskShared>& run, const std::function<void()>& deliver,
+                              const std::string& failure)
 {
     if (run != shared_)
     {
@@ -205,19 +215,19 @@ void TaskBase::finished(const std::shared_ptr<detail::TaskShared>& run, const st
     }
     if (progress_changed)
     {
-        notify_changed(progress);
+        q->notify_changed(q->progress);
     }
-    notify_changed(running);
+    q->notify_changed(q->running);
     if (cancelled_)
     {
-        notify_changed(cancelled);
+        q->notify_changed(q->cancelled);
     }
     if (!error_.empty())
     {
-        notify_changed(error);
+        q->notify_changed(q->error);
     }
     // ハンドラの中でこの Task が破棄されてもよいよう、最後に呼ぶ。
-    Object* self = this;
+    Object* self = q;
     detail::fire(on_finish_, self);
 }
 

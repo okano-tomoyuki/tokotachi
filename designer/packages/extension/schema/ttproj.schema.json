@@ -37,10 +37,188 @@
       },
       "additionalProperties": false
     },
+    "theme": {
+      "type": "object",
+      "properties": {
+        "color_scheme": {
+          "type": "string",
+          "enum": [
+            "SYSTEM",
+            "LIGHT",
+            "DARK"
+          ]
+        },
+        "override": {
+          "type": "object",
+          "properties": {
+            "colors": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "enum": [
+                  "WINDOW",
+                  "POPUP",
+                  "TEXT",
+                  "TEXT_SECONDARY",
+                  "TEXT_DISABLED",
+                  "PLACEHOLDER",
+                  "ACCENT",
+                  "ACCENT_HOVER",
+                  "ACCENT_PRESSED",
+                  "ACCENT_DISABLED",
+                  "ON_ACCENT",
+                  "FOCUS_RING",
+                  "FIELD",
+                  "FIELD_DISABLED",
+                  "BORDER",
+                  "SELECTION",
+                  "SELECTION_INACTIVE",
+                  "ON_SELECTION",
+                  "PREEDIT_UNDERLINE",
+                  "SCROLL_TRACK",
+                  "SCROLL_THUMB",
+                  "SCROLL_THUMB_ACTIVE",
+                  "TOOLTIP",
+                  "ON_TOOLTIP"
+                ]
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "light": {
+                        "type": "string",
+                        "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                      },
+                      "dark": {
+                        "type": "string",
+                        "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                      }
+                    },
+                    "required": [
+                      "light",
+                      "dark"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0
+            },
+            "field_radius": {
+              "type": "number",
+              "minimum": 0
+            },
+            "field_padding": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "presets": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "colors": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "enum": [
+                    "WINDOW",
+                    "POPUP",
+                    "TEXT",
+                    "TEXT_SECONDARY",
+                    "TEXT_DISABLED",
+                    "PLACEHOLDER",
+                    "ACCENT",
+                    "ACCENT_HOVER",
+                    "ACCENT_PRESSED",
+                    "ACCENT_DISABLED",
+                    "ON_ACCENT",
+                    "FOCUS_RING",
+                    "FIELD",
+                    "FIELD_DISABLED",
+                    "BORDER",
+                    "SELECTION",
+                    "SELECTION_INACTIVE",
+                    "ON_SELECTION",
+                    "PREEDIT_UNDERLINE",
+                    "SCROLL_TRACK",
+                    "SCROLL_THUMB",
+                    "SCROLL_THUMB_ACTIVE",
+                    "TOOLTIP",
+                    "ON_TOOLTIP"
+                  ]
+                },
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "type": "string",
+                          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                        },
+                        "dark": {
+                          "type": "string",
+                          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+                        }
+                      },
+                      "required": [
+                        "light",
+                        "dark"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0
+              },
+              "field_radius": {
+                "type": "number",
+                "minimum": 0
+              },
+              "field_padding": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "main_window": {
       "type": "string"
     },
     "windows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "custom_widgets": {
       "type": "array",
       "items": {
         "type": "string"

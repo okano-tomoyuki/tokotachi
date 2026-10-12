@@ -16,7 +16,9 @@ import type {
 } from './schema.ts';
 import { layouts, menus, namedNodes, temporaryNames, widgets, type NamedNode } from './tree.ts';
 import { bindingOf, isBindable, variableTypeOf } from './bindings.ts';
+import { isValidWindowPath } from '../project/paths.ts';
 import { checkMembers, checkValue, isEnumValue } from './values.ts';
+import { describeRange, inRange, propertyRange } from './range.ts';
 
 export function validateDocument(doc: TtuiDocument): Diagnostic[] {
   return new Validator(doc).run();
@@ -216,7 +218,36 @@ class Validator {
       if (typeof prop.type === 'object' && 'ref' in prop.type && typeof value === 'string') {
         this.checkReference(value, prop.type.ref, p);
       }
+      if (typeof value === 'number') {
+        // 範囲の外でも実行はできる(丸める・無視する)ので警告にする
+        const range = propertyRange(cls, prop, this.nodeAt(path));
+        if (!inRange(value, range)) {
+          this.report(
+            'warning',
+            'out-of-range',
+            l10n.t(
+              '{0} is out of the range of "{1}" ({2})',
+              value,
+              name,
+              describeRange(range) ?? '',
+            ),
+            p,
+          );
+        }
+      }
     }
+  }
+
+  /** path の位置のノード(定義ファイルの JSON)。 */
+  private nodeAt(path: JsonPath): unknown {
+    let node: unknown = this.doc;
+    for (const key of path) {
+      node =
+        typeof node === 'object' && node !== null
+          ? (node as Record<string | number, unknown>)[key]
+          : undefined;
+    }
+    return node;
   }
 
   /** Variable との結びつけ(dsl-spec.md §5.2)。 */
@@ -340,6 +371,17 @@ class Validator {
         });
       }
     }
+    if (w.class === 'Widget') {
+      // 部品ファイル(docs/adr/0043)はウィンドウの中に置くので、バーを持たない
+      for (const key of ['menu_bar', 'tool_bar', 'status_bar'] as const) {
+        if (w[key] !== undefined) {
+          this.error('children-not-allowed', l10n.t('{0} cannot have "{1}"', w.class, key), [
+            ...path,
+            key,
+          ]);
+        }
+      }
+    }
     if (w.menu_bar) {
       this.checkProperties('MenuBar', w.menu_bar.properties, [...path, 'menu_bar']);
     }
@@ -414,6 +456,9 @@ class Validator {
     if (!this.checkClass(node.class, 'widget', [...path, 'class'])) {
       return;
     }
+    if (node.component !== undefined) {
+      this.checkComponent(node, path);
+    }
     this.checkProperties(
       node.class,
       node.properties,
@@ -434,6 +479,36 @@ class Validator {
     node.columns?.forEach((c, i) => {
       this.checkProperties('Column', c.properties, [...path, 'columns', i]);
     });
+  }
+
+  /** 部品ファイルを置いた部品(docs/adr/0043)。ファイルが有るか・根が Widget かは、ファイルを読む拡張が調べる。 */
+  private checkComponent(node: WidgetNode, path: JsonPath): void {
+    if (node.class !== 'Widget') {
+      this.error(
+        'invalid-component',
+        l10n.t('A widget placed from a component file must have "class": "Widget"'),
+        [...path, 'class'],
+      );
+    }
+    if (!isValidWindowPath(node.component ?? '')) {
+      this.error(
+        'invalid-component',
+        l10n.t('Write a relative path ending with ".ttui.json" (separator: /)'),
+        [...path, 'component'],
+      );
+    }
+    for (const key of ['layout', 'children', 'tabs', 'panes', 'content', 'columns'] as const) {
+      if (node[key] !== undefined) {
+        this.error(
+          'children-not-allowed',
+          l10n.t(
+            'A widget placed from a component file cannot have "{0}" (the component file decides its content)',
+            key,
+          ),
+          [...path, key],
+        );
+      }
+    }
   }
 
   private checkLayout(layout: LayoutNode, path: JsonPath): void {

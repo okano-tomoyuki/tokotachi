@@ -2,6 +2,7 @@
 
 #include <tokotachi/core/application.hpp>
 
+#include <algorithm>
 #include <cstdint>
 
 #include "../widgets/theme.hpp"
@@ -113,17 +114,125 @@ bool Theme::operator==(const Theme& o) const
 
 Color ThemeColor::resolve() const { return is_role_ ? detail::current_theme()[role_] : color_; }
 
+// ---- ThemeOverride ----
+
+ThemeOverride::ThemeOverride() : radius_(-1), field_radius_(-1), field_padding_(-1)
+{
+    for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
+    {
+        has_[i] = false;
+    }
+}
+
+ThemeOverride& ThemeOverride::set(ColorRole role, const Color& color) { return set(role, color, color); }
+
+ThemeOverride& ThemeOverride::set(ColorRole role, const Color& light_color, const Color& dark_color)
+{
+    const int i = static_cast<int>(role);
+    light_[i] = light_color;
+    dark_[i] = dark_color;
+    has_[i] = true;
+    return *this;
+}
+
+ThemeOverride& ThemeOverride::unset(ColorRole role)
+{
+    const int i = static_cast<int>(role);
+    has_[i] = false;
+    light_[i] = dark_[i] = Color();
+    return *this;
+}
+
+ThemeOverride& ThemeOverride::set_radius(float v)
+{
+    radius_ = std::max(v, -1.0f);  // 負の値はどれも「上書きしない」
+    return *this;
+}
+
+ThemeOverride& ThemeOverride::set_field_radius(float v)
+{
+    field_radius_ = std::max(v, -1.0f);
+    return *this;
+}
+
+ThemeOverride& ThemeOverride::set_field_padding(float v)
+{
+    field_padding_ = std::max(v, -1.0f);
+    return *this;
+}
+
+bool ThemeOverride::is_empty() const
+{
+    for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
+    {
+        if (has_[i])
+        {
+            return false;
+        }
+    }
+    return radius_ < 0 && field_radius_ < 0 && field_padding_ < 0;
+}
+
+void ThemeOverride::apply_to(Theme& theme) const
+{
+    for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
+    {
+        if (has_[i])
+        {
+            theme[static_cast<ColorRole>(i)] = theme.dark_colors ? dark_[i] : light_[i];
+        }
+    }
+    if (radius_ >= 0)
+    {
+        theme.radius = radius_;
+    }
+    if (field_radius_ >= 0)
+    {
+        theme.field_radius = field_radius_;
+    }
+    if (field_padding_ >= 0)
+    {
+        theme.field_padding = field_padding_;
+    }
+}
+
+bool ThemeOverride::operator==(const ThemeOverride& o) const
+{
+    for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
+    {
+        if (has_[i] != o.has_[i] || (has_[i] && (light_[i] != o.light_[i] || dark_[i] != o.dark_[i])))
+        {
+            return false;
+        }
+    }
+    return radius_ == o.radius_ && field_radius_ == o.field_radius_ && field_padding_ == o.field_padding_;
+}
+
 namespace detail
 {
 
-const Theme& current_theme()
+namespace
+{
+const Theme* g_scoped_theme = nullptr;  // ThemeScope が切り替えた今のテーマ(無ければアプリケーションのもの)
+}  // namespace
+
+const Theme& application_theme()
 {
     if (Application* app = Application::instance())
     {
-        return app->impl()->current_theme;
+        return detail::impl_of(app)->current_theme;
     }
     static const Theme fallback;
     return fallback;
+}
+
+const Theme& current_theme() { return g_scoped_theme ? *g_scoped_theme : application_theme(); }
+
+const Theme* swap_scoped_theme(const Theme* theme)
+{
+    const Theme* previous = g_scoped_theme;
+    g_scoped_theme = theme;
+    return previous;
 }
 
 }  // namespace detail

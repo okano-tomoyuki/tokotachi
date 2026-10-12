@@ -1,22 +1,32 @@
 /// @file
-/// 押して使うウィジェット(Button・CheckBox・RadioButton)の共通の部分: 文字、マウス・キーでの押下、ホバー。
+/// tokotachi::ButtonBase の宣言。
 #ifndef TOKOTACHI_WIDGETS_BUTTON_BASE_HPP
 #define TOKOTACHI_WIDGETS_BUTTON_BASE_HPP
 
 #include <string>
 
+#include "../core/export.hpp"
 #include "../graphics/text_layout.hpp"
+#include "control_state.hpp"
 #include "widget.hpp"
 
 namespace tokotachi
 {
 
-class ButtonBase : public Widget
+/// 押して使うウィジェット(Button・CheckBox・RadioButton)の共通の部分: 文字、マウス・キーでの押下、ホバー。
+/// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、フォーカスを得て押したことになる(「&」は「&&」)。
+///
+/// @ingroup widgets_base
+class TOKOTACHI_API ButtonBase : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ButtonBase(Widget* parent = nullptr, const std::string& text = std::string());
+    ~ButtonBase() override;
 
+    /// 表示する文字(& でニーモニック。&& は & そのもの)。
     Property<std::string> text;
+    /// 文字のフォント。
     Property<Font> font;
 
     /// 上で押して離した・フォーカスがあるときに Space か Enter を押した。
@@ -39,21 +49,20 @@ protected:
     Size compute_minimum_size() const override;
 
     /// 描画のための状態。
-    bool is_hovered() const { return hovered_; }
-    bool is_pressed() const { return pressed_in_; }
+    bool is_hovered() const;
+    /// 押している途中か。
+    bool is_pressed() const;
+    /// 描画のための状態をまとめたもの(有効・ホバー・押下・フォーカス。checked は false)。標準の見た目を描く関数
+    /// (tokotachi::draw)にそのまま渡せる。
+    ControlState state() const;
+    /// 表示する文字(text から & を除いたもの)のレイアウト。
     const TextLayout& text_layout() const;
+    /// text_layout() を at に描いたときの、ニーモニックの下線(Alt を押している間だけ)。
+    void paint_mnemonic(Canvas& canvas, const Point& at, const Color& color) const;
 
 private:
-    void set_text(const std::string& v);
-    void set_font(const Font& v);
-
-    std::string text_;
-    Font font_;
-    NotifyHandler on_click_;
-    bool hovered_;
-    bool pressed_;     ///< 左ボタンを押している(外に出ても続く)
-    bool pressed_in_;  ///< 押していて、ポインタが上にある
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

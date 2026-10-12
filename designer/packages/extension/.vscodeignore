@@ -3,10 +3,13 @@
 !dist/canvas/**
 !dist/webview/**
 !schema/**
-!images/**
+!images/icon.png
+!images/activitybar.svg
 !l10n/**
 !package.json
 !package.nls.json
 !package.nls.ja.json
 !README.md
+!CHANGELOG.md
+!THIRD_PARTY_LICENSES.txt
 !LICENSE

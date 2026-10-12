@@ -36,6 +36,24 @@ describe('parseProject', () => {
     ]);
   });
 
+  it('自作部品のヘッダ: C++ のヘッダの相対パス・重複', () => {
+    expect(
+      codes({
+        format_version: 1,
+        custom_widgets: ['src/gauge.hpp', './src/gauge.hpp', 'C:/x.hpp', 'src/gauge.cpp', 'dial.h'],
+      }),
+    ).toEqual(['custom_widgets.1', 'custom_widgets.2', 'custom_widgets.3']);
+    expect(serializeProject({ format_version: 1, windows: [], custom_widgets: ['src/gauge.hpp'] }))
+      .toBe(`{
+  "format_version": 1,
+  "windows": [],
+  "custom_widgets": [
+    "src/gauge.hpp"
+  ]
+}
+`);
+  });
+
   it('決まった形で書き出す', () => {
     const text = serializeProject({ ...valid, format_version: 1 } as never);
     expect(text).toBe(`{
@@ -52,5 +70,52 @@ describe('parseProject', () => {
   ]
 }
 `);
+  });
+
+  it('テーマ: 配色と上書きを調べ、決まった形で書き出す', () => {
+    const theme = {
+      color_scheme: 'DARK',
+      override: {
+        colors: { ACCENT: '#DC2626', FIELD: { light: '#FFFFFF', dark: '#000000' } },
+        radius: 0,
+      },
+    };
+    expect(parseProject(JSON.stringify({ ...valid, theme })).diagnostics).toEqual([]);
+    expect(codes({ ...valid, theme: { color_scheme: 'AUTO' } })).toEqual(['theme.color_scheme']);
+    expect(
+      codes({ ...valid, theme: { override: { colors: { NOPE: '#000000' } } } }).length,
+    ).toBeGreaterThan(0);
+    expect(codes({ ...valid, theme: { override: { radius: -1 } } }).length).toBeGreaterThan(0);
+    const text = serializeProject({ format_version: 1, theme } as never);
+    expect(text).toBe(`{
+  "format_version": 1,
+  "theme": {
+    "color_scheme": "DARK",
+    "override": {
+      "colors": {
+        "ACCENT": "#DC2626",
+        "FIELD": {
+          "light": "#FFFFFF",
+          "dark": "#000000"
+        }
+      },
+      "radius": 0
+    }
+  }
+}
+`);
+  });
+
+  it('登録したテーマの名前と中身を調べる', () => {
+    expect(
+      parseProject(JSON.stringify({ ...valid, theme: { presets: { danger: { radius: 0 } } } }))
+        .diagnostics,
+    ).toEqual([]);
+    expect(codes({ ...valid, theme: { presets: { '1bad': { radius: 0 } } } })).toEqual([
+      'theme.presets.1bad',
+    ]);
+    expect(
+      codes({ ...valid, theme: { presets: { danger: { preset: 'x' } } } }).length,
+    ).toBeGreaterThan(0);
   });
 });

@@ -1,16 +1,5 @@
 /// @file
-/// 値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。
-///
-/// @code
-/// tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(&window);
-/// tokotachi::bind(line_edit_name->text, name->value);
-/// tokotachi::bind(label_name->text, name->value);
-/// name->value = "初期値";                             // line_edit_name と label_name の両方に伝わる
-/// name->on_change = [](tokotachi::Object* sender) { ... };  // 値が変わったときに呼ぶ
-/// name->on_set = [](tokotachi::Object* sender) { ... };     // 値が設定されるたびに呼ぶ(同じ値の代入でも)
-/// @endcode
-///
-/// 値の型は == で比べられること。
+/// tokotachi::Variable の宣言。
 #ifndef TOKOTACHI_CORE_VARIABLE_HPP
 #define TOKOTACHI_CORE_VARIABLE_HPP
 
@@ -20,10 +9,25 @@
 namespace tokotachi
 {
 
+/// 値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。
+///
+/// @code
+/// tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(window_main);
+/// tokotachi::bind(line_edit_name->text, name->value);
+/// tokotachi::bind(label_name->text, name->value);
+/// name->value = "初期値";                             // line_edit_name と label_name の両方に伝わる
+/// name->on_change = [](tokotachi::Object* sender) { ... };  // 値が変わったときに呼ぶ
+/// name->on_set = [](tokotachi::Object* sender) { ... };     // 値が設定されるたびに呼ぶ(同じ値の代入でも)
+/// @endcode
+///
+/// 値の型は == で比べられること。
+///
+/// @ingroup core_objects
 template <typename T>
 class Variable : public Object
 {
 public:
+    /// 所有者と初めの値から作る。
     explicit Variable(Object* owner_object = nullptr, const T& initial = T())
         : Object(owner_object),
           value(this, &Variable::get_value, &Variable::set_value),
@@ -33,6 +37,7 @@ public:
     {
     }
 
+    /// 値。結びつけたプロパティと値をそろえる(どちらを変えても伝わる)。
     Property<T> value;
     /// value が設定された(同じ値の代入でも呼ぶ。docs/adr/0016)。
     Property<NotifyHandler> on_set;
@@ -75,9 +80,13 @@ private:
     NotifyHandler on_change_;
 };
 
+/// 文字の変数。
 typedef Variable<std::string> StringVariable;
+/// 整数の変数(ラジオボタンのグループなど)。
 typedef Variable<int> IntVariable;
+/// 真偽の変数。
 typedef Variable<bool> BoolVariable;
+/// 数の変数(SpinBox・Slider など)。
 typedef Variable<double> DoubleVariable;
 
 }  // namespace tokotachi

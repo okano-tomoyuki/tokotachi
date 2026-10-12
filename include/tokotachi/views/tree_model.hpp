@@ -1,15 +1,9 @@
 /// @file
-/// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
-///
-/// @code
-/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
-/// tokotachi::TreeItem* docs = tree->add_item("文書");
-/// docs->add_child("報告書.txt");
-/// tree_view_docs->model = tree;
-/// @endcode
+/// tokotachi::TreeModel の宣言。
 #ifndef TOKOTACHI_VIEWS_TREE_MODEL_HPP
 #define TOKOTACHI_VIEWS_TREE_MODEL_HPP
 
+#include "../core/export.hpp"
 #include "item.hpp"
 #include "item_model.hpp"
 
@@ -18,11 +12,15 @@ namespace tokotachi
 
 class TreeModel;
 
-class TreeItem : public Item
+/// TreeModel の 1 つの項目(子を持てる)。
+///
+/// @ingroup views
+class TOKOTACHI_API TreeItem final : public Item
 {
 public:
     /// 親の項目(一番上なら nullptr)・子の項目(並んだ順)。
     ReadOnlyProperty<TreeItem*> parent_item;
+    /// 子の項目(並んだ順)。
     ReadOnlyProperty<std::vector<TreeItem*> > children;
 
     /// 最後の子として加える。
@@ -32,35 +30,46 @@ public:
 
 private:
     friend class TreeModel;
-
     TreeItem(TreeModel* model, TreeItem* parent, const std::string& text);
     ~TreeItem();
-
-    TreeItem* get_parent_item() const { return parent_; }
-    std::vector<TreeItem*> get_children() const { return children_; }
-
-    TreeModel* model_;
-    TreeItem* parent_;
-    std::vector<TreeItem*> children_;
+    class Impl;
+    Impl* d_;
 };
 
-class TreeModel : public ItemModel, private detail::ItemHost
+/// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
+///
+/// @code
+/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(window_main);
+/// tokotachi::TreeItem* docs = tree->add_item("文書");
+/// docs->add_child("報告書.txt");
+/// tree_view_docs->model = tree;
+/// @endcode
+///
+/// @ingroup views
+class TOKOTACHI_API TreeModel : public ItemModel
 {
 public:
+    /// 所有者を渡す(所有者と一緒に破棄される)。
     explicit TreeModel(Object* owner = nullptr);
     ~TreeModel();
 
     /// 一番上に加える。
     TreeItem* add_item(const std::string& text);
+    /// 一番上の index の位置に加える(範囲の外なら最後)。
     TreeItem* insert_item(int index, const std::string& text);
     /// 項目を(子孫ごと)除いて破棄する。どの深さの項目でもよい。
     void remove_item(TreeItem* item);
+    /// 項目を parent(nullptr なら一番上)の子の index の位置へ移す(範囲の外なら最後)。自分・子孫の下へは移せない(何もしない)。
+    void move_item(TreeItem* item, TreeItem* parent, int index);
+    /// すべての項目を除いて破棄する。
     void clear();
 
     /// 一番上の項目(並んだ順)。
     ReadOnlyProperty<std::vector<TreeItem*> > items;
 
+    /// 項目の位置(このモデルの項目でなければ無効な ModelIndex)。
     ModelIndex index_of(const TreeItem* item) const;
+    /// 位置の項目(無効なら nullptr)。
     TreeItem* item_at(const ModelIndex& index) const;
 
     int row_count(const ModelIndex& parent = ModelIndex()) const override;
@@ -72,22 +81,21 @@ public:
     bool checkable(const ModelIndex& index) const override;
     bool checked(const ModelIndex& index) const override;
     void set_checked(const ModelIndex& index, bool checked) override;
+    ThemeColor text_color(const ModelIndex& index, int column) const override;
+    Font font(const ModelIndex& index, int column) const override;
+    bool editable(const ModelIndex& index, int column) const override;
+    void set_text(const ModelIndex& index, int column, const std::string& text) override;
     /// 同じ親の子どうしを並べ替える(すべての深さで)。
     void sort(int column, SortOrder order) override;
+    /// 木の中の移動(ドラッグ&ドロップ)。自分・子孫の下へは移せない。
+    bool can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const override;
+    bool move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) override;
     ModelIndex locate(const ModelIndex& index) const override;
 
 private:
     friend class TreeItem;
-
-    std::vector<TreeItem*> get_items() const { return roots_; }
-    void item_changed(Item* item) override;
-    TreeItem* insert(TreeItem* parent, int index, const std::string& text);
-    std::vector<TreeItem*>& siblings(TreeItem* parent) { return parent ? parent->children_ : roots_; }
-    static void renumber(std::vector<TreeItem*>& list, std::size_t from);
-    static void destroy(TreeItem* item);
-    void sort_list(std::vector<TreeItem*>& list, int column, SortOrder order);
-
-    std::vector<TreeItem*> roots_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

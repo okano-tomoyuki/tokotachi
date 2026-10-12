@@ -1,21 +1,12 @@
 /// @file
-/// 項目の一覧から 1 つを選ぶ(docs/adr/0022)。押すと一覧をポップアップで出す。
-///
-/// @code
-/// tokotachi::ComboBox* combo_box_size = new tokotachi::ComboBox(&window);
-/// combo_box_size->items = std::vector<std::string>{"小", "中", "大"};
-/// combo_box_size->current_index = 1;
-/// combo_box_size->on_change = [](tokotachi::Object* sender) { ... };
-/// @endcode
-///
-/// 一覧が閉じているときは ↑↓ で選択を変え、Space・Enter・Alt+↓ で一覧を開く。一覧では ↑↓・Page Up/Down・Home/End で動かし、
-/// Enter で決め、Esc で閉じる。
+/// tokotachi::ComboBox の宣言。
 #ifndef TOKOTACHI_WIDGETS_COMBO_BOX_HPP
 #define TOKOTACHI_WIDGETS_COMBO_BOX_HPP
 
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../windows/popup.hpp"
 #include "../graphics/text_layout.hpp"
 #include "widget.hpp"
@@ -23,32 +14,50 @@
 namespace tokotachi
 {
 
-namespace detail
-{
-class PopupList;
-}
-
 class ScrollArea;
 
-class ComboBox : public Widget
+/// 項目の一覧から 1 つを選ぶ(docs/adr/0022)。押すと一覧をポップアップで出す。
+///
+/// @image html widget_combo_box.png
+///
+/// @code
+/// tokotachi::ComboBox* combo_box_size = new tokotachi::ComboBox(window_main);
+/// combo_box_size->items = std::vector<std::string>{"小", "中", "大"};
+/// combo_box_size->current_index = 1;
+/// combo_box_size->on_change = [](tokotachi::Object* sender) { ... };
+/// @endcode
+///
+/// 一覧が閉じているときは ↑↓ で選択を変え、Space・Enter・Alt+↓ で一覧を開く。一覧では ↑↓・Page Up/Down・Home/End で動かし、
+/// Enter で決め、Esc で閉じる。
+///
+/// @ingroup widgets_input
+class TOKOTACHI_API ComboBox : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ComboBox(Widget* parent = nullptr);
+    ~ComboBox() override;
 
+    /// 選ぶ項目の文字。
     Property<std::vector<std::string> > items;
     /// 選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。
     Property<int> current_index;
+    /// 選んでいる項目の文字(選んでいなければ空)。
     ReadOnlyProperty<std::string> current_text;
     /// 選んでいないときに出す文字。
     Property<std::string> placeholder_text;
+    /// 文字のフォント。
     Property<Font> font;
 
     /// current_index が変わった(利用者の操作・代入のどちらでも)。
     Property<NotifyHandler> on_change;
 
+    /// 一覧のポップアップを開く。
     void open_popup();
+    /// 一覧のポップアップを閉じる。
     void close_popup();
-    bool is_popup_open() const;
+    /// 一覧のポップアップを開いているか。
+    ReadOnlyProperty<bool> popup_open;
 
 protected:
     void paint(Canvas& canvas) override;
@@ -63,25 +72,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    std::vector<std::string> get_items() const { return items_; }
-    void set_items(const std::vector<std::string>& v);
-    int get_current_index() const { return current_index_; }
-    void set_current_index(const int& v);
-    std::string get_current_text() const;
-    void set_placeholder_text(const std::string& v);
-    void set_font(const Font& v);
-    const TextLayout& text_layout() const;
-
-    std::vector<std::string> items_;
-    int current_index_;
-    std::string placeholder_text_;
-    Font font_;
-    NotifyHandler on_change_;
-    bool hovered_;
-    Popup* popup_;
-    ScrollArea* scroll_;
-    detail::PopupList* list_;
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

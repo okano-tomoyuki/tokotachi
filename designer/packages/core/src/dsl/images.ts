@@ -9,10 +9,17 @@ import type { PropertyType } from '../catalog/types.ts';
 import { normalizePath } from '../project/paths.ts';
 import type { JsonPath } from './diagnostics.ts';
 import type { Properties, TtuiDocument } from './schema.ts';
+import { isIconValue } from './icons.ts';
 import { layouts, widgets } from './tree.ts';
 
 /** 読める画像の拡張子(Tokotachi の Image::load が読めるもの)。 */
 export const IMAGE_EXTENSIONS: readonly string[] = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
+
+/**
+ * これより大きい画像のファイルは警告する(バイト。docs/adr/0053)。生成するコードには 1 バイトを 6 文字ほどで埋め込むので、
+ * ソースが大きくなり、コンパイルが遅くなる。アイコン(数 KB)は十分に小さい。
+ */
+export const LARGE_IMAGE_BYTES = 256 * 1024;
 
 export function isImageType(type: PropertyType): boolean {
   return typeof type === 'object' && 'value' in type && type.value === 'Image';
@@ -27,6 +34,8 @@ export function isImagePath(path: string): boolean {
     !path.startsWith('/') &&
     !path.includes('\\') &&
     !/^[A-Za-z]:/.test(path) &&
+    // 途中にドライブ(`../../d:/x.png`。ほかのドライブのファイルは相対パスにできない)は不可
+    !path.split('/').some((part) => /^[A-Za-z]:$/.test(part)) &&
     // ファイルの名前が拡張子だけ(`.png`)は不可
     !/^\.[A-Za-z0-9]+$/.test(normalizePath(path).split('/').pop() ?? '')
   );
@@ -52,7 +61,8 @@ export function imageReferences(doc: TtuiDocument): ImageReference[] {
     }
     for (const [name, prop] of Object.entries(info.properties)) {
       const value = props[name];
-      if (isImageType(prop.type) && typeof value === 'string') {
+      // アイコン(`"icon:save"`)はファイルではない
+      if (isImageType(prop.type) && typeof value === 'string' && !isIconValue(value)) {
         out.push({ path: value, at: [...path, 'properties', name] });
       }
     }

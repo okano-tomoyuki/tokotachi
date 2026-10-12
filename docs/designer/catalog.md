@@ -50,14 +50,15 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 |---|---|---|
 | `classes` | パレットに出す、利用者が置けるクラスの一覧(抽象的なクラス・内部で使うクラスは書かない)。無いクラス・余分なクラスがあれば取り出しの道具がエラーにする | `Button`・`LineEdit`・`TabWidget`。`ButtonBase`・`RangeBase`・`ItemView`・`Popup` は書かない |
 | `classes` のテンプレート | `Variable<T>` は `part` として書き、ハンドラ(`on_set`・`on_change`)だけをカタログに載せる。テンプレートであることは Doxygen の XML から取り出し(`template: true`)、キャンバスの対応表には載せない(型の引数は定義ファイルの `type`。dsl-spec.md §4.8) | `Variable` |
-| `classes` の `kind` / `category` | 種類(window・widget・layout・part・object)とパレットの分類。`classes` の順がパレットの順 | 入力(`Button`・`CheckBox`…)・表示(`Label`・`ProgressBar`)・一覧(`ListView`・`TreeView`)・入れ物(`Widget`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
+| `classes` の `kind` / `category` | 種類(window・widget・layout・part・object)とパレットの分類。`classes` の順がパレットの順 | 入力(`Button`・`CheckBox`…・`DateEdit`・`ColorButton`・`Calendar`)・表示(`Label`・`ProgressBar`・`ImageBox`)・一覧(`ListView`・`TreeView`・`TableView`)・入れ物(`Widget`・`GroupBox`・`TabWidget`・`Splitter`・`ScrollArea`)・描画(`PaintBox`)・画面に出ないもの(`Timer`) |
 | `designable` / `not_designable` | デザイン時に設定できるか。まず型で決め(読み書きできて、値の型・列挙型・文字列・配列・参照のいずれか)、そのうえでクラスごとに除く・戻す | `parent`・`bounds`・`focused` は除く(位置と大きさは `geometry` の印で表す) |
 | `accepts_children` | `layout`・`children` を書けるか | `Widget`・`Window`・`Dialog` は可、`Button` は不可 |
-| `child_keys` | 専用の子のキー | `TabWidget` は `tabs`、`Splitter` は `panes`、`ScrollArea` は `content`、`ListView`・`TreeView` は `columns` |
+| `child_keys` | 専用の子のキー | `TabWidget` は `tabs`、`Splitter` は `panes`、`ScrollArea` は `content`、`ListView`・`TreeView`・`TableView` は `columns` |
 | `editor` | インスペクタの編集の種類(型から決まらないもの) | `TextEdit` の `text` は複数行、`Action` の `text` は `&` を含む文字列、`Label` の `color` は色 |
 | `excluded` | Widget の派生で親を渡して作れるが、パレットに出さないクラス(理由を書く)。classes にも excluded にも無い部品があれば、取り出しの道具がエラーにする(新しい部品の書き忘れを防ぐ) | `ButtonBase`・`ScrollBar` |
 | `geometry` | 位置と大きさのプロパティ(ウィンドウと自由な配置の子だけに書ける) | `Widget` の `x`・`y`・`width`・`height` |
 | `after_children` | 子(タブ・区画)を入れた後でないと効かないプロパティ(生成するコードでは子の後に設定する。codegen-design.md §4) | `TabWidget::current_index`・`Splitter::sizes` |
+| `range` | 数値のプロパティの範囲(ヘッダの説明に書いたもの)。端は数値、同じ部品のプロパティ(`{ "property": "maximum" }`)、配列のプロパティ・子の数に offset を足したもの(`{ "count": "items", "offset": -1 }`)。インスペクタが確定した値を収め、検証が範囲の外を警告する | `RangeBase::value` は minimum〜maximum、`SpinBox::decimals` は 0〜10、`Column::width` は 24 以上 |
 | `extra_enums`・`extra_values` | プロパティの型には出てこないが、定義ファイルで使う列挙型・値の型 | `Align`・`Anchor`・`DialogButton`・`ColorRole`・`Placement`・`Color` |
 | `special_values` | メンバではなく専用の書き方で表す値の型 | `ThemeColor`・`Shortcut`・`Image`(パスで書く。dsl-spec.md §5.1) |
 
@@ -103,6 +104,19 @@ pnpm catalog:check     # カタログがヘッダ・補足と食い違ってい�
 値(既定値・大きさ)は形を示すための例で、実際の値は測定で決まる。
 継承したプロパティ・ハンドラは、各クラスに展開して持つ(検証・インスペクタで継承をたどらずに済むように)。
 デザイン時に設定できないプロパティは書き出さない。`doc` はヘッダの `///` の説明(日本語)。
+
+## 4.1 自作部品([ADR 0044](../adr/0044-designer-custom-widgets.md))
+
+利用者が C++ で書いた部品は、プロジェクトファイルの `custom_widgets` に登録したヘッダを拡張が読み(core の
+[customHeader.ts](../../designer/packages/core/src/catalog/customHeader.ts)。Doxygen は使わない)、カタログに足す(`findClass` が引ける)。
+
+- 読むのは `class X : public Base` の形の、ライブラリの部品(か、登録した自作部品)の派生クラスと、その public の `Property<T> name;`。
+  T がカタログの型ならプロパティ、ハンドラの型ならハンドラにする。読めない型は飛ばし、プロジェクトファイルの問題(警告)として出す。
+  直前の `///`(行の後ろの `///<`)を説明に、`{3}`・`= 3` の文字の既定値を既定値にする。
+- クラスの情報は `kind: "widget"`・`category: "custom"` で、基底のプロパティ・ハンドラを受け継ぐ。`custom` に、ヘッダ・名前空間を付けた名前・
+  キャンバスで代わりに作るカタログの部品(`base`)を持つ。子は持てない。
+- 拡張はいくつもの定義ファイルを扱うので、検証・書き出し・コード生成・描画の間だけ `withCustomClasses` で足す。Webview は `customClasses` の
+  メッセージで受け取って `setCustomClasses` で足し、検証し直す。
 
 ## 5. ヘッダとの整合
 

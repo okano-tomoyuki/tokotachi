@@ -1,5 +1,31 @@
 /// @file
+/// tokotachi::ToolBar の宣言。
+#ifndef TOKOTACHI_WINDOWS_TOOL_BAR_HPP
+#define TOKOTACHI_WINDOWS_TOOL_BAR_HPP
+
+#include <string>
+#include <vector>
+
+#include "../actions/action.hpp"
+#include "../core/export.hpp"
+#include "../widgets/widget.hpp"
+
+namespace tokotachi
+{
+
+class Menu;
+
+/// ツールバーのボタンの見せ方。
+enum class ToolButtonStyle
+{
+    ICON_ONLY,         ///< 画像だけ(画像が無ければ文字)
+    TEXT_BESIDE_ICON,  ///< 画像の右に文字
+    TEXT_UNDER_ICON    ///< 画像の下に文字
+};
+
 /// ツールバー: Action をボタンとして横に並べる(docs/adr/0030)。
+///
+/// @image html widget_window_bars.png
 ///
 /// @code
 /// tokotachi::ToolBar* tool_bar = new tokotachi::ToolBar();
@@ -12,79 +38,36 @@
 ///
 /// ボタンは Action の画像(無ければ文字)を出し、文字とショートカットはツールチップに出す(button_style で変えられる)。
 /// 幅に収まらない項目は隠し、右端の » のメニューから選べる(add_widget の部品は隠すだけ)。
+/// 幅に収まらずに隠すときは、部品の visible を変えない(showing が false になる)。add_widget の部品を visible = false にすると、場所を取らない。
 /// ウィンドウの tool_bar の Action のショートカットは、ウィンドウ全体で効く。
-#ifndef TOKOTACHI_WINDOWS_TOOL_BAR_HPP
-#define TOKOTACHI_WINDOWS_TOOL_BAR_HPP
-
-#include <string>
-#include <vector>
-
-#include "../actions/action.hpp"
-#include "../widgets/widget.hpp"
-
-namespace tokotachi
-{
-
-class Menu;
-
-namespace detail
-{
-class ToolButton;
-}
-
-enum class ToolButtonStyle
-{
-    ICON_ONLY,         ///< 画像だけ(画像が無ければ文字)
-    TEXT_BESIDE_ICON,  ///< 画像の右に文字
-    TEXT_UNDER_ICON    ///< 画像の下に文字
-};
-
-class ToolBar : public Widget
+///
+/// @ingroup windows
+class TOKOTACHI_API ToolBar : public Widget
 {
 public:
+    /// ふつうは nullptr で作り、Window::tool_bar に代入する。
     explicit ToolBar(Widget* parent = nullptr);
     ~ToolBar();
 
     /// text の Action を作ってボタンとして加え、返す(このツールバーが所有する)。
     Action* add_item(const std::string& text, const NotifyHandler& on_trigger = NotifyHandler());
+    /// 区切りを最後に加える。
     void add_separator();
     /// 任意の部品を加える(ツールバーの子になる)。
     void add_widget(Widget* widget);
 
+    /// ボタンの見せ方(既定 ICON_ONLY)。
     Property<ToolButtonStyle> button_style;
 
 protected:
     void paint(Canvas& canvas) override;
     void arrange_children() override;
-    void child_removed(Widget* child) override;
-    void action_added(Action* action) override;
-    void action_removed(Action* action) override;
-    void action_changed(Action* action) override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
 
 private:
-    /// 項目: ボタン(Action)・部品・区切りのどれか。
-    struct Entry
-    {
-        Action* action;
-        detail::ToolButton* button;
-        Widget* widget;
-        bool hidden;  ///< 幅に収まらず隠している
-        float x;      ///< 区切りの位置
-    };
-
-    ToolButtonStyle get_button_style() const { return button_style_; }
-    void set_button_style(const ToolButtonStyle& v);
-    Widget* item_widget(const Entry& e) const;
-    float separator_width() const;
-    void show_overflow();
-
-    std::vector<Entry> entries_;
-    ToolButtonStyle button_style_;
-    detail::ToolButton* overflow_button_;  ///< »
-    Menu* overflow_menu_;
-    bool destroying_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

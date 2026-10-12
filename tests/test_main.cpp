@@ -1,8 +1,11 @@
 // Tokotachi のテスト。SDL の offscreen のビデオドライバで、画面なしで動かす(CMake が環境変数を設定する)。
 #include <tokotachi/tokotachi.hpp>
+#include <tokotachi/core/clipboard.hpp>
 
 #include "../src/core/binding_registry.hpp"
+#include "../src/core/object_impl.hpp"
 #include "../src/core/application_impl.hpp"
+#include "../src/widgets/text_input_impl.hpp"
 #include "../src/windows/window_impl.hpp"
 
 #include <algorithm>
@@ -136,6 +139,21 @@ TEST(text_layout_caret_stops)
     CHECK(l.offset_at(tokotachi::Point(-10, 0)) == 0);
     CHECK(l.offset_at(tokotachi::Point(1000, 0)) == s.size());
     CHECK(l.line_count() == 1);
+}
+
+TEST(text_layout_bold_and_italic)
+{
+    // 太字は字の送りが広くなり(本物の太字の書体か、合成した太字)、斜体は同じ文字の並びを描ける(docs/adr/0045)
+    const std::string s = "Tokotachi å¸¸ç«";  // Tokotachi 常立
+    const tokotachi::TextLayout regular(s, tokotachi::Font(14), 1.0f);
+    const tokotachi::TextLayout bold(s, tokotachi::Font(14, true), 1.0f);
+    const tokotachi::TextLayout italic(s, tokotachi::Font(14, false, true), 1.0f);
+    const tokotachi::TextLayout both(s, tokotachi::Font(14, true, true), 1.0f);
+    CHECK(bold.width() > regular.width());
+    CHECK(italic.width() > 0 && both.width() > 0);
+    CHECK(bold.font().bold && !bold.font().italic);
+    CHECK(tokotachi::Font(14, true) != tokotachi::Font(14));
+    CHECK(tokotachi::Font(14, false, true) != tokotachi::Font(14));
 }
 
 TEST(text_layout_hard_line_breaks)
@@ -446,6 +464,71 @@ TEST(line_edit_strips_control_characters)
     CHECK(edit->text == "12");
 }
 
+namespace
+{
+
+// 標準の見た目を描く関数だけで描く、自作のボタン(docs/adr/0058)。
+class FaceOnlyButton : public tokotachi::ButtonBase
+{
+public:
+    FaceOnlyButton(tokotachi::Widget* parent, tokotachi::ButtonStyle style) : tokotachi::ButtonBase(parent), style_(style) {}
+
+protected:
+    void paint(tokotachi::Canvas& canvas) override
+    {
+        const tokotachi::ControlState s = state();
+        tokotachi::draw::button_face(canvas, local_rect, s, style_);
+        if (s.focused)
+        {
+            tokotachi::draw::focus_ring(canvas, local_rect);
+        }
+    }
+
+private:
+    tokotachi::ButtonStyle style_;
+};
+
+}  // namespace
+
+TEST(draw_functions_match_built_in_look)
+{
+    // 文字の無い Button と、draw::button_face で描く自作のボタンは、同じ絵になる(テーマの上書きにも従う)。
+    const tokotachi::ButtonStyle styles[] = {tokotachi::ButtonStyle::PRIMARY, tokotachi::ButtonStyle::SECONDARY};
+    for (int i = 0; i < 2; ++i)
+    {
+        tokotachi::Window window("t", 200, 60);
+        tokotachi::ThemeOverride o;
+        o.set(tokotachi::ColorRole::ACCENT, tokotachi::Color(200, 30, 120));
+        window.theme_override = o;
+        tokotachi::Button* button = new tokotachi::Button(&window);
+        button->style = styles[i];
+        button->bounds = tokotachi::Rect(10, 10, 80, 32);
+        FaceOnlyButton* custom = new FaceOnlyButton(&window, styles[i]);
+        custom->bounds = tokotachi::Rect(110, 10, 80, 32);
+        custom->enabled = button->enabled = i == 0;
+        window.visible = true;
+        const tokotachi::Bitmap b = window.capture();
+        const int s = b.width() / 200;
+        int different = 0;
+        for (int y = 10 * s; y < 42 * s; ++y)
+        {
+            for (int x = 10 * s; x < 90 * s; ++x)
+            {
+                different += !(b.pixel(x, y) == b.pixel(x + 100 * s, y));
+            }
+        }
+        CHECK(different == 0);
+    }
+    // 部品の外(Bitmap)にも描ける(チェックの付いた印は強調の色で塗る)
+    tokotachi::Bitmap mark(16, 16);
+    {
+        tokotachi::ControlState s;
+        s.checked = true;
+        tokotachi::draw::check_mark(mark.canvas(), tokotachi::Rect(0, 0, 16, 16), s);
+    }
+    CHECK(mark.pixel(2, 8).a == 255);
+}
+
 TEST(button_click_by_key)
 {
     tokotachi::Window window("t", 300, 100);
@@ -481,7 +564,7 @@ TEST(timer_repeats_on_main_thread)
     tokotachi::Timer timer;
     timer.interval = 10;
     int fired = 0;
-    timer.on_timer = [&](tokotachi::Object* sender)
+    timer.on_timeout = [&](tokotachi::Object* sender)
     {
         CHECK(sender == &timer);
         if (++fired == 3)
@@ -505,12 +588,12 @@ TEST(timer_single_shot)
     once.interval = 5;
     once.repeat = false;
     int fired = 0;
-    once.on_timer = [&](tokotachi::Object*) { ++fired; };
+    once.on_timeout = [&](tokotachi::Object*) { ++fired; };
     once.enabled = true;
 
     tokotachi::Timer stopper;  // once が 2 回目を呼ばないことを確かめるため、少し待ってから終える
     stopper.interval = 60;
-    stopper.on_timer = [&](tokotachi::Object*) { app->quit(); };
+    stopper.on_timeout = [&](tokotachi::Object*) { app->quit(); };
     stopper.enabled = true;
     app->exec();
     CHECK(fired == 1);
@@ -526,12 +609,12 @@ TEST(timer_destroyed_while_running)
     {
         tokotachi::Timer t;
         t.interval = 1;
-        t.on_timer = [&](tokotachi::Object*) { ++fired; };
+        t.on_timeout = [&](tokotachi::Object*) { ++fired; };
         t.enabled = true;
     }  // 破棄すると止まる(すでに積まれたイベントが届いても呼ばない)
     tokotachi::Timer stopper;
     stopper.interval = 30;
-    stopper.on_timer = [&](tokotachi::Object*) { app->quit(); };
+    stopper.on_timeout = [&](tokotachi::Object*) { app->quit(); };
     stopper.enabled = true;
     app->exec();
     CHECK(fired == 0);
@@ -556,9 +639,9 @@ TEST(handler_shared_between_widget_and_timer)
         }
     };
     button->on_click = refresh;
-    timer.on_timer = button->on_click;
+    timer.on_timeout = button->on_click;
     button->key(tokotachi::Key::SPACE);
-    timer.on_timer.get()(&timer);
+    timer.on_timeout.get()(&timer);
     CHECK(from_button == 1);
     CHECK(from_timer == 1);
 }
@@ -646,7 +729,7 @@ TEST(binding_one_way_from_readonly)
     CHECK(label->text == "");
     edit->select_all();
     CHECK(label->text == "hello");
-    edit->deselect();
+    edit->clear_selection();
     CHECK(label->text == "");
     label->text = "x";  // 読み取り専用の側へは伝えない
     CHECK(edit->text == "hello");
@@ -1075,10 +1158,10 @@ TEST(text_input_enabled_when_shown_after_focus)
     tokotachi::Window window("t", 200, 100);
     tokotachi::LineEdit* edit = new tokotachi::LineEdit(&window);
     edit->focused = true;
-    CHECK(!window.impl()->text_input_active);  // 表示されていないうちは有効にしない
+    CHECK(!tokotachi::detail::window_impl_of(&window)->text_input_active);  // 表示されていないうちは有効にしない
     window.visible = true;
-    CHECK(window.impl()->text_input_active);
-    CHECK(SDL_TextInputActive(window.impl()->window));
+    CHECK(tokotachi::detail::window_impl_of(&window)->text_input_active);
+    CHECK(SDL_TextInputActive(tokotachi::detail::window_impl_of(&window)->window));
 
     tokotachi::Widget* panel = new tokotachi::Widget(&window);
     tokotachi::LineEdit* inner = new tokotachi::LineEdit(panel);
@@ -1141,6 +1224,75 @@ TEST(label_alignment)
     tokotachi::Label* label = new tokotachi::Label(&window, "abc");
     label->alignment = tokotachi::Align::END;
     CHECK(label->alignment == tokotachi::Align::END);
+}
+
+// 一色の画像。
+tokotachi::Image solid_image(int w, int h, const tokotachi::Color& c)
+{
+    return tokotachi::Image::from_pixels(w, h, std::vector<tokotachi::Color>(static_cast<std::size_t>(w * h), c));
+}
+
+TEST(image_box_fit)
+{
+    tokotachi::Window window("t", 100, 100);
+    window.background = tokotachi::Color(0, 0, 255);
+    tokotachi::ImageBox* image_box = new tokotachi::ImageBox(&window, solid_image(4, 2, tokotachi::Color(255, 0, 0)));
+    CHECK(image_box->preferred_size.get() == tokotachi::Size(4, 2));
+    image_box->bounds = tokotachi::Rect(0, 0, 40, 40);
+    window.visible = true;
+    const auto red_at = [&](float x, float y)
+    {
+        tokotachi::Bitmap b = window.capture();
+        const float s = static_cast<float>(b.width()) / 100;
+        const tokotachi::Color c = b.pixel(static_cast<int>(x * s), static_cast<int>(y * s));
+        return c.r == 255 && c.b == 0;
+    };
+    // NONE: 元の大きさで中ほど
+    CHECK(red_at(20, 20) && !red_at(10, 20));
+    // CONTAIN: 40×20 に広げて縦の中ほど
+    image_box->fit = tokotachi::ImageFit::CONTAIN;
+    CHECK(red_at(2, 20) && red_at(38, 12) && !red_at(20, 5));
+    // COVER: 隙間なく覆う(はみ出した部分は部品の外に描かない)
+    image_box->fit = tokotachi::ImageFit::COVER;
+    CHECK(red_at(20, 2) && red_at(20, 38) && !red_at(60, 20));
+    // STRETCH: 部品の大きさ
+    image_box->fit = tokotachi::ImageFit::STRETCH;
+    CHECK(red_at(2, 2) && red_at(38, 38));
+    // 空の画像なら何も描かず、望む大きさは 0
+    image_box->image = tokotachi::Image();
+    CHECK(!red_at(20, 20) && image_box->preferred_size.get() == tokotachi::Size(0, 0));
+}
+
+TEST(label_and_button_icons)
+{
+    tokotachi::Window window("t", 300, 200);
+    const tokotachi::Image icon = solid_image(32, 32, tokotachi::Color(255, 0, 0));
+    tokotachi::Label* label = new tokotachi::Label(&window, "abc");
+    const tokotachi::Size plain = label->preferred_size;
+    label->icon = icon;
+    // 画像(既定 16)と間(6)の分だけ広がる
+    CHECK(label->preferred_size.get().width == plain.width + 22);
+    label->icon_size = 40;
+    CHECK(label->preferred_size.get().width == plain.width + 46 && label->preferred_size.get().height == 40);
+    label->text = "";
+    CHECK(label->preferred_size.get() == tokotachi::Size(40, 40));
+
+    tokotachi::Button* button = new tokotachi::Button(&window, "OK");
+    const tokotachi::Size plain_button = button->preferred_size;
+    button->icon = icon;
+    CHECK(button->preferred_size.get().width == plain_button.width + 22);
+    // 文字が無ければ、画像だけの正方形に近いボタン
+    button->text = "";
+    const tokotachi::Size only = button->preferred_size;
+    CHECK(only.width == only.height && only.width < plain_button.width);
+    // 押したときに描く(画像の色が出る)
+    button->bounds = tokotachi::Rect(0, 0, only.width, only.height);
+    label->visible = false;
+    window.visible = true;
+    tokotachi::Bitmap b = window.capture();
+    const float s = static_cast<float>(b.width()) / 300;
+    const tokotachi::Color c = b.pixel(static_cast<int>(only.width / 2 * s), static_cast<int>(only.height / 2 * s));
+    CHECK(c.r == 255 && c.g == 0 && c.b == 0);
 }
 
 TEST(line_edit_word_navigation)
@@ -1219,9 +1371,15 @@ struct TestMemo : tokotachi::TextEdit
         return e.accepted;
     }
 
-    tokotachi::Point scroll() const { return scroll_offset(); }
-    std::size_t lines() const { return text_layout().line_count(); }
-    tokotachi::Rect area() const { return text_area(); }
+    tokotachi::Point scroll() const { return input()->scroll_offset(); }
+    std::size_t lines() const { return input()->text_layout().line_count(); }
+    tokotachi::Rect area() const { return input()->input_->text_area(); }
+
+private:
+    const tokotachi::detail::ImplAccess<tokotachi::TextInputBase>::Impl* input() const
+    {
+        return tokotachi::detail::ImplAccess<tokotachi::TextInputBase>::of(this);
+    }
 };
 
 TEST(text_edit_newlines_and_navigation)
@@ -1360,14 +1518,14 @@ TEST(wheel_goes_to_widget_under_pointer_then_parents)
     SDL_Event e;
     SDL_zero(e);
     e.type = SDL_EVENT_MOUSE_WHEEL;
-    e.wheel.windowID = SDL_GetWindowID(window.impl()->window);
+    e.wheel.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.wheel.x = 0;
     e.wheel.y = -1;
     e.wheel.direction = SDL_MOUSEWHEEL_NORMAL;
-    const float to_window = window.impl()->scale / window.impl()->density;
+    const float to_window = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     e.wheel.mouse_x = 10 * to_window;
     e.wheel.mouse_y = 10 * to_window;
-    window.impl()->handle(e);
+    tokotachi::detail::window_impl_of(&window)->handle(e);
     CHECK(area->scroll_position.get().y > 0);
 }
 
@@ -1377,28 +1535,28 @@ void dispatch_key(tokotachi::Window& window, SDL_Keycode key, bool down = true, 
     SDL_Event e;
     SDL_zero(e);
     e.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
-    e.key.windowID = SDL_GetWindowID(window.impl()->window);
+    e.key.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.key.key = key;
     e.key.mod = mod;
     e.key.down = down;
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 void dispatch_click(tokotachi::Window& window, const tokotachi::Point& p)
 {
-    const float k = window.impl()->scale / window.impl()->density;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     for (int i = 0; i < 2; ++i)
     {
         SDL_Event e;
         SDL_zero(e);
         e.type = i == 0 ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
-        e.button.windowID = SDL_GetWindowID(window.impl()->window);
+        e.button.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
         e.button.button = SDL_BUTTON_LEFT;
         e.button.down = i == 0;
         e.button.clicks = 1;
         e.button.x = p.x * k;
         e.button.y = p.y * k;
-        tokotachi::Application::instance()->impl()->dispatch(e);
+        tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
     }
 }
 
@@ -1413,18 +1571,18 @@ TEST(popup_opens_relative_to_owner)
     popup->on_closed = [&](tokotachi::Object*) { ++closed; };
     popup->open(button->local_rect, tokotachi::Size(120, 60));
     CHECK(popup->visible);
-    CHECK(popup->impl()->window != nullptr);
+    CHECK(tokotachi::detail::window_impl_of(popup)->window != nullptr);
     CHECK(near(popup->width, 120) && near(popup->height, 60));
-    CHECK(tokotachi::Application::instance()->impl()->open_menus.size() == 1);
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.size() == 1);
     int x = 0, y = 0;
-    SDL_GetWindowPosition(popup->impl()->window, &x, &y);
+    SDL_GetWindowPosition(tokotachi::detail::window_impl_of(popup)->window, &x, &y);
     int px = 0, py = 0;
-    SDL_GetWindowPosition(window.impl()->window, &px, &py);
+    SDL_GetWindowPosition(tokotachi::detail::window_impl_of(&window)->window, &px, &py);
     // ポップアップの位置は、親のウィンドウの button の左下(SDL3 はポップアップの位置を親からの相対で返す)。
     // ポップアップに対応しないドライバ(offscreen)の代わりの通常のウィンドウは、絶対の位置なので確かめない。
-    if (!popup->impl()->popup_parent)
+    if (!tokotachi::detail::window_impl_of(popup)->popup_parent)
     {
-        const float k = window.impl()->scale / window.impl()->density;
+        const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
         CHECK(x == static_cast<int>(20 * k + 0.5f) && y == static_cast<int>(54 * k + 0.5f));
     }
     (void)px;
@@ -1433,8 +1591,52 @@ TEST(popup_opens_relative_to_owner)
     dispatch_click(window, tokotachi::Point(250, 150));  // 外側を押すと閉じる(押したことは捨てる)
     CHECK(!popup->visible);
     CHECK(closed == 1);
-    CHECK(tokotachi::Application::instance()->impl()->open_menus.empty());
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.empty());
     delete button;  // 持ち主と一緒に破棄される(ぶら下がらない)
+}
+
+TEST(open_state_properties_notify)
+{
+    // 開いている・編集しているという状態は読むだけのプロパティで、変わると結びつけた相手へ伝わる(ADR 0013)
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::ComboBox* combo = new tokotachi::ComboBox(&window);
+    combo->items = std::vector<std::string>(1, "a");
+    tokotachi::DateEdit* date_edit = new tokotachi::DateEdit(&window);
+    tokotachi::Menu* menu = new tokotachi::Menu(&window);
+    menu->add_item("x");
+    tokotachi::ListModel* model = new tokotachi::ListModel(&window);
+    model->add_item("項目");
+    model->items.get()[0]->editable = true;
+    tokotachi::ListView* list = new tokotachi::ListView(&window);
+    list->model = model;
+    list->bounds = tokotachi::Rect(0, 40, 200, 100);
+
+    tokotachi::BoolVariable* combo_open = new tokotachi::BoolVariable(&window, false);
+    tokotachi::BoolVariable* calendar_open = new tokotachi::BoolVariable(&window, false);
+    tokotachi::BoolVariable* menu_open = new tokotachi::BoolVariable(&window, false);
+    tokotachi::BoolVariable* editing = new tokotachi::BoolVariable(&window, false);
+    tokotachi::bind(combo_open->value, combo->popup_open);
+    tokotachi::bind(calendar_open->value, date_edit->calendar_open);
+    tokotachi::bind(menu_open->value, menu->opened);
+    tokotachi::bind(editing->value, list->editing);
+
+    combo->open_popup();
+    CHECK(combo_open->value);
+    combo->close_popup();
+    CHECK(!combo_open->value);
+    date_edit->open_calendar();
+    CHECK(calendar_open->value);
+    date_edit->close_calendar();
+    CHECK(!calendar_open->value);
+    menu->popup(combo, tokotachi::Point(0, 0));
+    CHECK(menu_open->value);
+    menu->close();
+    CHECK(!menu_open->value);
+    list->edit(model->index(0));
+    CHECK(editing->value);
+    list->finish_editing(false);
+    CHECK(!editing->value);
 }
 
 TEST(combo_box_selects_with_keys_and_popup)
@@ -1458,18 +1660,18 @@ TEST(combo_box_selects_with_keys_and_popup)
     CHECK(combo->current_text == "小");
 
     dispatch_key(window, SDLK_SPACE);  // 一覧を開く
-    CHECK(combo->is_popup_open());
+    CHECK(combo->popup_open.get());
     dispatch_key(window, SDLK_DOWN);  // 開いている間のキーは一覧へ送る
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_RETURN);  // 決める
-    CHECK(!combo->is_popup_open());
+    CHECK(!combo->popup_open.get());
     CHECK(combo->current_index == 2);
     CHECK(changes == 2);
 
     dispatch_key(window, SDLK_SPACE);
     dispatch_key(window, SDLK_UP);
     dispatch_key(window, SDLK_ESCAPE);  // Esc は選ばずに閉じる
-    CHECK(!combo->is_popup_open());
+    CHECK(!combo->popup_open.get());
     CHECK(combo->current_index == 2);
 
     items.pop_back();
@@ -1498,36 +1700,36 @@ TEST(menu_keyboard_and_submenu)
     sort->add_item("日付順", [&](tokotachi::Object*) { chosen = "date"; });
 
     menu->popup(area, tokotachi::Point(50, 40));
-    CHECK(menu->is_open());
+    CHECK(menu->opened.get());
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_RETURN);  // 2 つ目(コピー)を選ぶ
     CHECK(chosen == "コピー");
-    CHECK(!menu->is_open());  // 選ぶとすべて閉じる
+    CHECK(!menu->opened.get());  // 選ぶとすべて閉じる
 
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_key(window, SDLK_UP);    // 何も強調していなければ、↑ は最後の項目(並べ替え)
     dispatch_key(window, SDLK_UP);    // 無効な項目・区切りを飛ばしてコピー
     dispatch_key(window, SDLK_DOWN);  // 区切り・無効な項目を飛ばして並べ替えへ戻る
     dispatch_key(window, SDLK_RIGHT);  // サブメニューを開き、最初の項目を強調する
-    CHECK(sort->is_open());
+    CHECK(sort->opened.get());
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_RETURN);
     CHECK(chosen == "date");
-    CHECK(!sort->is_open() && !menu->is_open());
+    CHECK(!sort->opened.get() && !menu->opened.get());
 
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_key(window, SDLK_UP);
     dispatch_key(window, SDLK_RIGHT);
     dispatch_key(window, SDLK_LEFT);  // サブメニューだけ閉じる
-    CHECK(!sort->is_open() && menu->is_open());
+    CHECK(!sort->opened.get() && menu->opened.get());
     dispatch_key(window, SDLK_ESCAPE);
-    CHECK(!menu->is_open());
+    CHECK(!menu->opened.get());
 
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_click(window, tokotachi::Point(350, 250));  // 外側を押すと閉じる
-    CHECK(!menu->is_open());
-    CHECK(tokotachi::Application::instance()->impl()->open_menus.empty());
+    CHECK(!menu->opened.get());
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.empty());
 }
 
 TEST(tooltip_property)
@@ -1552,12 +1754,30 @@ TEST(window_capture)
     window.background = tokotachi::Color(0x10, 0x20, 0x30);
     window.visible = true;
     tokotachi::Bitmap b = window.capture();
-    CHECK(b.width() == window.impl()->pixel_width && b.height() == window.impl()->pixel_height);
+    CHECK(b.width() == tokotachi::detail::window_impl_of(&window)->pixel_width && b.height() == tokotachi::detail::window_impl_of(&window)->pixel_height);
     CHECK(b.width() >= 120 && b.height() >= 60);
     // 背景の色(不透明)。描画先の画素と同じ
     const tokotachi::Color c = b.pixel(5, 5);
     CHECK(c.r == 0x10 && c.g == 0x20 && c.b == 0x30 && c.a == 255);
-    CHECK((b.pixels()[0] | 0xff000000u) == (window.impl()->buffer[0] | 0xff000000u));
+    CHECK((b.pixels()[0] | 0xff000000u) == (tokotachi::detail::window_impl_of(&window)->buffer[0] | 0xff000000u));
+}
+
+TEST(window_grows_to_minimum_before_capture)
+{
+    // 中身の最小の大きさがウィンドウより大きいと、ウィンドウは広がる。イベントを処理しなくても、広がった部分まで描く
+    tokotachi::Window window("t", 200, 100);
+    window.background = tokotachi::Color(0x10, 0x20, 0x30);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::Widget* tall = new tokotachi::Widget(&window);
+    tall->minimum_size = tokotachi::Size(50, 300);
+    box->add(tall);
+    window.visible = true;
+    tokotachi::Bitmap b = window.capture();
+    CHECK(window.height.get() >= 300);
+    const float s = static_cast<float>(b.width()) / window.width.get();
+    CHECK(b.height() >= static_cast<int>(300 * s));
+    const tokotachi::Color bottom = b.pixel(5, b.height() - 3);
+    CHECK(bottom.r == 0x10 && bottom.g == 0x20 && bottom.b == 0x30);
 }
 
 TEST(save_png)
@@ -1582,9 +1802,9 @@ void dispatch_text(tokotachi::Window& window, const char* text)
     SDL_Event e;
     SDL_zero(e);
     e.type = SDL_EVENT_TEXT_INPUT;
-    e.text.windowID = SDL_GetWindowID(window.impl()->window);
+    e.text.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.text.text = text;
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 TEST(range_base_clamps_and_moves_bounds)
@@ -1770,19 +1990,19 @@ TEST(theme_switch_notifies_and_repaints)
     tokotachi::Window window("t", 120, 60);
     tokotachi::Label* label = new tokotachi::Label(&window, "テスト");
     window.visible = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(window.background.get() == tokotachi::ThemeColor(tokotachi::ColorRole::WINDOW));
-    CHECK(window.impl()->buffer[0] == packed(tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]));
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[0] == packed(tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]));
 
     app->color_scheme = tokotachi::ColorScheme::DARK;
     CHECK(app->dark);
     CHECK(app->theme.get() == tokotachi::Theme::dark());
     CHECK(changes == 1);
     CHECK(dark_changes == 1 && dark->value);
-    CHECK(!window.impl()->dirty.empty());  // 描き直しを依頼済み
-    window.impl()->render(false);
-    CHECK(window.impl()->buffer[0] == packed(tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]));
-    CHECK(label->color.get().resolve() == tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT]);
+    CHECK(!tokotachi::detail::window_impl_of(&window)->dirty.empty());  // 描き直しを依頼済み
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[0] == packed(tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]));
+    CHECK(label->text_color.get().resolve() == tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT]);
 
     app->color_scheme = tokotachi::ColorScheme::DARK;  // 同じ値: 知らせない
     CHECK(changes == 1);
@@ -1802,10 +2022,103 @@ TEST(theme_switch_notifies_and_repaints)
     app->color_scheme = tokotachi::ColorScheme::SYSTEM;
 }
 
+// 望む大きさの計算の中で、今のテーマの ACCENT が赤(0xdc2626)かを幅にする。
+struct ThemeProbe : tokotachi::Widget
+{
+    explicit ThemeProbe(tokotachi::Widget* parent) : tokotachi::Widget(parent) {}
+    tokotachi::Size compute_preferred_size() const override
+    {
+        const bool red = tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve() == tokotachi::Color::rgb(0xdc2626);
+        return tokotachi::Size(red ? 1.0f : 0.0f, 0);
+    }
+};
+
+TEST(theme_override_inherits_to_descendants)
+{
+    // ウィジェットごとのテーマの上書き: 自分と子孫に効き、上書きしていない役割は親から継ぐ(docs/adr/0042)。
+    tokotachi::Application* app = tokotachi::Application::instance();
+    app->color_scheme = tokotachi::ColorScheme::LIGHT;
+    const tokotachi::Color red = tokotachi::Color::rgb(0xdc2626);
+    const tokotachi::Color dark_red = tokotachi::Color::rgb(0x7f1d1d);
+    const tokotachi::Color pale = tokotachi::Color::rgb(0xfef2f2);
+
+    tokotachi::Window window("t", 200, 100);
+    tokotachi::Widget* panel = new tokotachi::Widget(&window);
+    panel->bounds = tokotachi::Rect(0, 0, 100, 100);
+    tokotachi::Widget* inner = new tokotachi::Widget(panel);
+    inner->bounds = tokotachi::Rect(10, 10, 20, 20);
+    tokotachi::Widget* outside = new tokotachi::Widget(&window);
+    outside->bounds = tokotachi::Rect(150, 10, 20, 20);
+    // 描くときに読む「今のテーマ」の色を記録する
+    tokotachi::Color painted_inner, painted_outside;
+    inner->on_paint = [&](tokotachi::Object*, tokotachi::Canvas& c)
+    {
+        painted_inner = tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve();
+        c.fill_rect(tokotachi::Rect(0, 0, 20, 20), painted_inner);
+    };
+    outside->on_paint = [&](tokotachi::Object*, tokotachi::Canvas&)
+    {
+        painted_outside = tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve();
+    };
+
+    tokotachi::ThemeOverride accent;
+    CHECK(accent.is_empty() && !accent.has(tokotachi::ColorRole::ACCENT));
+    accent.set(tokotachi::ColorRole::ACCENT, red, dark_red);
+    CHECK(!accent.is_empty() && accent.light(tokotachi::ColorRole::ACCENT) == red && accent.dark(tokotachi::ColorRole::ACCENT) == dark_red);
+    panel->theme_override = accent;
+    CHECK(panel->theme_override.get() == accent);
+    CHECK(panel->theme.get()[tokotachi::ColorRole::ACCENT] == red);
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == red);  // 子孫は継ぐ
+    CHECK(outside->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    CHECK(inner->theme.get()[tokotachi::ColorRole::WINDOW] == tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]);
+
+    window.visible = true;
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    CHECK(painted_inner == red && painted_outside == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    // 描き終えたら、今のテーマはアプリケーションのものに戻る
+    CHECK(tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve() == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    const float scale = window.display_scale;
+    const int px = static_cast<int>(15 * scale), stride = static_cast<int>(200 * scale);
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[static_cast<std::size_t>(px * stride + px)] == packed(red));
+
+    // 子で別の役割を上書きすると、親の上書きと合わさる。ダークにすると、ダークの色を使う。
+    tokotachi::ThemeOverride field;
+    field.set(tokotachi::ColorRole::FIELD, pale);
+    field.set_field_padding(20);
+    inner->theme_override = field;
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == red && inner->theme.get()[tokotachi::ColorRole::FIELD] == pale);
+    CHECK(inner->theme.get().field_padding == 20 && panel->theme.get().field_padding != 20);
+    app->color_scheme = tokotachi::ColorScheme::DARK;
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == dark_red && inner->theme.get()[tokotachi::ColorRole::FIELD] == pale);
+    CHECK(inner->theme.get()[tokotachi::ColorRole::WINDOW] == tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]);
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    CHECK(painted_inner == dark_red);
+    app->color_scheme = tokotachi::ColorScheme::LIGHT;
+
+    // 望む大きさを計算するときも、自分に効いているテーマを読む。
+    ThemeProbe* probe = new ThemeProbe(panel);
+    CHECK(near(probe->preferred_size.get().width, 1));  // ACCENT が red(上書き)なら 1
+    probe->parent = &window;
+    CHECK(near(probe->preferred_size.get().width, 0));
+
+    // ポップアップは、開いた元のウィジェットのテーマを継ぐ。
+    tokotachi::Popup* popup = new tokotachi::Popup(inner);
+    CHECK(popup->theme.get()[tokotachi::ColorRole::ACCENT] == red && popup->theme.get()[tokotachi::ColorRole::FIELD] == pale);
+    delete popup;
+
+    // 上書きをやめると、親のものに戻る。
+    accent.unset(tokotachi::ColorRole::ACCENT);
+    CHECK(accent.is_empty());
+    panel->theme_override = accent;
+    CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
+    app->color_scheme = tokotachi::ColorScheme::SYSTEM;
+}
+
 TEST(tab_widget_add_insert_remove)
 {
     tokotachi::Window window("t", 300, 200);
     tokotachi::TabWidget* tabs = new tokotachi::TabWidget(&window);
+    window.visible = true;
     CHECK(tabs->current_index == -1 && tabs->current_tab == nullptr);
     int changes = 0;
     tabs->on_change = [&](tokotachi::Object* sender)
@@ -1819,16 +2132,16 @@ TEST(tab_widget_add_insert_remove)
     tokotachi::Widget* c = new tokotachi::Widget();
     tokotachi::Tab* ta = tabs->add_tab(a, "A");
     CHECK(ta && ta->page == a && ta->title.get() == "A" && a->parent == tabs);
-    CHECK(tabs->current_index == 0 && tabs->current_tab == ta && a->visible && changes == 1);
+    CHECK(tabs->current_index == 0 && tabs->current_tab == ta && a->showing && changes == 1);
     tokotachi::Tab* tb = tabs->add_tab(b, "B");
-    CHECK(tabs->current_index == 0 && !b->visible && changes == 1);  // 2 つ目以降は選ばない
+    CHECK(tabs->current_index == 0 && !b->showing && b->visible && changes == 1);  // 2 つ目以降は選ばない(visible は変えない)
     CHECK(tabs->add_tab(b, "B2") == tb && tabs->tabs.get().size() == 2);  // 同じページは加えない
     tokotachi::Tab* tc = tabs->insert_tab(0, c, "C");
     CHECK(tabs->tabs.get().size() == 3 && tabs->tabs.get()[0] == tc);
     CHECK(tabs->current_tab == ta && tabs->current_index == 1 && changes == 2);  // 選んでいるタブは同じで、番号がずれる
 
     tabs->current_index = 2;
-    CHECK(tabs->current_tab == tb && b->visible && !a->visible && !c->visible && changes == 3);
+    CHECK(tabs->current_tab == tb && b->showing && !a->showing && !c->showing && changes == 3);
     tabs->current_index = 5;  // 範囲の外は無視する
     tabs->current_index = -1;
     CHECK(tabs->current_index == 2 && changes == 3);
@@ -1836,22 +2149,32 @@ TEST(tab_widget_add_insert_remove)
     // 外したページは親が無くなり、見える状態で返る。選んでいたタブなら隣を選ぶ。
     CHECK(tabs->remove_tab(tb) == b);
     CHECK(b->parent == nullptr && b->visible && tabs->tabs.get().size() == 2);
-    CHECK(tabs->current_tab == ta && a->visible && changes == 4);
+    CHECK(tabs->current_tab == ta && a->showing && changes == 4);
     delete b;
 
     // ページを破棄する・別の親へ移すと、そのタブも消える。
     delete a;
-    CHECK(tabs->tabs.get().size() == 1 && tabs->current_tab == tc && c->visible && changes == 5);
+    CHECK(tabs->tabs.get().size() == 1 && tabs->current_tab == tc && c->showing && changes == 5);
     c->parent = &window;
     CHECK(tabs->tabs.get().empty() && tabs->current_index == -1 && tabs->current_tab == nullptr && changes == 6);
-    CHECK(c->visible);
+    CHECK(c->showing);
 
     // 別の TabWidget へ加えると、元のタブは消える。
     tokotachi::TabWidget* other = new tokotachi::TabWidget(&window);
     tabs->add_tab(c, "C");
     other->add_tab(c, "C");
     CHECK(tabs->tabs.get().empty() && other->tabs.get().size() == 1 && c->parent == other);
+    CHECK(c->showing);
     CHECK(tabs->insert_tab(0, tabs, "self") == nullptr);
+
+    // 利用者が隠したページは、選んでも見せない(TabWidget は visible を変えない)。
+    tokotachi::Widget* d = new tokotachi::Widget();
+    d->visible = false;
+    other->add_tab(d, "D");
+    other->current_index = 1;
+    CHECK(other->current_index == 1 && !d->visible && !d->showing && !c->showing);
+    d->visible = true;
+    CHECK(d->showing);
     tabs->on_change = tokotachi::NotifyHandler();
 }
 
@@ -1931,26 +2254,26 @@ TEST(tab_widget_scrolls_overflowing_titles)
 // マウスのボタン・移動のイベント(位置は dp)。修飾キーは SDL_SetModState で決める。
 void dispatch_mouse(tokotachi::Window& window, SDL_EventType type, const tokotachi::Point& p, int clicks = 1)
 {
-    const float k = window.impl()->scale / window.impl()->density;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     SDL_Event e;
     SDL_zero(e);
     e.type = type;
     if (type == SDL_EVENT_MOUSE_MOTION)
     {
-        e.motion.windowID = SDL_GetWindowID(window.impl()->window);
+        e.motion.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
         e.motion.x = p.x * k;
         e.motion.y = p.y * k;
     }
     else
     {
-        e.button.windowID = SDL_GetWindowID(window.impl()->window);
+        e.button.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
         e.button.button = SDL_BUTTON_LEFT;
         e.button.down = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
         e.button.clicks = static_cast<Uint8>(clicks);
         e.button.x = p.x * k;
         e.button.y = p.y * k;
     }
-    tokotachi::Application::instance()->impl()->dispatch(e);
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
 
 void click_with(tokotachi::Window& window, const tokotachi::Point& p, SDL_Keymod mod, int clicks = 1)
@@ -1988,9 +2311,161 @@ TEST(image_from_pixels_and_draw)
     w->bounds = tokotachi::Rect(0, 0, 40, 40);
     w->on_paint = [=](tokotachi::Object*, tokotachi::Canvas& canvas) { canvas.draw_image(image, tokotachi::Rect(0, 0, 20, 20)); };
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    CHECK(window.impl()->buffer[2 * stride + 2] == 0xffff0000u);
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[2 * stride + 2] == 0xffff0000u);
+}
+
+// 線画のアイコン(Image::icon。docs/adr/0054)。
+TEST(image_icon_is_drawn_with_tint)
+{
+    const tokotachi::Image save = tokotachi::Image::icon(tokotachi::Icon::SAVE);
+    CHECK(!save.is_null() && save.is_icon() && save.width() == 24 && save.height() == 24);
+    CHECK(!tokotachi::Image::from_pixels(1, 1, std::vector<tokotachi::Color>(1)).is_icon());
+    // 24 × 24 に描いた画像も持つ(色を決めていなければ黒)。四角の左の辺(x = 3 の縦の線)の上
+    CHECK(save.pixel(3, 12).a > 200 && save.pixel(3, 12).r < 40);
+    CHECK(save.pixel(12, 17).a == 0 || save.pixel(0, 0).a == 0);
+    const tokotachi::Image red = tokotachi::Image::icon(tokotachi::Icon::SQUARE, tokotachi::Color::rgb(0xff0000));
+    CHECK(red.pixel(3, 12).r > 200 && red.pixel(3, 12).g < 40);
+    // 範囲の外の値は空の画像
+    CHECK(tokotachi::Image::icon(static_cast<tokotachi::Icon>(1000)).is_null());
+    CHECK(static_cast<int>(tokotachi::Icon::MOON) == 70);  // 71 個(並びの最後)
+
+    // 描くときは渡した色(tint)で塗り、大きさに合わせて線を引く(ぼやけない: 48 × 48 でも線の中は濃い)
+    tokotachi::Bitmap bitmap(48, 48);
+    bitmap.canvas().draw_image(tokotachi::Image::icon(tokotachi::Icon::SQUARE), tokotachi::Rect(0, 0, 48, 48),
+                               tokotachi::Color::rgb(0x00ff00));
+    // square は (3, 3)〜(21, 21) の角の丸い四角。48 では x = 6 の縦の線(太さ 4)
+    CHECK(bitmap.pixel(6, 24) == tokotachi::Color::rgb(0x00ff00));
+    CHECK(bitmap.pixel(24, 24).a == 0);
+    // 色を決めたアイコンは tint によらない。opacity で薄くできる
+    tokotachi::Bitmap other(48, 48);
+    other.canvas().draw_image(red, tokotachi::Rect(0, 0, 48, 48), tokotachi::Color::rgb(0x00ff00), 0.5f);
+    CHECK(other.pixel(6, 24).r > 200 && other.pixel(6, 24).g < 40 && other.pixel(6, 24).a > 100 && other.pixel(6, 24).a < 150);
+    // tint を渡さない形では、色を決めていなければ黒
+    tokotachi::Bitmap plain(48, 48);
+    plain.canvas().draw_image(tokotachi::Image::icon(tokotachi::Icon::SQUARE), tokotachi::Rect(0, 0, 48, 48));
+    CHECK(plain.pixel(6, 24) == tokotachi::Color::rgb(0x000000));
+}
+
+// 部品は、アイコンを文字の色で塗る(無効なら無効の文字の色。薄くはしない)。
+TEST(widgets_tint_icons_with_text_color)
+{
+    tokotachi::Application::instance()->color_scheme = tokotachi::ColorScheme::DARK;
+    tokotachi::Window window("t", 120, 60);
+    tokotachi::ImageBox* image_box = new tokotachi::ImageBox(&window, tokotachi::Image::icon(tokotachi::Icon::SQUARE));
+    image_box->bounds = tokotachi::Rect(0, 0, 48, 48);
+    image_box->fit = tokotachi::ImageFit::CONTAIN;
+    window.visible = true;
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale;
+    const auto at = [&](float x, float y)
+    { return tokotachi::detail::window_impl_of(&window)->buffer[static_cast<int>(y * k) * stride + static_cast<int>(x * k)] & 0xffffffu; };
+    const tokotachi::Color text = tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT];
+    CHECK(at(6.5f, 24) == ((static_cast<std::uint32_t>(text.r) << 16) | (text.g << 8) | text.b));
+    image_box->enabled = false;
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const tokotachi::Color disabled = tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT_DISABLED];
+    CHECK(at(6.5f, 24) == ((static_cast<std::uint32_t>(disabled.r) << 16) | (disabled.g << 8) | disabled.b));
+    tokotachi::Application::instance()->color_scheme = tokotachi::ColorScheme::SYSTEM;
+}
+
+// OS からのドロップ(SDL_EVENT_DROP_*。位置は dp)。
+void dispatch_drop(tokotachi::Window& window, SDL_EventType type, const tokotachi::Point& p, const char* data = nullptr)
+{
+    const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
+    SDL_Event e;
+    SDL_zero(e);
+    e.type = type;
+    e.drop.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
+    e.drop.x = p.x * k;
+    e.drop.y = p.y * k;
+    e.drop.data = data;
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
+}
+
+TEST(drag_and_drop_in_window_and_from_outside)
+{
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::Widget* source = new tokotachi::Widget(&window);
+    source->bounds = tokotachi::Rect(0, 0, 100, 100);
+    tokotachi::Widget* box = new tokotachi::Widget(&window);  // 受け取る(中の子の上でも、親へ送られて受け取る)
+    box->bounds = tokotachi::Rect(150, 0, 150, 200);
+    tokotachi::Widget* inner = new tokotachi::Widget(box);
+    inner->bounds = tokotachi::Rect(10, 10, 50, 50);
+    box->accepts_drops = true;
+
+    // 押している間に始める。ボタンを押していなければ始められない
+    tokotachi::DragData data;
+    data.text = "りんご";
+    data.formats["app/id"] = "7";
+    CHECK(!source->start_drag(data));
+    bool started = false;
+    source->on_mouse_down = [&](tokotachi::Object*, tokotachi::MouseEvent&) {};
+    source->on_mouse_move = [&](tokotachi::Object*, tokotachi::MouseEvent&)
+    {
+        if (!started)
+        {
+            started = source->start_drag(data, "りんご");
+        }
+    };
+    std::vector<std::string> log;
+    tokotachi::DropAction finished = tokotachi::DropAction::COPY;
+    source->on_drag_finish = [&](tokotachi::Object*, tokotachi::DropAction a) { finished = a; };
+    box->on_drag_move = [&](tokotachi::Object*, tokotachi::DragEvent& e)
+    {
+        log.push_back("move");
+        CHECK(e.data.source() == source && !e.data.from_outside() && e.data.formats.at("app/id") == "7");
+        e.accepted = e.pos.x < 100;  // 左の 100dp だけで受け取る
+    };
+    box->on_drag_leave = [&](tokotachi::Object*) { log.push_back("leave"); };
+    box->on_drop = [&](tokotachi::Object*, tokotachi::DragEvent& e)
+    {
+        log.push_back("drop " + e.data.text);
+        CHECK(e.action == tokotachi::DropAction::MOVE && e.pos.x == 20 && e.pos.y == 30);
+    };
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(10, 10));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(20, 10));
+    CHECK(started && log.empty());
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 20));  // inner の上: box が受け取る
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(280, 20));  // 受け取らない位置
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 30));
+    tokotachi::detail::window_impl_of(&window)->render(false);                                              // 像を描ける
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(170, 30));
+    CHECK(log.size() == 6 && log[0] == "move" && log[1] == "move" && log[2] == "leave" && log[5] == "drop りんご");  // 離した位置でも聞き直す
+    CHECK(finished == tokotachi::DropAction::MOVE);
+
+    // Esc でやめると、受け取らなかったことになる
+    started = false;
+    log.clear();
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(10, 10));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 20));
+    dispatch_key(window, SDLK_ESCAPE);
+    CHECK(started && finished == tokotachi::DropAction::NONE && log.back() == "leave");
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(170, 20));
+    CHECK(log.back() == "leave");  // 落とさない
+
+    // OS からのファイル: 重ねている間は中身が分からず、落としたときに入る
+    std::vector<std::string> files;
+    box->on_drag_move = [&](tokotachi::Object*, tokotachi::DragEvent& e)
+    {
+        CHECK(e.data.from_outside() && e.data.source() == nullptr && e.action == tokotachi::DropAction::COPY);
+    };
+    box->on_drop = [&](tokotachi::Object*, tokotachi::DragEvent& e) { files = e.data.files; };
+    dispatch_drop(window, SDL_EVENT_DROP_BEGIN, tokotachi::Point());
+    dispatch_drop(window, SDL_EVENT_DROP_POSITION, tokotachi::Point(200, 50));
+    dispatch_drop(window, SDL_EVENT_DROP_FILE, tokotachi::Point(200, 50), "C:/a.txt");
+    dispatch_drop(window, SDL_EVENT_DROP_FILE, tokotachi::Point(200, 50), "C:/b.txt");
+    dispatch_drop(window, SDL_EVENT_DROP_COMPLETE, tokotachi::Point(200, 50));
+    CHECK(files.size() == 2 && files[1] == "C:/b.txt");
+    // 落とさずに離れた(中身が無い)ときは drop を送らない
+    files.clear();
+    dispatch_drop(window, SDL_EVENT_DROP_BEGIN, tokotachi::Point());
+    dispatch_drop(window, SDL_EVENT_DROP_POSITION, tokotachi::Point(200, 50));
+    dispatch_drop(window, SDL_EVENT_DROP_COMPLETE, tokotachi::Point(200, 50));
+    CHECK(files.empty() && !tokotachi::detail::window_impl_of(&window)->drag.active);
 }
 
 TEST(list_view_selection_and_keys)
@@ -2058,6 +2533,464 @@ TEST(list_view_selection_and_keys)
     dispatch_key(window, SDLK_RETURN);
     CHECK(activations == 2);
     view->on_selection_change = tokotachi::NotifyHandler();
+}
+
+TEST(item_view_text_style_search_and_edit)
+{
+    tokotachi::Window window("t", 300, 300);
+    window.visible = true;
+    tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+    const char* const names[] = {"apple", "Banana", "blueberry", "cherry", "bread"};
+    std::vector<tokotachi::Item*> items;
+    for (int i = 0; i < 5; ++i)
+    {
+        items.push_back(list->add_item(names[i]));
+    }
+    tokotachi::ListView* view = new tokotachi::ListView(&window);
+    view->bounds = tokotachi::Rect(0, 0, 200, 250);
+    view->model = list;
+    window.apply_layout();
+
+    // 項目ごとの文字の色・フォント(既定はビューの標準)
+    items[1]->text_color = tokotachi::ThemeColor(tokotachi::Color(220, 38, 38));
+    items[1]->font = tokotachi::Font(14, true);
+    CHECK(list->text_color(list->index_of(items[1]), 0) == tokotachi::ThemeColor(tokotachi::Color(220, 38, 38)));
+    CHECK(list->font(list->index_of(items[1]), 0).bold);
+    CHECK(list->text_color(list->index_of(items[0]), 0) == tokotachi::ThemeColor());
+    tokotachi::detail::window_impl_of(&window)->render(false);  // 描ける
+
+    // 押した文字で始まる項目へ(大文字・小文字は区別しない。続けて押すと前方一致)
+    dispatch_click(window, row_point(0));
+    dispatch_key(window, SDLK_B);
+    CHECK(view->current == list->index_of(items[1]));
+    dispatch_key(window, SDLK_L);  // "bl"
+    CHECK(view->current == list->index_of(items[2]));
+    SDL_Delay(1100);               // 間が空くと、新しい検索
+    dispatch_key(window, SDLK_B);  // 同じ文字は、次の項目へ
+    CHECK(view->current == list->index_of(items[4]));
+    dispatch_key(window, SDLK_B);  // "bb" も次へ(終わりから始めへ戻る)
+    CHECK(view->current == list->index_of(items[1]) && view->is_selected(list->index_of(items[1])));
+
+    // F2 で編集し、Enter で確定する(モデルの set_text)。編集できない項目では始めない
+    dispatch_key(window, SDLK_F2);
+    CHECK(!view->editing.get());
+    items[1]->editable = true;
+    SDL_Delay(1100);
+    dispatch_key(window, SDLK_F2);
+    CHECK(view->editing.get());
+    dispatch_key(window, SDLK_END);  // 編集の欄が受け取り、current は動かない
+    dispatch_text(window, "s");
+    CHECK(view->current == list->index_of(items[1]));
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(!view->editing.get() && items[1]->text.get() == "Bananas" && view->focused);
+    // Esc でやめる
+    view->edit(list->index_of(items[1]));
+    dispatch_text(window, "x");
+    dispatch_key(window, SDLK_ESCAPE);
+    CHECK(!view->editing.get() && items[1]->text.get() == "Bananas");
+    // 2 列目以降は column_texts に入る
+    view->add_column("名前", 100);
+    view->add_column("色", 80);
+    view->edit(list->index_of(items[1]), 1);
+    dispatch_text(window, "黄");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(items[1]->column_texts.get().size() == 1 && items[1]->column_texts.get()[0] == "黄");
+    // モデルの行が変わったらやめる
+    view->edit(list->index_of(items[1]));
+    list->add_item("date");
+    CHECK(!view->editing.get());
+}
+
+// ドラッグ: from で押し、少しずつ動かして to で離す。
+void drag_mouse(tokotachi::Window& window, const tokotachi::Point& from, const tokotachi::Point& to)
+{
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, from);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(from.x, from.y + 6));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, to);
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, to);
+}
+
+std::string texts_of(const tokotachi::ListModel* list)
+{
+    std::string out;
+    const std::vector<tokotachi::Item*> items = list->items;
+    for (std::size_t i = 0; i < items.size(); ++i)
+    {
+        out += items[i]->text.get();
+    }
+    return out;
+}
+
+TEST(item_view_drag_to_reorder)
+{
+    tokotachi::Window window("t", 300, 300);
+    window.visible = true;
+    tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+    for (const char* t : {"a", "b", "c", "d", "e"})
+    {
+        list->add_item(t);
+    }
+    tokotachi::ListView* view = new tokotachi::ListView(&window);
+    view->bounds = tokotachi::Rect(0, 0, 200, 250);
+    view->model = list;
+    view->selection_mode = tokotachi::SelectionMode::MULTI;
+    view->drag_enabled = true;
+    view->drop_enabled = true;
+    window.apply_layout();
+    const float h = view_row_height();
+
+    // a を d の後ろ(d の下半分)へ
+    dispatch_click(window, row_point(0));
+    drag_mouse(window, row_point(0), tokotachi::Point(100, 1 + 3 * h + h * 0.75f));
+    CHECK(texts_of(list) == "bcdae");
+    CHECK(view->current == list->index_of(list->items.get()[3]) && view->selection.get().size() == 1);  // 移した項目を選んだまま
+
+    // 選んでいる複数の項目(b・e)をまとめて先頭へ。選んでいる項目を押してもほかの選択は外れない
+    click_with(window, row_point(0), SDL_KMOD_NONE);   // b
+    click_with(window, row_point(4), SDL_KMOD_LCTRL);  // と e
+    CHECK(view->selection.get().size() == 2);
+    drag_mouse(window, row_point(4), tokotachi::Point(100, 1 + h * 0.25f));
+    CHECK(texts_of(list) == "becda");
+    // ドラッグしなければ、ふつうのクリック(選択がその項目だけになる)
+    click_with(window, row_point(0), SDL_KMOD_NONE);
+    CHECK(view->selection.get().size() == 1);
+    // ListModel::move_item(移した後の位置)
+    list->move_item(list->items.get()[0], 2);
+    CHECK(texts_of(list) == "ecbda");
+
+    // 木: 項目の上に落とすと子に、自分の子孫には落とせない
+    tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+    tokotachi::TreeItem* docs = tree->add_item("docs");
+    tokotachi::TreeItem* work = docs->add_child("work");
+    tokotachi::TreeItem* music = tree->add_item("music");
+    tokotachi::TreeView* tree_view = new tokotachi::TreeView(&window);
+    tree_view->bounds = tokotachi::Rect(0, 0, 200, 250);
+    tree_view->model = tree;
+    tree_view->drag_enabled = true;
+    tree_view->drop_enabled = true;
+    tree_view->expand_all();
+    view->visible = false;
+    window.apply_layout();
+    // 行: docs(0)・work(1)・music(2)。music を docs の上(中ほど)へ
+    dispatch_click(window, row_point(2));
+    drag_mouse(window, row_point(2), row_point(0));
+    CHECK(music->parent_item.get() == docs && docs->children.get().size() == 2 && docs->children.get()[1] == music);
+    // docs を自分の子(work)の上へは移せない
+    dispatch_click(window, row_point(0));
+    drag_mouse(window, row_point(0), row_point(1));
+    CHECK(docs->parent_item.get() == nullptr && work->parent_item.get() == docs);
+    // work を一番上の終わり(最後の行より下)へ
+    tree->move_item(work, nullptr, -1);
+    CHECK(work->parent_item.get() == nullptr && tree->items.get().size() == 2 && tree->items.get()[1] == work);
+
+    // ほかのウィジェットから: モデルの can_drop・drop_data(既定は受け取らない)
+    tokotachi::DragData data;
+    data.text = "x";
+    CHECK(!list->can_drop(data, tokotachi::ModelIndex(), 0));
+}
+
+// 3 列 × 4 行の表(すべて編集できる)。セル (r, c) の文字は「r,c」。
+struct TableFixture
+{
+    tokotachi::Window window;
+    tokotachi::ListModel* model;
+    tokotachi::TableView* table;
+
+    TableFixture() : window("t", 400, 300), model(nullptr), table(nullptr)
+    {
+        window.visible = true;
+        model = new tokotachi::ListModel(&window);
+        for (int r = 0; r < 4; ++r)
+        {
+            tokotachi::Item* item = model->add_item(std::to_string(r) + ",0");
+            std::vector<std::string> texts;  // 2 列目以降
+            for (int c = 1; c < 3; ++c)
+            {
+                texts.push_back(std::to_string(r) + "," + std::to_string(c));
+            }
+            item->column_texts = texts;
+            item->editable = true;
+        }
+        table = new tokotachi::TableView(&window);
+        table->bounds = tokotachi::Rect(0, 0, 360, 260);
+        for (int c = 0; c < 3; ++c)
+        {
+            table->add_column("列" + std::to_string(c), 80);
+        }
+        table->model = model;
+        table->selection_mode = tokotachi::SelectionMode::MULTI;
+        window.apply_layout();
+    }
+
+    // セル (r, c) の中ほど(行の見出しは 32、見出しの高さは行の高さ)。
+    tokotachi::Point cell(int r, int c) const
+    {
+        const float h = view_row_height();
+        return tokotachi::Point(1 + 32 + c * 80 + 40, 1 + h + r * h + h / 2);
+    }
+
+    std::string text(int r, int c) const { return model->text(model->index(r), c); }
+};
+
+TEST(application_language_selects_standard_texts)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    const std::string saved = app->language;
+    tokotachi::Window window("t", 200, 100);
+    app->language = "en-US";
+    tokotachi::Dialog* english = new tokotachi::Dialog(&window, "t");
+    CHECK(english->add_button(tokotachi::DialogButton::CANCEL)->text == "Cancel");
+    app->language = "ja-JP";
+    tokotachi::Dialog* japanese = new tokotachi::Dialog(&window, "t");
+    CHECK(japanese->add_button(tokotachi::DialogButton::CANCEL)->text == "キャンセル");
+    app->language = saved;
+}
+
+TEST(date_arithmetic_format_parse)
+{
+    const tokotachi::Date d(2026, 10, 11);
+    CHECK(d.is_valid() && !d.is_null() && tokotachi::Date().is_null() && !tokotachi::Date(2026, 2, 29).is_valid());
+    CHECK(d.day_of_week() == tokotachi::DayOfWeek::SUNDAY && tokotachi::Date(2000, 1, 1).day_of_week() == tokotachi::DayOfWeek::SATURDAY);
+    CHECK(tokotachi::Date::days_in_month(2024, 2) == 29 && tokotachi::Date::days_in_month(2100, 2) == 28);
+    CHECK(d.add_days(30) == tokotachi::Date(2026, 11, 10) && d.add_days(-11) == tokotachi::Date(2026, 9, 30));
+    CHECK(tokotachi::Date(2026, 1, 31).add_months(1) == tokotachi::Date(2026, 2, 28));
+    CHECK(tokotachi::Date(2024, 2, 29).add_years(1) == tokotachi::Date(2025, 2, 28));
+    CHECK(d.days_to(tokotachi::Date(2027, 10, 11)) == 365 && tokotachi::Date(9999, 12, 31).add_days(5) == tokotachi::Date(9999, 12, 31));
+    CHECK(d.format() == "2026/10/11" && d.format("yy-M-d") == "26-10-11" && tokotachi::Date(2026, 1, 5).format("M月d日") == "1月5日");
+    CHECK(tokotachi::Date().format().empty());
+    CHECK(tokotachi::Date::parse("2026-1-5") == tokotachi::Date(2026, 1, 5));
+    CHECK(tokotachi::Date::parse("26.1.5") == tokotachi::Date(2026, 1, 5));
+    CHECK(tokotachi::Date::parse("5/1/2026", "dd/MM/yyyy") == tokotachi::Date(2026, 1, 5));
+    CHECK(tokotachi::Date::parse("2026/2/30").is_null() && tokotachi::Date::parse("2026/2").is_null());
+    CHECK(tokotachi::Date(2026, 1, 1) < d && d <= d && d > tokotachi::Date(2025, 12, 31));
+}
+
+TEST(date_edit_typing_and_steps)
+{
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::DateEdit* date_edit = new tokotachi::DateEdit(&window);
+    date_edit->bounds = tokotachi::Rect(10, 10, 160, 32);
+    window.apply_layout();
+    int changes = 0;
+    date_edit->on_change = [&](tokotachi::Object*) { ++changes; };
+    CHECK(date_edit->date.get().is_null() && date_edit->text.get().empty());
+    // 打ち込んで Enter(区切りは何でもよい)
+    dispatch_click(window, tokotachi::Point(40, 26));
+    dispatch_text(window, "2026-3-31");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(date_edit->date == tokotachi::Date(2026, 3, 31) && date_edit->text == "2026/03/31" && changes == 1);
+    // ↑↓ はキャレットのある欄: 月の上で ↑ → 4 月 30 日
+    date_edit->focused = true;
+    dispatch_key(window, SDLK_HOME);
+    for (int i = 0; i < 6; ++i)
+    {
+        dispatch_key(window, SDLK_RIGHT);
+    }
+    dispatch_key(window, SDLK_UP);
+    CHECK(date_edit->date == tokotachi::Date(2026, 4, 30));
+    // 年の上で ↓
+    dispatch_key(window, SDLK_HOME);
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(date_edit->date == tokotachi::Date(2025, 4, 30));
+    // 読めなければ元に戻す。空にすると空の日付
+    dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+    dispatch_text(window, "abc");
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(date_edit->date == tokotachi::Date(2025, 4, 30) && date_edit->text == "2025/04/30");
+    dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+    dispatch_key(window, SDLK_BACKSPACE);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(date_edit->date.get().is_null());
+    // 範囲と書式
+    date_edit->minimum = tokotachi::Date(2026, 1, 1);
+    date_edit->date = tokotachi::Date(2020, 5, 5);
+    CHECK(date_edit->date == tokotachi::Date(2026, 1, 1));
+    date_edit->format = "dd.MM.yyyy";
+    CHECK(date_edit->text == "01.01.2026");
+    // 暦を開いて、矢印と Enter で選ぶ
+    date_edit->open_calendar();
+    CHECK(date_edit->calendar_open.get());
+    dispatch_key(window, SDLK_RIGHT);
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(!date_edit->calendar_open.get() && date_edit->date == tokotachi::Date(2026, 1, 2));
+}
+
+TEST(calendar_navigation)
+{
+    tokotachi::Window window("t", 400, 400);
+    window.visible = true;
+    tokotachi::Calendar* calendar = new tokotachi::Calendar(&window);
+    calendar->bounds = tokotachi::Rect(0, 0, 300, 300);
+    calendar->first_day_of_week = tokotachi::DayOfWeek::MONDAY;
+    calendar->date = tokotachi::Date(2026, 10, 11);
+    CHECK(calendar->shown_year == 2026 && calendar->shown_month == 10);
+    int activated = 0;
+    calendar->on_activate = [&](tokotachi::Object*) { ++activated; };
+    calendar->focused = true;
+    dispatch_key(window, SDLK_DOWN);
+    CHECK(calendar->date == tokotachi::Date(2026, 10, 18));
+    dispatch_key(window, SDLK_PAGEDOWN);
+    CHECK(calendar->date == tokotachi::Date(2026, 11, 18) && calendar->shown_month == 11);
+    dispatch_key(window, SDLK_END);
+    CHECK(calendar->date == tokotachi::Date(2026, 11, 30));
+    dispatch_key(window, SDLK_RETURN);
+    CHECK(activated == 1);
+    // 範囲の外へは動かない
+    calendar->maximum = tokotachi::Date(2026, 12, 1);
+    dispatch_key(window, SDLK_PAGEDOWN, true, SDL_KMOD_LSHIFT);
+    CHECK(calendar->date == tokotachi::Date(2026, 12, 1));
+    // 月だけを変える
+    calendar->show_month(2026, 1);
+    CHECK(calendar->shown_month == 1 && calendar->date == tokotachi::Date(2026, 12, 1));
+}
+
+TEST(color_dialog_sync)
+{
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::ColorDialog* color_dialog = new tokotachi::ColorDialog(&window);
+    color_dialog->color = tokotachi::Color(0x25, 0x63, 0xEB, 100);
+    // 不透明度を選ばないなら 255
+    CHECK(color_dialog->color.get() == tokotachi::Color(0x25, 0x63, 0xEB));
+    color_dialog->alpha_enabled = true;
+    color_dialog->color = tokotachi::Color(0x25, 0x63, 0xEB, 100);
+    CHECK(color_dialog->color.get().a == 100);
+    // 欄を探す(16 進数の入力欄と、R・G・B・A の数値)
+    std::vector<tokotachi::LineEdit*> edits;
+    std::vector<tokotachi::SpinBox*> spins;
+    std::vector<tokotachi::Widget*> stack(1, color_dialog);
+    while (!stack.empty())
+    {
+        tokotachi::Widget* w = stack.back();
+        stack.pop_back();
+        const std::vector<tokotachi::Widget*> children = w->children;
+        for (std::size_t i = children.size(); i-- > 0;)
+        {
+            stack.push_back(children[i]);
+        }
+        if (tokotachi::SpinBox* s = dynamic_cast<tokotachi::SpinBox*>(w))
+        {
+            spins.push_back(s);
+        }
+        else if (tokotachi::LineEdit* l = dynamic_cast<tokotachi::LineEdit*>(w))
+        {
+            if (!dynamic_cast<tokotachi::SpinBox*>(w->parent.get()))
+            {
+                edits.push_back(l);
+            }
+        }
+    }
+    CHECK(edits.size() == 1 && spins.size() == 4);
+    CHECK(edits[0]->text == "#2563EB64" && spins[0]->value == 0x25 && spins[3]->value == 100);
+    // 数値を変えると色と 16 進数が変わる
+    spins[1]->value = 255;
+    CHECK(color_dialog->color.get() == tokotachi::Color(0x25, 0xFF, 0xEB, 100) && edits[0]->text == "#25FFEB64");
+    // 16 進数を打ち込むと(読める長さになったら)色が変わる
+    edits[0]->text = "#FF0000";
+    CHECK(color_dialog->color.get() == tokotachi::Color(255, 0, 0, 100) && spins[0]->value == 255 && spins[1]->value == 0);
+    edits[0]->text = "#00FF0080";
+    CHECK(color_dialog->color.get() == tokotachi::Color(0, 255, 0, 128));
+}
+
+TEST(table_view_select_cells)
+{
+    TableFixture f;
+    tokotachi::TableView* table = f.table;
+    // クリックで 1 セル
+    dispatch_click(f.window, f.cell(1, 1));
+    CHECK(table->current == f.model->index(1) && table->current_column == 1);
+    CHECK(table->selected_ranges.get().size() == 1 && table->is_cell_selected(1, 1) && !table->is_cell_selected(1, 0));
+    // Shift+クリックで矩形に広げる
+    click_with(f.window, f.cell(2, 2), SDL_KMOD_LSHIFT);
+    CHECK(table->selected_ranges.get().size() == 1 && table->selected_ranges.get()[0] == tokotachi::CellRange(1, 1, 2, 2));
+    // Ctrl+クリックで範囲を加える
+    click_with(f.window, f.cell(0, 0), SDL_KMOD_LCTRL);
+    CHECK(table->selected_ranges.get().size() == 2 && table->is_cell_selected(0, 0) && table->is_cell_selected(2, 2));
+    // selection は選んでいるセルのある行
+    CHECK(table->selection.get().size() == 3);
+    // ドラッグで矩形
+    dispatch_mouse(f.window, SDL_EVENT_MOUSE_BUTTON_DOWN, f.cell(3, 0));
+    dispatch_mouse(f.window, SDL_EVENT_MOUSE_MOTION, f.cell(2, 1));
+    dispatch_mouse(f.window, SDL_EVENT_MOUSE_BUTTON_UP, f.cell(2, 1));
+    CHECK(table->selected_ranges.get().size() == 1 && table->selected_ranges.get()[0] == tokotachi::CellRange(2, 0, 3, 1));
+    // 行の見出しで行を選ぶ
+    dispatch_click(f.window, tokotachi::Point(10, f.cell(1, 0).y));
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(1, 0, 1, 2));
+    // キー: 矢印で動き、Shift+矢印で広げる。Ctrl+A ですべて
+    dispatch_click(f.window, f.cell(0, 0));
+    dispatch_key(f.window, SDLK_RIGHT);
+    dispatch_key(f.window, SDLK_DOWN, true, SDL_KMOD_LSHIFT);
+    CHECK(table->current == f.model->index(1) && table->current_column == 1);
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(0, 1, 1, 1));
+    dispatch_key(f.window, SDLK_END, true, SDL_KMOD_LCTRL);
+    CHECK(table->current == f.model->index(3) && table->current_column == 2 && table->selected_ranges.get().size() == 1);
+    dispatch_key(f.window, SDLK_A, true, SDL_KMOD_LCTRL);
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(0, 0, 3, 2));
+    // Tab は右へ、行の終わりなら次の行の始めへ
+    table->select_range(tokotachi::CellRange(0, 2, 0, 2));
+    dispatch_key(f.window, SDLK_TAB);
+    CHECK(table->current == f.model->index(1) && table->current_column == 0);
+    // 行を選ぶ使い方
+    table->selection_behavior = tokotachi::SelectionBehavior::ROWS;
+    dispatch_click(f.window, f.cell(2, 1));
+    CHECK(table->is_cell_selected(2, 0) && table->is_cell_selected(2, 2) && table->current_column == 1);
+}
+
+TEST(table_view_edit_and_clipboard)
+{
+    TableFixture f;
+    tokotachi::TableView* table = f.table;
+    dispatch_click(f.window, f.cell(0, 1));
+    // 文字を打つと上書きで編集を始め、Enter で確定して下へ
+    dispatch_text(f.window, "x");
+    CHECK(table->editing.get());
+    dispatch_text(f.window, "y");
+    dispatch_key(f.window, SDLK_RETURN);
+    CHECK(!table->editing.get() && f.text(0, 1) == "xy" && table->current == f.model->index(1) && table->current_column == 1);
+    // F2 は続きから、Tab で確定して右へ
+    dispatch_key(f.window, SDLK_F2);
+    dispatch_text(f.window, "!");
+    dispatch_key(f.window, SDLK_TAB);
+    CHECK(f.text(1, 1) == "1,1!" && table->current_column == 2 && table->focused);
+    // Esc でやめる
+    dispatch_text(f.window, "z");
+    dispatch_key(f.window, SDLK_ESCAPE);
+    CHECK(f.text(1, 2) == "1,2" && !table->editing.get());
+    // Enter は(編集していなくても)下へ
+    dispatch_key(f.window, SDLK_RETURN);
+    CHECK(table->current == f.model->index(2));
+    // 写す: 行は改行、列はタブ
+    table->select_range(tokotachi::CellRange(2, 0, 3, 1));
+    CHECK(table->selected_text() == "2,0\t2,1\n3,0\t3,1");
+    dispatch_key(f.window, SDLK_C, true, SDL_KMOD_LCTRL);
+    std::string copied = tokotachi::clipboard::text();
+    copied.erase(std::remove(copied.begin(), copied.end(), '\r'), copied.end());  // Windows のクリップボードは改行を CR LF にする
+    CHECK(copied == "2,0\t2,1\n3,0\t3,1");
+    // 貼る: current(範囲の左上)から
+    table->select_range(tokotachi::CellRange(0, 1, 0, 1));
+    dispatch_key(f.window, SDLK_V, true, SDL_KMOD_LCTRL);
+    CHECK(f.text(0, 1) == "2,0" && f.text(0, 2) == "2,1" && f.text(1, 1) == "3,0" && f.text(1, 2) == "3,1");
+    CHECK(table->selected_ranges.get()[0] == tokotachi::CellRange(0, 1, 1, 2));
+    // 1 つの値は、選んでいるすべてのセルへ
+    tokotachi::clipboard::set_text("v\n");
+    table->select_range(tokotachi::CellRange(2, 0, 3, 0));
+    table->paste();
+    CHECK(f.text(2, 0) == "v" && f.text(3, 0) == "v" && f.text(2, 1) == "2,1");
+    // Delete で空に。編集できないセルは変えない
+    f.model->items.get()[3]->editable = false;
+    table->select_range(tokotachi::CellRange(2, 1, 3, 1));
+    dispatch_key(f.window, SDLK_DELETE);
+    CHECK(f.text(2, 1).empty() && f.text(3, 1) == "3,1");
+    // 編集できないセルのダブルクリックは on_activate
+    int activated = 0;
+    table->on_activate = [&](tokotachi::Object*) { ++activated; };
+    click_with(f.window, f.cell(3, 2), SDL_KMOD_NONE, 2);
+    CHECK(activated == 1 && !table->editing.get());
+    // 並べ替えると、範囲は current のセルだけになる
+    table->select_range(tokotachi::CellRange(0, 0, 1, 1));
+    f.model->sort(0, tokotachi::SortOrder::DESCENDING);
+    CHECK(table->selected_ranges.get().size() == 1);
 }
 
 TEST(list_view_follows_model_changes)
@@ -2237,7 +3170,7 @@ TEST(item_view_queries_only_visible_rows)
     tokotachi::ListView* view = new tokotachi::ListView(&window);
     view->bounds = tokotachi::Rect(0, 0, 200, 250);
     view->model = model;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(model->queries > 0 && model->queries < 20);
     dispatch_click(window, row_point(0));
     dispatch_key(window, SDLK_END);
@@ -2365,45 +3298,45 @@ TEST(menu_bar_keyboard)
 
     // Alt+ニーモニックで開き、項目のニーモニックで選ぶ。
     dispatch_key(window, SDLK_F, true, SDL_KMOD_LALT);
-    CHECK(file->is_open());
+    CHECK(file->opened.get());
     dispatch_key(window, SDLK_S);
-    CHECK(done == "save " && !file->is_open());
+    CHECK(done == "save " && !file->opened.get());
 
     // F10 でメニューバーへ移り、→ で次へ、↓ で開く。
     dispatch_key(window, SDLK_F10);
     dispatch_key(window, SDLK_RIGHT);
     dispatch_key(window, SDLK_DOWN);
-    CHECK(edit->is_open());
+    CHECK(edit->opened.get());
     // 開いたメニューの ← は隣のメニューへ。Enter で最初の項目を選ぶ。
     dispatch_key(window, SDLK_LEFT);
-    CHECK(file->is_open() && !edit->is_open());
+    CHECK(file->opened.get() && !edit->opened.get());
     dispatch_key(window, SDLK_RETURN);
     CHECK(done == "save open ");
 
     // Esc はメニューバーへ戻り、もう一度 Esc でやめる。
     dispatch_key(window, SDLK_E, true, SDL_KMOD_LALT);
-    CHECK(edit->is_open());
+    CHECK(edit->opened.get());
     dispatch_key(window, SDLK_ESCAPE);
-    CHECK(!edit->is_open());
+    CHECK(!edit->opened.get());
     dispatch_key(window, SDLK_DOWN);  // まだメニューバーにいる
-    CHECK(edit->is_open());
+    CHECK(edit->opened.get());
     dispatch_key(window, SDLK_ESCAPE);
     dispatch_key(window, SDLK_ESCAPE);
     dispatch_key(window, SDLK_DOWN);  // メニューバーから出た
-    CHECK(!edit->is_open() && !file->is_open());
+    CHECK(!edit->opened.get() && !file->opened.get());
 
     // Alt を押して離すとメニューバーへ移る。
     dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
     dispatch_key(window, SDLK_LALT, false);
     dispatch_key(window, SDLK_RETURN);
-    CHECK(file->is_open());
+    CHECK(file->opened.get());
     file->close();
     // Alt を押したまま他のキーを押したときは移らない。
     dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
     dispatch_key(window, SDLK_X, true, SDL_KMOD_LALT);
     dispatch_key(window, SDLK_LALT, false);
     dispatch_key(window, SDLK_RETURN);
-    CHECK(!file->is_open());
+    CHECK(!file->opened.get());
 }
 
 TEST(delete_later_and_post)
@@ -2428,7 +3361,7 @@ TEST(delete_later_and_post)
     {
         while (SDL_PollEvent(&e))
         {
-            tokotachi::Application::instance()->impl()->dispatch(e);
+            tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
         }
     }
     CHECK(posted);
@@ -2437,8 +3370,8 @@ TEST(delete_later_and_post)
     tokotachi::Widget* x = new tokotachi::Widget(&window);
     x->delete_later();
     delete x;
-    tokotachi::Application::instance()->impl()->flush_doomed();
-    CHECK(tokotachi::Application::instance()->impl()->doomed.empty());
+    tokotachi::detail::impl_of(tokotachi::Application::instance())->flush_doomed();
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->doomed.empty());
 }
 
 bool accept_button_first()
@@ -2510,21 +3443,21 @@ TEST(message_dialog_show_finishes_and_deletes)
 {
     tokotachi::Window window("t", 400, 300);
     window.visible = true;
-    const std::size_t windows_before = tokotachi::Application::instance()->impl()->windows.size();
+    const std::size_t windows_before = tokotachi::detail::impl_of(tokotachi::Application::instance())->windows.size();
     tokotachi::DialogButton answer = tokotachi::DialogButton::NONE;
     tokotachi::MessageDialog* d = tokotachi::MessageDialog::show(
         &window, "確認", "保存しますか？ 長い文はダイアログの幅で折り返す。長い文はダイアログの幅で折り返す。",
         std::vector<tokotachi::DialogButton>{tokotachi::DialogButton::SAVE, tokotachi::DialogButton::DISCARD, tokotachi::DialogButton::CANCEL},
         [&](tokotachi::Object* sender) { answer = static_cast<tokotachi::Dialog*>(sender)->result; }, tokotachi::MessageType::QUESTION);
     CHECK(d->visible && d->text.get().find("保存") == 0 && d->type == tokotachi::MessageType::QUESTION);
-    CHECK(d->width <= 560 && tokotachi::Application::instance()->impl()->windows.size() == windows_before + 1);
+    CHECK(d->width <= 560 && tokotachi::detail::impl_of(tokotachi::Application::instance())->windows.size() == windows_before + 1);
     if (const char* dir = std::getenv("TOKOTACHI_TEST_SHOTS"))
     {
         d->save_png(std::string(dir) + "/message_dialog.png");
     }
     dispatch_key(*d, SDLK_ESCAPE);  // ダイアログは dispatch の終わりに破棄される
     CHECK(answer == tokotachi::DialogButton::CANCEL);
-    CHECK(tokotachi::Application::instance()->impl()->windows.size() == windows_before);
+    CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->windows.size() == windows_before);
 
     // OK だけのお知らせは、Esc でも閉じる。
     answer = tokotachi::DialogButton::NONE;
@@ -2544,7 +3477,7 @@ void pump_events()
     {
         while (SDL_PollEvent(&e))
         {
-            tokotachi::Application::instance()->impl()->dispatch(e);
+            tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
         }
     }
 }
@@ -2591,7 +3524,7 @@ TEST(post_from_worker_threads)
     }
     tokotachi::Timer guard;  // 届かなかったときに終えるため
     guard.interval = 5000;
-    guard.on_timer = [&](tokotachi::Object*) { app->quit(); };
+    guard.on_timeout = [&](tokotachi::Object*) { app->quit(); };
     guard.enabled = true;
     app->exec();
     for (std::size_t i = 0; i < workers.size(); ++i)
@@ -2601,6 +3534,53 @@ TEST(post_from_worker_threads)
     CHECK(received == THREADS * PER_THREAD);
     CHECK(in_order && on_main && worker_on_main == 0);
     CHECK(!tokotachi::post(std::function<void()>()));  // 空の関数は頼まない
+}
+
+namespace
+{
+
+// 破棄の通知を受け取った順に覚える。
+void record_destroyed(tokotachi::Object* object, void* data)
+{
+    static_cast<std::vector<tokotachi::Object*>*>(data)->push_back(object);
+}
+
+// 自分を外す(通知の中で外してもよい)。
+void remove_self(tokotachi::Object*, void* data)
+{
+    tokotachi::detail::remove_destroy_observer(&remove_self, data);
+    ++*static_cast<int*>(data);
+}
+
+}  // namespace
+
+TEST(destroy_observer)
+{
+    std::vector<tokotachi::Object*> destroyed;
+    tokotachi::detail::add_destroy_observer(&record_destroyed, &destroyed);
+    {
+        tokotachi::Window window("t", 100, 100);
+        tokotachi::Widget* panel = new tokotachi::Widget(&window);
+        tokotachi::Label* label = new tokotachi::Label(panel, "a");
+        tokotachi::Timer* timer = new tokotachi::Timer(label);
+        delete panel;  // 子孫(label・timer)も破棄される
+        CHECK(destroyed.size() == 3);
+        CHECK(std::find(destroyed.begin(), destroyed.end(), panel) != destroyed.end());
+        CHECK(std::find(destroyed.begin(), destroyed.end(), label) != destroyed.end());
+        CHECK(std::find(destroyed.begin(), destroyed.end(), timer) != destroyed.end());
+        destroyed.clear();
+    }
+    CHECK(destroyed.size() == 1);  // window
+    tokotachi::detail::remove_destroy_observer(&record_destroyed, &destroyed);
+    destroyed.clear();
+    delete new tokotachi::Object();
+    CHECK(destroyed.empty());  // 外した後は呼ばれない
+
+    int calls = 0;
+    tokotachi::detail::add_destroy_observer(&remove_self, &calls);
+    delete new tokotachi::Object();
+    delete new tokotachi::Object();
+    CHECK(calls == 1);  // 1 回目の通知の中で外した
 }
 
 TEST(post_with_weak_ref)
@@ -2639,7 +3619,7 @@ bool run_until(F done, int timeout_ms = 5000)
     {
         if (SDL_WaitEventTimeout(&e, 20))
         {
-            tokotachi::Application::instance()->impl()->dispatch(e);
+            tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
         }
     }
     return done();
@@ -2775,7 +3755,7 @@ TEST(tool_bar_buttons_and_shortcuts)
     const std::vector<tokotachi::Widget*> children = tools->children;
     for (std::size_t i = 0; i < children.size(); ++i)
     {
-        if (children[i]->visible)
+        if (children[i]->showing)
         {
             buttons.push_back(children[i]);
         }
@@ -2819,7 +3799,7 @@ TEST(tool_bar_overflow_menu)
     const std::vector<tokotachi::Widget*> children = tools->children;
     for (std::size_t i = 0; i < children.size(); ++i)
     {
-        if (children[i]->visible)
+        if (children[i]->showing)
         {
             ++shown;
             if (!chevron || children[i]->x > chevron->x)
@@ -2835,6 +3815,52 @@ TEST(tool_bar_overflow_menu)
     dispatch_key(window, SDLK_UP);  // 最後の項目
     dispatch_key(window, SDLK_RETURN);
     CHECK(done == "7");
+}
+
+TEST(tool_bar_keeps_user_visibility)
+{
+    // 幅に収まらずに隠すときは visible を変えない。利用者が隠した部品は場所を取らない(docs/adr/0041)。
+    tokotachi::Window window("t", 400, 200);
+    tokotachi::ToolBar* tools = new tokotachi::ToolBar();
+    tokotachi::LineEdit* edit = new tokotachi::LineEdit();
+    edit->minimum_size = tokotachi::Size(120, 0);
+    tools->add_widget(edit);
+    tools->add_separator();
+    tools->add_item("後ろ");
+    window.tool_bar = tools;
+    window.visible = true;
+    window.apply_layout();
+    tokotachi::Widget* after = nullptr;
+    const std::vector<tokotachi::Widget*> children = tools->children;
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        if (children[i] != edit && children[i]->showing && (!after || children[i]->x < after->x))
+        {
+            after = children[i];
+        }
+    }
+    CHECK(after && edit->showing && after->x > edit->x.get() + 100);
+    edit->visible = false;
+    window.apply_layout();
+    CHECK(!edit->showing && near(after->x, 4));  // 場所を空けない(先頭に来た区切りも置かない)
+    edit->visible = true;
+    window.apply_layout();
+    CHECK(edit->showing && after->x > edit->x.get() + 100);
+
+    // 狭くして収まらなくなっても、visible は true のまま(showing だけが false)。
+    window.width = 60;
+    window.apply_layout();
+    CHECK(edit->visible && !edit->showing);
+    window.width = 400;
+    window.apply_layout();
+    CHECK(edit->showing);
+    // 隠したまま狭くし、広げても隠れたまま。
+    edit->visible = false;
+    window.width = 60;
+    window.apply_layout();
+    window.width = 400;
+    window.apply_layout();
+    CHECK(!edit->visible && !edit->showing);
 }
 
 TEST(status_bar_message_and_widgets)
@@ -2898,14 +3924,14 @@ TEST(splitter_sizes_stretch_and_drag)
     CHECK(near(split->sizes.get()[0], 50));  // 最小(30 は最小の半分より大きい)
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(13, 100));
     window.apply_layout();
-    CHECK(near(split->sizes.get()[0], 0) && left_pane->collapsed && !left->visible);
+    CHECK(near(split->sizes.get()[0], 0) && left_pane->collapsed && !left->showing && left->visible);  // visible は変えない
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(13, 100));
     // たたんだ区画は、境目(左端)をドラッグして戻す。
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(3, 100));
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(153, 100));
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(153, 100));
     window.apply_layout();
-    CHECK(near(split->sizes.get()[0], 150) && !left_pane->collapsed && left->visible);
+    CHECK(near(split->sizes.get()[0], 150) && !left_pane->collapsed && left->showing);
     // たためない区画はたたまない。
     right_pane->collapsible = false;
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(153, 100));
@@ -2922,6 +3948,220 @@ TEST(splitter_sizes_stretch_and_drag)
     window.apply_layout();
     CHECK(split->panes.get().size() == 1 && near(right->x, 0) && near(right->width, 500));
     split->on_change = tokotachi::NotifyHandler();
+}
+
+TEST(splitter_hidden_pane_takes_no_space)
+{
+    // 区画の部品を visible = false にすると、場所も境目も取らない。戻すと元の大きさで出る(docs/adr/0041)。
+    tokotachi::Window window("t", 600, 200);
+    tokotachi::Splitter* split = new tokotachi::Splitter(&window);
+    split->bounds = tokotachi::Rect(0, 0, 406, 200);
+    tokotachi::Widget* a = new tokotachi::Widget();
+    tokotachi::Widget* b = new tokotachi::Widget();
+    tokotachi::Widget* c = new tokotachi::Widget();
+    split->add_widget(a, 0);
+    split->add_widget(b, 0);
+    split->add_widget(c, 1);
+    split->sizes = std::vector<float>{100, 100, 194};
+    window.visible = true;
+    window.apply_layout();
+    CHECK(near(b->x, 106) && near(c->x, 212) && near(c->width, 194));
+    const float preferred = split->preferred_size.get().width;
+
+    b->visible = false;
+    window.apply_layout();
+    CHECK(!b->showing && near(c->x, 106) && near(c->width, 300));
+    CHECK(split->preferred_size.get().width < preferred);
+    CHECK(near(split->sizes.get()[1], 100));  // 戻したときの大きさを覚えている
+    // 境目は a と c の間の 1 本だけ(b の境目をつかもうとしても、c の中)。
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_DOWN, tokotachi::Point(103, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(153, 100));
+    dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(153, 100));
+    window.apply_layout();
+    CHECK(near(a->width, 150) && near(c->x, 156) && near(c->width, 250));
+
+    b->visible = true;
+    window.apply_layout();
+    CHECK(b->showing && near(b->x, 156) && near(b->width, 100) && near(c->x, 262) && near(c->width, 144));
+}
+
+TEST(mnemonics_move_focus_and_click)
+{
+    tokotachi::Window window("t", 400, 400);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    new tokotachi::Label(&window, "名前(&N)");
+    tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(&window);
+    int saves = 0;
+    tokotachi::Button* button_save = new tokotachi::Button(&window, "保存(&S)");
+    button_save->on_click = [&](tokotachi::Object*) { ++saves; };
+    tokotachi::CheckBox* check_box_over = new tokotachi::CheckBox(&window, "上書き(&O)");
+    tokotachi::GroupBox* group_box_out = new tokotachi::GroupBox(&window, "出力(&U)");
+    tokotachi::BoxLayout* box_out = new tokotachi::BoxLayout(group_box_out);
+    tokotachi::LineEdit* line_edit_inner = new tokotachi::LineEdit(group_box_out);
+    box_out->add(line_edit_inner);
+    tokotachi::Label* label_memo = new tokotachi::Label(&window, "メモ(&M)");
+    label_memo->buddy = line_edit_inner;
+    tokotachi::Label* label_amp = new tokotachi::Label(&window, "A && B");
+    // 同じキーが 2 つ: 押すたびに順に移る
+    new tokotachi::Label(&window, "一(&D)");
+    tokotachi::LineEdit* line_edit_d1 = new tokotachi::LineEdit(&window);
+    new tokotachi::Label(&window, "二(&D)");
+    tokotachi::LineEdit* line_edit_d2 = new tokotachi::LineEdit(&window);
+    const std::vector<tokotachi::Widget*> children = window.children;
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        box->add(children[i]);
+    }
+    window.visible = true;
+    window.apply_layout();
+
+    // Alt を押している間は下線を出す
+    dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
+    CHECK(tokotachi::detail::window_impl_of(&window)->cues);
+    dispatch_key(window, SDLK_N, true, SDL_KMOD_LALT);
+    CHECK(line_edit_name->focused);  // ラベルの次の部品
+    dispatch_key(window, SDLK_LALT, false);
+    CHECK(!tokotachi::detail::window_impl_of(&window)->cues);
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LALT);
+    CHECK(saves == 1 && button_save->focused);
+    dispatch_key(window, SDLK_O, true, SDL_KMOD_LALT);
+    CHECK(check_box_over->checked);
+    dispatch_key(window, SDLK_U, true, SDL_KMOD_LALT);
+    CHECK(line_edit_inner->focused);  // 枠の中の最初の部品
+    line_edit_name->focused = true;
+    dispatch_key(window, SDLK_M, true, SDL_KMOD_LALT);
+    CHECK(line_edit_inner->focused);  // buddy
+    dispatch_key(window, SDLK_D, true, SDL_KMOD_LALT);
+    CHECK(line_edit_d1->focused);
+    dispatch_key(window, SDLK_D, true, SDL_KMOD_LALT);
+    CHECK(line_edit_d2->focused);
+    dispatch_key(window, SDLK_D, true, SDL_KMOD_LALT);
+    CHECK(line_edit_d1->focused);
+    // Ctrl と一緒・無効な部品・当てはまらないキーは何もしない
+    dispatch_key(window, SDLK_S, true, static_cast<SDL_Keymod>(SDL_KMOD_LALT | SDL_KMOD_LCTRL));
+    button_save->enabled = false;
+    dispatch_key(window, SDLK_S, true, SDL_KMOD_LALT);
+    CHECK(saves == 1);
+    // 「&&」は「&」を出す(ニーモニックではない)
+    CHECK(label_amp->text == "A && B");
+    const tokotachi::TextLayout amp("A & B", tokotachi::Font(), label_amp->display_scale);
+    CHECK(label_amp->preferred_size.get().width == std::ceil(amp.width()));
+}
+
+TEST(group_box_content)
+{
+    tokotachi::Window window("t", 300, 300);
+    tokotachi::GroupBox* group_box_out = new tokotachi::GroupBox(&window, "出力");
+    tokotachi::BoxLayout* box_out = new tokotachi::BoxLayout(group_box_out);
+    tokotachi::Button* button_go = new tokotachi::Button(group_box_out, "実行");
+    box_out->add(button_go);
+    const tokotachi::Size inner = button_go->preferred_size;
+    const tokotachi::Size outer = group_box_out->preferred_size;
+    CHECK(outer.width >= inner.width + 24 && outer.height > inner.height + 24);
+    group_box_out->bounds = tokotachi::Rect(10, 10, 200, 120);
+    window.visible = true;
+    window.apply_layout();
+    // 中の部品は、枠と見出しの内側に並ぶ
+    const tokotachi::Rect content = group_box_out->content_rect;
+    CHECK(content.y > 12 && near(content.x, 12) && near(content.right(), 188) && near(content.bottom(), 108));
+    CHECK(near(button_go->x, content.x) && near(button_go->y, content.y) && near(button_go->width, content.width));
+    // 見出しが無ければ、上も同じ余白
+    group_box_out->title = "";
+    window.apply_layout();
+    CHECK(near(group_box_out->content_rect.get().y, 12));
+}
+
+TEST(progress_bar_indeterminate)
+{
+    tokotachi::Window window("t", 300, 100);
+    tokotachi::ProgressBar* progress_bar_busy = new tokotachi::ProgressBar(&window);
+    progress_bar_busy->text_visible = true;
+    const float with_text = progress_bar_busy->preferred_size.get().width;
+    progress_bar_busy->indeterminate = true;
+    CHECK(progress_bar_busy->preferred_size.get().width < with_text);  // 割合の文字は出さない
+    progress_bar_busy->bounds = tokotachi::Rect(0, 0, 200, 20);
+    window.visible = true;
+    // 動く部分(棒の 3 割)は、動き始めに棒の左寄りにある
+    tokotachi::Bitmap b = window.capture();
+    const float s = static_cast<float>(b.width()) / 300;
+    const tokotachi::Color on = b.pixel(static_cast<int>(60 * s), static_cast<int>(10 * s));
+    const tokotachi::Color off = b.pixel(static_cast<int>(150 * s), static_cast<int>(10 * s));
+    CHECK(on != off);
+    progress_bar_busy->indeterminate = false;
+    CHECK(progress_bar_busy->preferred_size.get().width == with_text);
+}
+
+TEST(spin_box_prefix_suffix_and_slider_ticks)
+{
+    tokotachi::Window window("t", 300, 100);
+    window.visible = true;
+    tokotachi::SpinBox* spin_box_weight = new tokotachi::SpinBox(&window);
+    spin_box_weight->bounds = tokotachi::Rect(10, 10, 140, 32);
+    spin_box_weight->maximum = 1000000;  // 幅が数値で決まるように(短い数値なら最小の幅)
+    const float plain = spin_box_weight->preferred_size.get().width;
+    spin_box_weight->suffix = " kg";
+    spin_box_weight->value = 5;
+    CHECK(spin_box_weight->text == "5 kg" && spin_box_weight->preferred_size.get().width > plain);
+    // 単位は付けても付けなくてもよい
+    const char* inputs[] = {"7", "8kg", " 9 kg ", "x kg"};
+    const double expected[] = {7, 8, 9, 9};
+    const char* shown[] = {"7 kg", "8 kg", "9 kg", "9 kg"};
+    for (int i = 0; i < 4; ++i)
+    {
+        dispatch_click(window, tokotachi::Point(30, 26));
+        dispatch_key(window, SDLK_A, true, SDL_KMOD_LCTRL);
+        dispatch_text(window, inputs[i]);
+        dispatch_key(window, SDLK_RETURN);
+        CHECK(spin_box_weight->value == expected[i] && spin_box_weight->text == shown[i]);
+    }
+    spin_box_weight->prefix = "約";
+    CHECK(spin_box_weight->text == "約9 kg");
+
+    tokotachi::Slider* slider_level = new tokotachi::Slider(&window);
+    const float thin = slider_level->preferred_size.get().height;
+    slider_level->tick_interval = 10;
+    CHECK(slider_level->preferred_size.get().height > thin);
+    slider_level->tick_interval = -1;  // 0 以下は目盛り無し
+    CHECK(slider_level->tick_interval == 0 && slider_level->preferred_size.get().height == thin);
+}
+
+TEST(splitter_double_click_and_keys)
+{
+    tokotachi::Window window("t", 600, 200);
+    tokotachi::Splitter* split = new tokotachi::Splitter(&window);
+    split->bounds = tokotachi::Rect(0, 0, 400, 200);
+    tokotachi::Widget* left = new tokotachi::Widget();
+    tokotachi::Widget* right = new tokotachi::Widget();
+    left->minimum_size = tokotachi::Size(50, 0);
+    right->minimum_size = tokotachi::Size(50, 0);
+    tokotachi::SplitterPane* left_pane = split->add_widget(left, 0);
+    split->add_widget(right, 1);
+    window.visible = true;
+    window.apply_layout();
+    split->sizes = std::vector<float>{150, 244};
+    window.apply_layout();
+    int changes = 0;
+    split->on_change = [&](tokotachi::Object*) { ++changes; };
+    // ダブルクリック: stretch の小さい左をたたみ、もう一度で元の大きさに戻す
+    click_with(window, tokotachi::Point(153, 100), SDL_KMOD_NONE, 1);
+    click_with(window, tokotachi::Point(153, 100), SDL_KMOD_NONE, 2);
+    window.apply_layout();
+    CHECK(left_pane->collapsed && near(split->sizes.get()[1], 394) && changes == 1);
+    click_with(window, tokotachi::Point(3, 100), SDL_KMOD_NONE, 2);
+    window.apply_layout();
+    CHECK(!left_pane->collapsed && near(split->sizes.get()[0], 150) && near(split->sizes.get()[1], 244) && changes == 2);
+    // 境目を押した後は、矢印キーで動かし、Enter でたたむ
+    CHECK(split->focused);
+    dispatch_key(window, SDLK_RIGHT);
+    window.apply_layout();
+    CHECK(near(split->sizes.get()[0], 160) && changes == 3);
+    dispatch_key(window, SDLK_RETURN);
+    window.apply_layout();
+    CHECK(left_pane->collapsed);
+    // プログラムからも戻せる(on_change は呼ばない)
+    left_pane->collapsed = false;
+    window.apply_layout();
+    CHECK(!left_pane->collapsed && near(split->sizes.get()[0], 160) && changes == 4);
 }
 
 TEST(splitter_vertical_and_nested)
@@ -2981,9 +4221,9 @@ TEST(canvas_transforms_clip_and_dashes)
         c.restore();
     };
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    const std::uint32_t* px = &window.impl()->buffer[0];
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    const std::uint32_t* px = &tokotachi::detail::window_impl_of(&window)->buffer[0];
     const auto at = [&](int x, int y) { return px[y * stride + x]; };
     CHECK(at(100, 30) == packed(red) && at(100, 90) == packed(red));  // 縦に伸びた
     CHECK(at(70, 60) != packed(red) && at(130, 60) != packed(red));
@@ -3040,9 +4280,9 @@ TEST(canvas_layer_group_opacity)
         c.restore();
     };
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    const std::uint32_t* px = &window.impl()->buffer[0];
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    const std::uint32_t* px = &tokotachi::detail::window_impl_of(&window)->buffer[0];
     const auto at = [&](int x, int y) { return px[y * stride + x]; };
     CHECK(at(20, 20) != at(40, 20));    // 図形ごと: 重なりが濃い
     CHECK(at(120, 20) == at(140, 20));  // グループ: 同じ濃さ
@@ -3060,6 +4300,33 @@ TEST(canvas_layer_group_opacity)
     {
         window.save_png(std::string(dir) + "/layer.png");
     }
+}
+
+TEST(draw_image_scales_smoothly)
+{
+    // 白黒の市松 4×4 を 2×2 に縮めると灰色(面積の平均)。最も近い画素を取ると白か黒になる
+    std::vector<tokotachi::Color> pixels;
+    for (int i = 0; i < 16; ++i)
+    {
+        pixels.push_back(((i % 4) + (i / 4)) % 2 ? tokotachi::Color(255, 255, 255) : tokotachi::Color(0, 0, 0));
+    }
+    const tokotachi::Image checker = tokotachi::Image::from_pixels(4, 4, pixels);
+    tokotachi::Bitmap small(2, 2);
+    small.canvas().draw_image(checker, tokotachi::Rect(0, 0, 2, 2));
+    const tokotachi::Color c = small.pixel(1, 1);
+    CHECK(c.r > 100 && c.r < 155 && c.a == 255);
+    // 黒・白の 2×1 を 8×1 に広げると、間は灰色の段階になる(端は元の色)
+    std::vector<tokotachi::Color> two;
+    two.push_back(tokotachi::Color(0, 0, 0));
+    two.push_back(tokotachi::Color(255, 255, 255));
+    tokotachi::Bitmap wide(8, 1);
+    wide.canvas().draw_image(tokotachi::Image::from_pixels(2, 1, two), tokotachi::Rect(0, 0, 8, 1));
+    CHECK(wide.pixel(0, 0).r == 0 && wide.pixel(7, 0).r == 255);
+    CHECK(wide.pixel(3, 0).r > 60 && wide.pixel(3, 0).r < 128 && wide.pixel(4, 0).r > 128 && wide.pixel(4, 0).r < 200);
+    // 同じ大きさなら写さずにそのまま
+    tokotachi::Bitmap same(4, 4);
+    same.canvas().draw_image(checker, tokotachi::Rect(0, 0, 4, 4));
+    CHECK(same.pixel(0, 0).r == 0 && same.pixel(1, 0).r == 255);
 }
 
 TEST(bitmap_canvas_pixels_and_image)
@@ -3096,23 +4363,23 @@ TEST(paint_box_cached)
         c.fill_rect(tokotachi::Rect(0, 0, 50, 60), tokotachi::Color::rgb(0x059669));
     };
     window.visible = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     box->invalidate();
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 2);  // 覚えないとき: 描き直すたびに呼ぶ
     box->cached = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     box->invalidate();
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 3);  // 覚えるとき: 1 回だけ
-    const int stride = window.impl()->pixel_width;
-    CHECK(window.impl()->buffer[10 * stride + 10] == packed(tokotachi::Color::rgb(0x059669)));  // 覚えた絵を貼る
-    CHECK(window.impl()->buffer[10 * stride + 70] != packed(tokotachi::Color::rgb(0x059669)));
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[10 * stride + 10] == packed(tokotachi::Color::rgb(0x059669)));  // 覚えた絵を貼る
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[10 * stride + 70] != packed(tokotachi::Color::rgb(0x059669)));
     box->refresh();
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 4);
     box->bounds = tokotachi::Rect(0, 0, 110, 60);  // 大きさが変わると描き直す
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 5);
 }
 
@@ -3188,6 +4455,187 @@ TEST(task_renders_image_in_background)
 }
 
 }  // namespace
+
+TEST(text_input_undo_redo)
+{
+    tokotachi::Window window("t", 300, 100);
+    TestEdit* edit = new TestEdit(&window);
+    edit->bounds = tokotachi::Rect(0, 0, 200, 30);
+    edit->focused = true;
+    tokotachi::BoolVariable can_undo(nullptr, true);
+    tokotachi::bind(can_undo.value, edit->can_undo);
+    CHECK(!can_undo.value);
+
+    // 続けて打った文字は 1 回で戻す。キャレットを動かすとまとまりが切れる。
+    edit->type("a");
+    edit->type("b");
+    edit->type("c");
+    CHECK(can_undo.value);
+    edit->key(tokotachi::Key::LEFT);
+    edit->type("X");
+    CHECK(edit->text == "abXc");
+    edit->key(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL);
+    CHECK(edit->text == "abc");
+    CHECK(edit->cursor_position == 2u);  // 戻す前のキャレットの位置
+    CHECK(edit->can_redo);
+    edit->undo();
+    CHECK(edit->text.get().empty());
+    CHECK(!can_undo.value);
+    edit->undo();  // 戻せなければ何もしない
+    CHECK(edit->text.get().empty());
+
+    // やり直す(Ctrl+Y・Ctrl+Shift+Z)。
+    edit->key(tokotachi::Key::Y, tokotachi::MODIFIER_CONTROL);
+    CHECK(edit->text == "abc");
+    edit->key(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL | tokotachi::MODIFIER_SHIFT);
+    CHECK(edit->text == "abXc");
+    CHECK(!edit->can_redo);
+
+    // 続けて消した文字は 1 回で戻す。新しい編集でやり直す履歴は消える。
+    edit->key(tokotachi::Key::END);
+    edit->key(tokotachi::Key::BACKSPACE);
+    edit->key(tokotachi::Key::BACKSPACE);
+    CHECK(edit->text == "ab");
+    edit->undo();
+    CHECK(edit->text == "abXc");
+    CHECK(edit->cursor_position == 4u);
+    edit->type("!");
+    CHECK(!edit->can_redo);
+
+    // 選んで置き換えた文字・貼り付けは、それぞれ 1 回で戻す。
+    edit->select_all();
+    edit->type("z");
+    CHECK(edit->text == "z");
+    edit->insert("123");
+    CHECK(edit->text == "z123");
+    edit->undo();
+    CHECK(edit->text == "z");
+    edit->undo();
+    CHECK(edit->text == "abXc!");
+    CHECK(edit->selected_text == "abXc!");  // 選択も戻る
+
+    // text への代入は履歴を消す。
+    edit->text = "loaded";
+    CHECK(!can_undo.value);
+    CHECK(!edit->can_redo);
+    edit->undo();
+    CHECK(edit->text == "loaded");
+
+    // IME で選択を置き換えて確定した文字は、選択の削除と合わせて 1 回で戻す。変換中は戻さない。
+    edit->select_all();
+    edit->compose("にほん");
+    edit->key(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL);
+    edit->compose("日本");
+    edit->compose("");
+    edit->type("日本");
+    CHECK(edit->text == "日本");
+    edit->undo();
+    CHECK(edit->text == "loaded");
+    tokotachi::unbind(can_undo.value);
+}
+
+TEST(windows_are_owned_by_application_or_owner_window)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    tokotachi::Window* window_main = new tokotachi::Window("main", 300, 200);
+    CHECK(window_main->owner == static_cast<tokotachi::Object*>(app));  // 所有者を渡さなければ Application(docs/adr/0062)
+    tokotachi::Window* window_tool = new tokotachi::Window(window_main, "tool", 200, 100);
+    CHECK(window_tool->owner == static_cast<tokotachi::Object*>(window_main));
+    CHECK(window_tool->parent == nullptr);  // 部品の親ではない(トップレベルのまま)
+
+    // 所有者を隠すと、所有するウィンドウも隠れる。所有者をもう一度表示しても、自動では表示しない。
+    window_main->visible = true;
+    window_tool->visible = true;
+    window_main->visible = false;
+    CHECK(!window_tool->visible);
+    window_main->visible = true;
+    CHECK(!window_tool->visible);
+
+    // 所有者と一緒に破棄される。
+    tokotachi::WeakRef<tokotachi::Window> tool(window_tool);
+    delete window_main;
+    CHECK(tool.expired());
+}
+
+TEST(application_quits_by_main_window_or_last_window)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    tokotachi::detail::ApplicationImpl* impl = tokotachi::detail::impl_of(app);
+    tokotachi::Window* window_a = new tokotachi::Window("a", 200, 100);
+    tokotachi::Window* window_b = new tokotachi::Window("b", 200, 100);
+
+    // メインのウィンドウを決めていなければ、最後のウィンドウを閉じたときに終える。
+    window_a->visible = true;
+    window_b->visible = true;
+    impl->running = true;
+    window_b->close();
+    CHECK(impl->running);
+    window_a->close();
+    CHECK(!impl->running);
+
+    // メインのウィンドウを閉じたら、ほかのウィンドウが開いていても終える。
+    app->main_window = window_a;
+    window_a->visible = true;
+    window_b->visible = true;
+    impl->running = true;
+    window_b->close();
+    CHECK(impl->running);
+    window_b->visible = true;
+    window_a->close();
+    CHECK(!impl->running);
+
+    // auto_quit_enabled が false なら、quit() まで終えない。
+    app->auto_quit_enabled = false;
+    window_a->visible = true;
+    impl->running = true;
+    window_a->close();
+    window_b->close();
+    CHECK(impl->running);
+    app->auto_quit_enabled = true;
+
+    // メインのウィンドウが破棄されると nullptr になり(知らせる)、終える。
+    tokotachi::Variable<tokotachi::Window*> main(nullptr, nullptr);
+    tokotachi::bind(main.value, app->main_window);
+    CHECK(main.value == window_a);
+    impl->running = true;
+    delete window_a;
+    CHECK(app->main_window == nullptr);
+    CHECK(main.value == nullptr);
+    CHECK(!impl->running);
+    tokotachi::unbind(main.value);
+    delete window_b;
+}
+
+TEST(window_destroy_on_close)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    tokotachi::detail::ApplicationImpl* impl = tokotachi::detail::impl_of(app);
+    tokotachi::Window* window_help = new tokotachi::Window("help", 200, 100);
+    window_help->destroy_on_close = true;
+    window_help->visible = true;
+    tokotachi::WeakRef<tokotachi::Window> help(window_help);
+    window_help->close();
+    CHECK(!help.expired());  // 今のイベントの処理が終わってから破棄する
+    impl->flush_doomed();
+    CHECK(help.expired());
+
+    // ダイアログは on_finish を呼んだ後に破棄する。
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::Dialog* dialog = new tokotachi::Dialog(&window, "d");
+    dialog->destroy_on_close = true;
+    dialog->add_button(tokotachi::DialogButton::OK);
+    bool finished = false;
+    dialog->on_finish = [&](tokotachi::Object*) { finished = true; };
+    tokotachi::WeakRef<tokotachi::Dialog> weak(dialog);
+    dialog->open();
+    dialog->close();
+    CHECK(finished);
+    CHECK(!weak.expired());
+    impl->flush_doomed();
+    CHECK(weak.expired());
+    impl->running = false;
+}
 
 int main(int argc, char** argv)
 {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""C API の生成器(docs/adr/0041)。api.py から次の 3 つを作る:
+"""C API の生成器(docs/adr/0065)。api.py から次の 3 つを作る:
 
   bindings/c/include/tokotachi/tokotachi.h   C のヘッダ
   bindings/c/src/generated.cpp               プロパティ・メソッドの C の関数(C++ の実装)
@@ -396,7 +396,7 @@ def manual_function(m):
 # C のヘッダ
 # ---------------------------------------------------------------------------------------------------------------------
 
-HEADER_TOP = r'''/* Tokotachi の C API(docs/adr/0041・docs/bindings/c-api.md)。
+HEADER_TOP = r'''/* Tokotachi の C API(docs/adr/0065・docs/bindings/c-api.md)。
  * %(notice)s(bindings/c/api.py・bindings/c/generate.py)。
  *
  * 決まり:
@@ -405,8 +405,9 @@ HEADER_TOP = r'''/* Tokotachi の C API(docs/adr/0041・docs/bindings/c-api.md)�
  * - Object の派生(ウィジェット・レイアウト・Action など)は、どれも tokotachi_object へのポインタで指す
  *   (tokotachi_widget などはその別名)。基底のクラスの関数(tokotachi_widget_set_x など)に、そのまま派生のものを渡せる。
  *   型が違うものを渡すと何もせずに失敗する。
- * - 所有は C++ と同じ(docs/adr/0015)。所有者のあるものは所有者と一緒に破棄される。所有者の無いもの(Window・Application など)は
- *   tokotachi_object_delete で破棄する。Application は最後に破棄する。
+ * - 所有は C++ と同じ(docs/adr/0015・0062)。所有者のあるものは所有者と一緒に破棄される。所有者を渡さずに作った Window は
+ *   Application が所有する。所有者の無いもの(Application・所有者を渡さない Timer など)は tokotachi_object_delete で破棄する。
+ *   Application は最後に破棄する(残っているウィンドウも一緒に破棄される)。
  * - 文字列は UTF-8。返された char* は tokotachi_free で、char** は tokotachi_strv_free で解放する。
  * - 読み取りだけの並びは size_t f(self, out, capacity) の形で、全体の数を返し、out に capacity 個まで書く。
  * - ハンドラは関数・利用者のデータ・解放の関数(NULL でもよい)を渡す。ハンドラが外れる・置き換わる・Object が破棄されるときに
@@ -774,7 +775,7 @@ def generate_python():
            '                    _in_Margins, _out_Margins, _in_Font, _out_Font, _in_Shortcut, _out_Shortcut,\n'
            '                    _in_ThemeColor, _out_ThemeColor, _in_ModelIndex, _out_ModelIndex, _in_Placement,\n'
            '                    _out_Placement)\n',
-           'from ._core import (_ApplicationMixin, _MessageDialogMixin, _VariableMixin, _TaskMixin, _CustomModelMixin)\n',
+           'from ._core import (_ApplicationMixin, _WindowMixin, _MessageDialogMixin, _VariableMixin, _TaskMixin, _CustomModelMixin)\n',
            ]
     names = []
     out.append('\n# ---- 列挙 ----\n')

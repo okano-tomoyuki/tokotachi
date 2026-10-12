@@ -25,7 +25,8 @@ option(TOKOTACHI_SHARED "Build tokotachi as a shared library (DLL / .so). OFF bu
 option(TOKOTACHI_BUILD_EXAMPLES "Build the examples" ${TOKOTACHI_TOP_LEVEL})
 option(TOKOTACHI_BUILD_TESTS "Build the tests" ${TOKOTACHI_TOP_LEVEL})
 option(TOKOTACHI_INSTALL "Generate the install rules" ${TOKOTACHI_TOP_LEVEL})
-if(EMSCRIPTEN)
+# Windows(MinGW)での C API はまだ確かめていないので、既定では作らない(-DTOKOTACHI_BUILD_C_API=ON で作れる。docs/adr/0065)。
+if(EMSCRIPTEN OR WIN32)
     set(_tokotachi_default_c_api OFF)
 else()
     set(_tokotachi_default_c_api ${TOKOTACHI_TOP_LEVEL})
@@ -108,6 +109,8 @@ add_library(tokotachi_objects OBJECT
     src/core/application.cpp
     src/core/binding.cpp
     src/core/clipboard.cpp
+    src/core/date.cpp
+    src/core/locale.cpp
     src/core/object.cpp
     src/core/task.cpp
     src/core/timer.cpp
@@ -115,6 +118,8 @@ add_library(tokotachi_objects OBJECT
     src/graphics/bitmap.cpp
     src/graphics/canvas.cpp
     src/graphics/font_cache.cpp
+    src/graphics/icon.cpp
+    src/graphics/icon_data.cpp
     src/graphics/image.cpp
     src/graphics/path.cpp
     src/graphics/raster_canvas.cpp
@@ -127,12 +132,20 @@ add_library(tokotachi_objects OBJECT
     src/views/item_model.cpp
     src/views/item_view.cpp
     src/views/list_model.cpp
+    src/views/list_view.cpp
+    src/views/table_view.cpp
     src/views/tree_model.cpp
     src/views/tree_view.cpp
     src/widgets/button.cpp
     src/widgets/button_base.cpp
     src/widgets/check_box.cpp
+    src/widgets/calendar.cpp
+    src/widgets/color_button.cpp
     src/widgets/combo_box.cpp
+    src/widgets/date_edit.cpp
+    src/widgets/draw.cpp
+    src/widgets/group_box.cpp
+    src/widgets/image_box.cpp
     src/widgets/label.cpp
     src/widgets/line_edit.cpp
     src/widgets/paint_box.cpp
@@ -149,6 +162,7 @@ add_library(tokotachi_objects OBJECT
     src/widgets/text_edit.cpp
     src/widgets/text_input_base.cpp
     src/widgets/widget.cpp
+    src/windows/color_dialog.cpp
     src/windows/dialog.cpp
     src/windows/file_dialog.cpp
     src/windows/menu_bar.cpp
@@ -161,6 +175,12 @@ target_include_directories(tokotachi_objects PUBLIC ${CMAKE_CURRENT_LIST_DIR}/in
 # C++11(docs/adr/0003)。利用者が新しい規格でビルドしてもよいよう、公開のヘッダは C++20 でも通るように書く。
 target_compile_features(tokotachi_objects PUBLIC cxx_std_11)
 set_target_properties(tokotachi_objects PROPERTIES CXX_EXTENSIONS OFF POSITION_INDEPENDENT_CODE ON)
+# 公開するのは TOKOTACHI_API を付けたクラス・関数だけ(docs/adr/0057。include/tokotachi/core/export.hpp)。
+# Linux などは既定で隠し、MinGW は dllexport を付けたものだけを公開する(自動の公開をしない)。
+set_target_properties(tokotachi_objects PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+if(TOKOTACHI_SHARED)
+    target_compile_definitions(tokotachi_objects PRIVATE TOKOTACHI_BUILDING_SHARED)
+endif()
 target_compile_options(tokotachi_objects PRIVATE -Wall -Wextra -pedantic)
 target_link_libraries(tokotachi_objects PRIVATE Threads::Threads SDL3::SDL3-static plutovg::plutovg harfbuzz::harfbuzz
                                                 Freetype::Freetype unibreak::unibreak SheenBidi::SheenBidi)
@@ -206,7 +226,7 @@ endif()
 if(TOKOTACHI_SHARED)
     # 中に入れた静的ライブラリ(SDL3・FreeType など)のシンボルを公開しない。利用者が別の版の SDL3 を使っても衝突せず、
     # Linux ではシステムの libfontconfig がシステムの libfreetype ではなくこちらの FreeType を呼ぶこともない(docs/adr/0005)。
-    # このライブラリ自身のシンボルは、Linux では既定の可視性で、MinGW では自動で、すべて公開する。
+    # このライブラリ自身のシンボルは、TOKOTACHI_API を付けたものだけを公開する(上の tokotachi_objects の設定)。
     target_link_options(tokotachi PRIVATE -Wl,--exclude-libs,ALL)
 else()
     # 依存ライブラリの静的ライブラリを libtokotachi.a にまとめる。利用者は tokotachi と OS のライブラリだけをリンクする。
@@ -287,7 +307,7 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     tokotachi_copy_runtime(hello)
 
     # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
-    set(TOKOTACHI_GALLERY buttons inputs views window dialog drawing)
+    set(TOKOTACHI_GALLERY buttons inputs pickers views table window windows dialog drawing drop images icons)
     foreach(_name ${TOKOTACHI_GALLERY})
         add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
         target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)
@@ -335,8 +355,31 @@ if(TOKOTACHI_BUILD_DOCS)
             COMMENT "Taking the screenshot of gallery_${_name}")
         list(APPEND _shots "${_png}")
     endforeach()
-    file(GLOB_RECURSE _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.md ${CMAKE_CURRENT_LIST_DIR}/include/tokotachi/*.hpp
-         ${CMAKE_CURRENT_LIST_DIR}/examples/gallery/*.cpp)
+    # 色のダイアログ(gallery_pickers が開いて撮る)
+    set(_png "${TOKOTACHI_DOCS_IMAGES}/color_dialog.png")
+    add_custom_command(OUTPUT "${_png}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${TOKOTACHI_DOCS_IMAGES}"
+        COMMAND ${CMAKE_COMMAND} -E env SDL_VIDEO_DRIVER=offscreen $<TARGET_FILE:gallery_pickers> --screenshot "${_png}" --color-dialog
+        DEPENDS gallery_pickers
+        COMMENT "Taking the screenshot of the color dialog")
+    list(APPEND _shots "${_png}")
+    # 部品のページに載せる、部品ごとの画像(widget_<名前>.png。docs/adr/0056)
+    add_executable(widget_images docs/widget_images.cpp)
+    target_link_libraries(widget_images PRIVATE tokotachi::tokotachi)
+    target_compile_options(widget_images PRIVATE -Wall -Wextra -pedantic)
+    set_target_properties(widget_images PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+    tokotachi_copy_runtime(widget_images)
+    set(_stamp "${TOKOTACHI_DOCS_IMAGES}/widget_images.stamp")
+    add_custom_command(OUTPUT "${_stamp}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${TOKOTACHI_DOCS_IMAGES}"
+        COMMAND ${CMAKE_COMMAND} -E env SDL_VIDEO_DRIVER=offscreen $<TARGET_FILE:widget_images> "${TOKOTACHI_DOCS_IMAGES}"
+        COMMAND ${CMAKE_COMMAND} -E touch "${_stamp}"
+        DEPENDS widget_images
+        COMMENT "Taking the screenshots of the widgets")
+    list(APPEND _shots "${_stamp}")
+    file(GLOB_RECURSE _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.md ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.dox
+         ${CMAKE_CURRENT_LIST_DIR}/include/tokotachi/*.hpp ${CMAKE_CURRENT_LIST_DIR}/examples/gallery/*.cpp)
+    list(APPEND _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/DoxygenLayout.xml)
     add_custom_target(docs
         COMMAND Doxygen::doxygen "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
         DEPENDS ${_shots} ${_doc_inputs} "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
@@ -394,7 +437,7 @@ if(TOKOTACHI_BUILD_TESTS)
                                                                            CXX_EXTENSIONS OFF)
 endif()
 
-# ---- C API(docs/adr/0041)。テストを登録するので enable_testing の後に置く ----
+# ---- C API(docs/adr/0065)。テストを登録するので enable_testing の後に置く ----
 if(TOKOTACHI_BUILD_C_API)
     add_subdirectory(bindings/c)
 endif()

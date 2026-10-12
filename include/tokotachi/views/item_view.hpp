@@ -1,17 +1,5 @@
 /// @file
-/// 項目の一覧・木を表示するビューの共通の部分(ListView・TreeView の基底。docs/adr/0026)。
-///
-/// 表示するのは見えている行だけで、そのときにモデル(item_model.hpp)へ文字などを問い合わせる。行の高さはすべて同じ。
-/// 列(Column)を加えると見出しを出す。列が無ければ 1 列で、ビューの幅いっぱいに描く。
-///
-/// @code
-/// tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
-/// list_view_files->add_column("名前", 200);
-/// list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
-/// list_view_files->model = files;
-/// list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
-/// list_view_files->on_activate = [=](tokotachi::Object*) { open(list_view_files->current); };
-/// @endcode
+/// tokotachi::ItemView の宣言。
 #ifndef TOKOTACHI_VIEWS_ITEM_VIEW_HPP
 #define TOKOTACHI_VIEWS_ITEM_VIEW_HPP
 
@@ -20,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/export.hpp"
 #include "../layout/alignment.hpp"
 #include "item_model.hpp"
 #include "../graphics/text_layout.hpp"
@@ -29,8 +18,11 @@ namespace tokotachi
 {
 
 class ItemView;
+class LineEdit;
 class ScrollBar;
+class Timer;
 
+/// 選び方。
 enum class SelectionMode
 {
     NONE,    ///< 選ばない(current だけが動く)
@@ -38,8 +30,51 @@ enum class SelectionMode
     MULTI    ///< Ctrl+クリック・Shift+クリック・Shift+矢印・Ctrl+A で複数を選ぶ
 };
 
+/// 表(TableView)で選ぶ単位(docs/adr/0050)。
+enum class SelectionBehavior
+{
+    CELLS,  ///< セル(矩形の範囲)を選ぶ
+    ROWS    ///< 行を選ぶ(一覧と同じ。キーで動かすセルは current_column)
+};
+
+/// 表のセルの矩形の範囲(行・列の番号。両端を含む)。
+/// @ingroup views
+struct TOKOTACHI_API CellRange
+{
+    /// 最初の行。
+    int first_row;
+    /// 最初の列。
+    int first_column;
+    /// 最後の行(含む)。
+    int last_row;
+    /// 最後の列(含む)。
+    int last_column;
+
+    CellRange() : first_row(0), first_column(0), last_row(-1), last_column(-1) {}
+    /// 2 つの隅から作る(どちらの隅が先でもよい)。
+    CellRange(int row_a, int column_a, int row_b, int column_b);
+
+    /// セルを含まないか。
+    bool is_empty() const { return last_row < first_row || last_column < first_column; }
+    /// セル (row, column) を含むか。
+    bool contains(int row, int column) const
+    {
+        return row >= first_row && row <= last_row && column >= first_column && column <= last_column;
+    }
+    /// 範囲が等しいか。
+    ///@{
+    bool operator==(const CellRange& o) const
+    {
+        return first_row == o.first_row && first_column == o.first_column && last_row == o.last_row &&
+               last_column == o.last_column;
+    }
+    bool operator!=(const CellRange& o) const { return !(*this == o); }
+    ///@}
+};
+
 /// ビューの 1 つの列。ItemView が作り、所有する。
-class Column : public Object
+/// @ingroup views
+class TOKOTACHI_API Column final : public Object
 {
 public:
     /// 見出しの文字。
@@ -51,22 +86,28 @@ public:
 
 private:
     friend class ItemView;
-
     Column(ItemView* view, const std::string& title, float width);
     ~Column();
-
-    void set_title(const std::string& v);
-    void set_width(const float& v);
-    void set_alignment(const Align& v);
-
-    ItemView* view_;
-    std::string title_;
-    float width_;
-    Align alignment_;
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
-class ItemView : public Widget
+/// 項目の一覧・木・表を表示するビューの共通の部分(ListView・TreeView・TableView の基底。docs/adr/0026)。
+///
+/// 表示するのは見えている行だけで、そのときにモデル(item_model.hpp)へ文字などを問い合わせる。行の高さはすべて同じ。
+/// 列(Column)を加えると見出しを出す。列が無ければ 1 列で、ビューの幅いっぱいに描く。
+///
+/// @code
+/// tokotachi::ListView* list_view_files = new tokotachi::ListView(window_main);
+/// list_view_files->add_column("名前", 200);
+/// list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
+/// list_view_files->model = files;
+/// list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+/// list_view_files->on_activate = [=](tokotachi::Object*) { open(list_view_files->current); };
+/// @endcode
+///
+/// @ingroup views
+class TOKOTACHI_API ItemView : public Widget
 {
 public:
     ~ItemView();
@@ -76,7 +117,9 @@ public:
 
     /// 列を最後に加える・除く。
     Column* add_column(const std::string& title, float width = 120);
+    /// 列を除いて破棄する。
     void remove_column(Column* column);
+    /// 列(並んだ順)。
     ReadOnlyProperty<std::vector<Column*> > columns;
     /// 列があるときに見出しを出すか(既定 true)。
     Property<bool> header_visible;
@@ -85,6 +128,7 @@ public:
     Property<bool> sorting_enabled;
     /// 並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。
     Property<int> sort_column;
+    /// 並べ替えの向き(既定 ASCENDING)。
     Property<SortOrder> sort_order;
 
     /// 選び方(既定 SINGLE)。
@@ -94,16 +138,35 @@ public:
     /// 選んでいる項目(表示の順。TreeView で閉じた親の中にあるものは最後)。
     ReadOnlyProperty<std::vector<ModelIndex> > selection;
 
+    /// index を選んでいるか。
     bool is_selected(const ModelIndex& index) const;
     /// index を選ぶ・選ぶのをやめる(SINGLE では他の選択を外し、current も移す。NONE では何もしない)。
     void select(const ModelIndex& index, bool selected = true);
     /// 見えているすべての項目を選ぶ(MULTI のときだけ)。
     void select_all();
+    /// すべての選択を外す。
     void clear_selection();
     /// index の行が見えるようにスクロールする(TreeView では祖先を開く)。
     void scroll_to(const ModelIndex& index);
     /// 位置 p(ビューの座標)の行の項目(無ければ無効な ModelIndex)。
     ModelIndex index_at(const Point& p) const;
+
+    /// index の column 列目の文字を、その場で編集し始める(モデルの editable が false なら何もしない。docs/adr/0046)。
+    /// 利用者は F2・選んでいる項目のクリックでも始められる。Enter・ほかへのフォーカスの移動で確定し(モデルの set_text を呼ぶ)、
+    /// Esc でやめる。スクロールすると確定し、モデルの行が変わるとやめる。
+    void edit(const ModelIndex& index, int column = 0);
+    /// セルを編集しているか(edit から finish_editing まで)。
+    ReadOnlyProperty<bool> editing;
+    /// 編集を終える(commit が false なら、文字を変えずにやめる)。
+    void finish_editing(bool commit = true);
+
+    /// 選んでいる項目をドラッグできるか(既定 false。docs/adr/0047)。文字は 1 列目を改行でつないだもの。
+    Property<bool> drag_enabled;
+    /// 項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、
+    /// ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。
+    /// 部品がドロップを受け取るか(Widget::accepts_drops)とは別で、項目の間に落とせるようにする。代入すると、
+    /// accepts_drops も同じ値にする。
+    Property<bool> drop_enabled;
 
     /// selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。
     Property<NotifyHandler> on_selection_change;
@@ -111,8 +174,8 @@ public:
     Property<NotifyHandler> on_activate;
 
 protected:
-    /// tree が true なら木として(子を開いて)表示する。
-    ItemView(Widget* parent, bool tree);
+    /// tree が true なら木として(子を開いて)表示する。table が true なら表として(セルを選んで)表示する。
+    ItemView(Widget* parent, const detail::InternalTag& tag, bool tree, bool table = false);
 
     void paint(Canvas& canvas) override;
     void mouse_down(MouseEvent& e) override;
@@ -121,136 +184,26 @@ protected:
     void mouse_leave() override;
     void mouse_wheel(WheelEvent& e) override;
     void key_down(KeyEvent& e) override;
+    void text_input(TextInputEvent& e) override;
+    void text_editing(TextEditingEvent& e) override;
     void focus_in() override;
     void focus_out() override;
+    void drag_move(DragEvent& e) override;
+    void drag_leave() override;
+    void drop(DragEvent& e) override;
     void scale_changed() override;
     void theme_changed() override;
     void arrange_children() override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
 
-    /// TreeView のための操作。
-    void expand(const ModelIndex& index);
-    void collapse(const ModelIndex& index);
-    bool is_expanded(const ModelIndex& index) const;
-    void expand_all();
-    void collapse_all();
-    float get_indentation() const { return indentation_; }
-    void set_indentation(const float& v);
-
 private:
+    template <typename>
+    friend struct detail::ImplAccess;
     friend class ItemModel;
     friend class Column;
-
-    struct Row
-    {
-        ModelIndex index;
-        int depth;
-        bool has_children;
-    };
-
-    ItemModel* get_model() const { return model_; }
-    void set_model(ItemModel* const& v);
-    std::vector<Column*> get_columns() const { return columns_; }
-    bool get_header_visible() const { return header_visible_; }
-    void set_header_visible(const bool& v);
-    bool get_sorting_enabled() const { return sorting_enabled_; }
-    void set_sorting_enabled(const bool& v) { sorting_enabled_ = v; }
-    int get_sort_column() const { return sort_column_; }
-    void set_sort_column(const int& v);
-    SortOrder get_sort_order() const { return sort_order_; }
-    void set_sort_order(const SortOrder& v);
-    SelectionMode get_selection_mode() const { return selection_mode_; }
-    void set_selection_mode(const SelectionMode& v);
-    ModelIndex get_current() const { return current_; }
-    void set_current(const ModelIndex& v);
-    std::vector<ModelIndex> get_selection() const;
-
-    /// モデルからの知らせ。
-    void model_rows_inserted(const ModelIndex& parent, int first, int count);
-    void model_rows_removing(const ModelIndex& parent, int first, int count);
-    void model_data_changed(const ModelIndex& index);
-    void model_layout_changed();
-    void model_reset();
-    void model_destroyed();
-    /// モデルの構造が変わった: 行を作り直し、配置をやり直す。
-    void structure_changed();
-    void forget_state();
-    void column_changed();
-    void apply_sort();
-
-    /// 見えている行(TreeView では開いた子を含む)。
-    void ensure_rows() const;
-    int row_total() const;
-    Row row_at(int row) const;
-    int row_of(const ModelIndex& index) const;
-    bool row_enabled(int row) const;
-
-    /// 寸法(dp)。
-    float row_height() const;
-    float header_height() const;
-    Rect viewport() const;
-    float content_width() const;
-    /// 列 c の左端(中身の座標)と、描く幅(最後の列は余りまで広げる)。
-    float column_x(int c) const;
-    float column_draw_width(int c) const;
-    int column_count() const;
-    /// 行の中の、木の印・チェックボックス・画像・文字の位置(中身の座標の x)。
-    float content_start(int depth) const;
-    Rect check_rect(int row) const;
-    Rect arrow_rect(int row) const;
-    /// 位置 p(ビューの座標)の行(無ければ -1)。見出しの上なら -1。
-    int row_at_point(const Point& p) const;
-    /// 見出しの上で、境目(幅を変えられる)にあたる列(無ければ -1)・押した列。
-    int header_divider_at(const Point& p) const;
-    int header_column_at(const Point& p) const;
-
-    const TextLayout& text_layout(const std::string& text) const;
-    void paint_header(Canvas& canvas, const Rect& view);
-    void paint_row(Canvas& canvas, int row, const Rect& view);
-
-    /// 選択と current を変える。変わったら知らせ、ハンドラを呼ぶ。
-    void change_current(const ModelIndex& index);
-    void change_selection(const std::set<ModelIndex>& next);
-    /// 利用者が行 row へ動いた(クリック・キー)。修飾キーで選び方を変える。
-    void move_to(int row, Modifiers modifiers, bool toggle);
-    /// from から step の向きで、選べる行を探す(無ければ -1)。
-    int next_enabled_row(int from, int step) const;
-    void reveal_row(int row);
-    void toggle_expanded(int row);
-    void activate();
-    /// 古い ModelIndex の行をずらした値。
-    static ModelIndex shifted(const ModelIndex& index, int delta);
-
-    ItemModel* model_;
-    std::vector<Column*> columns_;
-    bool header_visible_;
-    bool sorting_enabled_;
-    int sort_column_;
-    SortOrder sort_order_;
-    SelectionMode selection_mode_;
-    ModelIndex current_;
-    ModelIndex anchor_;  ///< Shift で範囲を選ぶときの起点
-    std::set<ModelIndex> selected_;
-    NotifyHandler on_selection_change_;
-    NotifyHandler on_activate_;
-
-    ScrollBar* vertical_;
-    ScrollBar* horizontal_;
-    int hover_row_;
-    int resizing_column_;  ///< 幅をドラッグしている列(-1 なら無し)
-    float resize_origin_;  ///< ドラッグを始めた x と幅
-    float resize_width_;
-    int pressed_column_;  ///< 押した見出し(-1 なら無し)
-
-    const bool tree_;
-    float indentation_;
-    std::set<void*> expanded_;  ///< 開いている項目の識別子
-    mutable std::vector<Row> rows_;
-    mutable std::map<void*, int> row_map_;  ///< 識別子から行へ
-    mutable bool rows_dirty_;
-    mutable std::map<std::string, TextLayout> layouts_;
-    mutable float layouts_scale_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -1,4 +1,4 @@
-// C API の実装の共通部分(docs/adr/0041)。C と C++ の値の変換・ハンドル・失敗の報告・ハンドラ・名前からプロパティへの表。
+// C API の実装の共通部分(docs/adr/0065)。C と C++ の値の変換・ハンドル・失敗の報告・ハンドラ・名前からプロパティへの表。
 #ifndef TOKOTACHI_C_COMMON_HPP
 #define TOKOTACHI_C_COMMON_HPP
 

@@ -31,6 +31,12 @@ export type Slot =
       readonly column?: number;
       readonly x?: number;
       readonly y?: number;
+      /**
+       * PlaceLayout: x・y は部品の左上の位置。基準点・相対の位置を引き継ぐときに書く値を求めるため、レイアウトの範囲の大きさ(area)と
+       * 部品の大きさ(size。キャンバスの描画の結果)も渡す。
+       */
+      readonly area?: { readonly width: number; readonly height: number };
+      readonly size?: { readonly width: number; readonly height: number };
     }
   /** 自由な配置(レイアウトの無い部品・ウィンドウ)。位置は親の左上から(dp)。 */
   | { readonly kind: 'child'; readonly parent: JsonPath; readonly x: number; readonly y: number }
@@ -194,6 +200,25 @@ const ITEM_SETTINGS: Readonly<Record<string, readonly string[]>> = {
   PlaceLayout: ['placement'],
 };
 
+/**
+ * 部品の左上を slot の x・y に置くための、placement の x・y。引き継いだ相対の位置・基準点を戻して求める
+ * (PlaceLayout は 左上 = 範囲の左上 + x + relative_x × 範囲の幅 - 基準点の列 × 幅 / 2)。
+ */
+function placementPosition(placement: Json, slot: Extract<Slot, { kind: 'item' }>): Json {
+  const num = (k: string): number => (typeof placement[k] === 'number' ? placement[k] : 0);
+  const anchors = getCatalog().enums['Anchor']?.values ?? [];
+  const anchor = typeof placement['anchor'] === 'string' ? placement['anchor'] : 'TOP_LEFT';
+  const a = Math.max(0, anchors.indexOf(anchor));
+  const column = a % 3;
+  const row = Math.floor(a / 3);
+  const area = slot.area ?? { width: 0, height: 0 };
+  const size = slot.size ?? { width: 0, height: 0 };
+  return {
+    x: Math.round((slot.x ?? 0) - num('relative_x') * area.width + (column * size.width) / 2),
+    y: Math.round((slot.y ?? 0) - num('relative_y') * area.height + (row * size.height) / 2),
+  };
+}
+
 function place(
   dest: Destination,
   widget: Json,
@@ -218,7 +243,7 @@ function place(
       }
       if (cls === 'PlaceLayout' && (slot.x !== undefined || slot.y !== undefined)) {
         const old = isObject(item['placement']) ? item['placement'] : {};
-        item['placement'] = { ...old, x: Math.round(slot.x ?? 0), y: Math.round(slot.y ?? 0) };
+        item['placement'] = { ...old, ...placementPosition(old, slot) };
       }
       item['widget'] = widget;
       dest.list?.splice(index(slot.index), 0, item);

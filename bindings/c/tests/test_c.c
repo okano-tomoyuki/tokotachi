@@ -1,4 +1,4 @@
-/* C API のテスト(docs/adr/0041)。C99 としてコンパイルし、画面なし(SDL の offscreen)で動かす。 */
+/* C API のテスト(docs/adr/0065)。C99 としてコンパイルし、画面なし(SDL の offscreen)で動かす。 */
 #include <tokotachi/tokotachi.h>
 
 #include <math.h>
@@ -124,14 +124,14 @@ static void test_properties(tokotachi_window* window)
     CHECK(tokotachi_widget_get_bounds(label).y == 25);
 
     tokotachi_theme_color color = {true, TOKOTACHI_COLOR_ROLE_TEXT_SECONDARY, {0, 0, 0, 0}};
-    tokotachi_label_set_color(label, color);
-    CHECK(tokotachi_label_get_color(label).is_role);
-    CHECK(tokotachi_label_get_color(label).role == TOKOTACHI_COLOR_ROLE_TEXT_SECONDARY);
+    tokotachi_label_set_text_color(label, color);
+    CHECK(tokotachi_label_get_text_color(label).is_role);
+    CHECK(tokotachi_label_get_text_color(label).role == TOKOTACHI_COLOR_ROLE_TEXT_SECONDARY);
     color.is_role = false;
     color.color.r = 200;
     color.color.a = 255;
-    tokotachi_label_set_color(label, color);
-    CHECK(!tokotachi_label_get_color(label).is_role && tokotachi_label_get_color(label).color.r == 200);
+    tokotachi_label_set_text_color(label, color);
+    CHECK(!tokotachi_label_get_text_color(label).is_role && tokotachi_label_get_text_color(label).color.r == 200);
 
     tokotachi_font font = {22};
     tokotachi_label_set_font(label, font);
@@ -376,7 +376,7 @@ static void test_drawing(void)
     tokotachi_path* path = tokotachi_path_new();
     tokotachi_point center = {32, 16};
     tokotachi_path_add_ellipse(path, center, 10, 10);
-    CHECK(!tokotachi_path_empty(path));
+    CHECK(!tokotachi_path_is_empty(path));
     tokotachi_paint black;
     memset(&black, 0, sizeof(black));
     black.color.a = 255;
@@ -493,7 +493,7 @@ static void test_event_loop(void)
     CHECK(tokotachi_task_start(task, work, NULL, count_destroy));
     tokotachi_timer* timer = tokotachi_timer_new(window);
     tokotachi_timer_set_interval(timer, 5000);
-    tokotachi_timer_set_on_timer(timer, on_timeout, NULL, NULL);
+    tokotachi_timer_set_on_timeout(timer, on_timeout, NULL, NULL);
     tokotachi_timer_set_enabled(timer, true);
     CHECK(tokotachi_application_exec(app) == 7);
     CHECK(posted == 1);
@@ -514,6 +514,11 @@ int main(int argc, char** argv)
 
     tokotachi_window* window = tokotachi_window_new("test", 400, 300);
     CHECK(strcmp(tokotachi_object_class_name(window), "Window") == 0);
+    /* 所有者を渡さないウィンドウは Application が、所有者を渡したウィンドウはそれが所有する(docs/adr/0062) */
+    CHECK(tokotachi_object_get_owner(window) == app);
+    tokotachi_window* owned = tokotachi_window_new_owned(window, "owned", 100, 50);
+    CHECK(tokotachi_object_get_owner(owned) == window);
+    tokotachi_object_delete(owned);
     CHECK(take_equal(tokotachi_window_get_title(window), "test"));
 
     test_properties(window);

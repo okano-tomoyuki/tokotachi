@@ -12,7 +12,7 @@
 class MainWindow : public tokotachi::Window
 {
 public:
-    MainWindow();
+    explicit MainWindow(tokotachi::Window* owner = nullptr);
 
     // <tokotachi-designer:begin id="declarations">
     tokotachi::Action* action_open;
@@ -50,9 +50,10 @@ public:
     void main_window_close(tokotachi::Object* sender, bool& can_close);
     void search(tokotachi::Object* sender);
     void tab_widget_files_change(tokotachi::Object* sender);
+    void list_view_files_drop(tokotachi::Object* sender, tokotachi::DragEvent& e);
     void list_view_files_activate(tokotachi::Object* sender);
     void button_close_click(tokotachi::Object* sender);
-    // <tokotachi-designer:end id="declarations" hash="9800f673">
+    // <tokotachi-designer:end id="declarations" hash="45fcb3a8">
 
 private:
     void tokotachi_setup_ui();

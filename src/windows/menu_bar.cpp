@@ -7,7 +7,8 @@
 #include <tokotachi/graphics/text_layout.hpp>
 
 #include "../actions/action_access.hpp"
-#include "../core/property_impl.hpp"
+#include "../actions/menu_access.hpp"
+#include "../core/impl.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../widgets/theme.hpp"
 
@@ -37,32 +38,34 @@ Action* find_shortcut(const Menu* menu, const KeyEvent& e)
 
 MenuBar::MenuBar(Widget* parent_widget)
     : Widget(parent_widget),
-      TOKOTACHI_READONLY_PROPERTY(MenuBar, std::vector<Menu*>, menus),
-      open_(-1),
-      hover_(-1),
-      active_(-1),
-      alt_alone_(false),
-      cues_(false)
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<Menu*>, menus),
+      d_(new Impl(this))
 {
+    d_->open_ = -1;
+    d_->hover_ = -1;
+    d_->active_ = -1;
+    d_->alt_alone_ = false;
+    d_->cues_ = false;
 }
 
 MenuBar::~MenuBar()
 {
     // メニュー(所有しているオブジェクト)は、自分がまだ MenuBar であるうちに破棄する(閉じたことを知らせてくるため)。
     std::vector<Menu*> menus_copy;
-    menus_copy.swap(menus_);
+    menus_copy.swap(d_->menus_);
     for (std::size_t i = 0; i < menus_copy.size(); ++i)
     {
-        menus_copy[i]->bar_ = nullptr;
+        detail::ImplAccess<Menu>::of(menus_copy[i])->bar_ = nullptr;
         delete menus_copy[i];
     }
+    delete d_;
 }
 
 Menu* MenuBar::add_menu(const std::string& title)
 {
     Menu* menu = new Menu(this, title);
-    menu->bar_ = this;
-    menus_.push_back(menu);
+    detail::ImplAccess<Menu>::of(menu)->bar_ = this;
+    d_->menus_.push_back(menu);
     notify_changed(menus);
     request_layout();
     invalidate();
@@ -71,24 +74,24 @@ Menu* MenuBar::add_menu(const std::string& title)
 
 void MenuBar::remove_menu(Menu* menu)
 {
-    const int i = index_of(menu);
+    const int i = d_->index_of(menu);
     if (i < 0)
     {
         return;
     }
     menu->close();
-    menus_.erase(menus_.begin() + i);
-    menu->bar_ = nullptr;
+    d_->menus_.erase(d_->menus_.begin() + i);
+    detail::ImplAccess<Menu>::of(menu)->bar_ = nullptr;
     delete menu;
-    open_ = -1;
-    hover_ = -1;
-    active_ = -1;
+    d_->open_ = -1;
+    d_->hover_ = -1;
+    d_->active_ = -1;
     notify_changed(menus);
     request_layout();
     invalidate();
 }
 
-int MenuBar::index_of(const Menu* menu) const
+int MenuBar::Impl::index_of(const Menu* menu) const
 {
     for (std::size_t i = 0; i < menus_.size(); ++i)
     {
@@ -100,7 +103,7 @@ int MenuBar::index_of(const Menu* menu) const
     return -1;
 }
 
-int MenuBar::mnemonic_at(Key key) const
+int MenuBar::Impl::mnemonic_at(Key key) const
 {
     if (key == Key::UNKNOWN)
     {
@@ -108,7 +111,7 @@ int MenuBar::mnemonic_at(Key key) const
     }
     for (std::size_t i = 0; i < menus_.size(); ++i)
     {
-        if (detail::parse_mnemonic(menus_[i]->title_).key == key)
+        if (detail::parse_mnemonic(detail::ImplAccess<Menu>::of(menus_[i])->title_).key == key)
         {
             return static_cast<int>(i);
         }
@@ -118,29 +121,29 @@ int MenuBar::mnemonic_at(Key key) const
 
 // ---- 寸法 ----
 
-float MenuBar::bar_height() const
+float MenuBar::Impl::bar_height() const
 {
-    return std::ceil(TextLayout("Ag", Font(), display_scale).height()) + TITLE_PADDING_Y * 2;
+    return std::ceil(TextLayout("Ag", Font(), q->display_scale).height()) + TITLE_PADDING_Y * 2;
 }
 
-Rect MenuBar::title_rect(int i) const
+Rect MenuBar::Impl::title_rect(int i) const
 {
     float x = BAR_PADDING_X;
-    const float scale = display_scale;
+    const float scale = q->display_scale;
     for (int k = 0; k < static_cast<int>(menus_.size()); ++k)
     {
-        const float w = std::ceil(TextLayout(detail::parse_mnemonic(menus_[k]->title_).text, Font(), scale).width()) +
+        const float w = std::ceil(TextLayout(detail::parse_mnemonic(detail::ImplAccess<Menu>::of(menus_[k])->title_).text, Font(), scale).width()) +
                         TITLE_PADDING_X * 2;
         if (k == i)
         {
-            return Rect(x, 0, w, height);
+            return Rect(x, 0, w, q->height);
         }
         x += w;
     }
     return Rect();
 }
 
-int MenuBar::title_at(const Point& p) const
+int MenuBar::Impl::title_at(const Point& p) const
 {
     for (int i = 0; i < static_cast<int>(menus_.size()); ++i)
     {
@@ -154,11 +157,11 @@ int MenuBar::title_at(const Point& p) const
 
 Size MenuBar::compute_preferred_size() const
 {
-    const Rect last = menus_.empty() ? Rect() : title_rect(static_cast<int>(menus_.size()) - 1);
-    return Size(last.right() + BAR_PADDING_X, bar_height());
+    const Rect last = d_->menus_.empty() ? Rect() : d_->title_rect(static_cast<int>(d_->menus_.size()) - 1);
+    return Size(last.right() + BAR_PADDING_X, d_->bar_height());
 }
 
-Size MenuBar::compute_minimum_size() const { return Size(0, bar_height()); }
+Size MenuBar::compute_minimum_size() const { return Size(0, d_->bar_height()); }
 
 // ---- 描画とマウス ----
 
@@ -169,20 +172,20 @@ void MenuBar::paint(Canvas& canvas)
     canvas.fill_rect(Rect(0, r.height - 1, r.width, 1), theme::border());
     const float scale = display_scale;
     const bool enabled_now = effectively_enabled;
-    for (int i = 0; i < static_cast<int>(menus_.size()); ++i)
+    for (int i = 0; i < static_cast<int>(d_->menus_.size()); ++i)
     {
-        const Rect t = title_rect(i);
-        const bool hot = i == open_ || i == active_ || (open_ < 0 && active_ < 0 && i == hover_);
+        const Rect t = d_->title_rect(i);
+        const bool hot = i == d_->open_ || i == d_->active_ || (d_->open_ < 0 && d_->active_ < 0 && i == d_->hover_);
         if (hot && enabled_now)
         {
             canvas.fill_round_rect(t.adjusted(0, 3, 0, 4), theme::field_radius(), theme::selection_inactive());
         }
-        const detail::Mnemonic m = detail::parse_mnemonic(menus_[i]->title_);
+        const detail::Mnemonic m = detail::parse_mnemonic(detail::ImplAccess<Menu>::of(d_->menus_[i])->title_);
         const TextLayout l(m.text, Font(), scale);
         const Point at(t.x + TITLE_PADDING_X, (r.height - l.height()) / 2);
         const Color fg = enabled_now ? theme::text() : theme::text_disabled();
         canvas.draw_text(l, at, fg);
-        if (cues_)
+        if (d_->cues_)
         {
             detail::paint_mnemonic_underline(canvas, l, at, m.offset, fg);
         }
@@ -199,34 +202,34 @@ void MenuBar::mouse_down(MouseEvent& e)
     }
     e.accepted = true;
     // メニューを開いている間にバーを押すと、Application がメニューを閉じて押したことを捨てるので、ここへは来ない。
-    const int i = title_at(e.pos);
+    const int i = d_->title_at(e.pos);
     if (i >= 0)
     {
-        open(i, false);
+        d_->open(i, false);
     }
 }
 
 void MenuBar::mouse_move(MouseEvent& e)
 {
     Widget::mouse_move(e);
-    const int i = title_at(e.pos);
-    if (i != hover_)
+    const int i = d_->title_at(e.pos);
+    if (i != d_->hover_)
     {
-        hover_ = i;
+        d_->hover_ = i;
         invalidate();
     }
     // 開いている間は、ポインタが乗った見出しのメニューに切り替える。
-    if (open_ >= 0 && i >= 0 && i != open_)
+    if (d_->open_ >= 0 && i >= 0 && i != d_->open_)
     {
-        open(i, false);
+        d_->open(i, false);
     }
 }
 
 void MenuBar::mouse_leave()
 {
-    if (hover_ != -1)
+    if (d_->hover_ != -1)
     {
-        hover_ = -1;
+        d_->hover_ = -1;
         invalidate();
     }
     Widget::mouse_leave();
@@ -234,7 +237,7 @@ void MenuBar::mouse_leave()
 
 // ---- メニューの開閉 ----
 
-void MenuBar::open(int i, bool keyboard)
+void MenuBar::Impl::open(int i, bool keyboard)
 {
     if (i < 0 || i >= static_cast<int>(menus_.size()))
     {
@@ -249,15 +252,15 @@ void MenuBar::open(int i, bool keyboard)
     active_ = -1;
     cues_ = keyboard;
     open_ = i;
-    invalidate();
-    menus_[i]->open_below(this, title_rect(i), keyboard);
-    if (!menus_[i]->is_open())
+    q->invalidate();
+    detail::ImplAccess<Menu>::of(menus_[i])->open_below(q, title_rect(i), keyboard);
+    if (!menus_[i]->opened.get())
     {
         open_ = -1;  // 開けなかった(ウィンドウが表示されていないなど)
     }
 }
 
-void MenuBar::open_adjacent(Menu* from, int step)
+void MenuBar::Impl::open_adjacent(Menu* from, int step)
 {
     const int n = static_cast<int>(menus_.size());
     const int i = index_of(from);
@@ -268,7 +271,7 @@ void MenuBar::open_adjacent(Menu* from, int step)
     open((i + step + n) % n, true);
 }
 
-void MenuBar::menu_closed(Menu* menu)
+void MenuBar::Impl::menu_closed(Menu* menu)
 {
     if (index_of(menu) == open_)
     {
@@ -277,20 +280,20 @@ void MenuBar::menu_closed(Menu* menu)
         {
             cues_ = false;
         }
-        invalidate();
+        q->invalidate();
     }
 }
 
-void MenuBar::menu_escaped(Menu* menu)
+void MenuBar::Impl::menu_escaped(Menu* menu)
 {
     const int i = index_of(menu);
     menu->close();
     enter_keyboard_mode(i);
 }
 
-void MenuBar::menu_activated() { leave_keyboard_mode(); }
+void MenuBar::Impl::menu_activated() { leave_keyboard_mode(); }
 
-void MenuBar::enter_keyboard_mode(int i)
+void MenuBar::Impl::enter_keyboard_mode(int i)
 {
     if (menus_.empty())
     {
@@ -298,20 +301,20 @@ void MenuBar::enter_keyboard_mode(int i)
     }
     active_ = std::max(0, std::min(i, static_cast<int>(menus_.size()) - 1));
     cues_ = true;
-    invalidate();
+    q->invalidate();
 }
 
-void MenuBar::leave_keyboard_mode()
+void MenuBar::Impl::leave_keyboard_mode()
 {
     if (active_ >= 0 || cues_)
     {
         active_ = -1;
         cues_ = false;
-        invalidate();
+        q->invalidate();
     }
 }
 
-void MenuBar::cancel()
+void MenuBar::Impl::cancel()
 {
     alt_alone_ = false;
     leave_keyboard_mode();
@@ -319,9 +322,9 @@ void MenuBar::cancel()
 
 // ---- キー ----
 
-bool MenuBar::handle_key(const KeyEvent& e, bool down)
+bool MenuBar::Impl::handle_key(const KeyEvent& e, bool down)
 {
-    if (menus_.empty() || !showing.get() || !effectively_enabled.get())
+    if (menus_.empty() || !q->showing.get() || !q->effectively_enabled.get())
     {
         return false;
     }
@@ -347,7 +350,7 @@ bool MenuBar::handle_key(const KeyEvent& e, bool down)
             if (active_ < 0 && cues_)
             {
                 cues_ = false;
-                invalidate();
+                q->invalidate();
             }
         }
         return false;
@@ -361,7 +364,7 @@ bool MenuBar::handle_key(const KeyEvent& e, bool down)
             if (!cues_)
             {
                 cues_ = true;  // 押している間は下線を出す
-                invalidate();
+                q->invalidate();
             }
         }
         return false;
@@ -377,11 +380,11 @@ bool MenuBar::handle_key(const KeyEvent& e, bool down)
         {
         case Key::LEFT:
             active_ = (active_ - 1 + n) % n;
-            invalidate();
+            q->invalidate();
             return true;
         case Key::RIGHT:
             active_ = (active_ + 1) % n;
-            invalidate();
+            q->invalidate();
             return true;
         case Key::DOWN:
         case Key::UP:
@@ -423,9 +426,9 @@ bool MenuBar::handle_key(const KeyEvent& e, bool down)
     return false;
 }
 
-bool MenuBar::trigger_shortcut(const KeyEvent& e)
+bool MenuBar::Impl::trigger_shortcut(const KeyEvent& e)
 {
-    if (!showing.get() || !effectively_enabled.get())
+    if (!q->showing.get() || !q->effectively_enabled.get())
     {
         return false;
     }
@@ -439,11 +442,11 @@ bool MenuBar::trigger_shortcut(const KeyEvent& e)
             a->trigger();
             return true;
         }
-        for (std::size_t i = 0; i < m->entries_.size(); ++i)
+        for (std::size_t i = 0; i < detail::ImplAccess<Menu>::of(m)->entries_.size(); ++i)
         {
-            if (m->entries_[i].submenu)
+            if (detail::ImplAccess<Menu>::of(m)->entries_[i].submenu)
             {
-                stack.push_back(m->entries_[i].submenu);
+                stack.push_back(detail::ImplAccess<Menu>::of(m)->entries_[i].submenu);
             }
         }
     }

@@ -8,9 +8,10 @@
 #include <tokotachi/graphics/text_layout.hpp>
 
 #include "../actions/action_access.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../widgets/theme.hpp"
+#include "../widgets/widget_access.hpp"
 
 namespace tokotachi
 {
@@ -23,6 +24,9 @@ const float ICON = 16;         // ボタンの画像の大きさ
 const float BUTTON_PADDING = 8;
 const float ICON_TEXT_GAP = 6;
 const float SEPARATOR = 9;     // 区切りの幅
+
+// 利用者が隠した部品(visible が false)。場所を取らない。
+bool user_hidden(const Widget* item) { return item && !item->visible.get(); }
 }  // namespace
 
 namespace detail
@@ -121,17 +125,17 @@ protected:
             canvas.fill_round_rect(r, theme::radius(), theme::selection_inactive().with_alpha(128));
         }
         const Color fg = enabled_now ? theme::text() : theme::text_disabled();
-        const float opacity = enabled_now ? 1.0f : 0.4f;
+        const float opacity = enabled_now || ActionAccess::icon(action).is_icon() ? 1.0f : 0.4f;
         const TextLayout l(label(), Font(), display_scale);
         const bool icon = shows_icon(), text = shows_text();
         if (icon && !text)
         {
-            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, (r.height - ICON) / 2, ICON, ICON),
+            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, (r.height - ICON) / 2, ICON, ICON), fg,
                               opacity);
         }
         else if (icon && style == ToolButtonStyle::TEXT_UNDER_ICON)
         {
-            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, 6, ICON, ICON), opacity);
+            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, 6, ICON, ICON), fg, opacity);
             canvas.draw_text(l, Point((r.width - l.width()) / 2, 6 + ICON + 4), fg);
         }
         else
@@ -139,7 +143,7 @@ protected:
             float x = BUTTON_PADDING;
             if (icon)
             {
-                canvas.draw_image(ActionAccess::icon(action), Rect(x, (r.height - ICON) / 2, ICON, ICON), opacity);
+                canvas.draw_image(ActionAccess::icon(action), Rect(x, (r.height - ICON) / 2, ICON, ICON), fg, opacity);
                 x += ICON + ICON_TEXT_GAP;
             }
             canvas.draw_text(l, Point(x, (r.height - l.height()) / 2), fg);
@@ -205,31 +209,71 @@ private:
 
 }  // namespace detail
 
+class ToolBar::Impl : public detail::WidgetHooks
+{
+    TOKOTACHI_IMPL(ToolBar);
+
+    explicit Impl(ToolBar* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
+    void action_added(Action* action) override;
+    void action_removed(Action* action) override;
+    void action_changed(Action* action) override;
+
+    /// 項目: ボタン(Action)・部品・区切りのどれか。
+    struct Entry
+    {
+        Action* action;
+        detail::ToolButton* button;
+        Widget* widget;
+        bool hidden;  ///< 幅に収まらず隠している
+        float x;      ///< 区切りの位置
+    };
+
+    ToolButtonStyle get_button_style() const { return button_style_; }
+    void set_button_style(const ToolButtonStyle& v);
+    Widget* item_widget(const Entry& e) const;
+    /// 並べない項目: 利用者が隠した部品と、それによって端に来た・続いた区切り。
+    std::vector<bool> absent_entries() const;
+    float separator_width() const;
+    void show_overflow();
+
+    std::vector<Entry> entries_;
+    ToolButtonStyle button_style_;
+    detail::ToolButton* overflow_button_;  ///< »
+    Menu* overflow_menu_;
+    bool destroying_;
+};
+
 ToolBar::ToolBar(Widget* parent_widget)
     : Widget(parent_widget),
-      TOKOTACHI_PROPERTY_GETTER(ToolBar, ToolButtonStyle, button_style),
-      button_style_(ToolButtonStyle::ICON_ONLY),
-      overflow_button_(nullptr),
-      overflow_menu_(nullptr),
-      destroying_(false)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolButtonStyle, button_style),
+      d_(new Impl(this))
 {
-    overflow_button_ = new detail::ToolButton(this, nullptr, button_style_);
-    overflow_button_->visible = false;
-    overflow_button_->tooltip = "その他の項目";
-    overflow_button_->on_press = [this]() { show_overflow(); };
+    d_->install(this);
+    d_->button_style_ = ToolButtonStyle::ICON_ONLY;
+    d_->overflow_button_ = nullptr;
+    d_->overflow_menu_ = nullptr;
+    d_->destroying_ = false;
+    d_->overflow_button_ = new detail::ToolButton(this, nullptr, d_->button_style_);
+    d_->overflow_button_->visible = false;
+    d_->overflow_button_->tooltip = "その他の項目";
+    d_->overflow_button_->on_press = [this]() { d_->show_overflow(); };
 }
 
 ToolBar::~ToolBar()
 {
-    destroying_ = true;
-    delete overflow_menu_;
-    overflow_menu_ = nullptr;
+    d_->destroying_ = true;
+    delete d_->overflow_menu_;
+    d_->overflow_menu_ = nullptr;
     // ボタンを持つ Action を外す(このツールバーが作った Action は、この後 Object として破棄される)。
     const std::vector<Action*> list = actions;
     for (std::size_t i = 0; i < list.size(); ++i)
     {
         remove_action(list[i]);
     }
+    delete d_;
 }
 
 Action* ToolBar::add_item(const std::string& text, const NotifyHandler& on_trigger)
@@ -242,8 +286,8 @@ Action* ToolBar::add_item(const std::string& text, const NotifyHandler& on_trigg
 
 void ToolBar::add_separator()
 {
-    const Entry e = {nullptr, nullptr, nullptr, false, 0};
-    entries_.push_back(e);
+    const Impl::Entry e = {nullptr, nullptr, nullptr, false, 0};
+    d_->entries_.push_back(e);
     request_layout();
 }
 
@@ -258,19 +302,19 @@ void ToolBar::add_widget(Widget* widget)
     {
         return;
     }
-    const Entry e = {nullptr, nullptr, widget, false, 0};
-    entries_.push_back(e);
+    const Impl::Entry e = {nullptr, nullptr, widget, false, 0};
+    d_->entries_.push_back(e);
     request_layout();
 }
 
-void ToolBar::action_added(Action* action)
+void ToolBar::Impl::action_added(Action* action)
 {
-    const Entry e = {action, new detail::ToolButton(this, action, button_style_), nullptr, false, 0};
+    const Impl::Entry e = {action, new detail::ToolButton(q, action, button_style_), nullptr, false, 0};
     entries_.push_back(e);
-    request_layout();
+    q->request_layout();
 }
 
-void ToolBar::action_removed(Action* action)
+void ToolBar::Impl::action_removed(Action* action)
 {
     for (std::size_t i = 0; i < entries_.size(); ++i)
     {
@@ -279,13 +323,13 @@ void ToolBar::action_removed(Action* action)
             detail::ToolButton* button = entries_[i].button;
             entries_.erase(entries_.begin() + static_cast<std::ptrdiff_t>(i));
             delete button;
-            request_layout();
+            q->request_layout();
             return;
         }
     }
 }
 
-void ToolBar::action_changed(Action* action)
+void ToolBar::Impl::action_changed(Action* action)
 {
     for (std::size_t i = 0; i < entries_.size(); ++i)
     {
@@ -296,7 +340,7 @@ void ToolBar::action_changed(Action* action)
     }
 }
 
-void ToolBar::child_removed(Widget* child)
+void ToolBar::Impl::child_removed(Widget* child)
 {
     if (destroying_)
     {
@@ -307,13 +351,13 @@ void ToolBar::child_removed(Widget* child)
         if (entries_[i].widget == child)
         {
             entries_.erase(entries_.begin() + static_cast<std::ptrdiff_t>(i));
-            request_layout();
+            q->request_layout();
             return;
         }
     }
 }
 
-void ToolBar::set_button_style(const ToolButtonStyle& v)
+void ToolBar::Impl::set_button_style(const ToolButtonStyle& v)
 {
     button_style_ = v;
     for (std::size_t i = 0; i < entries_.size(); ++i)
@@ -324,22 +368,63 @@ void ToolBar::set_button_style(const ToolButtonStyle& v)
             entries_[i].button->request_layout();
         }
     }
-    request_layout();
-    invalidate();
+    q->request_layout();
+    q->invalidate();
 }
 
-Widget* ToolBar::item_widget(const Entry& e) const { return e.button ? e.button : e.widget; }
+Widget* ToolBar::Impl::item_widget(const Entry& e) const { return e.button ? e.button : e.widget; }
 
-float ToolBar::separator_width() const { return SEPARATOR; }
+float ToolBar::Impl::separator_width() const { return SEPARATOR; }
+
+std::vector<bool> ToolBar::Impl::absent_entries() const
+{
+    const std::size_t n = entries_.size();
+    std::vector<bool> out(n, false);
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        out[i] = user_hidden(item_widget(entries_[i]));
+    }
+    // 区切りは、前と後ろの両方に並べる項目があるときだけ置く(続く区切りは 1 つにする)。
+    bool item_before = false;
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        if (out[i])
+        {
+            continue;
+        }
+        if (item_widget(entries_[i]))
+        {
+            item_before = true;
+            continue;
+        }
+        bool item_after = false;
+        for (std::size_t k = i + 1; k < n && !item_after; ++k)
+        {
+            if (!out[k] && !item_widget(entries_[k]))
+            {
+                break;  // 次の区切りまでに項目が無い
+            }
+            item_after = !out[k];
+        }
+        out[i] = !item_before || !item_after;
+        item_before = item_before && out[i];
+    }
+    return out;
+}
 
 // ---- 配置 ----
 
 Size ToolBar::compute_preferred_size() const
 {
     float w = BAR_PADDING * 2, h = 0;
-    for (std::size_t i = 0; i < entries_.size(); ++i)
+    const std::vector<bool> absent = d_->absent_entries();
+    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
     {
-        const Widget* item = item_widget(entries_[i]);
+        const Widget* item = d_->item_widget(d_->entries_[i]);
+        if (absent[i])
+        {
+            continue;
+        }
         const Size s = item ? item->preferred_size.get() : Size(SEPARATOR, 0);
         w += s.width + SPACING;
         h = std::max(h, s.height);
@@ -351,7 +436,7 @@ Size ToolBar::compute_preferred_size() const
 Size ToolBar::compute_minimum_size() const
 {
     const Size p = compute_preferred_size();
-    return Size(overflow_button_->preferred_size.get().width + BAR_PADDING * 2, p.height);
+    return Size(d_->overflow_button_->preferred_size.get().width + BAR_PADDING * 2, p.height);
 }
 
 void ToolBar::arrange_children()
@@ -359,12 +444,16 @@ void ToolBar::arrange_children()
     const Rect r = local_rect;
     const float inner_h = std::max(0.0f, r.height - BAR_PADDING * 2);
     float total = BAR_PADDING;
-    for (std::size_t i = 0; i < entries_.size(); ++i)
+    const std::vector<bool> absent = d_->absent_entries();
+    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
     {
-        const Widget* item = item_widget(entries_[i]);
-        total += (item ? item->preferred_size.get().width : SEPARATOR) + SPACING;
+        const Widget* item = d_->item_widget(d_->entries_[i]);
+        if (!absent[i])
+        {
+            total += (item ? item->preferred_size.get().width : SEPARATOR) + SPACING;
+        }
     }
-    const float overflow_w = overflow_button_->preferred_size.get().width;
+    const float overflow_w = d_->overflow_button_->preferred_size.get().width;
     const bool overflow = total > r.width - BAR_PADDING;
     const float limit = overflow ? r.width - BAR_PADDING - overflow_w - SPACING : r.width - BAR_PADDING;
 
@@ -372,16 +461,21 @@ void ToolBar::arrange_children()
     float x = BAR_PADDING;
     bool full = false;
     int last_shown = -1;
-    for (std::size_t i = 0; i < entries_.size(); ++i)
+    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
     {
-        Entry& e = entries_[i];
-        Widget* item = item_widget(e);
+        Impl::Entry& e = d_->entries_[i];
+        Widget* item = d_->item_widget(e);
+        if (absent[i])
+        {
+            e.hidden = !item;  // 区切りは描かない(部品は visible が false なので描かれない)
+            continue;
+        }
         const Size s = item ? item->preferred_size.get() : Size(SEPARATOR, 0);
         full = full || x + s.width > limit;
         e.hidden = full;
         if (item)
         {
-            item->visible = !full;
+            detail::WidgetAccess::set_hidden_by_parent(item, full);  // 利用者の visible は変えない
         }
         if (full)
         {
@@ -400,15 +494,15 @@ void ToolBar::arrange_children()
         x += s.width + SPACING;
     }
     // 見える項目の最後が区切りなら隠す。
-    if (overflow && last_shown >= 0 && !item_widget(entries_[static_cast<std::size_t>(last_shown)]))
+    if (overflow && last_shown >= 0 && !d_->item_widget(d_->entries_[static_cast<std::size_t>(last_shown)]))
     {
-        entries_[static_cast<std::size_t>(last_shown)].hidden = true;
+        d_->entries_[static_cast<std::size_t>(last_shown)].hidden = true;
     }
-    overflow_button_->visible = overflow;
+    d_->overflow_button_->visible = overflow;
     if (overflow)
     {
-        const float h = std::min(overflow_button_->preferred_size.get().height, inner_h);
-        overflow_button_->bounds = Rect(r.width - BAR_PADDING - overflow_w, BAR_PADDING + (inner_h - h) / 2, overflow_w, h);
+        const float h = std::min(d_->overflow_button_->preferred_size.get().height, inner_h);
+        d_->overflow_button_->bounds = Rect(r.width - BAR_PADDING - overflow_w, BAR_PADDING + (inner_h - h) / 2, overflow_w, h);
     }
     invalidate();
 }
@@ -418,10 +512,10 @@ void ToolBar::paint(Canvas& canvas)
     const Rect r = local_rect;
     canvas.fill_rect(r, theme::window());
     canvas.fill_rect(Rect(0, r.height - 1, r.width, 1), theme::border());
-    for (std::size_t i = 0; i < entries_.size(); ++i)
+    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
     {
-        const Entry& e = entries_[i];
-        if (!item_widget(e) && !e.hidden)
+        const Impl::Entry& e = d_->entries_[i];
+        if (!d_->item_widget(e) && !e.hidden)
         {
             canvas.fill_rect(Rect(std::floor(e.x), BAR_PADDING + 6, 1, r.height - BAR_PADDING * 2 - 12), theme::border());
         }
@@ -429,11 +523,11 @@ void ToolBar::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-void ToolBar::show_overflow()
+void ToolBar::Impl::show_overflow()
 {
     // 隠している Action をメニューに並べる(部品は出さない)。
     delete overflow_menu_;
-    overflow_menu_ = new Menu(this);
+    overflow_menu_ = new Menu(q);
     bool pending_separator = false;
     for (std::size_t i = 0; i < entries_.size(); ++i)
     {

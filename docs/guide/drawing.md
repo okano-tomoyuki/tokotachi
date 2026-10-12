@@ -9,7 +9,7 @@
 自由に描くには `PaintBox`(または任意の部品の `on_paint`)の中で、渡される `Canvas` に描きます。
 
 ```cpp
-tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(window_main);
 paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
 {
     c.fill_rect(tokotachi::Rect(0, 0, 100, 50), tokotachi::Color::rgb(0xf3f4f6));
@@ -38,6 +38,33 @@ Canvas の決まり:
 | 変換・クリップ | `translate`・`scale_by`・`rotate`・`clip_rect`・`clip_path`(`save`・`restore` で戻す) |
 | グループの透過 | `begin_layer(opacity)`〜`end_layer()`(重なった所も同じ濃さ) |
 
+## 画像
+
+`Image` はファイル・メモリ上のデータ(PNG・JPEG・BMP・GIF)から読みます。描くときの大きさは dp で、画像の 1 ピクセルを 1 dp とします
+(倍率 2 の画面でにじませたくないときは、2 倍の大きさの画像を用意し、半分の大きさで描きます)。大きさを変えて描くと、滑らかに写します。
+
+```cpp
+const tokotachi::Image image_logo = tokotachi::Image::load("logo.png");
+// 画像を表示する部品
+tokotachi::ImageBox* image_box_logo = new tokotachi::ImageBox(window_main, image_logo);
+image_box_logo->fit = tokotachi::ImageFit::CONTAIN;  // NONE(元の大きさ)・CONTAIN・COVER・STRETCH
+// ラベル・ボタンの文字の前(icon_size で大きさ。既定 16)。ボタンは文字が空なら画像だけ
+label_status->icon = tokotachi::Image::load("info.png");
+button_open->icon = tokotachi::Image::load("open.png");
+// メニュー・ツールバーには Action の icon を出す
+action_open->icon = tokotachi::Image::load("open.png");
+```
+
+よく使うアイコンは、画像のファイルを用意しなくても `Image::icon` で使えます(Lucide の線画。約 70 個。一覧は @ref gallery の「アイコン」)。
+部品の文字の色で塗るので、ダークのテーマ・無効の部品・強調したボタンでも文字と同じ色になり、どの大きさでもぼやけません。
+
+```cpp
+action_save->icon = tokotachi::Image::icon(tokotachi::Icon::SAVE);
+button_delete->icon = tokotachi::Image::icon(tokotachi::Icon::TRASH, tokotachi::Color::rgb(0xDC2626));  // 色を決める
+// 自分で描くときは、塗る色を渡す(渡さなければ黒)
+canvas.draw_image(tokotachi::Image::icon(tokotachi::Icon::INFO), tokotachi::Rect(0, 0, 20, 20), text_color);
+```
+
 ## 重い描画
 
 - `PaintBox::cached` を true にすると、描いた結果を覚え、`refresh()`・大きさ・倍率・テーマが変わるまで `on_paint` を呼びません。
@@ -45,7 +72,7 @@ Canvas の決まり:
 - Bitmap には**別のスレッドでも描けます**(文字も)。`Task` の中で描いて Image を返し、画面に貼ります(@ref threads_guide)。
 
 ```cpp
-tokotachi::Task<tokotachi::Image>* render = new tokotachi::Task<tokotachi::Image>(&window);
+tokotachi::Task<tokotachi::Image>* render = new tokotachi::Task<tokotachi::Image>(window_main);
 render->on_finish = [=](tokotachi::Object*) { image = render->result; paint_box_chart->refresh(); };
 render->start([](tokotachi::TaskContext&) -> tokotachi::Image
 {

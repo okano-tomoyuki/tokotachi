@@ -1,4 +1,4 @@
-# 0041. C の API を仕様から生成して単独の共有ライブラリで配り、Python のバインディングはその上に ctypes で作る
+# 0065. C の API を仕様から生成して単独の共有ライブラリで配り、Python のバインディングはその上に ctypes で作る
 
 - 状態: 承認
 - 日付: 2026-10-12
@@ -17,6 +17,10 @@ C の API を共通の土台にし、各言語のバインディングをその�
 - C の API の形(名前・ハンドル・所有・文字列・ハンドラ・失敗の伝え方)と、作り方(手で書くか生成するか)。
 - 配る形(どのライブラリに入れるか)。
 - Python のバインディングの作り方と、Object の寿命の扱い。
+
+[ADR 0057](0057-compatibility-abi-and-c-layer.md) は「将来の C の層」の方針(1.0 の後に Python で試作して形を固める・Bethany の DLL の
+決まりに合わせる・関数の一覧はデザイナーのカタログから生成する)を決めた。この ADR は、その試作として C の層と Python の層を作り、
+決まりを具体的にする。ADR 0057 と違うところは「ADR 0057 との違い」に書く。
 
 ## 検討した選択肢
 
@@ -60,9 +64,9 @@ C の API を共通の土台にし、各言語のバインディングをその�
   列挙は `TOKOTACHI_ALIGN_START` の形で、値は C++ の `enum class` と同じ順(生成した実装の `static_assert` で確かめる)。
 - Object の派生は `tokotachi_object*` で指し、`tokotachi_label` などはその別名。基底のクラスの関数に派生のものをそのまま渡せる。
   型の違うハンドルは失敗にする(落ちない)。
-- 所有は C++ と同じ(ADR 0015)。所有者の無いものは `tokotachi_object_delete` で破棄する。`tokotachi_object_set_user_data` で、
-  Object が破棄されるときに呼ばれる関数を付けられる(対象の Object が所有する見えない Object が持つ)。バインディングは
-  これで、破棄された Object に触らないようにする。
+- 所有は C++ と同じ(ADR 0015・0062。所有者を渡さない Window は Application が所有する)。所有者の無いものは
+  `tokotachi_object_delete` で破棄する。`tokotachi_object_set_user_data` で、Object が破棄されるときに呼ばれる関数を付けられる
+  (ADR 0057 で用意した破棄の通知 `detail::add_destroy_observer` を使う)。バインディングはこれで、破棄された Object に触らないようにする。
 - 文字列は UTF-8。返す文字列は malloc したもので `tokotachi_free` で解放する。読み取りだけの並びは、呼んだ側の配列に書いて全体の数を返す。
 - ハンドラは関数・利用者のデータ・解放の関数を受け取り、ハンドラが置き換わる・外れる・Object が破棄されるときに解放の関数を呼ぶ
   (`std::function` の最後の写しが無くなるとき)。
@@ -76,7 +80,7 @@ C の API を共通の土台にし、各言語のバインディングをその�
 
 ### 配る形
 
-- C の API は、CMake のオプション `TOKOTACHI_BUILD_C_API`(単独のとき ON。Emscripten では OFF)で作る、単独の共有ライブラリ
+- C の API は、CMake のオプション `TOKOTACHI_BUILD_C_API`(単独のとき ON。Emscripten と、まだ確かめていない Windows では OFF)で作る、単独の共有ライブラリ
   `tokotachi_c` とする。ライブラリの C++ のオブジェクト(`tokotachi_objects`)と依存ライブラリを中に入れ、`tokotachi_*` だけを公開する
   (Linux はバージョンスクリプト、MinGW は `dllexport`)。MinGW では C++ のランタイムも静的にリンクする。
   利用者は C++ の標準ライブラリの違いを気にせずに読み込める。
@@ -91,7 +95,8 @@ C の API を共通の土台にし、各言語のバインディングをその�
 - ctypes の宣言・列挙・クラスは、C の API と同じ仕様から生成する(`_api.py`)。手で書くのは寿命・変換・描画の型(`_core.py`)。
 - **寿命**: C++ の Object 1 つに Python の Object 1 つ。所有者のある Object は C++ の所有者が寿命を決め、Python の Object は
   C++ の Object が破棄されるまで保つ(ハンドラの sender・children で同じものが返り、利用者が付けた属性も残る)。
-  Python で作った所有者の無い Object(Window など)は、Python の Object が無くなったとき(または `delete()`)に破棄する(PyQt と同じ)。
+  Python で作った所有者の無い Object(所有者を渡さない Timer・親の無いウィジェットなど)は、Python の Object が無くなったとき
+  (または `delete()`)に破棄する(PyQt と同じ)。Window は Application が所有する(ADR 0062)ので、参照が無くなっても残る。
   別のスレッドで回収されたときは、メインスレッドで破棄するよう post する。Python が終わるときは、所有者の無い Object を破棄してから
   Application を破棄する。C++ の Object が破棄された後に触ると `RuntimeError`(落ちない)。
 - C の API の失敗は `TokotachiError`、ハンドラの中の例外は `sys.excepthook` で知らせて続ける。
@@ -105,6 +110,14 @@ C の API を共通の土台にし、各言語のバインディングをその�
   `tokotachi_struct_size` で C と比べる。どちらも AddressSanitizer・UndefinedBehaviorSanitizer で確かめた。
 - 生成したファイルが仕様と合っていることを CI で確かめる(`generate.py --check`)。
 
+### ADR 0057 との違い
+
+| 項目 | ADR 0057 | この ADR | 理由 |
+|---|---|---|---|
+| 返す文字列 | スレッドごとのバッファ | malloc したものを返し、`tokotachi_free` で解放する | 次の呼び出しで上書きされないので、ハンドラの中から別の関数を呼んでも安全。文字列の並び(`char**`)も同じ決まりで返せる |
+| 関数の一覧の元 | デザイナーのカタログ(`catalog.json`) | `bindings/c/api.py` | カタログはデザイナーで置ける部品・設定できるプロパティだけを持ち、メソッド・読み取り専用のプロパティ・モデル・描画の型を持たない。C の層に要る意味(所有・既定値・NULL の可否)も書けない |
+| 作る時期 | 1.0 の後 | 0.x の今 | 依頼による。0.x の間は C の ABI も小さい版で変わりうる(下の「影響」) |
+
 ## 影響
 
 - C++ の公開の API を変えたら、`bindings/c/api.py` も直して生成し直す(合わなければ C++ の実装のコンパイルが通らない)。
@@ -112,4 +125,4 @@ C の API を共通の土台にし、各言語のバインディングをその�
 - C の API の版はライブラリの版と同じ。0.x の間は、小さい版で C の ABI も変わりうる。
 - C の API には継承による拡張が無いので、独自のウィジェット・レイアウトは C++ で書く。
 - デザイナー(ADR 0039)が生成するのは C++ だけのまま。Python のコードの生成は後で検討する。
-- Windows(MinGW)での C の API と Python のバインディングは、CI では確かめていない(Linux だけ)。
+- Windows(MinGW)での C の API と Python のバインディングは確かめていない(既定で作らず、CI も Linux だけ)。確かめたら既定を ON にする。

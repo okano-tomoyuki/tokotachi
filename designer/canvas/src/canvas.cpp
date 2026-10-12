@@ -24,6 +24,7 @@ namespace
 {
 
 tokotachi::Application* g_app = nullptr;
+std::string g_language;  ///< 拡張が渡した利用者の言語(空なら Application が調べたもの)
 /// 描いたウィンドウ(次の描画で破棄する)。Dialog のときは、その持ち主の隠れたウィンドウも。
 tokotachi::Window* g_window = nullptr;
 tokotachi::Window* g_owner = nullptr;
@@ -40,6 +41,10 @@ void ensure_app()
         static char name[] = "tokotachi-canvas";
         static char* argv[] = {name, nullptr};
         g_app = new tokotachi::Application(1, argv);
+    }
+    if (!g_language.empty())
+    {
+        g_app->language = g_language;
     }
 }
 
@@ -206,6 +211,12 @@ private:
         if (scroll && property == "content")
         {
             scroll->content = dynamic_cast<tokotachi::Widget*>(value);
+            return;
+        }
+        tokotachi::Label* label = dynamic_cast<tokotachi::Label*>(object);
+        if (label && property == "buddy")
+        {
+            label->buddy = dynamic_cast<tokotachi::Widget*>(value);
             return;
         }
         error("cannot set reference " + property);
@@ -505,8 +516,28 @@ EMSCRIPTEN_KEEPALIVE void ttc_configure(const char* config_text)
         fonts += (i > 0 ? ";" : "") + config["fonts"].items()[i].as_string();
     }
     setenv("TOKOTACHI_FONT_FILES", fonts.c_str(), 1);
+    // Linux: 書体ごとの面(拡張が fontconfig で探したもの)。1 行に「書体 番号 太らせる 傾ける ファイル」をタブで区切る
+    std::string sources;
+    if (config.has("font_sources"))
+    {
+        const std::vector<ttc::Json>& items = config["font_sources"].items();
+        for (std::size_t i = 0; i < items.size(); ++i)
+        {
+            const ttc::Json& s = items[i];
+            sources += std::to_string(static_cast<int>(s["style"].as_number())) + "\t" +
+                       std::to_string(static_cast<int>(s["index"].as_number())) + "\t" +
+                       (s["synthetic_bold"].as_bool() ? "1" : "0") + "\t" + (s["synthetic_italic"].as_bool() ? "1" : "0") +
+                       "\t" + s["file"].as_string() + "\n";
+        }
+    }
+    setenv("TOKOTACHI_FONT_SOURCES", sources.c_str(), 1);
     setenv("TOKOTACHI_HOST_OS", config["os"].as_string().c_str(), 1);
     setenv("XDG_CURRENT_DESKTOP", config["desktop"].as_string().c_str(), 1);
+    // 利用者の言語(暦の月・曜日、ダイアログのボタンの文字を選ぶ。ネイティブでは OS の設定)
+    if (config.has("language") && config["language"].is_string())
+    {
+        g_language = config["language"].as_string();
+    }
 }
 
 EMSCRIPTEN_KEEPALIVE const char* ttc_render(const char* request_text)
@@ -524,6 +555,18 @@ EMSCRIPTEN_KEEPALIVE const char* ttc_render(const char* request_text)
     }
     g_app->color_scheme =
         request["color_scheme"].as_string() == "DARK" ? tokotachi::ColorScheme::DARK : tokotachi::ColorScheme::LIGHT;
+    // プロジェクトのテーマの上書き(生成する main.cpp と同じく、標準のライト・ダークに重ねる)
+    tokotachi::ThemeOverride app_override;
+    if (request.has("theme_override"))
+    {
+        from_json(request["theme_override"], app_override);
+    }
+    tokotachi::Theme light = tokotachi::Theme::light();
+    tokotachi::Theme dark = tokotachi::Theme::dark();
+    app_override.apply_to(light);
+    app_override.apply_to(dark);
+    g_app->light_theme = light;
+    g_app->dark_theme = dark;
     set_images(request["images"]);
 
     const std::string window_class = request["window_class"].as_string();

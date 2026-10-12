@@ -1,0 +1,66 @@
+/**
+@defgroup core 基本(core)
+@brief オブジェクト・プロパティ・イベント・アプリケーション・スレッド・基本の値。`<tokotachi/core.hpp>`
+
+@defgroup core_objects オブジェクトとプロパティ
+@ingroup core
+@brief Object(親子と所有)・Property(値と変化の知らせ)・Variable(結びつけ)・Application・Timer。
+
+@defgroup core_events イベント
+@ingroup core
+@brief マウス・キー・ホイール・文字の入力・ドラッグ&ドロップのイベント。
+
+@defgroup core_threads スレッド
+@ingroup core
+@brief メインスレッドへの post・WeakRef・別のスレッドで処理する Task。
+
+@defgroup core_values 基本の値
+@ingroup core
+@brief Point・Size・Rect・Color・Date。値の型なので、公開のメンバ変数で表す。
+
+@defgroup graphics 描画(graphics)
+@brief Canvas・Path・Image・Bitmap・Font・文字のレイアウト・テーマ。`<tokotachi/graphics.hpp>`
+
+@defgroup layout レイアウト(layout)
+@brief 子の部品の並べ方。BoxLayout・GridLayout・PlaceLayout。`<tokotachi/layouts.hpp>`
+
+@defgroup widgets 部品(widgets)
+@brief 画面の部品。分類はデザイナーのパレットと同じ。`<tokotachi/widgets.hpp>`
+
+@defgroup widgets_input 入力
+@ingroup widgets
+@brief ボタン・チェック・入力欄・値・選択・日付・色。
+
+@defgroup widgets_display 表示
+@ingroup widgets
+@brief 文字・進み具合・画像を見せる。
+
+@defgroup widgets_container 入れ物
+@ingroup widgets
+@brief ほかの部品を入れる(枠・タブ・分割・スクロール)。
+
+@defgroup widgets_drawing 描画
+@ingroup widgets
+@brief 自分で描く部品。
+
+@defgroup widgets_base 部品の基底
+@ingroup widgets
+@brief 部品の共通の基底(Widget など)。自作の部品を作るときに使う。
+
+@defgroup windows ウィンドウ(windows)
+@brief Window・ダイアログ・ポップアップ・メニューバー・ツールバー・ステータスバー。`<tokotachi/windows.hpp>`
+
+@defgroup actions Action・メニュー(actions)
+@brief Action(メニュー・ツールバー・ショートカットで共有する操作)・Menu・Shortcut。`<tokotachi/actions.hpp>`
+
+@defgroup views 一覧・木・表(views)
+@brief ListView・TreeView・TableView と、そのモデル。`<tokotachi/views.hpp>`
+*/
+
+/**
+@namespace tokotachi
+@brief Tokotachi の公開の型と関数(`detail` の中は内部で、互換の約束に含めない。@ref compatibility)。
+
+@namespace tokotachi::clipboard
+@brief クリップボードの文字の読み書き。
+*/

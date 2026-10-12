@@ -6,7 +6,7 @@
  * ノードは JSON 上の位置(パス)で指す。レイアウト・タブ・区画のように名前の無いノードもあるため。
  * パスが指すノードの種類が合わなければ、コマンドは失敗する(テキストエディタでの変更とすれ違ったとき)。
  */
-import { findClass, getCatalog } from '../catalog/catalog.ts';
+import { findClass } from '../catalog/catalog.ts';
 import { memberNameProblem, isValidIdentifier, describeIdentifierProblem } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { JsonPath } from '../dsl/diagnostics.ts';
@@ -35,11 +35,14 @@ import {
   addEntry,
   addMenu,
   moveSibling,
+  moveSiblings,
   removeActionReferences,
   setEntryAction,
   setMenuTitle,
   type Bar,
 } from './menus.ts';
+import { pasteNodes, type ClipboardItem } from './clipboard.ts';
+import { moveWidgets } from './slots.ts';
 import {
   addVariable,
   removeBindings,
@@ -71,6 +74,8 @@ export type EditCommand =
   | { readonly kind: 'addObject'; readonly class: string }
   /** 部品を別の場所へ移す(レイアウトの中の位置・別の入れ物)。 */
   | { readonly kind: 'moveWidget'; readonly target: JsonPath; readonly slot: Slot }
+  /** 部品をまとめて移す(構造の木の順に並べる。slots.ts)。 */
+  | { readonly kind: 'moveWidgets'; readonly targets: readonly JsonPath[]; readonly slot: Slot }
   /** ノード(部品・空き・タブ・区画・レイアウト・Action・オブジェクト)を消す。 */
   | { readonly kind: 'remove'; readonly targets: readonly JsonPath[] }
   /** BoxLayout に空き(伸びる空き・固定の空き)を足す。 */
@@ -138,6 +143,14 @@ export type EditCommand =
     }
   /** 同じ並びの中で前(-1)・後ろ(1)へ動かす。 */
   | { readonly kind: 'moveSibling'; readonly target: JsonPath; readonly delta: number }
+  /** 複数を、それぞれ同じ並びの中でまとめて前後に動かす(端に着いたものは動かさず、ほかのものも追い越さない)。 */
+  | { readonly kind: 'moveSiblings'; readonly targets: readonly JsonPath[]; readonly delta: number }
+  /** コピーしたものを貼り付ける(clipboard.ts)。部品は slot に入れ、名前が重なるものは改名する。 */
+  | {
+      readonly kind: 'paste';
+      readonly items: readonly ClipboardItem[];
+      readonly slot?: Slot | undefined;
+    }
   | { readonly kind: 'batch'; readonly commands: readonly EditCommand[] };
 
 export type CommandResult =
@@ -301,7 +314,6 @@ function setEvent(doc: TtuiDocument, path: JsonPath, event: string, handler: str
 
 /** 名前の参照(メニュー・ツールバーの action、部品の actions、参照のプロパティ)を書き換える。 */
 function renameReferences(doc: Json, from: string, to: string): void {
-  const catalog = getCatalog();
   const visit = (node: unknown, path: JsonPath): void => {
     if (Array.isArray(node)) {
       node.forEach((v, i) => {
@@ -328,12 +340,51 @@ function renameReferences(doc: Json, from: string, to: string): void {
       } catch {
         cls = undefined;
       }
-      const info = cls === undefined ? undefined : catalog.classes[cls];
+      const info = cls === undefined ? undefined : findClass(cls);
       for (const [name, value] of Object.entries(props)) {
         const type = info?.properties[name]?.type;
         if (value === from && typeof type === 'object' && 'ref' in type) {
           props[name] = to;
         }
+      }
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (key !== 'properties' && key !== 'events') {
+        visit(value, [...path, key]);
+      }
+    }
+  };
+  visit(doc, []);
+}
+
+/** 消えた名前を指す参照のプロパティ(Label の buddy 等)を消す(参照が切れて検証のエラーにならないように)。 */
+function removeReferences(doc: Json, names: ReadonlySet<string>): void {
+  const visit = (node: unknown, path: JsonPath): void => {
+    if (Array.isArray(node)) {
+      node.forEach((v, i) => {
+        visit(v, [...path, i]);
+      });
+      return;
+    }
+    if (!isObject(node)) {
+      return;
+    }
+    const props = node['properties'];
+    if (isObject(props) && typeof node['class'] === 'string') {
+      const info = findClass(node['class']);
+      for (const [name, value] of Object.entries(props)) {
+        const type = info?.properties[name]?.type;
+        if (
+          typeof value === 'string' &&
+          names.has(value) &&
+          typeof type === 'object' &&
+          'ref' in type
+        ) {
+          Reflect.deleteProperty(props, name);
+        }
+      }
+      if (Object.keys(props).length === 0) {
+        Reflect.deleteProperty(node, 'properties');
       }
     }
     for (const [key, value] of Object.entries(node)) {
@@ -396,6 +447,12 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
     case 'moveWidget':
       moveWidget(doc, command.target, command.slot);
       return;
+    case 'moveWidgets':
+      moveWidgets(doc, command.targets, command.slot);
+      return;
+    case 'paste':
+      pasteNodes(doc, command.items, command.slot);
+      return;
     case 'remove': {
       // Action を消すときは、その Action を参照する項目も消す
       const actions = command.targets.flatMap((t) =>
@@ -409,7 +466,13 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
           t.length === 2 && t[0] === 'variables' ? doc.variables?.[Number(t[1])] : undefined;
         return v ? [{ name: v.name, value: variableValue(v.type, v.value) }] : [];
       });
+      const named = new Set(namedNodes(doc).map((n) => n.name));
       removeNodes(doc, command.targets);
+      // 消した部品を指す参照のプロパティも消す
+      for (const n of namedNodes(doc)) {
+        named.delete(n.name);
+      }
+      removeReferences(doc, named);
       for (const name of actions) {
         removeActionReferences(doc, name);
       }
@@ -447,6 +510,9 @@ function apply(doc: TtuiDocument, command: EditCommand): void {
       return;
     case 'moveSibling':
       moveSibling(doc, command.target, command.delta);
+      return;
+    case 'moveSiblings':
+      moveSiblings(doc, command.targets, command.delta);
       return;
     case 'addSpacer':
       addSpacer(doc, command.layout, command.index, command.spacer);
@@ -513,7 +579,7 @@ export function defaultEventOf(cls: string): string | undefined {
     'on_submit',
     'on_change',
     'on_activate',
-    'on_timer',
+    'on_timeout',
     'on_finish',
     'on_close',
     'on_paint',

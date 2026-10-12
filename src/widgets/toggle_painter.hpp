@@ -29,15 +29,18 @@ inline Size toggle_preferred_size(const TextLayout& l)
     return Size(TOGGLE_INDICATOR + TOGGLE_GAP + std::ceil(l.width()), std::max(TOGGLE_INDICATOR, std::ceil(l.height())) + 8);
 }
 
-inline void paint_toggle_text(Canvas& canvas, const TextLayout& l, const Rect& r, bool focused, bool enabled)
+// 文字を描き、その位置を返す(ニーモニックの下線を引くため)。
+inline Point paint_toggle_text(Canvas& canvas, const TextLayout& l, const Rect& r, bool focused, bool enabled)
 {
     const float tx = TOGGLE_INDICATOR + TOGGLE_GAP;
-    canvas.draw_text(l, Point(tx, (r.height - l.height()) / 2), enabled ? theme::text() : theme::text_disabled());
+    const Point at(tx, (r.height - l.height()) / 2);
+    canvas.draw_text(l, at, enabled ? theme::text() : theme::text_disabled());
     if (focused)
     {
         // フォーカスは文字の下線で示す。
         canvas.fill_rect(Rect(tx, (r.height + l.height()) / 2, l.width(), 1), theme::focus_ring());
     }
+    return at;
 }
 
 }  // namespace detail

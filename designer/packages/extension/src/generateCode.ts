@@ -8,6 +8,7 @@ import {
   generateProject,
   resolveCppTarget,
   windowCppOptions,
+  type CppOptions,
   type CppTarget,
   type GenerateResult,
   type ProjectWindow,
@@ -20,9 +21,12 @@ import {
   parseDocument,
   parseProject,
   PROJECT_EXTENSION,
+  withCustomClasses,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { loadComponents } from './components.ts';
+import { customClassesOf, readProjectCustomClasses } from './customWidgets.ts';
 import { projectOf, readText, windowUri } from './projects.ts';
 import { cppOptions, generateOnSave } from './settings.ts';
 
@@ -79,7 +83,9 @@ export async function generateWindowCode(
   document: vscode.TextDocument,
   options: GenerateOptions,
 ): Promise<CodeResult | undefined> {
-  const parsed = parseDocument(document.getText());
+  // 自作部品(docs/adr/0044)をカタログに足して検証・生成する
+  const classes = await customClassesOf(document.uri);
+  const parsed = withCustomClasses(classes, () => parseDocument(document.getText()));
   if (!parsed.document || hasErrors(parsed.diagnostics)) {
     if (!options.onSave) {
       void vscode.window.showErrorMessage(
@@ -107,17 +113,34 @@ export async function generateWindowCode(
   const target = resolveCppTarget(doc, fileName, settings);
   // 出力先の既存の内容を先に読んでおく(生成は同期的に行う)
   const existing = new Map<string, string | undefined>();
-  for (const path of [target.header, target.source]) {
+  for (const path of [target.header, target.source, target.images]) {
     existing.set(path, await readText(vscode.Uri.joinPath(directory, path)));
   }
   // 画像も先に読む(生成したコードに埋め込む)
   const images = await readImages(directory, doc);
-  const generated = generateCpp(
-    doc,
-    fileName,
-    (path) => existing.get(path),
-    settings,
-    (path) => images.get(path),
+  // 置いた部品ファイル(docs/adr/0043)のクラスの名前とヘッダ。プロジェクトに属していれば、部品ファイルもプロジェクトの設定で生成する
+  const { components } = await loadComponents(document.uri, doc, classes);
+  const componentOptions = new Map<string, CppOptions>();
+  for (const [path, c] of components) {
+    const componentOwner = owner ? await projectOf(c.uri) : undefined;
+    componentOptions.set(
+      path,
+      componentOwner ? windowCppOptions(componentOwner.project.doc, componentOwner.path) : settings,
+    );
+  }
+  const generated = withCustomClasses(classes, () =>
+    generateCpp(
+      doc,
+      fileName,
+      (path) => existing.get(path),
+      settings,
+      (path) => images.get(path),
+      (path) => {
+        const c = components.get(path);
+        const options = componentOptions.get(path);
+        return c && options ? { document: c.document, options } : undefined;
+      },
+    ),
   );
   const written = await writeGenerated(directory, generated, existing, options, () =>
     generateWindowCode(document, { quiet: true, overwrite: true }),
@@ -172,10 +195,12 @@ export async function generateProjectCode(
   }
   const windows: ProjectWindow[] = [];
   const failed: string[] = [];
+  const { classes } = await readProjectCustomClasses(uri, project);
   for (const path of project.windows ?? []) {
     const wUri = windowUri(uri, path);
     const wText = await readText(wUri);
-    const w = wText === undefined ? undefined : parseDocument(wText);
+    const w =
+      wText === undefined ? undefined : withCustomClasses(classes, () => parseDocument(wText));
     if (!w?.document || hasErrors(w.diagnostics)) {
       failed.push(path);
       continue;

@@ -1,6 +1,6 @@
 # C の API
 
-Tokotachi を C から使うための API([ADR 0041](../adr/0041-c-api-and-python-bindings.md))。他の言語のバインディングの土台でもある
+Tokotachi を C から使うための API([ADR 0065](../adr/0065-c-api-and-python-bindings.md))。他の言語のバインディングの土台でもある
 (Python は [python.md](python.md))。
 
 - ヘッダ: [bindings/c/include/tokotachi/tokotachi.h](../../bindings/c/include/tokotachi/tokotachi.h)(`#include <tokotachi/tokotachi.h>`)
@@ -9,7 +9,7 @@ Tokotachi を C から使うための API([ADR 0041](../adr/0041-c-api-and-pytho
 
 ## ビルドと使い方
 
-`TOKOTACHI_BUILD_C_API`(単独でビルドするときは ON)で作られる。
+`TOKOTACHI_BUILD_C_API`(単独でビルドするときは ON。まだ確かめていない Windows では OFF)で作られる。
 
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -50,10 +50,10 @@ int main(int argc, char** argv)
     tokotachi_box_layout_add(layout, button, 0, TOKOTACHI_ALIGN_END);
     tokotachi_button_base_set_on_click(button, on_click, window, NULL);  /* Button の on_click は ButtonBase のもの */
 
+    tokotachi_application_set_main_window(app, window);  /* 閉じたら終える */
     tokotachi_widget_set_visible(window, true);
     int code = tokotachi_application_exec(app);
-    tokotachi_object_delete(window);  /* 所有者の無いものは利用者が破棄する(子も一緒に破棄される) */
-    tokotachi_object_delete(app);     /* Application は最後 */
+    tokotachi_object_delete(app);  /* 残っているウィンドウ(Application が所有する)も一緒に破棄される */
     return code;
 }
 ```
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 |---|---|
 | 名前 | `tokotachi_<クラス>_<操作>`。プロパティは `_get_<名前>`・`_set_<名前>`(読み取り専用は get だけ)、ハンドラは `_set_on_xxx`、コンストラクタは `_new`。C++ の引数の既定値は無いので、すべて渡す |
 | ハンドル | Object の派生はすべて `tokotachi_object*`(`tokotachi_label` などは別名)。基底のクラスの関数(`tokotachi_widget_set_x` など)に派生のものをそのまま渡せる。型の違うものを渡すと何もせずに失敗する |
-| 所有 | C++ と同じ([ADR 0015](../adr/0015-object-ownership.md))。所有者のあるものは所有者と一緒に破棄される。所有者の無いものは `tokotachi_object_delete` で破棄する。Application は最後に破棄する |
+| 所有 | C++ と同じ([ADR 0015](../adr/0015-object-ownership.md)・[ADR 0062](../adr/0062-window-ownership-and-quit.md))。所有者のあるものは所有者と一緒に破棄される。所有者を渡さない Window は Application が、`tokotachi_window_new_owned(owner, ...)` のものは owner が所有する。所有者の無いものは `tokotachi_object_delete` で破棄する。Application は最後に破棄する(残っているウィンドウも一緒に破棄される) |
 | 値の型 | `tokotachi_point`・`tokotachi_rect`・`tokotachi_color` などの構造体を値で渡す。`tokotachi_theme_color` は役割(`is_role`)か具体的な色、`tokotachi_model_index` は行(負なら無効)と識別子 |
 | 文字列 | UTF-8。返された `char*` は `tokotachi_free` で、`char**`(NULL で終わる並び)は `tokotachi_strv_free` で解放する。渡す並びは配列と数 |
 | 読み取りだけの並び | `size_t f(self, out, capacity)`。全体の数を返し、`out` に `capacity` 個まで書く(`f(self, NULL, 0)` で数だけ得る) |

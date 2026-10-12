@@ -8,6 +8,7 @@
 #include "views/item_view.hpp"
 #include "views/list_model.hpp"
 #include "views/list_view.hpp"
+#include "views/table_view.hpp"
 #include "views/tree_model.hpp"
 #include "views/tree_view.hpp"
 

@@ -7,7 +7,9 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/core/clipboard.hpp>
 
-#include "../core/property_impl.hpp"
+#include "text_input_impl.hpp"
+#include "widget_access.hpp"
+#include "../core/impl.hpp"
 #include "../graphics/utf8.hpp"
 #include "theme.hpp"
 
@@ -19,87 +21,244 @@ namespace
 const int BLINK_MS = 530;
 }
 
-TextInputBase::TextInputBase(Widget* parent_widget, const std::string& initial_text, bool multi_line)
+TextInputBase::TextInputBase(Widget* parent_widget, const detail::InternalTag&, const std::string& initial_text, bool multi_line)
     : Widget(parent_widget),
-      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(TextInputBase, std::string, text),
-      TOKOTACHI_PROPERTY_MEMBER(TextInputBase, std::string, placeholder_text),
-      TOKOTACHI_PROPERTY_MEMBER(TextInputBase, Font, font),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(TextInputBase, std::size_t, cursor_position),
-      TOKOTACHI_READONLY_PROPERTY(TextInputBase, bool, has_selection),
-      TOKOTACHI_READONLY_PROPERTY(TextInputBase, std::string, selected_text),
-      TOKOTACHI_HANDLER_PROPERTY(TextInputBase, NotifyHandler, on_change),
-      multi_line_(multi_line),
-      text_(multi_line ? detail::normalize_multiline(initial_text) : detail::strip_control(initial_text)),
-      cursor_(text_.size()),
-      anchor_(text_.size()),
-      preedit_start_(-1),
-      preedit_length_(-1),
-      selecting_(false),
-      caret_on_(true),
-      goal_x_(-1),
-      layout_wrap_(0)
+      TOKOTACHI_IMPL_PROPERTY_MEMBER_SELF_NOTIFY(Impl, std::string, text),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, placeholder_text),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Font, font),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, std::size_t, cursor_position),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, has_selection),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, selected_text),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, can_undo),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, can_redo),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      d_(new Impl(this, multi_line))
 {
+    d_->install(this);
+    d_->text_ = multi_line ? detail::normalize_multiline(initial_text) : detail::strip_control(initial_text);
+    d_->cursor_ = d_->text_.size();
+    d_->anchor_ = d_->text_.size();
+    d_->preedit_start_ = -1;
+    d_->preedit_length_ = -1;
+    d_->selecting_ = false;
+    d_->caret_on_ = true;
+    d_->goal_x_ = -1;
+    d_->layout_wrap_ = 0;
+    d_->merge_open_ = false;
     focus_policy = FocusPolicy::TAB_AND_CLICK;
     cursor = MouseCursor::IBEAM;
     accepts_text_input = true;
-    blink_.interval = BLINK_MS;
-    blink_.on_timer = [this](Object*)
+    d_->blink_.interval = BLINK_MS;
+    d_->blink_.on_timeout = [this](Object*)
     {
-        caret_on_ = !caret_on_;
+        d_->caret_on_ = !d_->caret_on_;
         invalidate();
     };
 }
 
-std::string TextInputBase::sanitize(const std::string& s) const
+TextInputBase::~TextInputBase() { delete d_; }
+
+Point TextInputBase::Impl::scroll_offset() const { return scroll_; }
+
+bool TextInputBase::Impl::is_multi_line() const { return multi_line_; }
+
+std::string TextInputBase::Impl::sanitize(const std::string& s) const
 {
     return multi_line_ ? detail::normalize_multiline(s) : detail::strip_control(s);
 }
 
 // --- 状態の変化の通知(docs/adr/0016) ---
 
-TextInputBase::State TextInputBase::state() const
+TextInputBase::Impl::State TextInputBase::Impl::state() const
 {
     State s;
     s.text = text_;
     s.cursor = cursor_;
     s.anchor = anchor_;
+    s.can_undo = get_can_undo();
+    s.can_redo = get_can_redo();
     return s;
 }
 
-void TextInputBase::finish(const State& before)
+void TextInputBase::Impl::finish(const State& before, Edit edit)
 {
     const bool text_changed = before.text != text_;
+    if (text_changed && edit != Edit::NONE)
+    {
+        record(before, edit);
+    }
+    else if (!text_changed && before.cursor != cursor_)
+    {
+        merge_open_ = false;  // キャレットを動かしたら、続けて打った文字のまとまりを切る
+    }
     if (text_changed)
     {
-        notify_changed(text);
+        q->notify_changed(q->text);
+    }
+    if (before.can_undo != get_can_undo())
+    {
+        q->notify_changed(q->can_undo);
+    }
+    if (before.can_redo != get_can_redo())
+    {
+        q->notify_changed(q->can_redo);
     }
     if (before.cursor != cursor_)
     {
-        notify_changed(cursor_position);
+        q->notify_changed(q->cursor_position);
     }
     const bool had_selection = before.anchor != before.cursor;
     if (had_selection != get_has_selection())
     {
-        notify_changed(has_selection);
+        q->notify_changed(q->has_selection);
     }
     const std::size_t lo = std::min(before.cursor, before.anchor), hi = std::max(before.cursor, before.anchor);
     if (before.text.substr(lo, hi - lo) != get_selected_text())
     {
-        notify_changed(selected_text);
+        q->notify_changed(q->selected_text);
     }
     // ハンドラの中でこのウィジェットが破棄されてもよいよう、最後に呼ぶ。
     if (text_changed)
     {
-        Object* self = this;
+        Object* self = q;
         detail::fire(on_change_, self);
     }
 }
 
+// --- 元に戻す(docs/adr/0063) ---
+
+namespace
+{
+// 履歴の数の上限(超えたら古いものから捨てる)。
+const std::size_t UNDO_LIMIT = 1000;
+}  // namespace
+
+void TextInputBase::Impl::record(const State& before, Edit edit)
+{
+    // 前後のテキストの、共通の始めと終わりを除いた部分が変わった部分。
+    const std::string& a = before.text;
+    const std::string& b = text_;
+    std::size_t prefix = 0;
+    const std::size_t shorter = std::min(a.size(), b.size());
+    while (prefix < shorter && a[prefix] == b[prefix])
+    {
+        ++prefix;
+    }
+    std::size_t suffix = 0;
+    while (suffix < shorter - prefix && a[a.size() - 1 - suffix] == b[b.size() - 1 - suffix])
+    {
+        ++suffix;
+    }
+    UndoStep step;
+    step.kind = edit;
+    step.start = prefix;
+    step.removed = a.substr(prefix, a.size() - prefix - suffix);
+    step.inserted = b.substr(prefix, b.size() - prefix - suffix);
+    step.cursor_before = before.cursor;
+    step.anchor_before = before.anchor;
+    step.cursor_after = cursor_;
+    step.anchor_after = anchor_;
+    redo_.clear();
+
+    // 続けて打った文字・続けて消した文字は、最後の履歴に足す。
+    if (merge_open_ && !undo_.empty() && undo_.back().kind == edit)
+    {
+        UndoStep& last = undo_.back();
+        bool merged = false;
+        if (edit == Edit::TYPING && step.removed.empty() && step.start == last.start + last.inserted.size())
+        {
+            last.inserted += step.inserted;
+            merged = true;
+        }
+        else if (edit == Edit::DELETE_BACK && step.inserted.empty() && last.inserted.empty() &&
+                 step.start + step.removed.size() == last.start)
+        {
+            last.removed = step.removed + last.removed;
+            last.start = step.start;
+            merged = true;
+        }
+        else if (edit == Edit::DELETE_FORWARD && step.inserted.empty() && last.inserted.empty() &&
+                 step.start == last.start)
+        {
+            last.removed += step.removed;
+            merged = true;
+        }
+        if (merged)
+        {
+            last.cursor_after = step.cursor_after;
+            last.anchor_after = step.anchor_after;
+            return;
+        }
+    }
+    undo_.push_back(step);
+    if (undo_.size() > UNDO_LIMIT)
+    {
+        undo_.erase(undo_.begin());
+    }
+    merge_open_ = edit == Edit::TYPING || edit == Edit::DELETE_BACK || edit == Edit::DELETE_FORWARD;
+}
+
+void TextInputBase::Impl::apply_step(const UndoStep& step, bool undo)
+{
+    const std::string& from = undo ? step.inserted : step.removed;
+    const std::string& to = undo ? step.removed : step.inserted;
+    text_.replace(step.start, from.size(), to);
+    cursor_ = undo ? step.cursor_before : step.cursor_after;
+    anchor_ = undo ? step.anchor_before : step.anchor_after;
+    preedit_.clear();
+    goal_x_ = -1;
+    merge_open_ = false;
+    text_touched();
+}
+
+void TextInputBase::Impl::clear_history()
+{
+    undo_.clear();
+    redo_.clear();
+    merge_open_ = false;
+}
+
+void TextInputBase::undo()
+{
+    if (d_->undo_.empty() || !d_->preedit_.empty())
+    {
+        return;
+    }
+    const Impl::State before = d_->state();
+    const Impl::UndoStep step = d_->undo_.back();
+    d_->undo_.pop_back();
+    d_->apply_step(step, true);
+    d_->redo_.push_back(step);
+    d_->finish(before);
+}
+
+void TextInputBase::redo()
+{
+    if (d_->redo_.empty() || !d_->preedit_.empty())
+    {
+        return;
+    }
+    const Impl::State before = d_->state();
+    const Impl::UndoStep step = d_->redo_.back();
+    d_->redo_.pop_back();
+    d_->apply_step(step, false);
+    d_->undo_.push_back(step);
+    d_->finish(before);
+}
+
+void TextInputBase::clear_undo_history()
+{
+    const Impl::State before = d_->state();
+    d_->clear_history();
+    d_->finish(before);
+}
+
 // --- プロパティ ---
 
-void TextInputBase::set_text(const std::string& v)
+void TextInputBase::Impl::set_text(const std::string& v)
 {
     const State before = state();
+    clear_history();  // 代入したテキスト(読み込んだ文書など)より前へは戻せないようにする
     text_ = sanitize(v);
     cursor_ = anchor_ = text_.size();
     preedit_.clear();
@@ -108,14 +267,14 @@ void TextInputBase::set_text(const std::string& v)
     finish(before);
 }
 
-void TextInputBase::set_placeholder_text(const std::string& v)
+void TextInputBase::Impl::set_placeholder_text(const std::string& v)
 {
     placeholder_text_ = v;
     placeholder_layout_ = TextLayout();
-    invalidate();
+    q->invalidate();
 }
 
-void TextInputBase::set_font(const Font& v)
+void TextInputBase::Impl::set_font(const Font& v)
 {
     if (v == font_)
     {
@@ -124,12 +283,12 @@ void TextInputBase::set_font(const Font& v)
     font_ = v;
     invalidate_layout();
     placeholder_layout_ = TextLayout();
-    invalidate();
-    update_input_method();
-    request_layout();
+    q->invalidate();
+    detail::WidgetAccess::update_input_method(q);
+    q->request_layout();
 }
 
-void TextInputBase::set_cursor_position(const std::size_t& v)
+void TextInputBase::Impl::set_cursor_position(const std::size_t& v)
 {
     const State before = state();
     goal_x_ = -1;
@@ -137,7 +296,7 @@ void TextInputBase::set_cursor_position(const std::size_t& v)
     finish(before);
 }
 
-std::string TextInputBase::get_selected_text() const
+std::string TextInputBase::Impl::get_selected_text() const
 {
     const std::size_t lo = std::min(cursor_, anchor_), hi = std::max(cursor_, anchor_);
     return text_.substr(lo, hi - lo);
@@ -147,37 +306,37 @@ std::string TextInputBase::get_selected_text() const
 
 void TextInputBase::select_all()
 {
-    const State before = state();
-    anchor_ = 0;
-    move_cursor(text_.size(), true);
-    finish(before);
+    const Impl::State before = d_->state();
+    d_->anchor_ = 0;
+    d_->move_cursor(d_->text_.size(), true);
+    d_->finish(before);
 }
 
-void TextInputBase::deselect()
+void TextInputBase::clear_selection()
 {
-    const State before = state();
-    move_cursor(cursor_, false);
-    finish(before);
+    const Impl::State before = d_->state();
+    d_->move_cursor(d_->cursor_, false);
+    d_->finish(before);
 }
 
 void TextInputBase::cut()
 {
-    if (!get_has_selection())
+    if (!d_->get_has_selection())
     {
         return;
     }
-    const State before = state();
+    const Impl::State before = d_->state();
     copy();
-    erase_selection();
-    text_touched();
-    finish(before);
+    d_->erase_selection();
+    d_->text_touched();
+    d_->finish(before, Impl::Edit::OTHER);
 }
 
 void TextInputBase::copy() const
 {
-    if (get_has_selection())
+    if (d_->get_has_selection())
     {
-        clipboard::set_text(get_selected_text());
+        clipboard::set_text(d_->get_selected_text());
     }
 }
 
@@ -185,14 +344,14 @@ void TextInputBase::paste() { insert(clipboard::text()); }
 
 void TextInputBase::insert(const std::string& s)
 {
-    const State before = state();
-    insert_text(s);
-    finish(before);
+    const Impl::State before = d_->state();
+    d_->insert_text(s);
+    d_->finish(before, Impl::Edit::OTHER);
 }
 
 // --- 内部の処理(通知はしない。呼び出し側が finish で知らせる) ---
 
-void TextInputBase::insert_text(const std::string& s)
+void TextInputBase::Impl::insert_text(const std::string& s)
 {
     const std::string clean = sanitize(s);
     if (clean.empty() && !get_has_selection())
@@ -207,7 +366,7 @@ void TextInputBase::insert_text(const std::string& s)
     text_touched();
 }
 
-void TextInputBase::move_cursor(std::size_t pos, bool keep_anchor)
+void TextInputBase::Impl::move_cursor(std::size_t pos, bool keep_anchor)
 {
     cursor_ = pos;
     if (!keep_anchor)
@@ -217,7 +376,7 @@ void TextInputBase::move_cursor(std::size_t pos, bool keep_anchor)
     caret_touched();
 }
 
-void TextInputBase::move_vertically(int lines, bool keep_anchor)
+void TextInputBase::Impl::move_vertically(int lines, bool keep_anchor)
 {
     const TextLayout& l = text_layout();
     if (goal_x_ < 0)
@@ -244,7 +403,7 @@ void TextInputBase::move_vertically(int lines, bool keep_anchor)
     goal_x_ = keep;  // 上下に続けて動かす間は、最初の横の位置を保つ
 }
 
-void TextInputBase::erase_selection()
+void TextInputBase::Impl::erase_selection()
 {
     if (!get_has_selection())
     {
@@ -256,24 +415,24 @@ void TextInputBase::erase_selection()
     invalidate_layout();
 }
 
-void TextInputBase::text_touched()
+void TextInputBase::Impl::text_touched()
 {
     invalidate_layout();
     caret_touched();
 }
 
-void TextInputBase::caret_touched()
+void TextInputBase::Impl::caret_touched()
 {
     restart_blink();
     update_scroll(true);
-    invalidate();
-    update_input_method();
+    q->invalidate();
+    detail::WidgetAccess::update_input_method(q);
 }
 
-const TextLayout& TextInputBase::text_layout() const
+const TextLayout& TextInputBase::Impl::text_layout() const
 {
-    const float scale = display_scale;
-    const float wrap = wrap_width();
+    const float scale = q->display_scale;
+    const float wrap = input_->wrap_width();
     if (layout_.is_null() || layout_.scale() != scale || layout_wrap_ != wrap)
     {
         const std::string shown =
@@ -284,9 +443,9 @@ const TextLayout& TextInputBase::text_layout() const
     return layout_;
 }
 
-void TextInputBase::invalidate_layout() { layout_ = TextLayout(); }
+void TextInputBase::Impl::invalidate_layout() { layout_ = TextLayout(); }
 
-Point TextInputBase::caret_in_layout() const
+Point TextInputBase::Impl::caret_in_layout() const
 {
     const TextLayout& l = text_layout();
     if (preedit_.empty())
@@ -297,9 +456,9 @@ Point TextInputBase::caret_in_layout() const
     return l.caret_position(cursor_ + in);
 }
 
-Point TextInputBase::text_origin() const
+Point TextInputBase::Impl::text_origin() const
 {
-    const Rect area = text_area();
+    const Rect area = input_->text_area();
     const TextLayout& l = text_layout();
     if (multi_line_)
     {
@@ -311,9 +470,9 @@ Point TextInputBase::text_origin() const
     return Point(x, area.y + (area.height - l.height()) / 2);
 }
 
-void TextInputBase::update_scroll(bool follow_caret)
+void TextInputBase::Impl::update_scroll(bool follow_caret)
 {
-    const Rect area = text_area();
+    const Rect area = input_->text_area();
     if (area.width <= 0 || area.height <= 0)
     {
         return;
@@ -350,40 +509,40 @@ void TextInputBase::update_scroll(bool follow_caret)
     if (s != scroll_)
     {
         scroll_ = s;
-        invalidate();
-        update_input_method();
+        q->invalidate();
+        detail::WidgetAccess::update_input_method(q);
     }
-    scroll_changed();
+    input_->scroll_changed();
 }
 
-void TextInputBase::set_scroll_offset(const Point& p)
+void TextInputBase::Impl::set_scroll_offset(const Point& p)
 {
     scroll_ = p;
     update_scroll(false);
-    invalidate();
+    q->invalidate();
 }
 
-std::size_t TextInputBase::offset_at(const Point& p) const { return text_layout().offset_at(p - text_origin()); }
+std::size_t TextInputBase::Impl::offset_at(const Point& p) const { return text_layout().offset_at(p - text_origin()); }
 
-void TextInputBase::restart_blink()
+void TextInputBase::Impl::restart_blink()
 {
     caret_on_ = true;
     blink_.enabled = false;
-    if (focused)
+    if (q->focused)
     {
         blink_.enabled = true;
     }
 }
 
-void TextInputBase::stop_blink() { blink_.enabled = false; }
+void TextInputBase::Impl::stop_blink() { blink_.enabled = false; }
 
 // --- 描画 ---
 
-void TextInputBase::paint_text(Canvas& canvas)
+void TextInputBase::Impl::paint_text(Canvas& canvas)
 {
-    const bool enabled_now = effectively_enabled, has_focus = focused;
+    const bool enabled_now = q->effectively_enabled, has_focus = q->focused;
     const TextLayout& l = text_layout();
-    const Rect area = text_area();
+    const Rect area = input_->text_area();
     const Point o = text_origin();
     const Color fg = enabled_now ? theme::text() : theme::text_disabled();
 
@@ -394,7 +553,7 @@ void TextInputBase::paint_text(Canvas& canvas)
     {
         if (placeholder_layout_.is_null() || placeholder_layout_.scale() != l.scale())
         {
-            placeholder_layout_ = TextLayout(placeholder_text_, font_, l.scale(), wrap_width());
+            placeholder_layout_ = TextLayout(placeholder_text_, font_, l.scale(), input_->wrap_width());
         }
         canvas.draw_text(placeholder_layout_, multi_line_ ? Point(area.x, area.y) : Point(area.x, o.y),
                          theme::placeholder());
@@ -462,8 +621,8 @@ void TextInputBase::paint_text(Canvas& canvas)
 void TextInputBase::resized()
 {
     invalidate();
-    update_scroll(true);
-    update_input_method();
+    d_->update_scroll(true);
+    detail::WidgetAccess::update_input_method(this);
     Widget::resized();
 }
 
@@ -475,11 +634,11 @@ void TextInputBase::mouse_down(MouseEvent& e)
         return;
     }
     e.accepted = true;
-    if (!preedit_.empty())
+    if (!d_->preedit_.empty())
     {
         return;  // 変換中はキャレットを動かさない
     }
-    goal_x_ = -1;
+    d_->goal_x_ = -1;
     if (e.clicks >= 3)
     {
         select_all();  // トリプルクリックで全体
@@ -488,28 +647,28 @@ void TextInputBase::mouse_down(MouseEvent& e)
     if (e.clicks == 2)
     {
         // ダブルクリックで単語を選ぶ。
-        const State before = state();
+        const Impl::State before = d_->state();
         std::size_t start = 0, end = 0;
-        text_layout().word_at(offset_at(e.pos), start, end);
-        anchor_ = start;
-        move_cursor(end, true);
-        finish(before);
+        d_->text_layout().word_at(d_->offset_at(e.pos), start, end);
+        d_->anchor_ = start;
+        d_->move_cursor(end, true);
+        d_->finish(before);
         return;
     }
-    const State before = state();
-    move_cursor(offset_at(e.pos), e.has_modifier(MODIFIER_SHIFT));
-    selecting_ = true;
-    finish(before);
+    const Impl::State before = d_->state();
+    d_->move_cursor(d_->offset_at(e.pos), e.has_modifier(MODIFIER_SHIFT));
+    d_->selecting_ = true;
+    d_->finish(before);
 }
 
 void TextInputBase::mouse_move(MouseEvent& e)
 {
     Widget::mouse_move(e);
-    if (selecting_)
+    if (d_->selecting_)
     {
-        const State before = state();
-        move_cursor(offset_at(e.pos), true);
-        finish(before);
+        const Impl::State before = d_->state();
+        d_->move_cursor(d_->offset_at(e.pos), true);
+        d_->finish(before);
     }
 }
 
@@ -519,7 +678,7 @@ void TextInputBase::mouse_up(MouseEvent& e)
     if (e.button == MouseButton::LEFT)
     {
         e.accepted = true;
-        selecting_ = false;
+        d_->selecting_ = false;
     }
 }
 
@@ -527,12 +686,26 @@ void TextInputBase::key_down(KeyEvent& e)
 {
     Widget::key_down(e);
     // 変換中のキーは IME のもの(docs/adr/0009)。
-    if (!preedit_.empty())
+    if (!d_->preedit_.empty())
     {
         e.accepted = true;
         return;
     }
     const bool shift = e.has_modifier(MODIFIER_SHIFT), ctrl = e.has_modifier(MODIFIER_CONTROL);
+    if (ctrl && (e.key == Key::Z || e.key == Key::Y))
+    {
+        // Ctrl+Z で元に戻し、Ctrl+Y・Ctrl+Shift+Z でやり直す。
+        e.accepted = true;
+        if (e.key == Key::Z && !shift)
+        {
+            undo();
+        }
+        else
+        {
+            redo();
+        }
+        return;
+    }
     if (ctrl && (e.key == Key::A || e.key == Key::C || e.key == Key::X || e.key == Key::V))
     {
         // それぞれの操作が自分で知らせる。
@@ -555,82 +728,86 @@ void TextInputBase::key_down(KeyEvent& e)
         }
         return;
     }
-    if (e.key == Key::RETURN && !multi_line_)
+    if (e.key == Key::RETURN && !d_->multi_line_)
     {
         // ハンドラの中で破棄されてもよいよう、submit の後は自分に触らない(e は呼び出し側のもの)。
-        e.accepted = submit();
+        e.accepted = d_->input_->submit();
         return;
     }
 
-    const TextLayout& l = text_layout();
-    const std::size_t lo = std::min(cursor_, anchor_), hi = std::max(cursor_, anchor_);
-    const bool selected = get_has_selection();
-    const State before = state();
+    const TextLayout& l = d_->text_layout();
+    const std::size_t lo = std::min(d_->cursor_, d_->anchor_), hi = std::max(d_->cursor_, d_->anchor_);
+    const bool selected = d_->get_has_selection();
+    const Impl::State before = d_->state();
     bool handled = true;
     bool vertical = false;  // 上下の移動(キャレットの横の位置を保つ)
+    Impl::Edit edit = Impl::Edit::NONE;  // 元に戻す履歴での編集の種類
     switch (e.key)
     {
     case Key::LEFT:
-        move_cursor(ctrl ? l.previous_word_offset(cursor_) : (selected && !shift ? lo : l.previous_offset(cursor_)),
+        d_->move_cursor(ctrl ? l.previous_word_offset(d_->cursor_) : (selected && !shift ? lo : l.previous_offset(d_->cursor_)),
                     shift);
         break;
     case Key::RIGHT:
-        move_cursor(ctrl ? l.next_word_offset(cursor_) : (selected && !shift ? hi : l.next_offset(cursor_)), shift);
+        d_->move_cursor(ctrl ? l.next_word_offset(d_->cursor_) : (selected && !shift ? hi : l.next_offset(d_->cursor_)), shift);
         break;
     case Key::UP:
     case Key::DOWN:
     case Key::PAGE_UP:
     case Key::PAGE_DOWN:
-        if (!multi_line_)
+        if (!d_->multi_line_)
         {
             handled = false;
             break;
         }
         {
             // Page Up・Down は見えている行の数だけ動かす。
-            const int page = std::max(1, static_cast<int>(text_area().height / std::max(1.0f, l.line_height())) - 1);
+            const int page = std::max(1, static_cast<int>(d_->input_->text_area().height / std::max(1.0f, l.line_height())) - 1);
             const int lines = e.key == Key::UP ? -1 : e.key == Key::DOWN ? 1 : e.key == Key::PAGE_UP ? -page : page;
-            move_vertically(lines, shift);
+            d_->move_vertically(lines, shift);
             vertical = true;
         }
         break;
     case Key::HOME:
         // 複数行では行の始め(Ctrl で全体の始め)。
-        move_cursor(multi_line_ && !ctrl ? l.line_start(l.line_of(cursor_)) : 0, shift);
+        d_->move_cursor(d_->multi_line_ && !ctrl ? l.line_start(l.line_of(d_->cursor_)) : 0, shift);
         break;
     case Key::END:
-        move_cursor(multi_line_ && !ctrl ? l.line_end(l.line_of(cursor_)) : text_.size(), shift);
+        d_->move_cursor(d_->multi_line_ && !ctrl ? l.line_end(l.line_of(d_->cursor_)) : d_->text_.size(), shift);
         break;
     case Key::RETURN:
-        insert_text("\n");  // 複数行では改行を入れる
+        d_->insert_text("\n");  // 複数行では改行を入れる
+        edit = Impl::Edit::OTHER;
         break;
     case Key::BACKSPACE:
+        edit = selected || ctrl ? Impl::Edit::OTHER : Impl::Edit::DELETE_BACK;
         if (selected)
         {
-            erase_selection();
-            text_touched();
+            d_->erase_selection();
+            d_->text_touched();
         }
-        else if (cursor_ > 0)
+        else if (d_->cursor_ > 0)
         {
             // Ctrl なら単語の始めまで消す。
-            const std::size_t prev = ctrl ? l.previous_word_offset(cursor_) : l.previous_offset(cursor_);
-            text_.erase(prev, cursor_ - prev);
-            cursor_ = anchor_ = prev;
-            text_touched();
+            const std::size_t prev = ctrl ? l.previous_word_offset(d_->cursor_) : l.previous_offset(d_->cursor_);
+            d_->text_.erase(prev, d_->cursor_ - prev);
+            d_->cursor_ = d_->anchor_ = prev;
+            d_->text_touched();
         }
         break;
     case Key::DEL:
+        edit = selected || ctrl ? Impl::Edit::OTHER : Impl::Edit::DELETE_FORWARD;
         if (selected)
         {
-            erase_selection();
-            text_touched();
+            d_->erase_selection();
+            d_->text_touched();
         }
-        else if (cursor_ < text_.size())
+        else if (d_->cursor_ < d_->text_.size())
         {
-            const std::size_t next = ctrl ? l.next_word_offset(cursor_) : l.next_offset(cursor_);
-            text_.erase(cursor_, next - cursor_);
-            anchor_ = cursor_;
-            text_touched();
+            const std::size_t next = ctrl ? l.next_word_offset(d_->cursor_) : l.next_offset(d_->cursor_);
+            d_->text_.erase(d_->cursor_, next - d_->cursor_);
+            d_->anchor_ = d_->cursor_;
+            d_->text_touched();
         }
         break;
     default:
@@ -641,66 +818,67 @@ void TextInputBase::key_down(KeyEvent& e)
     {
         if (!vertical)
         {
-            goal_x_ = -1;
+            d_->goal_x_ = -1;
         }
         e.accepted = true;
-        finish(before);
+        d_->finish(before, edit);
     }
 }
 
 void TextInputBase::text_input(TextInputEvent& e)
 {
-    const State before = state();
-    if (!preedit_.empty())
+    const Impl::State before = d_->state();
+    if (!d_->preedit_.empty())
     {
-        preedit_.clear();
-        invalidate_layout();
+        d_->preedit_.clear();
+        d_->invalidate_layout();
     }
-    insert_text(e.text);
-    finish(before);
+    d_->insert_text(e.text);
+    d_->finish(before, Impl::Edit::TYPING);
 }
 
 void TextInputBase::text_editing(TextEditingEvent& e)
 {
-    const State before = state();
+    const Impl::State before = d_->state();
     if (e.text.empty())
     {
-        if (!preedit_.empty())
+        if (!d_->preedit_.empty())
         {
-            preedit_.clear();
-            invalidate_layout();
+            d_->preedit_.clear();
+            d_->invalidate_layout();
             invalidate();
-            update_input_method();
+            detail::WidgetAccess::update_input_method(this);
         }
         return;
     }
     // 変換を始めるときに選択していた部分は、変換中の文字列で置き換える。
-    if (preedit_.empty() && get_has_selection())
+    if (d_->preedit_.empty() && d_->get_has_selection())
     {
-        erase_selection();
+        d_->erase_selection();
     }
-    preedit_ = e.text;
-    preedit_start_ = e.start;
-    preedit_length_ = e.length;
-    text_touched();
-    finish(before);
+    d_->preedit_ = e.text;
+    d_->preedit_start_ = e.start;
+    d_->preedit_length_ = e.length;
+    d_->text_touched();
+    // 選択を変換中の文字列で置き換えたなら、確定した文字と同じまとまりで戻す。
+    d_->finish(before, Impl::Edit::TYPING);
 }
 
 void TextInputBase::focus_in()
 {
-    restart_blink();
+    d_->restart_blink();
     invalidate();
     Widget::focus_in();
 }
 
 void TextInputBase::focus_out()
 {
-    stop_blink();
-    selecting_ = false;
-    if (!preedit_.empty())
+    d_->stop_blink();
+    d_->selecting_ = false;
+    if (!d_->preedit_.empty())
     {
-        preedit_.clear();
-        invalidate_layout();
+        d_->preedit_.clear();
+        d_->invalidate_layout();
     }
     invalidate();
     Widget::focus_out();
@@ -708,11 +886,11 @@ void TextInputBase::focus_out()
 
 void TextInputBase::scale_changed()
 {
-    invalidate_layout();
-    placeholder_layout_ = TextLayout();
+    d_->invalidate_layout();
+    d_->placeholder_layout_ = TextLayout();
 }
 
-Rect TextInputBase::input_method_rect() const
+Rect TextInputBase::Impl::input_method_rect() const
 {
     const TextLayout& l = text_layout();
     const Point c = caret_in_layout() + text_origin();

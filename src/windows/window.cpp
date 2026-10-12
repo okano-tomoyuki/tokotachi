@@ -7,22 +7,31 @@
 #include <tokotachi/core/application.hpp>
 #include <tokotachi/layout/box_layout.hpp>
 #include <tokotachi/graphics/canvas.hpp>
+#include <tokotachi/graphics/text_layout.hpp>
 #include <tokotachi/widgets/label.hpp>
 #include <tokotachi/windows/menu_bar.hpp>
 #include <tokotachi/windows/status_bar.hpp>
 #include <tokotachi/windows/tool_bar.hpp>
 #include <tokotachi/windows/popup.hpp>
 
+#include "../core/object_impl.hpp"
 #include "../layout/layout_access.hpp"
 #include "../actions/menu_access.hpp"
 #include "../actions/action_access.hpp"
 #include "../core/application_impl.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "../widgets/widget_access.hpp"
 #include "window_impl.hpp"
 
 namespace tokotachi
 {
+
+/// DragData の内部の値を書く(ウィンドウだけが使う)。
+struct DragAccess
+{
+    static void set_source(DragData& d, Widget* w) { d.source_ = w; }
+    static void set_outside(DragData& d, bool v) { d.outside_ = v; }
+};
 
 namespace detail
 {
@@ -143,9 +152,37 @@ bool takes_click_focus(const Widget* w)
     return p == FocusPolicy::CLICK || p == FocusPolicy::TAB_AND_CLICK;
 }
 
+// w が root か、その子孫か。
+bool within(const Widget* w, const Widget* root)
+{
+    for (; w; w = WidgetAccess::parent_of(w))
+    {
+        if (w == root)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// 表示されている部品を木の前順に並べる。
+void collect_displayed(Widget* w, std::vector<Widget*>& out)
+{
+    if (!WidgetAccess::displayed(w))
+    {
+        return;
+    }
+    out.push_back(w);
+    const std::vector<Widget*>& children = WidgetAccess::children(w);
+    for (std::size_t i = 0; i < children.size(); ++i)
+    {
+        collect_displayed(children[i], out);
+    }
+}
+
 void collect_focusable(Widget* w, std::vector<Widget*>& out)
 {
-    if (!WidgetAccess::visible_flag(w))
+    if (!WidgetAccess::displayed(w))
     {
         return;
     }
@@ -166,9 +203,15 @@ WindowImpl::WindowImpl(Window* q_)
     : q(q_), window(nullptr), modal_parent(nullptr), renderer(nullptr), texture(nullptr), pixel_width(0), pixel_height(0), scale(1),
       density(1), shown(false), popup(false), popup_parent(nullptr), tooltip_timer(nullptr), tooltip(nullptr), layout_pending(true),
       hover(nullptr), grab(nullptr), focus(nullptr), text_input_active(false),
-      ime_dirty(false)
+      ime_dirty(false),
+      cues(false)
 {
     dirty.x0 = dirty.y0 = dirty.x1 = dirty.y1 = 0;
+    drag.active = false;
+    drag.outside = false;
+    drag.source = nullptr;
+    drag.target = nullptr;
+    drag.action = DropAction::NONE;
     static const SDL_SystemCursor ids[7] = {SDL_SYSTEM_CURSOR_DEFAULT,   SDL_SYSTEM_CURSOR_TEXT,
                                             SDL_SYSTEM_CURSOR_POINTER,   SDL_SYSTEM_CURSOR_WAIT,
                                             SDL_SYSTEM_CURSOR_CROSSHAIR, SDL_SYSTEM_CURSOR_EW_RESIZE,
@@ -183,7 +226,7 @@ WindowImpl::~WindowImpl()
 {
     if (Application* app = Application::instance())
     {
-        std::vector<WindowImpl*>& modals = app->impl()->modal_dialogs;
+        std::vector<WindowImpl*>& modals = detail::impl_of(app)->modal_dialogs;
         modals.erase(std::remove(modals.begin(), modals.end(), this), modals.end());
         for (std::size_t i = 0; i < modals.size(); ++i)
         {
@@ -276,7 +319,7 @@ void WindowImpl::ensure_target()
 
 void WindowImpl::paint_tree(Widget* w)
 {
-    if (!WidgetAccess::visible_flag(w))
+    if (!WidgetAccess::displayed(w))
     {
         return;
     }
@@ -289,7 +332,7 @@ void WindowImpl::paint_tree(Widget* w)
     canvas.clip_rect(w->local_rect);
     if (!canvas.clip_bounds().is_empty())
     {
-        WidgetAccess::paint(w, canvas);
+        WidgetAccess::paint(w, canvas.api());
         const std::vector<Widget*>& children = WidgetAccess::children(w);
         for (std::size_t i = 0; i < children.size(); ++i)
         {
@@ -303,7 +346,7 @@ void WindowImpl::layout_tree(Widget* w)
 {
     // 隠れている子は、表示されたときに配置する(印は残る)。ウィンドウ自身は表示の前でも配置する
     // (表示したときに配置が済んでいるように・save_png や apply_layout で結果を読めるように)。
-    if (w != q && !WidgetAccess::visible_flag(w))
+    if (w != q && !WidgetAccess::displayed(w))
     {
         return;
     }
@@ -321,19 +364,31 @@ void WindowImpl::layout_tree(Widget* w)
 
 void WindowImpl::run_layout()
 {
-    // 配置の結果を受けたハンドラが、さらに配置を依頼することがあるので、落ち着くまで(上限あり)繰り返す。
-    for (int i = 0; layout_pending && i < 8; ++i)
+    for (int round = 0; round < 2; ++round)
     {
-        layout_pending = false;
-        layout_tree(q);
-    }
-    // レイアウトを持つウィンドウは、その最小の大きさより小さくできないようにする。
-    const Size m = WidgetAccess::layout_of(q) ? q->minimum_hint.get() : Size();
-    if (m != minimum_size)
-    {
+        // 配置の結果を受けたハンドラが、さらに配置を依頼することがあるので、落ち着くまで(上限あり)繰り返す。
+        for (int i = 0; layout_pending && i < 8; ++i)
+        {
+            layout_pending = false;
+            layout_tree(q);
+        }
+        // レイアウトを持つウィンドウは、その最小の大きさより小さくできないようにする。
+        const Size m = WidgetAccess::layout_of(q) ? q->minimum_hint.get() : Size();
+        if (m == minimum_size || !window)
+        {
+            return;
+        }
         minimum_size = m;
         SDL_SetWindowMinimumSize(window, static_cast<int>(std::ceil(m.width * scale / density)),
                                  static_cast<int>(std::ceil(m.height * scale / density)));
+        // OS がその場で大きくしたら、知らせ(イベント)を待たずに大きさを合わせて配置し直す
+        // (イベントを処理しない capture・デザイナーのキャンバスでも、広がった部分まで描くため)
+        const Size before = WidgetAccess::bounds(q).size();
+        sync_size();
+        if (WidgetAccess::bounds(q).size() == before)
+        {
+            return;
+        }
     }
 }
 
@@ -356,6 +411,7 @@ void WindowImpl::render(bool present)
     canvas.set_scale(scale);
     canvas.begin(clip);
     paint_tree(q);
+    paint_drag_ghost();
     canvas.end();
 
     const SDL_Rect r = {clip.x0, clip.y0, clip.x1 - clip.x0, clip.y1 - clip.y0};
@@ -386,6 +442,13 @@ void WindowImpl::set_shown(bool show)
     WidgetAccess::notify_visible(q);
     if (show)
     {
+        // 所有者のウィンドウの上に出す(docs/adr/0062)。所有者が隠れていれば親子にしない(隠れた親の子は出ない環境がある)。
+        Window* owner = ImplAccess<Window>::of(q)->owner_window_;
+        WindowImpl* owner_impl = owner ? window_impl_of(owner) : nullptr;
+        if (owner_impl && owner_impl->window && owner_impl->shown)
+        {
+            SDL_SetWindowParent(window, owner_impl->window);
+        }
         SDL_ShowWindow(window);
         invalidate_all();
         // 表示の前にフォーカスを移したウィジェットは、表示されていなかったので文字入力を有効にしていない。ここで判断し直す。
@@ -393,6 +456,18 @@ void WindowImpl::set_shown(bool show)
     }
     else
     {
+        // 所有するウィンドウも隠す(docs/adr/0062)。隠すと一覧が変わることはないが、念のため写してから回す。
+        if (Application* app = Application::instance())
+        {
+            const std::vector<WindowImpl*> ws = impl_of(app)->windows;
+            for (std::size_t i = 0; i < ws.size(); ++i)
+            {
+                if (ws[i] != this && ws[i]->shown && ImplAccess<Window>::of(ws[i]->q)->owner_window_ == q)
+                {
+                    ws[i]->q->visible = false;
+                }
+            }
+        }
         widget_hidden(q);
         if (popup && is_wayland())
         {
@@ -513,7 +588,7 @@ void WindowImpl::schedule_tooltip()
         tooltip_timer = new Timer();
         tooltip_timer->interval = 600;
         tooltip_timer->repeat = false;
-        tooltip_timer->on_timer = [this](Object*)
+        tooltip_timer->on_timeout = [this](Object*)
         {
             if (!hover || hover->tooltip.get().empty() || !shown)
             {
@@ -524,7 +599,7 @@ void WindowImpl::schedule_tooltip()
                 tooltip = new Popup(q, PopupKind::TOOLTIP);
                 tooltip->background = ColorRole::TOOLTIP;
                 Label* text = new Label(tooltip);
-                text->color = ColorRole::ON_TOOLTIP;
+                text->text_color = ColorRole::ON_TOOLTIP;
                 text->font = Font(12);
                 BoxLayout* box = new BoxLayout(tooltip);
                 box->margins = Margins(6, 4, 6, 4);
@@ -699,6 +774,85 @@ void WindowImpl::focus_next(bool forward)
     set_focus(list[index]);
 }
 
+bool WindowImpl::focus_after(Widget* w)
+{
+    // 表示されている部品をタブの順(木の前順)に並べ、w の子孫の後ろから、フォーカスを受ける部品を探す
+    std::vector<Widget*> all;
+    collect_displayed(q, all);
+    std::vector<Widget*>::iterator it = std::find(all.begin(), all.end(), w);
+    if (it == all.end())
+    {
+        return false;
+    }
+    for (++it; it != all.end(); ++it)
+    {
+        if (!within(w, *it) && !within(*it, w) && takes_tab_focus(*it))
+        {
+            set_focus(*it);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WindowImpl::focus_first_in(Widget* w)
+{
+    std::vector<Widget*> list;
+    collect_focusable(w, list);
+    if (list.empty())
+    {
+        return false;
+    }
+    set_focus(list[0]);
+    return true;
+}
+
+bool WindowImpl::activate_mnemonic(Key key)
+{
+    if (key == Key::UNKNOWN)
+    {
+        return false;
+    }
+    std::vector<Widget*> all, hits;
+    collect_displayed(q, all);
+    for (std::size_t i = 0; i < all.size(); ++i)
+    {
+        if (all[i]->effectively_enabled && WidgetAccess::mnemonic_key(all[i]) == key)
+        {
+            hits.push_back(all[i]);
+        }
+    }
+    if (hits.empty())
+    {
+        return false;
+    }
+    // 同じキーの部品が複数あれば、フォーカスのある部品(またはその祖先)の次の部品へ
+    Widget* target = hits[0];
+    if (focus && hits.size() > 1)
+    {
+        const std::vector<Widget*>::iterator at = std::find(all.begin(), all.end(), focus);
+        for (std::size_t i = 0; i < hits.size(); ++i)
+        {
+            if (std::find(all.begin(), at, hits[i]) == at && !within(focus, hits[i]))
+            {
+                target = hits[i];
+                break;
+            }
+        }
+    }
+    WidgetAccess::mnemonic_activated(target);
+    return true;
+}
+
+void WindowImpl::set_cues(bool on)
+{
+    if (on != cues)
+    {
+        cues = on;
+        q->invalidate();
+    }
+}
+
 void WindowImpl::update_text_input()
 {
     const bool want = focus && focus->accepts_text_input && focus->showing && focus->effectively_enabled;
@@ -738,6 +892,15 @@ void WindowImpl::update_input_method_area()
 
 void WindowImpl::widget_destroyed(Widget* w)
 {
+    if (drag.source == w)
+    {
+        drag.source = nullptr;
+        DragAccess::set_source(drag.data, nullptr);
+    }
+    if (drag.target == w)
+    {
+        drag.target = nullptr;
+    }
     if (hover == w)
     {
         hover = nullptr;
@@ -772,6 +935,7 @@ void WindowImpl::widget_hidden(Widget* w)
 void WindowImpl::mouse_down(const Point& p, MouseButton button, int clicks)
 {
     hide_tooltip();
+    set_cues(false);
     Widget* target = widget_at(p);
     if (!target->effectively_enabled)
     {
@@ -803,6 +967,12 @@ void WindowImpl::mouse_down(const Point& p, MouseButton button, int clicks)
 
 void WindowImpl::mouse_up(const Point& p, MouseButton button, int clicks)
 {
+    // ドラッグの途中なら落とす(その後、始めたウィジェットにも離したことを送る)
+    if (drag.active && !drag.outside)
+    {
+        drag_update(p, to_modifiers(SDL_GetModState()));
+        drag_end(true, to_modifiers(SDL_GetModState()));
+    }
     if (Widget* w = grab)
     {
         grab = nullptr;
@@ -817,6 +987,11 @@ void WindowImpl::mouse_move(const Point& p)
 {
     pointer = p;
     const Modifiers mods = to_modifiers(SDL_GetModState());
+    if (drag.active && !drag.outside)
+    {
+        drag_update(p, mods);
+        return;
+    }
     if (grab)
     {
         MouseEvent ev(grab->map_from_window(p), MouseButton::NONE, mods, 0);
@@ -837,6 +1012,24 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
     hide_tooltip();
     const Modifiers mods = to_modifiers(e.mod);
     const Key k = to_key(e.key);
+    // ドラッグの途中: Esc でやめる。Ctrl で操作(移す・写す)が変わるので、受け取る側に聞き直す
+    if (drag.active && !drag.outside)
+    {
+        if (e.down && k == Key::ESCAPE)
+        {
+            drag_end(false, mods);
+        }
+        else if (k == Key::CONTROL)
+        {
+            drag_update(drag.pos, mods);
+        }
+        return;
+    }
+    // Alt を押している間は、部品のニーモニックの下線を出す(docs/adr/0049)
+    if (k == Key::ALT)
+    {
+        set_cues(e.down);
+    }
     // メニューバーのキーボードの操作(Alt・F10・Alt+ニーモニック)を先に(docs/adr/0027)。
     if (MenuBar* bar = q->menu_bar)
     {
@@ -846,7 +1039,19 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
             return;
         }
     }
-    if (e.down && k == Key::TAB && !(mods & (MODIFIER_CONTROL | MODIFIER_ALT)))
+    // 部品のニーモニック(Alt+文字)。メニューバーのものが優先
+    if (e.down && k != Key::ALT && (mods & MODIFIER_ALT) && !(mods & (MODIFIER_CONTROL | MODIFIER_SHIFT | MODIFIER_META)) &&
+        activate_mnemonic(k))
+    {
+        return;
+    }
+    const bool tab = e.down && k == Key::TAB && !(mods & (MODIFIER_CONTROL | MODIFIER_ALT));
+    bool tab_to_widget = false;  // フォーカスのある部品か祖先が Tab を自分で使う(docs/adr/0050)
+    for (Widget* w = focus; tab && w && !tab_to_widget; w = WidgetAccess::parent_of(w))
+    {
+        tab_to_widget = WidgetAccess::handles_tab_key(w);
+    }
+    if (tab && !tab_to_widget)
     {
         focus_next(!(mods & MODIFIER_SHIFT));
         return;
@@ -867,11 +1072,198 @@ void WindowImpl::key(const SDL_KeyboardEvent& e)
             return;
         }
     }
+    if (tab)
+    {
+        focus_next(!(mods & MODIFIER_SHIFT));  // 部品が受け取らなかった Tab
+        return;
+    }
     if (e.down)
     {
         const KeyEvent ev(k, mods, e.repeat, static_cast<std::uint32_t>(e.key));
         trigger_shortcut(ev);
     }
+}
+
+// ---- ドラッグ&ドロップ(docs/adr/0047) ----
+
+bool WindowImpl::start_drag(Widget* source, const DragData& data, const std::string& label)
+{
+    if (drag.active || !grab)
+    {
+        return false;
+    }
+    hide_tooltip();
+    drag.active = true;
+    drag.outside = false;
+    drag.data = data;
+    DragAccess::set_source(drag.data, source);
+    DragAccess::set_outside(drag.data, false);
+    drag.source = source;
+    drag.label = label;
+    drag.target = nullptr;
+    drag.action = DropAction::NONE;
+    drag.ghost = Rect();
+    drag_update(pointer, to_modifiers(SDL_GetModState()));
+    return true;
+}
+
+void WindowImpl::drag_update(const Point& p, Modifiers mods)
+{
+    drag.pos = p;
+    // ウィンドウの中は移す(Ctrl なら写す)、OS からは写すを提案する
+    const DropAction proposed =
+        drag.outside ? DropAction::COPY : (mods & MODIFIER_CONTROL) ? DropAction::COPY : DropAction::MOVE;
+    Widget* found = nullptr;
+    DropAction action = DropAction::NONE;
+    for (Widget* w = widget_at(p); w; w = WidgetAccess::parent_of(w))
+    {
+        if (!WidgetAccess::accepts_drops(w) || !w->effectively_enabled)
+        {
+            continue;
+        }
+        DragEvent ev(w->map_from_window(p), drag.data, mods, proposed);
+        WidgetAccess::drag_move(w, ev);
+        if (!drag.active)
+        {
+            return;  // ハンドラがドラッグを終わらせた
+        }
+        if (ev.accepted && ev.action != DropAction::NONE)
+        {
+            found = w;
+            action = ev.action;
+            break;
+        }
+    }
+    if (drag.target && drag.target != found)
+    {
+        Widget* old = drag.target;
+        drag.target = nullptr;
+        WidgetAccess::drag_leave(old);
+    }
+    drag.target = found;
+    drag.action = action;
+    // 像を描き直す
+    invalidate(drag.ghost);
+    drag.ghost = drag_ghost_rect();
+    invalidate(drag.ghost);
+}
+
+void WindowImpl::drag_end(bool do_drop, Modifiers mods)
+{
+    if (!drag.active)
+    {
+        return;
+    }
+    DropAction result = DropAction::NONE;
+    if (Widget* target = drag.target)
+    {
+        drag.target = nullptr;
+        if (do_drop)
+        {
+            DragEvent ev(target->map_from_window(drag.pos), drag.data, mods, drag.action);
+            WidgetAccess::drop(target, ev);
+            result = ev.accepted ? ev.action : DropAction::NONE;
+        }
+        else
+        {
+            WidgetAccess::drag_leave(target);
+        }
+    }
+    Widget* source = drag.source;
+    drag.active = false;
+    drag.source = nullptr;
+    drag.data = DragData();
+    invalidate(drag.ghost);
+    drag.ghost = Rect();
+    if (source)
+    {
+        WidgetAccess::drag_finished(source, result);
+    }
+}
+
+void WindowImpl::os_drop(const SDL_DropEvent& e)
+{
+    const Modifiers mods = to_modifiers(SDL_GetModState());
+    switch (e.type)
+    {
+    case SDL_EVENT_DROP_BEGIN:
+        if (drag.active)
+        {
+            return;  // ウィンドウの中のドラッグの途中
+        }
+        drag.active = true;
+        drag.outside = true;
+        drag.data = DragData();
+        DragAccess::set_outside(drag.data, true);
+        drag.source = nullptr;
+        drag.label.clear();
+        drag.target = nullptr;
+        drag.action = DropAction::NONE;
+        drag.ghost = Rect();
+        break;
+    case SDL_EVENT_DROP_POSITION:
+        if (drag.active && drag.outside)
+        {
+            drag_update(to_dp(e.x, e.y), mods);
+        }
+        break;
+    case SDL_EVENT_DROP_FILE:
+    case SDL_EVENT_DROP_TEXT:
+        if (drag.active && drag.outside && e.data)
+        {
+            if (e.type == SDL_EVENT_DROP_FILE)
+            {
+                drag.data.files.push_back(e.data);
+            }
+            else
+            {
+                drag.data.text += e.data;
+            }
+            drag.pos = to_dp(e.x, e.y);
+        }
+        break;
+    case SDL_EVENT_DROP_COMPLETE:
+        if (drag.active && drag.outside)
+        {
+            // 中身が無ければ、落とさずに離れた
+            const bool dropped = !drag.data.files.empty() || !drag.data.text.empty();
+            if (dropped)
+            {
+                // 中身が分かったので、受け取るかを聞き直してから落とす
+                drag_update(drag.pos, mods);
+            }
+            drag_end(dropped, mods);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+Rect WindowImpl::drag_ghost_rect() const
+{
+    if (!drag.active || drag.outside || drag.label.empty())
+    {
+        return Rect();
+    }
+    const TextLayout l(drag.label, Font(), scale);
+    return Rect(drag.pos.x + 12, drag.pos.y + 14, std::ceil(l.width()) + 16, std::ceil(l.height()) + 8);
+}
+
+void WindowImpl::paint_drag_ghost()
+{
+    const Rect r = drag_ghost_rect();
+    if (r.is_empty())
+    {
+        return;
+    }
+    // 受け取る先が無いときは薄く描く
+    const float alpha = drag.target ? 1.0f : 0.5f;
+    const Color bg = theme::selection();
+    canvas.fill_round_rect(r, 4, bg.with_alpha(static_cast<std::uint8_t>(220 * alpha)));
+    const TextLayout l(drag.label, Font(), scale);
+    const Color fg = theme::on_selection();
+    canvas.draw_text(l, Point(r.x + 8, r.y + 4), fg.with_alpha(static_cast<std::uint8_t>(255 * alpha)));
 }
 
 bool WindowImpl::trigger_shortcut(const KeyEvent& ev)
@@ -934,6 +1326,7 @@ void WindowImpl::handle(const SDL_Event& e)
         break;
     }
     case SDL_EVENT_WINDOW_FOCUS_LOST:
+        set_cues(false);
         if (MenuBar* bar = q->menu_bar)
         {
             MenuBarAccess::cancel(bar);
@@ -991,6 +1384,13 @@ void WindowImpl::handle(const SDL_Event& e)
             WidgetAccess::text_input(focus, ev);
         }
         break;
+    case SDL_EVENT_DROP_BEGIN:
+    case SDL_EVENT_DROP_POSITION:
+    case SDL_EVENT_DROP_FILE:
+    case SDL_EVENT_DROP_TEXT:
+    case SDL_EVENT_DROP_COMPLETE:
+        os_drop(e.drop);
+        break;
     case SDL_EVENT_TEXT_EDITING:
         if (focus && focus->accepts_text_input)
         {
@@ -1005,97 +1405,129 @@ void WindowImpl::handle(const SDL_Event& e)
 
 }  // namespace detail
 
-Window::Window(const std::string& title_text, float width_dp, float height_dp)
-    : TOKOTACHI_PROPERTY_GETTER(Window, std::string, title),
-      TOKOTACHI_PROPERTY_GETTER(Window, ThemeColor, background),
-      TOKOTACHI_READONLY_PROPERTY(Window, Widget*, focused_widget),
-      TOKOTACHI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
-      TOKOTACHI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
-      d_(nullptr),
-      background_(ColorRole::WINDOW),
-      menu_bar_(nullptr),
-      tool_bar_(nullptr),
-      status_bar_(nullptr)
+void Window::Impl::init_toplevel(Window* owner, const std::string& title_text, float width_dp, float height_dp)
 {
+    native_ = nullptr;
+    background_ = ColorRole::WINDOW;
+    menu_bar_ = nullptr;
+    tool_bar_ = nullptr;
+    status_bar_ = nullptr;
     Application* app = Application::instance();
     if (!app)
     {
         std::fprintf(stderr, "tokotachi::Window: create tokotachi::Application first\n");
         return;
     }
-    detail::WidgetAccess::set_is_window(this, true);
-    detail::WidgetAccess::set_visible_flag(this, false);
-    d_ = new detail::WindowImpl(this);
-    d_->window = SDL_CreateWindow(title_text.c_str(), static_cast<int>(width_dp), static_cast<int>(height_dp),
-                                  SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
-    if (!d_->window)
+    // 所有者のウィンドウが無ければ Application が所有する(docs/adr/0062)。
+    owner_window_ = owner;
+    detail::change_owner(q, owner ? static_cast<Object*>(owner) : static_cast<Object*>(app));
+    detail::WidgetAccess::set_is_window(q, true);
+    detail::WidgetAccess::set_visible_flag(q, false);
+    native_ = new detail::WindowImpl(q);
+    native_->window = SDL_CreateWindow(title_text.c_str(), static_cast<int>(width_dp), static_cast<int>(height_dp),
+                                       SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
+    if (!native_->window)
     {
         std::fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
         return;
     }
-    d_->renderer = SDL_CreateRenderer(d_->window, nullptr);
-    if (!d_->renderer)
+    native_->renderer = SDL_CreateRenderer(native_->window, nullptr);
+    if (!native_->renderer)
     {
         std::fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
     }
-    d_->update_scale();
-    d_->request_size(Size(width_dp, height_dp));
-    app->impl()->windows.push_back(d_);
+    native_->update_scale();
+    native_->request_size(Size(width_dp, height_dp));
+    detail::impl_of(app)->windows.push_back(native_);
+}
+
+Window::Window(const std::string& title_text, float width_dp, float height_dp)
+    : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, focused_widget),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MenuBar*, menu_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, destroy_on_close),
+      d_(new Impl(this))
+{
+    d_->install(this);
+    d_->init_toplevel(nullptr, title_text, width_dp, height_dp);
+}
+
+Window::Window(Window* owner, const std::string& title_text, float width_dp, float height_dp)
+    : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, focused_widget),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MenuBar*, menu_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, destroy_on_close),
+      d_(new Impl(this))
+{
+    d_->install(this);
+    d_->init_toplevel(owner, title_text, width_dp, height_dp);
 }
 
 Window::~Window()
 {
     // 子のデストラクタは window を通じてこのウィンドウに触るので、Window のうちに破棄する(タイマー・変数なども含む)。
+    // 所有するウィンドウ(docs/adr/0062)も、SDL のウィンドウの親子が残らないよう先に破棄する。
     delete_owned();
     if (Application* app = Application::instance())
     {
-        std::vector<detail::WindowImpl*>& ws = app->impl()->windows;
-        ws.erase(std::remove(ws.begin(), ws.end(), d_), ws.end());
+        detail::impl_of(app)->window_destroyed(this);
+        std::vector<detail::WindowImpl*>& ws = detail::impl_of(app)->windows;
+        ws.erase(std::remove(ws.begin(), ws.end(), d_->native_), ws.end());
     }
     detail::WidgetAccess::set_is_window(this, false);
+    delete d_->native_;
     delete d_;
 }
 
-std::string Window::get_title() const
+std::string Window::Impl::get_title() const
 {
-    const char* t = SDL_GetWindowTitle(d_->window);
+    const char* t = SDL_GetWindowTitle(native_->window);
     return t ? t : "";
 }
 
-void Window::set_title(const std::string& v) { SDL_SetWindowTitle(d_->window, v.c_str()); }
+void Window::Impl::set_title(const std::string& v) { SDL_SetWindowTitle(native_->window, v.c_str()); }
 
-void Window::set_background(const ThemeColor& v)
+void Window::Impl::set_background(const ThemeColor& v)
 {
     background_ = v;
-    invalidate();
+    q->invalidate();
 }
 
-Widget* Window::get_focused_widget() const { return d_->focus; }
+Widget* Window::Impl::get_focused_widget() const { return native_->focus; }
 
 Window::Window(Object* owner_object)
-    : TOKOTACHI_PROPERTY_GETTER(Window, std::string, title),
-      TOKOTACHI_PROPERTY_GETTER(Window, ThemeColor, background),
-      TOKOTACHI_READONLY_PROPERTY(Window, Widget*, focused_widget),
-      TOKOTACHI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
-      TOKOTACHI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
-      d_(nullptr),
-      background_(ColorRole::POPUP),
-      menu_bar_(nullptr),
-      tool_bar_(nullptr),
-      status_bar_(nullptr)
+    : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, focused_widget),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MenuBar*, menu_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, destroy_on_close),
+      d_(new Impl(this))
 {
+    d_->install(this);
+    d_->native_ = nullptr;
+    d_->background_ = ColorRole::POPUP;
+    d_->menu_bar_ = nullptr;
+    d_->tool_bar_ = nullptr;
+    d_->status_bar_ = nullptr;
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
-    change_owner(owner_object);
-    d_ = new detail::WindowImpl(this);
-    d_->popup = true;
+    detail::change_owner(this, owner_object);
+    d_->native_ = new detail::WindowImpl(this);
+    d_->native_->popup = true;
     if (Application* app = Application::instance())
     {
-        app->impl()->windows.push_back(d_);
+        detail::impl_of(app)->windows.push_back(d_->native_);
     }
 }
 
@@ -1104,16 +1536,21 @@ void Window::close()
     visible = false;
     if (Application* app = Application::instance())
     {
-        app->impl()->quit_if_no_window();
+        detail::impl_of(app)->quit_if_done();
+    }
+    if (d_->destroy_on_close_)
+    {
+        // ハンドラ(Dialog の on_finish など)を呼び終えてから破棄する。
+        delete_later();
     }
 }
 
 bool Window::save_png(const std::string& path)
 {
-    d_->invalidate_all();
-    d_->render(false);
-    SDL_Surface* s = SDL_CreateSurfaceFrom(d_->pixel_width, d_->pixel_height, SDL_PIXELFORMAT_ARGB8888,
-                                           &d_->buffer[0], d_->pixel_width * 4);
+    d_->native_->invalidate_all();
+    d_->native_->render(false);
+    SDL_Surface* s = SDL_CreateSurfaceFrom(d_->native_->pixel_width, d_->native_->pixel_height, SDL_PIXELFORMAT_ARGB8888,
+                                           &d_->native_->buffer[0], d_->native_->pixel_width * 4);
     const bool ok = s && SDL_SavePNG(s, path.c_str());
     if (!ok)
     {
@@ -1125,14 +1562,14 @@ bool Window::save_png(const std::string& path)
 
 Bitmap Window::capture()
 {
-    d_->invalidate_all();
-    d_->render(false);
-    Bitmap b(d_->pixel_width, d_->pixel_height, d_->scale);
+    d_->native_->invalidate_all();
+    d_->native_->render(false);
+    Bitmap b(d_->native_->pixel_width, d_->native_->pixel_height, d_->native_->scale);
     std::uint32_t* out = b.pixels();
     // ウィンドウの描画先は不透明(ARGB8888)。Bitmap はアルファ乗算済みなので、アルファを 255 にして写す
-    for (std::size_t i = 0; i < d_->buffer.size(); ++i)
+    for (std::size_t i = 0; i < d_->native_->buffer.size(); ++i)
     {
-        out[i] = d_->buffer[i] | 0xff000000u;
+        out[i] = d_->native_->buffer[i] | 0xff000000u;
     }
     return b;
 }
@@ -1165,29 +1602,29 @@ void replace_bar(Window* self, T*& slot, T* v)
 
 }  // namespace
 
-void Window::set_menu_bar(MenuBar* const& v) { replace_bar(this, menu_bar_, v); }
+void Window::Impl::set_menu_bar(MenuBar* const& v) { replace_bar(q, menu_bar_, v); }
 
-void Window::set_tool_bar(ToolBar* const& v) { replace_bar(this, tool_bar_, v); }
+void Window::Impl::set_tool_bar(ToolBar* const& v) { replace_bar(q, tool_bar_, v); }
 
-void Window::set_status_bar(StatusBar* const& v) { replace_bar(this, status_bar_, v); }
+void Window::Impl::set_status_bar(StatusBar* const& v) { replace_bar(q, status_bar_, v); }
 
-void Window::child_removed(Widget* child)
+void Window::Impl::child_removed(Widget* child)
 {
     bool removed = true;
     if (child == menu_bar_)
     {
         menu_bar_ = nullptr;
-        notify_changed(menu_bar);
+        q->notify_changed(q->menu_bar);
     }
     else if (child == tool_bar_)
     {
         tool_bar_ = nullptr;
-        notify_changed(tool_bar);
+        q->notify_changed(q->tool_bar);
     }
     else if (child == status_bar_)
     {
         status_bar_ = nullptr;
-        notify_changed(status_bar);
+        q->notify_changed(q->status_bar);
     }
     else
     {
@@ -1195,8 +1632,8 @@ void Window::child_removed(Widget* child)
     }
     if (removed)
     {
-        mark_layout_dirty();
-        request_layout();
+        detail::WidgetAccess::mark_layout_dirty(q);
+        q->request_layout();
     }
 }
 
@@ -1204,7 +1641,7 @@ void Window::arrange_children()
 {
     // 上端にメニューバー・ツールバー、下端にステータスバーを置き、レイアウトはその間に配置する。
     Rect area = local_rect;
-    Widget* const top[] = {menu_bar_, tool_bar_};
+    Widget* const top[] = {d_->menu_bar_, d_->tool_bar_};
     for (int i = 0; i < 2; ++i)
     {
         if (top[i])
@@ -1214,10 +1651,10 @@ void Window::arrange_children()
             area = area.adjusted(0, h, 0, 0);
         }
     }
-    if (status_bar_)
+    if (d_->status_bar_)
     {
-        const float h = status_bar_->preferred_size.get().height;
-        status_bar_->bounds = Rect(0, area.bottom() - h, area.width, h);
+        const float h = d_->status_bar_->preferred_size.get().height;
+        d_->status_bar_->bounds = Rect(0, area.bottom() - h, area.width, h);
         area = area.adjusted(0, 0, 0, h);
     }
     if (Layout* l = layout)
@@ -1229,13 +1666,13 @@ void Window::arrange_children()
 Size Window::compute_preferred_size() const
 {
     Size s = Widget::compute_preferred_size();
-    Widget* const bars[] = {menu_bar_, tool_bar_, status_bar_};
+    Widget* const bars[] = {d_->menu_bar_, d_->tool_bar_, d_->status_bar_};
     for (int i = 0; i < 3; ++i)
     {
         if (bars[i])
         {
             const Size b = bars[i]->preferred_size;
-            s = Size(std::max(s.width, bars[i] == menu_bar_ ? b.width : 0.0f), s.height + b.height);
+            s = Size(std::max(s.width, bars[i] == d_->menu_bar_ ? b.width : 0.0f), s.height + b.height);
         }
     }
     return s;
@@ -1244,7 +1681,7 @@ Size Window::compute_preferred_size() const
 Size Window::compute_minimum_size() const
 {
     Size s = Widget::compute_minimum_size();
-    Widget* const bars[] = {menu_bar_, tool_bar_, status_bar_};
+    Widget* const bars[] = {d_->menu_bar_, d_->tool_bar_, d_->status_bar_};
     for (int i = 0; i < 3; ++i)
     {
         if (bars[i])
@@ -1258,7 +1695,7 @@ Size Window::compute_minimum_size() const
 
 void Window::paint(Canvas& canvas)
 {
-    canvas.fill_rect(local_rect, background_.resolve());
+    canvas.fill_rect(local_rect, d_->background_.resolve());
     Widget::paint(canvas);
 }
 

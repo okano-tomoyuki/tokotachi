@@ -7,6 +7,7 @@ export type DiagnosticCode =
   // 読み込み・構造
   | 'json-syntax'
   | 'unsupported-version'
+  | 'migrated-format'
   | 'schema'
   // 名前
   | 'invalid-identifier'
@@ -20,6 +21,7 @@ export type DiagnosticCode =
   | 'not-designable-property'
   | 'geometry-not-allowed'
   | 'invalid-property-value'
+  | 'out-of-range'
   | 'unknown-event'
   // 参照・ハンドラ
   | 'unknown-reference'
@@ -37,8 +39,12 @@ export type DiagnosticCode =
   | 'invalid-menu-item'
   | 'invalid-tool-item'
   | 'invalid-dialog-button'
+  | 'invalid-component'
   // ファイル(core では調べず、拡張が調べて出す)
-  | 'missing-image';
+  | 'missing-image'
+  | 'large-image'
+  | 'missing-component'
+  | 'unknown-theme';
 
 export interface Diagnostic {
   readonly severity: Severity;

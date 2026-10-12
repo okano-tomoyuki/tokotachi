@@ -3,9 +3,11 @@ import {
   minimalTextEdit,
   parseDocument,
   serializeDocument,
+  withCustomClasses,
   type EditCommand,
 } from '@tokotachi-designer/core';
 import * as vscode from 'vscode';
+import { customClassesOf } from './customWidgets.ts';
 
 export type ApplyResult = { readonly ok: true } | { readonly ok: false; readonly error: string };
 
@@ -17,9 +19,18 @@ export async function applyEditCommand(
   document: vscode.TextDocument,
   command: EditCommand,
 ): Promise<ApplyResult> {
+  // 自作部品(docs/adr/0044)をカタログに足して、検証・書き出しをする
+  const classes = await customClassesOf(document.uri);
   const current = document.getText();
-  const parsed = parseDocument(current);
-  if (!parsed.document) {
+  const applied = withCustomClasses(classes, () => {
+    const parsed = parseDocument(current);
+    if (!parsed.document) {
+      return undefined;
+    }
+    const result = applyCommand(parsed.document, command);
+    return result.ok ? { ok: true as const, text: serializeDocument(result.document) } : result;
+  });
+  if (!applied) {
     return {
       ok: false,
       error: vscode.l10n.t(
@@ -27,12 +38,11 @@ export async function applyEditCommand(
       ),
     };
   }
-  const result = applyCommand(parsed.document, command);
-  if (!result.ok) {
-    return result;
+  if (!applied.ok) {
+    return applied;
   }
   const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
-  const next = serializeDocument(result.document).replace(/\n/g, eol);
+  const next = applied.text.replace(/\n/g, eol);
   const change = minimalTextEdit(current, next);
   if (!change) {
     return { ok: true };
@@ -43,8 +53,8 @@ export async function applyEditCommand(
     new vscode.Range(document.positionAt(change.start), document.positionAt(change.end)),
     change.text,
   );
-  const applied = await vscode.workspace.applyEdit(edit);
-  return applied
+  const done = await vscode.workspace.applyEdit(edit);
+  return done
     ? { ok: true }
     : { ok: false, error: vscode.l10n.t('Failed to apply the change to the file') };
 }

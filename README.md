@@ -1,3 +1,5 @@
+<img src="designer/packages/extension/images/icon.png" alt="Tokotachi" width="40" align="right">
+
 # Tokotachi
 
 SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ(開発中)。
@@ -19,16 +21,18 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [bindings/](bindings/) | C の API([docs/bindings/c-api.md](docs/bindings/c-api.md))と Python のバインディング([docs/bindings/python.md](docs/bindings/python.md)) |
 | [tests/](tests/) | テスト(SDL の offscreen のビデオドライバで、画面なしで動く) |
 | [spike/](spike/) | 技術検証のコード(ライブラリには引き継がない) |
+| [designer/](designer/README.md) | 画面を見ながらウィンドウを組み、C++ のクラスを生成する GUI デザイナー(VS Code の拡張 [Tokotachi Designer](designer/packages/extension/README.ja.md)) |
+| [tools/](tools/) | ライブラリのソースを作る道具(よく使うアイコンの線画を Lucide から作る `icons/generate.mjs`) |
 
 | グループ | 内容 |
 |---|---|
-| `core/` | Object・プロパティ・結びつけ・変数・イベント・Application・タイマー・スレッド(post・Task)・クリップボード・基本の値(Point・Rect・Color) |
+| `core/` | Object・プロパティ・結びつけ・変数・イベント・Application・タイマー・スレッド(post・Task)・クリップボード・基本の値(Point・Rect・Color・Date) |
 | `graphics/` | Canvas・Image・Bitmap・文字のレイアウト・テーマ |
 | `layout/` | BoxLayout・GridLayout・PlaceLayout・そろえ方 |
-| `widgets/` | Widget とボタン・入力欄・値の部品・スクロール・タブ・分割・PaintBox |
-| `windows/` | Window・ポップアップ・ダイアログ・メニューバー・ツールバー・ステータスバー |
+| `widgets/` | Widget とボタン・入力欄・値の部品・日付(DateEdit・Calendar)・色のボタン・スクロール・タブ・分割・PaintBox・ImageBox・GroupBox |
+| `windows/` | Window・ポップアップ・ダイアログ(メッセージ・ファイル・色)・メニューバー・ツールバー・ステータスバー |
 | `actions/` | Action・ショートカット・メニュー |
-| `views/` | 一覧と木のモデルとビュー |
+| `views/` | 一覧・木・表のモデルとビュー |
 
 ```cpp
 #include <tokotachi/tokotachi.hpp>
@@ -36,23 +40,24 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("hello", 400, 200);
+    tokotachi::Window* window_main = new tokotachi::Window("hello", 400, 200);
 
-    tokotachi::Button* button_close = new tokotachi::Button(&window, "クリック");  // 親(window)が所有する
+    tokotachi::Button* button_close = new tokotachi::Button(window_main, "クリック");  // 親(window_main)が所有する
     button_close->bounds = tokotachi::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
     button_close->on_click = [&](tokotachi::Object* sender)                   // イベントは単一のハンドラ
     {
-        window.close();
+        window_main->close();
     };
 
-    window.visible = true;
+    app.main_window = window_main;                                          // 閉じたら終える
+    window_main->visible = true;
     return app.exec();
 }
 ```
 
 API の規則(プロパティ・ハンドラ・命名・書式)は [ADR 0013](docs/adr/0013-api-style-properties-and-handlers.md) を参照。
 
-C と Python からも使える([ADR 0041](docs/adr/0041-c-api-and-python-bindings.md))。Python では同じ名前で書ける:
+C と Python からも使える([ADR 0065](docs/adr/0065-c-api-and-python-bindings.md))。Python では同じ名前で書ける:
 
 ```python
 import tokotachi as tt
@@ -79,6 +84,7 @@ app.exec()
 | plutovg | 1.3.3 | MIT | 2D のベクター描画 |
 | libunibreak | 8.0 | zlib | 改行・単語・書記素の境界(UAX #14・#29) |
 | SheenBidi | 3.0.0 | Apache-2.0 | 双方向テキスト(UAX #9) |
+| Lucide | 1.48.0 | ISC(一部 MIT) | よく使うアイコン(`Icon`。線画のデータだけを取り込む。[tools/icons](tools/icons/generate.mjs)) |
 
 OS の一部であるライブラリはシステムのものを使う。
 
@@ -114,12 +120,16 @@ CMake のオプション:
 | `TOKOTACHI_INSTALL` | 単独のとき ON | インストールの規則を作る |
 | `TOKOTACHI_DEPS_PREFIX` | `deps/install/<プラットフォーム>` | 依存ライブラリの場所(組み込まれたときはビルドのフォルダの中) |
 | `TOKOTACHI_BUILD_DEPS` | ON | 依存ライブラリが無ければ自動でビルドする |
-| `TOKOTACHI_BUILD_C_API` | 単独のとき ON | C の API(共有ライブラリ `tokotachi_c`。Python などのバインディングの土台。[docs/bindings/c-api.md](docs/bindings/c-api.md)) |
+| `TOKOTACHI_BUILD_C_API` | 単独のとき ON(Windows では OFF) | C の API(共有ライブラリ `tokotachi_c`。Python などのバインディングの土台。[docs/bindings/c-api.md](docs/bindings/c-api.md)) |
 | `TOKOTACHI_STATIC_RUNTIME` | ON | 静的ライブラリのとき、MinGW のランタイムも静的にリンクする(exe が OS の DLL だけに依存する) |
 
 ## 使う(インストール・組み込み)
 
-インストールする(`<prefix>` は `/usr/local` や任意のフォルダ):
+ビルドしたパッケージ(Linux の x86_64・aarch64、Windows の MSYS2 MINGW64。共有ライブラリと静的ライブラリ)を
+[GitHub の Release](https://github.com/okano-tomoyuki/tokotachi/releases) に置いている。展開したフォルダを `<prefix>` として、
+下の CMake・pkg-config の方法で使える。変更は [CHANGELOG.md](CHANGELOG.md)、出し方は [ADR 0061](docs/adr/0061-library-release.md)。
+
+ソースからビルドしてインストールする(`<prefix>` は `/usr/local` や任意のフォルダ):
 
 ```bash
 cmake --install build --prefix <prefix>
@@ -131,7 +141,7 @@ cmake --install build --prefix <prefix>
 CMake から使う:
 
 ```cmake
-find_package(tokotachi 0.1 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
+find_package(tokotachi 0.3 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
 
@@ -145,7 +155,7 @@ g++ -std=c++11 main.cpp $(pkg-config --cflags --libs tokotachi)
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(tokotachi GIT_REPOSITORY <リポジトリ> GIT_TAG <タグ>)
+FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.3.0)
 FetchContent_MakeAvailable(tokotachi)        # add_subdirectory(<ソースの場所>) でもよい
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```

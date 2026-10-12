@@ -6,6 +6,7 @@
 namespace tokotachi
 {
 
+/// 並べる向き。
 enum class Orientation
 {
     HORIZONTAL,

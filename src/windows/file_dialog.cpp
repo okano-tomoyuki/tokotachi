@@ -7,18 +7,42 @@
 #include <tokotachi/windows/window.hpp>
 
 #include "../core/application_impl.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "window_impl.hpp"
 
 namespace tokotachi
 {
 
-struct FileDialogAccess
+class FileDialog::Impl
 {
-    static void finished(FileDialog* d, const std::vector<std::string>& result, int filter, const std::string& failure)
-    {
-        d->finished(result, filter, failure);
-    }
+    TOKOTACHI_IMPL(FileDialog);
+
+    explicit Impl(FileDialog* object) : q(object) {}
+
+    std::vector<std::string> get_paths() const { return paths_; }
+    int get_selected_filter() const { return selected_filter_; }
+    std::string get_error() const { return error_; }
+    bool get_running() const { return request_ != 0; }
+    void set_mode(const FileDialogMode& v) { mode_ = v; }
+    void set_title(const std::string& v) { title_ = v; }
+    void set_filters(const std::vector<FileFilter>& v) { filters_ = v; }
+    void set_location(const std::string& v) { location_ = v; }
+    void set_multi_enabled(const bool& v) { multi_enabled_ = v; }
+    /// 結果が届いた(メインスレッド)。
+    void finished(const std::vector<std::string>& result, int filter, const std::string& failure);
+
+
+    Window* parent_;
+    FileDialogMode mode_;
+    std::string title_;
+    std::vector<FileFilter> filters_;
+    std::string location_;
+    bool multi_enabled_;
+    std::vector<std::string> paths_;
+    int selected_filter_;
+    std::string error_;
+    NotifyHandler on_finish_;
+    int request_;  ///< 開いている要求の番号(0 なら開いていない)
 };
 
 namespace
@@ -76,7 +100,7 @@ void SDLCALL dialog_callback(void* userdata, const char* const* filelist, int fi
             }
             FileDialog* d = it->second;
             live.erase(it);
-            FileDialogAccess::finished(d, result, filter, failure);
+            detail::impl_of(d)->finished(result, filter, failure);
         });
 }
 
@@ -84,46 +108,48 @@ void SDLCALL dialog_callback(void* userdata, const char* const* filelist, int fi
 
 FileDialog::FileDialog(Window* parent, FileDialogMode initial_mode)
     : Object(parent),
-      TOKOTACHI_PROPERTY_MEMBER(FileDialog, FileDialogMode, mode),
-      TOKOTACHI_PROPERTY_MEMBER(FileDialog, std::string, title),
-      TOKOTACHI_PROPERTY_MEMBER(FileDialog, std::vector<FileFilter>, filters),
-      TOKOTACHI_PROPERTY_MEMBER(FileDialog, std::string, location),
-      TOKOTACHI_PROPERTY_MEMBER(FileDialog, bool, allow_many),
-      TOKOTACHI_READONLY_PROPERTY(FileDialog, std::vector<std::string>, paths),
-      TOKOTACHI_READONLY_PROPERTY(FileDialog, std::string, error),
-      TOKOTACHI_READONLY_PROPERTY(FileDialog, int, selected_filter),
-      TOKOTACHI_READONLY_PROPERTY(FileDialog, bool, running),
-      TOKOTACHI_HANDLER_PROPERTY(FileDialog, NotifyHandler, on_finish),
-      parent_(parent),
-      mode_(initial_mode),
-      allow_many_(false),
-      selected_filter_(-1),
-      request_(0)
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, FileDialogMode, mode),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::vector<FileFilter>, filters),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, location),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, multi_enabled),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<std::string>, paths),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, error),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, int, selected_filter),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, running),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_finish),
+      d_(new Impl(this))
 {
+    d_->parent_ = parent;
+    d_->mode_ = initial_mode;
+    d_->multi_enabled_ = false;
+    d_->selected_filter_ = -1;
+    d_->request_ = 0;
 }
 
 FileDialog::~FileDialog()
 {
-    if (request_ != 0)
+    if (d_->request_ != 0)
     {
-        live_requests().erase(request_);  // 結果が届いても捨てる
+        live_requests().erase(d_->request_);  // 結果が届いても捨てる
     }
+    delete d_;
 }
 
 void FileDialog::open()
 {
-    if (request_ != 0)
+    if (d_->request_ != 0)
     {
         return;
     }
     Request* request = new Request();
     request->id = ++g_next_request;
-    for (std::size_t i = 0; i < filters_.size(); ++i)
+    for (std::size_t i = 0; i < d_->filters_.size(); ++i)
     {
-        request->names.push_back(filters_[i].name);
-        request->patterns.push_back(filters_[i].pattern);
+        request->names.push_back(d_->filters_[i].name);
+        request->patterns.push_back(d_->filters_[i].pattern);
     }
-    for (std::size_t i = 0; i < filters_.size(); ++i)
+    for (std::size_t i = 0; i < d_->filters_.size(); ++i)
     {
         SDL_DialogFileFilter f;
         f.name = request->names[i].c_str();
@@ -132,50 +158,50 @@ void FileDialog::open()
     }
     request->props = SDL_CreateProperties();
     const SDL_PropertiesID props = request->props;
-    if (!request->filters.empty() && mode_ != FileDialogMode::FOLDER)
+    if (!request->filters.empty() && d_->mode_ != FileDialogMode::FOLDER)
     {
         SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_FILTERS_POINTER, &request->filters[0]);
         SDL_SetNumberProperty(props, SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER, static_cast<Sint64>(request->filters.size()));
     }
-    if (parent_ && parent_->impl() && parent_->impl()->window)
+    if (d_->parent_ && detail::window_impl_of(d_->parent_) && detail::window_impl_of(d_->parent_)->window)
     {
-        SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_WINDOW_POINTER, parent_->impl()->window);
+        SDL_SetPointerProperty(props, SDL_PROP_FILE_DIALOG_WINDOW_POINTER, detail::window_impl_of(d_->parent_)->window);
     }
-    if (!location_.empty())
+    if (!d_->location_.empty())
     {
-        SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_LOCATION_STRING, location_.c_str());
+        SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_LOCATION_STRING, d_->location_.c_str());
     }
-    if (!title_.empty())
+    if (!d_->title_.empty())
     {
-        SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_TITLE_STRING, title_.c_str());
+        SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_TITLE_STRING, d_->title_.c_str());
     }
-    SDL_SetBooleanProperty(props, SDL_PROP_FILE_DIALOG_MANY_BOOLEAN, allow_many_ && mode_ != FileDialogMode::SAVE);
+    SDL_SetBooleanProperty(props, SDL_PROP_FILE_DIALOG_MANY_BOOLEAN, d_->multi_enabled_ && d_->mode_ != FileDialogMode::SAVE);
 
-    request_ = request->id;
-    live_requests()[request_] = this;
-    paths_.clear();
-    selected_filter_ = -1;
-    error_.clear();
+    d_->request_ = request->id;
+    live_requests()[d_->request_] = this;
+    d_->paths_.clear();
+    d_->selected_filter_ = -1;
+    d_->error_.clear();
     SDL_ClearError();
     notify_changed(running);
-    const SDL_FileDialogType type = mode_ == FileDialogMode::SAVE     ? SDL_FILEDIALOG_SAVEFILE
-                                    : mode_ == FileDialogMode::FOLDER ? SDL_FILEDIALOG_OPENFOLDER
+    const SDL_FileDialogType type = d_->mode_ == FileDialogMode::SAVE     ? SDL_FILEDIALOG_SAVEFILE
+                                    : d_->mode_ == FileDialogMode::FOLDER ? SDL_FILEDIALOG_OPENFOLDER
                                                                       : SDL_FILEDIALOG_OPENFILE;
     // コールバックは、この中で(失敗したときなど)呼ばれることもある。結果はメインスレッドへ送るので、後で届く。
     SDL_ShowFileDialogWithProperties(type, &dialog_callback, request, props);
 }
 
-void FileDialog::finished(const std::vector<std::string>& result, int filter, const std::string& failure)
+void FileDialog::Impl::finished(const std::vector<std::string>& result, int filter, const std::string& failure)
 {
     request_ = 0;
     paths_ = result;
     selected_filter_ = filter;
     error_ = failure;
-    notify_changed(paths);
-    notify_changed(error);
-    notify_changed(selected_filter);
-    notify_changed(running);
-    Object* self = this;
+    q->notify_changed(q->paths);
+    q->notify_changed(q->error);
+    q->notify_changed(q->selected_filter);
+    q->notify_changed(q->running);
+    Object* self = q;
     detail::fire(on_finish_, self);
 }
 

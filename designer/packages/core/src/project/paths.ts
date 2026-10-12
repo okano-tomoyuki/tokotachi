@@ -46,12 +46,22 @@ export function resolvePath(dir: string, relative: string): string {
   return normalizePath(`${dir}/${relative}`);
 }
 
+/** パスの部分が同じか。Windows のドライブ(`c:` と `C:`)は大文字・小文字を区別しない(VS Code の URI はどちらも使う) */
+function samePart(a: string, b: string, index: number): boolean {
+  return a === b || (index === 0 && /^[A-Za-z]:$/.test(a) && a.toLowerCase() === b.toLowerCase());
+}
+
 /** フォルダ(絶対パス)から target(絶対パス)への相対パス */
 export function relativePath(dir: string, target: string): string {
   const from = normalizePath(dir).split('/').filter(Boolean);
   const to = normalizePath(target).split('/').filter(Boolean);
   let common = 0;
-  while (common < from.length && common < to.length && from[common] === to[common]) common++;
+  while (
+    common < from.length &&
+    common < to.length &&
+    samePart(from[common] ?? '', to[common] ?? '', common)
+  )
+    common++;
   return [...from.slice(common).map(() => '..'), ...to.slice(common)].join('/');
 }
 

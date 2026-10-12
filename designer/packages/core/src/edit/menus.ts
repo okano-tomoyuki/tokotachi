@@ -115,6 +115,62 @@ export function moveSibling(doc: TtuiDocument, target: JsonPath, delta: number):
   items.splice(to, 0, moved);
 }
 
+/**
+ * 複数を、それぞれ同じ並びの中でまとめて前後に動かす(delta は -1 か 1)。端に着いたものは動かさず、その次のものも追い越さない。
+ * 動かした後の位置(targets と同じ順。部品の中身を指していれば、その中身の位置)を返す。
+ */
+export function moveSiblings(
+  doc: TtuiDocument,
+  targets: readonly JsonPath[],
+  delta: number,
+): JsonPath[] {
+  // 部品の中身(widget・page・menu)を指していれば、それを入れている項目を動かす
+  const items = targets.map((t) => {
+    const last = t[t.length - 1];
+    return last === 'widget' || last === 'page' || last === 'menu' ? t.slice(0, -1) : t;
+  });
+  const results = targets.map((t) => [...t]);
+  // 並びごとにまとめ、深いものから動かす(浅いものを動かしても、深いものの位置の書き換えで追える)
+  const lists = new Map<string, { list: JsonPath; indices: number[] }>();
+  for (const item of items) {
+    const index = item[item.length - 1];
+    const list = item.slice(0, -1);
+    if (typeof index !== 'number' || !Array.isArray(valueAt(doc, list))) {
+      throw new CommandError(l10n.t('This cannot be moved'));
+    }
+    const key = JSON.stringify(list);
+    const entry = lists.get(key) ?? { list, indices: [] };
+    if (!entry.indices.includes(index)) {
+      entry.indices.push(index);
+    }
+    lists.set(key, entry);
+  }
+  const ordered = [...lists.values()].sort((a, b) => b.list.length - a.list.length);
+  for (const { list, indices } of ordered) {
+    const array = valueAt(doc, list) as unknown[];
+    // 進む向きの先頭から動かす。端に着いたもの(と、それに続くもの)は動かさない
+    const sorted = [...indices].sort((a, b) => (delta < 0 ? a - b : b - a));
+    let edge = delta < 0 ? 0 : array.length - 1;
+    for (const from of sorted) {
+      if (from === edge) {
+        edge -= delta;
+        continue;
+      }
+      const to = from + delta;
+      const [moved] = array.splice(from, 1);
+      array.splice(to, 0, moved);
+      // 入れ替えた 2 つの位置を、その中を指す結果の位置で書き換える
+      for (const r of results) {
+        if (r.length > list.length && list.every((key, i) => r[i] === key)) {
+          const at = r[list.length];
+          r[list.length] = at === from ? to : at === to ? from : (at as number);
+        }
+      }
+    }
+  }
+  return results;
+}
+
 /** Action を消すときに、その Action を参照する項目・部品の actions も消す(参照が切れないように)。 */
 export function removeActionReferences(doc: TtuiDocument, name: string): void {
   const visit = (node: unknown, path: JsonPath): void => {

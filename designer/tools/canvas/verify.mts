@@ -13,6 +13,7 @@ import {
   parseDocument,
   type TtuiDocument,
 } from '@tokotachi-designer/core';
+import { useSampleCustomClasses } from '../samples.mts';
 import { decodePng, encodePng } from './png.mts';
 
 const designer = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -20,6 +21,12 @@ const native = join(designer, '.cache', 'verify-cpp');
 const work = join(designer, '.cache', 'canvas-verify');
 
 const SAMPLES = ['main_window', 'settings_dialog'];
+
+/** 見本が置いている部品ファイルを読む(パスは samples/ からの相対パス)。 */
+function readComponent(path: string): { document: TtuiDocument } | undefined {
+  const parsed = parseDocument(readFileSync(join(designer, 'samples', path), 'utf8'));
+  return parsed.document ? { document: parsed.document } : undefined;
+}
 
 /** 見本が参照する画像を読む。 */
 function sampleImages(doc: TtuiDocument): Map<string, Uint8Array> {
@@ -33,6 +40,8 @@ function sampleImages(doc: TtuiDocument): Map<string, Uint8Array> {
 
 async function main(): Promise<void> {
   mkdirSync(work, { recursive: true });
+  // 自作部品(docs/adr/0044)は基底(ProgressBar)として描く。見本の自作部品は描画を変えないので、ネイティブと同じになる
+  useSampleCustomClasses();
   let t = performance.now();
   const canvas = await Canvas.load();
   console.log(`読み込み: ${(performance.now() - t).toFixed(0)} ms`);
@@ -46,12 +55,12 @@ async function main(): Promise<void> {
     }
     const images = sampleImages(parsed.document);
     t = performance.now();
-    const first = canvas.render(parsed.document, { images });
+    const first = canvas.render(parsed.document, { images, components: readComponent });
     const firstMs = performance.now() - t;
     t = performance.now();
     const N = 20;
     for (let i = 0; i < N; i++) {
-      canvas.render(parsed.document, { images });
+      canvas.render(parsed.document, { images, components: readComponent });
     }
     const eachMs = (performance.now() - t) / N;
     writeFileSync(join(work, `${name}.png`), encodePng(first));

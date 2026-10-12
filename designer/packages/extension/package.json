@@ -2,9 +2,18 @@
   "name": "tokotachi-designer",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "publisher": "okano-tomoyuki",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1E2A5A",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/okano-tomoyuki/tokotachi/tree/master/designer/packages/extension#readme",
+  "bugs": {
+    "url": "https://github.com/okano-tomoyuki/tokotachi/issues"
+  },
   "license": "MIT",
   "preview": true,
   "repository": {
@@ -22,7 +31,11 @@
     "tokotachi",
     "gui",
     "designer",
-    "c++"
+    "c++",
+    "cpp",
+    "ui",
+    "form designer",
+    "wysiwyg"
   ],
   "main": "./dist/extension.cjs",
   "activationEvents": [
@@ -39,6 +52,16 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "tokotachiDesigner.projectEditor",
+        "displayName": "%customEditor.project.displayName%",
+        "selector": [
+          {
+            "filenamePattern": "*.ttproj.json"
+          }
+        ],
+        "priority": "default"
       }
     ],
     "commands": [
@@ -47,6 +70,11 @@
         "title": "%command.newWindow.title%",
         "category": "Tokotachi Designer",
         "icon": "$(add)"
+      },
+      {
+        "command": "tokotachiDesigner.newComponent",
+        "title": "%command.newComponent.title%",
+        "category": "Tokotachi Designer"
       },
       {
         "command": "tokotachiDesigner.generateCode",
@@ -77,6 +105,12 @@
         "title": "%command.setMainWindow.title%",
         "category": "Tokotachi Designer",
         "icon": "$(star-full)"
+      },
+      {
+        "command": "tokotachiDesigner.chooseColorScheme",
+        "title": "%command.chooseColorScheme.title%",
+        "category": "Tokotachi Designer",
+        "icon": "$(color-mode)"
       },
       {
         "command": "tokotachiDesigner.addToProject",
@@ -116,6 +150,11 @@
           "group": "navigation@9"
         },
         {
+          "command": "tokotachiDesigner.newComponent",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@9"
+        },
+        {
           "command": "tokotachiDesigner.generateCode",
           "when": "resourceFilename =~ /\\.ttui\\.json$/",
           "group": "navigation@9"
@@ -129,6 +168,9 @@
       "file/newFile": [
         {
           "command": "tokotachiDesigner.newWindow"
+        },
+        {
+          "command": "tokotachiDesigner.newComponent"
         }
       ],
       "view/title": [
@@ -150,12 +192,29 @@
       ],
       "view/item/context": [
         {
-          "command": "tokotachiDesigner.generateProject",
+          "command": "tokotachiDesigner.newWindow",
           "when": "view == tokotachiDesigner.projects && viewItem == project",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "command": "tokotachiDesigner.generateProject",
+          "when": "view == tokotachiDesigner.projects && viewItem == project",
+          "group": "inline@2"
+        },
+        {
+          "command": "tokotachiDesigner.newWindow",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
+        },
+        {
+          "command": "tokotachiDesigner.newComponent",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
+        },
+        {
+          "command": "tokotachiDesigner.generateProject",
+          "when": "view == tokotachiDesigner.projects && viewItem == project"
+        },
+        {
+          "command": "tokotachiDesigner.chooseColorScheme",
           "when": "view == tokotachiDesigner.projects && viewItem == project"
         },
         {

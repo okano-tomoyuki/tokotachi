@@ -97,6 +97,13 @@
                     "name": "button_search",
                     "class": "Button",
                     "properties": {
+                      "theme_override": {
+                        "colors": {
+                          "ACCENT": { "light": "#059669", "dark": "#34D399" },
+                          "ON_ACCENT": "#FFFFFF"
+                        },
+                        "radius": 0
+                      },
                       "text": "検索"
                     },
                     "events": { "on_click": "search" }
@@ -140,9 +147,14 @@
                         "class": "ListView",
                         "properties": {
                           "sorting_enabled": true,
-                          "selection_mode": "MULTI"
+                          "selection_mode": "MULTI",
+                          "drag_enabled": true,
+                          "drop_enabled": true
                         },
-                        "events": { "on_activate": "list_view_files_activate" },
+                        "events": {
+                          "on_drop": "list_view_files_drop",
+                          "on_activate": "list_view_files_activate"
+                        },
                         "columns": [
                           {
                             "properties": {
@@ -191,7 +203,8 @@
                                 "name": "label_name",
                                 "class": "Label",
                                 "properties": {
-                                  "text": "名前"
+                                  "text": "名前(&N)",
+                                  "buddy": "line_edit_name"
                                 }
                               }
                             },
@@ -213,8 +226,9 @@
                                 "name": "label_size",
                                 "class": "Label",
                                 "properties": {
-                                  "text": "大きさ",
-                                  "color": "TEXT_SECONDARY"
+                                  "text": "大きさ(&S)",
+                                  "text_color": "TEXT_SECONDARY",
+                                  "buddy": "spin_box_size"
                                 }
                               }
                             },
@@ -309,7 +323,8 @@
       "name": "action_quit",
       "properties": {
         "text": "終了(&X)",
-        "shortcut": "Ctrl+Q"
+        "shortcut": "Ctrl+Q",
+        "icon": "icon:log_out"
       },
       "events": { "on_trigger": "action_quit_trigger" }
     }
@@ -321,7 +336,7 @@
       "properties": {
         "interval": 5000
       },
-      "events": { "on_timer": "refresh" }
+      "events": { "on_timeout": "refresh" }
     }
   ],
   "variables": [

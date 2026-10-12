@@ -1,4 +1,4 @@
-"""C API の仕様(docs/adr/0041)。generate.py がここから、C のヘッダ・C++ の実装・Python の ctypes の宣言を作る。
+"""C API の仕様(docs/adr/0065)。generate.py がここから、C のヘッダ・C++ の実装・Python の ctypes の宣言を作る。
 
 型の名前(generate.py の TYPES):
   void・bool・int・float・double・size_t・string(UTF-8)・strings(文字列の並び)・floats・Point・Size・Rect・Color・Margins・
@@ -139,7 +139,7 @@ CORE = [
     F('tokotachi_object_set_user_data', 'void',
       [('obj:Object', 'object'), ('raw:void*', 'data'), ('raw:tokotachi_destroy_fn', 'destroy')],
       doc='Object に利用者のデータを 1 つ付ける。Object が破棄されるとき・付け替えたときに destroy(data) を呼ぶ\n'
-          '(破棄の途中で呼ぶので、destroy の中で Object に触ってはいけない)'),
+          '(破棄の始め、所有しているものより先に呼ぶ。destroy の中で Object に触ってはいけない)'),
     F('tokotachi_object_get_user_data', 'raw:void*', [('obj:Object', 'object')]),
     F('tokotachi_bind', 'bool',
       [('obj:Object', 'target'), ('raw:const char*', 'target_property'), ('obj:Object', 'source'),
@@ -215,7 +215,7 @@ CORE = [
     F('tokotachi_path_add_polyline', 'void',
       [('raw:tokotachi_path*', 'path'), ('raw:const tokotachi_point*', 'points'), ('size_t', 'count'),
        ('bool', 'close')]),
-    F('tokotachi_path_empty', 'bool', [('raw:const tokotachi_path*', 'path')]),
+    F('tokotachi_path_is_empty', 'bool', [('raw:const tokotachi_path*', 'path')]),
     # ---- TextLayout ----
     F('tokotachi_text_layout_new', 'raw:tokotachi_text_layout*',
       [('string', 'text'), ('Font', 'font'), ('float', 'scale'), ('float', 'wrap_width'), ('Align', 'alignment')]),
@@ -305,6 +305,9 @@ CLASSES = [
         P('dark_theme', 'Theme'),
         P('dark', 'bool', ro=True),
         P('theme', 'Theme', ro=True),
+        P('language', 'string'),
+        P('main_window', 'obj:Window', bindable=False, doc='閉じたら(隠れたら・破棄されたら)アプリケーションを終えるウィンドウ'),
+        P('auto_quit_enabled', 'bool'),
         H('on_theme_change', 'notify'),
         M('exec', 'int', doc='イベントループを回し、quit で抜ける。戻り値は quit に渡した値'),
         M('quit', 'void', [('int', 'code', '0')]),
@@ -315,7 +318,7 @@ CLASSES = [
         P('interval', 'int'),
         P('repeat', 'bool'),
         P('enabled', 'bool'),
-        H('on_timer', 'notify'),
+        H('on_timeout', 'notify'),
     ], new=[('obj:Object', 'owner', 'None')]),
     Cls('Widget', 'tokotachi::Widget', 'Object', 'widgets/widget.hpp', [
         P('parent', 'obj:Widget', bindable=False),
@@ -381,12 +384,12 @@ CLASSES = [
         H('on_change', 'notify'),
         M('open_popup', 'void'),
         M('close_popup', 'void'),
-        M('is_popup_open', 'bool'),
+        P('popup_open', 'bool', ro=True),
     ], new=PARENT),
     Cls('Label', 'tokotachi::Label', 'Widget', 'widgets/label.hpp', [
         P('text', 'string'),
         P('font', 'Font'),
-        P('color', 'ThemeColor'),
+        P('text_color', 'ThemeColor'),
         P('alignment', 'Align'),
         P('word_wrap', 'bool'),
     ], new=PARENT_TEXT),
@@ -399,7 +402,7 @@ CLASSES = [
         P('selected_text', 'string', ro=True),
         H('on_change', 'notify'),
         M('select_all', 'void'),
-        M('deselect', 'void'),
+        M('clear_selection', 'void'),
         M('cut', 'void'),
         M('copy', 'void'),
         M('paste', 'void'),
@@ -488,12 +491,17 @@ CLASSES = [
         P('menu_bar', 'obj:MenuBar', bindable=False),
         P('tool_bar', 'obj:ToolBar', bindable=False),
         P('status_bar', 'obj:StatusBar', bindable=False),
+        P('destroy_on_close', 'bool', doc='true なら、閉じた後に破棄する'),
         H('on_close', 'close'),
         M('close', 'void'),
+        F('tokotachi_window_new_owned', 'obj:Window',
+          [('obj:Window', 'owner'), ('string', 'title'), ('float', 'width'), ('float', 'height')],
+          doc='owner が所有し、その上に出すウィンドウ(docs/adr/0062)'),
         M('save_png', 'bool', [('string', 'path')]),
         M('capture', 'Bitmap', doc='全体を描いて Bitmap にする(tokotachi_bitmap_free で解放する)'),
     ], new=[('string', 'title', "''"), ('float', 'width', '640'), ('float', 'height', '480')],
-        doc='Application を作った後に作る。所有者を持たない(利用者が破棄する)'),
+        doc='Application を作った後に作る。Application が所有する(docs/adr/0062)', py_mixin='_WindowMixin',
+        py_init=False),
     Cls('Dialog', 'tokotachi::Dialog', 'Window', 'windows/dialog.hpp', [
         P('result', 'DialogButton', ro=True),
         H('on_finish', 'notify'),
@@ -518,7 +526,7 @@ CLASSES = [
         P('title', 'string'),
         P('filters', 'file_filters', doc='名前と拡張子(";" でつなぐ)を交互に並べたもの(["画像", "png;jpg"])', bindable=False),
         P('location', 'string'),
-        P('allow_many', 'bool'),
+        P('multi_enabled', 'bool'),
         P('paths', 'strings', ro=True),
         P('error', 'string', ro=True),
         P('selected_filter', 'int', ro=True),
@@ -602,7 +610,7 @@ CLASSES = [
         M('add_submenu', 'obj:Menu', [('string', 'title')]),
         M('popup', 'void', [('obj:Widget', 'anchor_widget'), ('Point', 'at')]),
         M('close', 'void'),
-        M('is_open', 'bool'),
+        P('opened', 'bool', ro=True),
     ], new=[('obj:Object', 'owner', 'None'), ('string', 'title', "''")]),
     # ---- views ----
     Cls('ItemModel', 'tokotachi::ItemModel', 'Object', 'views/item_model.hpp', [

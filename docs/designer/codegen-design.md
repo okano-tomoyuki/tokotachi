@@ -44,7 +44,7 @@
 ```
 
 `id` で区間を見分け、`hash` は区間の中身のハッシュ(手で変えたことに気づくため。§6 M2)。
-ハンドラの雛形は `// <tokotachi-designer:handler-stubs>` の行の後に足す。
+ハンドラの雛形は `// <tokotachi-designer:handler-stubs>` の行の後に並べる。生成し直して足りない雛形を足すときは、新しく作ったときと同じ位置(生成する順で後ろに来る既存の雛形の前。無ければ雛形の並びの終わり)に、同じ空行で足す。
 
 ## 3. 生成例
 
@@ -67,7 +67,7 @@
 class MainWindow : public tokotachi::Window
 {
 public:
-    MainWindow();
+    explicit MainWindow(tokotachi::Window* owner = nullptr);
 
     // <tokotachi-designer:begin id="declarations">
     tokotachi::Widget* row_search;
@@ -110,8 +110,8 @@ private:
 // <tokotachi-designer:begin id="tokotachi_namespace_begin">
 // <tokotachi-designer:end id="tokotachi_namespace_begin" hash="...">
 
-MainWindow::MainWindow()
-    : tokotachi::Window(std::string())
+MainWindow::MainWindow(tokotachi::Window* owner)
+    : tokotachi::Window(owner, std::string())
 {
     tokotachi_setup_ui();
 }
@@ -131,7 +131,7 @@ void MainWindow::tokotachi_setup_ui()
 
     autosave_timer = new tokotachi::Timer(this);
     autosave_timer->interval = 60000;
-    autosave_timer->on_timer = [this](tokotachi::Object* sender) { autosave(sender); };
+    autosave_timer->on_timeout = [this](tokotachi::Object* sender) { autosave(sender); };
 
     title = "メモ";
     width = 640;
@@ -197,8 +197,10 @@ void MainWindow::button_search_click(tokotachi::Object* sender)
 // <tokotachi-designer:end id="tokotachi_namespace_end" hash="...">
 ```
 
-`Dialog` のときは、コンストラクタが親のウィンドウを受け取る(`explicit SettingsDialog(tokotachi::Window* parent);`、
-`: tokotachi::Dialog(parent, std::string())`)。
+`Window` のときは、コンストラクタが所有者のウィンドウを任意で受け取る(既定 nullptr。渡さなければ Application が所有し、渡せば
+そのウィンドウの上に出て一緒に破棄される。docs/adr/0062)。`Dialog` のときは、コンストラクタが親のウィンドウを受け取る
+(`explicit SettingsDialog(tokotachi::Window* parent);`、`: tokotachi::Dialog(parent, std::string())`)。
+コンストラクタは区間の外にあるので、この形は新しく生成するファイルにだけ効く(既に生成したファイルは利用者が直す)。
 
 利用側(プロジェクトの起動部分。§8):
 
@@ -209,8 +211,9 @@ void MainWindow::button_search_click(tokotachi::Object* sender)
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    MainWindow window;
-    window.visible = true;
+    MainWindow* window_main = new MainWindow();   // Application が所有する(docs/adr/0062)
+    app.main_window = window_main;
+    window_main->visible = true;
     return app.exec();
 }
 ```
@@ -236,6 +239,27 @@ int main(int argc, char** argv)
 
 この順で生成したウィンドウの配置が、キャンバス(同じ定義ファイルを WebAssembly の Tokotachi で組んだもの)と同じになることを、生成したコードの実行で確かめる(§7)。
 
+### 4.1 部品ファイル([ADR 0043](../adr/0043-designer-component-files.md))
+
+- 部品ファイル(根が `Widget`)は `class LabeledEdit : public tokotachi::Widget` にし、コンストラクタは
+  `explicit LabeledEdit(tokotachi::Widget* parent)`(`: tokotachi::Widget(parent)`)。根の `width`・`height` は書かない。
+- 部品ファイルを置いた部品は `panel_user = new LabeledEdit(this);` とし、メンバの型は `LabeledEdit*`。
+  ヘッダで部品ファイルのヘッダを include する(ヘッダのフォルダからの相対パス。部品ファイルの出力先は、部品ファイルが属するプロジェクトの設定で決まる)。
+- 部品ファイルの中身(子の部品・ハンドラ)は部品ファイルのクラスのコンストラクタが組むので、置いた側の順は部品の 1 と同じ位置で、
+  その後に置いた側のプロパティを設定する。
+- キャンバスでは、部品ファイルのクラスが WebAssembly の Tokotachi に無いので、置いた部品を Widget として作り、部品ファイルの操作の並びを
+  変数の名前に `置いた部品の名前.` を付けて続ける(ハンドラはつながない。画像のパスは置いた側のフォルダからにする)。
+  順は生成したコードと同じなので、描いた画面は同じになる(見本の settings_dialog が置く parts/labeled_edit で確かめている)。
+
+### 4.2 自作部品([ADR 0044](../adr/0044-designer-custom-widgets.md))
+
+- 自作部品は名前空間を付けた名前で作る(`level_bar_zoom = new samples::LevelBar(area_free);`。メンバの型も `samples::LevelBar*`)。
+  プロパティ・ハンドラはライブラリの部品と同じ書き方(ヘッダから読んだ型で値を書く)。
+- ヘッダから自作部品のヘッダを include する(ヘッダのフォルダからの相対パス。登録したヘッダはプロジェクトのフォルダからのパスなので、
+  `CppOptions.projectDir` でたどる)。プロジェクトに属さないウィンドウで使えばエラーにする。
+- 見本(`designer/samples` はプロジェクト `samples.ttproj.json`)の settings_dialog が `widgets/level_bar.hpp` の LevelBar を置き、
+  `pnpm codegen:verify-cpp`・`codegen:verify-project` でビルド・実行し、`canvas:verify` でキャンバス(基底の ProgressBar で描く)と画素まで同じことを確かめる。
+
 ## 5. 書き出しの決まり
 
 | # | 論点 | 案 |
@@ -247,14 +271,14 @@ int main(int argc, char** argv)
 | N5 | 既定値 | 定義ファイルに書いたプロパティだけを書き出す |
 | N6 | レイアウトの `add` の引数 | 既定値と同じ後ろの引数は省く(`add(w)`、`add(w, 1)`)。途中の引数を書くときは、その前の引数も書く |
 | N7 | 予約の名前 | 生成したコードが使うメンバ関数・区間には接頭辞 `tokotachi_` を付ける(`tokotachi_setup_ui`)。ノードの `name`・ハンドラの名前に `tokotachi_` で始まる名前は使えない |
-| N8 | 画像 | 定義ファイルが参照する画像のファイル(dsl-spec.md §5.1)の中身を、区間 `tokotachi_setup_ui` の先頭の無名の名前空間に `const unsigned char tokotachi_image_<パス>[]` として書き(同じファイルは 1 つ。1 行に 16 バイト)、`tokotachi::Image::load_from_data(配列, sizeof(配列))` で読む。区間の中なので、既存のファイルの形は変わらない。読めない画像があれば、何も書かずにエラーにする。実装は [cpp/images.ts](../../designer/packages/codegen/src/cpp/images.ts) |
+| N8 | 画像 | 定義ファイルが参照する画像のファイル(dsl-spec.md §5.1)の中身を、別のソース `<定義ファイルの名前>_images.cpp`(ソースと同じフォルダ。ファイル全体を区間 `tokotachi_images` にして、生成し直すと上書きする)に、ウィンドウと同じ名前空間の中の `tokotachi_images_<クラス名>` の名前空間の `const unsigned char tokotachi_image_<パス>[]` と大きさ `tokotachi_image_<パス>_size` として書く(同じファイルは 1 つ。1 行に 16 バイト。別の翻訳単位から使うので、先に `extern` で宣言する)。ウィンドウのソースは区間 `tokotachi_setup_ui` の先頭で同じものを `extern` で宣言し、`tokotachi::Image::load_from_data(配列, 大きさ)` で読む。画像を参照しないウィンドウは画像のソースを書かない(前に書いたものが残っていれば、使われていないと知らせる)。プロジェクトに属すれば CMakeLists.txt のソースの一覧に入れ、属さなければ作ったときに、ビルドに加えるよう知らせる。読めない画像があれば、何も書かずにエラーにする。実装は [cpp/images.ts](../../designer/packages/codegen/src/cpp/images.ts)([ADR 0053](../adr/0053-designer-image-source-file.md)) |
 | N9 | Variable | メンバは `tokotachi::Variable<std::string>* file_name;`(`StringVariable` 等の typedef は float に無いので使わず、型の引数で書く)。ハンドラ(`on_set`・`on_change`)はほかのオブジェクトと同じくつなぐ |
 
 ## 6. Bethany から引き継ぐ決まり
 
 | # | 論点 | 決定 |
 |---|---|---|
-| M1 | ハンドラの宣言と中身の置き場所 | 宣言は `declarations` の区間に入れる。中身の雛形は `handler-stubs` の行の後に足すだけで、消さない(定義ファイルから消えたハンドラの中身は、宣言が無くなってコンパイルエラーになるので気づける) |
+| M1 | ハンドラの宣言と中身の置き場所 | 宣言は `declarations` の区間に入れる。中身の雛形は `handler-stubs` の行の後に(生成する順に)足すだけで、消さない(定義ファイルから消えたハンドラの中身は、宣言が無くなってコンパイルエラーになるので気づける) |
 | M2 | 区間の中の手での変更 | 終わりのマーカーに区間の中身のハッシュを持たせ、生成し直すときに合わなければ、上書きする前に警告して確かめる |
 | M3 | 整形の道具との共存 | ハッシュは空白(改行・字下げを含む)を取り除いてから求める(clang-format で整形しても手での変更とみなさない) |
 | M4 | 壊れたマーカー | マーカーが欠けている・重なっている・入れ子になっている・対応していないときは、何も書かずにエラーにする |

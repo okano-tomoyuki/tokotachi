@@ -57,6 +57,11 @@ export interface LanguageSyntax {
   readonly hasHandler: (text: string, name: string) => boolean;
   /** stubs マーカーがないときの追記位置(行番号。この行の前に挿入する) */
   readonly fallbackStubLine: (lines: readonly string[]) => number;
+  /**
+   * ハンドラ name の定義の始まりの行(無ければ -1)。あれば、雛形を生成する順に並べて足す(新規に作ったファイルと同じ並びにする)。
+   * 無い言語は、stubs マーカーの直後に足す。
+   */
+  readonly handlerLine?: (lines: readonly string[], name: string) => number;
   /** 末尾に区間を加えるときに前に置く空行の数(Python は 2 行、C++ は 1 行) */
   readonly blankLinesBeforeAppended: number;
 }
@@ -153,12 +158,38 @@ export function splitRegions(
   const parsed = parseRegions(lines);
   if (typeof parsed === 'string') return undefined;
   const outside = [...lines];
-  const inside: string[] = [];
+  let inside: string[] = [];
   for (const p of parsed) {
-    inside.push(...lines.slice(p.begin + 1, p.end));
+    inside = inside.concat(lines.slice(p.begin + 1, p.end));
     outside.fill('', p.begin, p.end + 1);
   }
   return { inside: inside.join('\n'), outside };
+}
+
+/**
+ * lines の start から count 行を items に置き換えた配列(splice と同じ)。区間は大きいことがある(埋め込んだ画像は 100 万行を超える)ので、
+ * 引数に展開しない(`splice(start, count, ...items)` は引数の数でスタックがあふれる)。
+ */
+function replaced(
+  lines: readonly string[],
+  start: number,
+  count: number,
+  items: readonly string[],
+): string[] {
+  return lines.slice(0, start).concat(items, lines.slice(start + count));
+}
+
+/**
+ * 雛形の並びの終わり(この行の前に足す): stubs マーカーの後の、最初の区間の始まり(C++ は名前空間の終わりの区間)。
+ * マーカーが無ければ fallbackStubLine。
+ */
+function stubsEnd(lines: readonly string[], syntax: LanguageSyntax): number {
+  const marker = lines.findIndex((l) => l.includes(STUBS_MARKER));
+  if (marker < 0) {
+    return syntax.fallbackStubLine(lines);
+  }
+  const next = lines.findIndex((l, i) => i > marker && l.includes('<tokotachi-designer:begin'));
+  return next >= 0 ? next : syntax.fallbackStubLine(lines);
 }
 
 /** 既存のファイルのマーカー区間を置き換え、足りないハンドラの雛形を追記する */
@@ -205,21 +236,41 @@ export function mergeFile(
     .map((p) => p.id);
 
   // 後ろの区間から置き換えると、前の区間の行番号がずれない
-  const output = [...lines];
+  let output = [...lines];
   for (const p of [...parsed].sort((a, b) => b.begin - a.begin)) {
     const region = generated.regions.find((r) => r.id === p.id);
     if (!region) continue; // 未知の区間(新しいバージョンの生成物など)はそのまま残す
-    output.splice(p.begin, p.end - p.begin + 1, ...renderRegion(region, syntax).split('\n'));
+    output = replaced(
+      output,
+      p.begin,
+      p.end - p.begin + 1,
+      renderRegion(region, syntax).split('\n'),
+    );
   }
 
   // まだ定義されていないハンドラの雛形を追記する(削除はしない)
   const current = output.join('\n');
   const newStubs = generated.stubs.filter((s) => !syntax.hasHandler(current, s.name));
-  if (newStubs.length > 0) {
+  const handlerLine = syntax.handlerLine;
+  if (newStubs.length > 0 && handlerLine) {
+    // 生成する順で後ろに来る、定義済みの雛形の前に足す(無ければ雛形の並びの終わり)。雛形の後に空行を置く(新規のファイルと同じ形)
+    for (const stub of newStubs) {
+      const order = generated.stubs.indexOf(stub);
+      const next = generated.stubs
+        .slice(order + 1)
+        .map((s) => handlerLine(output, s.name))
+        .find((line) => line >= 0);
+      const insertAt = next ?? stubsEnd(output, syntax);
+      // 前の行がコードなら、間に空行を置く(stubs マーカーの直後には置かない)
+      const before = output[insertAt - 1];
+      const gap = before !== undefined && before.trim() !== '' && !before.includes(STUBS_MARKER);
+      output = replaced(output, insertAt, 0, [...(gap ? [''] : []), ...stub.code.split('\n'), '']);
+    }
+  } else if (newStubs.length > 0) {
     const markerLine = output.findIndex((l) => l.includes(STUBS_MARKER));
     const insertAt = markerLine >= 0 ? markerLine + 1 : syntax.fallbackStubLine(output);
     const stubLines = newStubs.flatMap((s) => ['', ...s.code.split('\n')]);
-    output.splice(insertAt, 0, ...stubLines);
+    output = replaced(output, insertAt, 0, stubLines);
   }
 
   return {
@@ -256,23 +307,27 @@ function addMissingRegions(
       !(p.region.group !== undefined && skippedGroups.includes(p.region.group)),
   );
 
-  const lines = [...original];
+  let lines = [...original];
   const ranged = usable.flatMap((p) =>
     p.range !== undefined && p.range !== 'append' ? [{ region: p.region, range: p.range }] : [],
   );
   for (const { region, range } of ranged.sort((a, b) => b.range.start - a.range.start)) {
     const rendered = renderRegion(region, syntax).split('\n');
-    lines.splice(
+    lines = replaced(
+      lines,
       range.start,
       range.end - range.start,
-      ...(range.start === range.end ? [...rendered, ''] : rendered),
+      range.start === range.end ? rendered.concat(['']) : rendered,
     );
   }
   const appended = usable.filter((p) => p.range === 'append').map((p) => p.region);
   if (appended.length > 0) {
     while (lines.length > 0 && lines[lines.length - 1]?.trim() === '') lines.pop();
     const gap = Array<string>(syntax.blankLinesBeforeAppended).fill('');
-    lines.push(...appended.flatMap((r) => [...gap, ...renderRegion(r, syntax).split('\n')]), '');
+    lines = lines.concat(
+      appended.flatMap((r) => gap.concat(renderRegion(r, syntax).split('\n'))),
+      [''],
+    );
   }
   return { lines, skippedGroups };
 }

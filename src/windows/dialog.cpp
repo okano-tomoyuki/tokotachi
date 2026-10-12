@@ -10,8 +10,10 @@
 #include <tokotachi/core/application.hpp>
 #include <tokotachi/layout/layout.hpp>
 
+#include "../core/object_impl.hpp"
 #include "../core/application_impl.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/locale.hpp"
+#include "../core/impl.hpp"
 #include "../widgets/widget_access.hpp"
 #include "window_impl.hpp"
 #include "../layout/layout_access.hpp"
@@ -87,27 +89,9 @@ int rank(DialogButton b)
     return r == Role::DESTRUCTIVE ? 0 : r == Role::REJECT ? 1 : 2;
 }
 
-// 利用者の言語が日本語か(標準のボタンの文字を選ぶ)。
-bool japanese()
-{
-    static const bool ja = []()
-    {
-        int count = 0;
-        SDL_Locale** locales = SDL_GetPreferredLocales(&count);
-        bool result = false;
-        if (locales && count > 0 && locales[0] && locales[0]->language)
-        {
-            result = std::strcmp(locales[0]->language, "ja") == 0;
-        }
-        SDL_free(locales);
-        return result;
-    }();
-    return ja;
-}
-
 std::string standard_text(DialogButton b)
 {
-    const bool ja = japanese();
+    const bool ja = detail::prefers_japanese();
     switch (b)
     {
     case DialogButton::OK:
@@ -131,30 +115,58 @@ std::string standard_text(DialogButton b)
 
 }  // namespace
 
+class Dialog::Impl : public detail::WidgetHooks
+{
+    TOKOTACHI_IMPL(Dialog);
+
+    explicit Impl(Dialog* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
+
+    DialogButton get_result() const { return result_; }
+    /// 並べる順に並べたボタン。
+    std::vector<std::pair<DialogButton, Button*> > ordered_buttons() const;
+    Button* button_for(DialogButton role) const;
+    /// Esc・閉じるボタンのときの結果。
+    DialogButton cancel_result() const;
+    float button_row_height() const;
+    float button_row_width() const;
+
+    Window* parent_window_;
+    std::vector<std::pair<DialogButton, Button*> > buttons_;
+    DialogButton result_;
+    NotifyHandler on_finish_;
+    bool running_;
+};
+
 Dialog::Dialog(Window* parent, const std::string& title_text)
     : Window(title_text, 400, 200),
-      TOKOTACHI_READONLY_PROPERTY(Dialog, DialogButton, result),
-      TOKOTACHI_HANDLER_PROPERTY(Dialog, NotifyHandler, on_finish),
-      parent_window_(parent),
-      result_(DialogButton::NONE),
-      running_(false)
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, DialogButton, result),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_finish),
+      d_(new Impl(this))
 {
-    change_owner(parent);
+    d_->install(this);
+    d_->parent_window_ = parent;
+    d_->result_ = DialogButton::NONE;
+    d_->running_ = false;
+    detail::change_owner(this, parent);
 }
 
 Dialog::~Dialog()
 {
-    if (running_)
+    if (d_->running_)
     {
         // 開いたまま破棄された: 親への入力を止めるのをやめる(WindowImpl の破棄でも外れる)。
-        running_ = false;
+        d_->running_ = false;
         if (Application* app = Application::instance())
         {
-            std::vector<detail::WindowImpl*>& modals = app->impl()->modal_dialogs;
-            modals.erase(std::remove(modals.begin(), modals.end(), impl()), modals.end());
+            std::vector<detail::WindowImpl*>& modals = detail::impl_of(app)->modal_dialogs;
+            modals.erase(std::remove(modals.begin(), modals.end(), detail::window_impl_of(this)), modals.end());
         }
     }
-    buttons_.clear();
+    d_->buttons_.clear();
+    delete d_;
 }
 
 Button* Dialog::add_button(DialogButton button, const std::string& text_value)
@@ -163,26 +175,26 @@ Button* Dialog::add_button(DialogButton button, const std::string& text_value)
     b->style = role_of(button) == Role::ACCEPT ? ButtonStyle::PRIMARY : ButtonStyle::SECONDARY;
     b->focus_policy = FocusPolicy::TAB_AND_CLICK;
     b->on_click = [this, button](Object*) { finish(button); };
-    buttons_.push_back(std::make_pair(button, b));
+    d_->buttons_.push_back(std::make_pair(button, b));
     request_layout();
     return b;
 }
 
-void Dialog::child_removed(Widget* child)
+void Dialog::Impl::child_removed(Widget* child)
 {
     for (std::size_t i = 0; i < buttons_.size(); ++i)
     {
         if (buttons_[i].second == child)
         {
             buttons_.erase(buttons_.begin() + static_cast<std::ptrdiff_t>(i));
-            request_layout();
+            q->request_layout();
             break;
         }
     }
-    Window::child_removed(child);
+    base_->child_removed(child);
 }
 
-std::vector<std::pair<DialogButton, Button*> > Dialog::ordered_buttons() const
+std::vector<std::pair<DialogButton, Button*> > Dialog::Impl::ordered_buttons() const
 {
     std::vector<std::pair<DialogButton, Button*> > out = buttons_;
     std::stable_sort(out.begin(), out.end(),
@@ -191,7 +203,7 @@ std::vector<std::pair<DialogButton, Button*> > Dialog::ordered_buttons() const
     return out;
 }
 
-Button* Dialog::button_for(DialogButton role) const
+Button* Dialog::Impl::button_for(DialogButton role) const
 {
     for (std::size_t i = 0; i < buttons_.size(); ++i)
     {
@@ -203,7 +215,7 @@ Button* Dialog::button_for(DialogButton role) const
     return nullptr;
 }
 
-DialogButton Dialog::cancel_result() const
+DialogButton Dialog::Impl::cancel_result() const
 {
     for (std::size_t i = 0; i < buttons_.size(); ++i)
     {
@@ -218,7 +230,7 @@ DialogButton Dialog::cancel_result() const
 
 // ---- 配置 ----
 
-float Dialog::button_row_height() const
+float Dialog::Impl::button_row_height() const
 {
     float h = 0;
     for (std::size_t i = 0; i < buttons_.size(); ++i)
@@ -231,7 +243,7 @@ float Dialog::button_row_height() const
     return h;
 }
 
-float Dialog::button_row_width() const
+float Dialog::Impl::button_row_width() const
 {
     float w = 0;
     int n = 0;
@@ -250,12 +262,12 @@ void Dialog::arrange_children()
 {
     // ボタンを下端に右寄せで並べ、レイアウト(中身)はその上に配置する。
     const Rect area = local_rect;
-    const float row_h = button_row_height();
+    const float row_h = d_->button_row_height();
     Rect content = area;
     if (row_h > 0)
     {
         const float y = area.height - MARGIN - row_h;
-        const std::vector<std::pair<DialogButton, Button*> > ordered = ordered_buttons();
+        const std::vector<std::pair<DialogButton, Button*> > ordered = d_->ordered_buttons();
         float x = area.width - MARGIN;
         for (std::size_t i = ordered.size(); i-- > 0;)
         {
@@ -280,31 +292,31 @@ void Dialog::arrange_children()
 Size Dialog::compute_preferred_size() const
 {
     const Size content = Window::compute_preferred_size();
-    const float row_h = button_row_height();
-    return Size(std::max(content.width, button_row_width()), content.height + (row_h > 0 ? row_h + MARGIN : 0));
+    const float row_h = d_->button_row_height();
+    return Size(std::max(content.width, d_->button_row_width()), content.height + (row_h > 0 ? row_h + MARGIN : 0));
 }
 
 Size Dialog::compute_minimum_size() const
 {
     const Size content = Window::compute_minimum_size();
-    const float row_h = button_row_height();
-    return Size(std::max(content.width, button_row_width()), content.height + (row_h > 0 ? row_h + MARGIN : 0));
+    const float row_h = d_->button_row_height();
+    return Size(std::max(content.width, d_->button_row_width()), content.height + (row_h > 0 ? row_h + MARGIN : 0));
 }
 
 // ---- 開閉 ----
 
 void Dialog::open()
 {
-    detail::WindowImpl* d = impl();
-    if (running_ || !d || !d->window)
+    detail::WindowImpl* d = detail::window_impl_of(this);
+    if (d_->running_ || !d || !d->window)
     {
         return;
     }
     Application* app = Application::instance();
-    detail::WindowImpl* parent_impl = parent_window_ ? parent_window_->impl() : nullptr;
+    detail::WindowImpl* parent_impl = d_->parent_window_ ? detail::window_impl_of(d_->parent_window_) : nullptr;
     if (app)
     {
-        app->impl()->close_menus();
+        detail::impl_of(app)->close_menus();
     }
     // 大きさを中身に合わせる: 幅を決めてから配置し(折り返す文字の高さが決まる)、高さを決める。
     // OS のウィンドウの大きさは最後に 1 回だけ変える。
@@ -346,11 +358,11 @@ void Dialog::open()
         SDL_SetWindowPosition(d->window, px + (pw - dw) / 2, py + (ph - dh) / 2);
     }
 
-    result_ = DialogButton::NONE;
-    running_ = true;
+    d_->result_ = DialogButton::NONE;
+    d_->running_ = true;
     if (app)
     {
-        app->impl()->modal_dialogs.push_back(d);
+        detail::impl_of(app)->modal_dialogs.push_back(d);
     }
     visible = true;
     // フォーカスが無ければ、最初のフォーカスを受けるウィジェット(無ければ決定のボタン)へ。
@@ -362,16 +374,16 @@ void Dialog::open()
 
 void Dialog::finish(DialogButton r)
 {
-    if (!running_)
+    if (!d_->running_)
     {
         return;
     }
-    running_ = false;
-    result_ = r;
-    detail::WindowImpl* d = impl();
+    d_->running_ = false;
+    d_->result_ = r;
+    detail::WindowImpl* d = detail::window_impl_of(this);
     if (Application* app = Application::instance())
     {
-        std::vector<detail::WindowImpl*>& modals = app->impl()->modal_dialogs;
+        std::vector<detail::WindowImpl*>& modals = detail::impl_of(app)->modal_dialogs;
         modals.erase(std::remove(modals.begin(), modals.end(), d), modals.end());
     }
     if (d && d->window && d->modal_parent)
@@ -391,14 +403,14 @@ void Dialog::finish(DialogButton r)
     notify_changed(result);
     // ハンドラの中でダイアログが破棄されてもよいよう、最後に呼ぶ。
     Object* self = this;
-    detail::fire(on_finish_, self);
+    detail::fire(d_->on_finish_, self);
 }
 
 void Dialog::close()
 {
-    if (running_)
+    if (d_->running_)
     {
-        finish(cancel_result());
+        finish(d_->cancel_result());
         return;
     }
     Window::close();
@@ -413,8 +425,8 @@ void Dialog::key_down(KeyEvent& e)
     }
     if (e.key == Key::ESCAPE)
     {
-        const DialogButton cancel = cancel_result();
-        if (cancel != DialogButton::NONE || buttons_.empty())
+        const DialogButton cancel = d_->cancel_result();
+        if (cancel != DialogButton::NONE || d_->buttons_.empty())
         {
             e.accepted = true;
             finish(cancel);
@@ -424,7 +436,7 @@ void Dialog::key_down(KeyEvent& e)
     if (e.key == Key::RETURN)
     {
         // 最初の決定のボタン(並べた順)を押す。
-        const std::vector<std::pair<DialogButton, Button*> > ordered = ordered_buttons();
+        const std::vector<std::pair<DialogButton, Button*> > ordered = d_->ordered_buttons();
         for (std::size_t i = 0; i < ordered.size(); ++i)
         {
             if (role_of(ordered[i].first) == Role::ACCEPT && ordered[i].second->effectively_enabled.get())

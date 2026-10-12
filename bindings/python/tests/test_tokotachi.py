@@ -55,10 +55,10 @@ class TestBasics(unittest.TestCase):
         self.assertEqual(label.x, 15)
         label.font = 22
         self.assertEqual(label.font, tt.Font(22))
-        label.color = tt.ColorRole.TEXT_SECONDARY
-        self.assertIs(label.color, tt.ColorRole.TEXT_SECONDARY)
-        label.color = tt.Color.rgb(0x336699)
-        self.assertEqual(label.color, tt.Color(0x33, 0x66, 0x99))
+        label.text_color = tt.ColorRole.TEXT_SECONDARY
+        self.assertIs(label.text_color, tt.ColorRole.TEXT_SECONDARY)
+        label.text_color = tt.Color.rgb(0x336699)
+        self.assertEqual(label.text_color, tt.Color(0x33, 0x66, 0x99))
         label.alignment = tt.Align.CENTER
         self.assertIs(label.alignment, tt.Align.CENTER)
         with self.assertRaises(AttributeError):
@@ -175,6 +175,27 @@ class TestBasics(unittest.TestCase):
         self.assertNotIn(widget._ptr, _core._pinned)
         widget.parent = self.window
         self.assertIn(widget._ptr, _core._pinned)
+
+    def test_window_ownership(self):
+        # 所有者を渡さないウィンドウは Application が所有し、参照が無くなっても残る(docs/adr/0062)
+        main = tt.Window('main', 200, 100)
+        self.assertIs(main.owner, app)
+        address = main._ptr
+        del main
+        gc.collect()
+        main = _core._wrap(address)
+        self.assertFalse(main.is_deleted)
+        # 所有者のウィンドウを渡すと、それが所有する
+        child = tt.Window(main, 'child', 100, 50)
+        self.assertIs(child.owner, main)
+        self.assertEqual(child.title, 'child')
+        app.main_window = main
+        self.assertIs(app.main_window, main)
+        main.destroy_on_close = True
+        self.assertTrue(main.destroy_on_close)
+        main.delete()
+        self.assertTrue(child.is_deleted)
+        self.assertIsNone(app.main_window)
 
     def test_bind(self):
         name = tt.Variable(self.window, 'はじめ')
@@ -439,7 +460,7 @@ class TestEventLoop(unittest.TestCase):
 
         timeout = tt.Timer(window)
         timeout.interval = 5000
-        timeout.on_timer = lambda sender: (events.append(('timeout',)), app.quit(1))
+        timeout.on_timeout = lambda sender: (events.append(('timeout',)), app.quit(1))
         timeout.enabled = True
         self.assertEqual(app.exec(), 3)
         self.assertIn(('post', True), events)

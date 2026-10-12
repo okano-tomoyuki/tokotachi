@@ -85,7 +85,7 @@
     { "name": "action_quit", "properties": { "text": "終了(&X)" }, "events": { "on_trigger": "action_quit_trigger" } }
   ],
   "objects": [
-    { "name": "autosave_timer", "class": "Timer", "properties": { "interval": 60000 }, "events": { "on_timer": "autosave" } }
+    { "name": "autosave_timer", "class": "Timer", "properties": { "interval": 60000 }, "events": { "on_timeout": "autosave" } }
   ]
 }
 ```
@@ -94,7 +94,7 @@
 
 | キー | 必須 | 型 | 説明 |
 |---|---|---|---|
-| `format_version` | ○ | `1` | 形式の版。形式を変えたときに上げ、古い形式からの移し替えに使う |
+| `format_version` | ○ | `1` | 形式の版。形式を変えたときに上げ、古い形式からの移し替えに使う(README.md の「定義ファイルの形式」。ADR 0064) |
 | `window` | ○ | ウィンドウのノード | §4.1 |
 | `actions` | | Action のノードの配列 | §4.6。メニュー・ツールバー・部品の右クリックから名前で参照する |
 | `objects` | | 画面に出ないオブジェクトのノードの配列 | §4.7(Timer 等) |
@@ -114,7 +114,7 @@
 | キー | 必須 | 型 | 説明 |
 |---|---|---|---|
 | `name` | ○ | 識別子 | **生成するクラスの名前**(PascalCase を勧める。`MainWindow`) |
-| `class` | ○ | `"Window"`・`"Dialog"` | 生成するクラスの基底クラス |
+| `class` | ○ | `"Window"`・`"Dialog"`・`"Widget"` | 生成するクラスの基底クラス。`Widget` は部品ファイル(§4.9) |
 | `properties` | | 名前 → 値 | §5。ウィンドウ自身のプロパティ(`title`・`width`・`height`・`background` 等) |
 | `events` | | 名前 → ハンドラ名 | §6 |
 | `menu_bar` | | メニューバーのノード | §4.5。`Window::menu_bar` に設定する |
@@ -124,6 +124,8 @@
 | `buttons` | | ボタンの配列 | `class` が `Dialog` のときだけ書ける。`{ "button": "OK" }`・`{ "button": "CANCEL", "text": "やめる" }`(`Dialog::add_button`) |
 
 - `width`・`height` はウィンドウの中身(枠・タイトルバーを含まない)の大きさ。メニューバー・ツールバー・ステータスバーは、その中に含まれる。
+- `Window` の生成するクラスは、コンストラクタで所有者のウィンドウを任意で受け取る(`Window(Window* owner, const std::string& title)`。
+  既定 nullptr で、そのときは Application が所有する)。
 - `Dialog` の生成するクラスは、コンストラクタで親のウィンドウを受け取る(`Dialog(Window* parent, const std::string& title)`)。
   Dialog は開くときに大きさを中身に合わせるので、大きさは `width`・`height` ではなく `minimum_size` で決める。
 
@@ -132,7 +134,8 @@
 | キー | 必須 | 型 | 説明 |
 |---|---|---|---|
 | `name` | ○ | 識別子 | |
-| `class` | ○ | クラス名 | カタログにある、利用者が作れる Widget の派生(`Button`・`Widget` 等) |
+| `class` | ○ | クラス名 | カタログにある、利用者が作れる Widget の派生(`Button`・`Widget` 等)。プロジェクトに登録した自作部品(`Gauge`。[ADR 0044](../adr/0044-designer-custom-widgets.md))も書ける |
+| `component` | | 相対パス | 部品ファイル(§4.9)を置く。`class` は `Widget` にし、`layout`・`children` 等の子は書けない |
 | `properties` | | 名前 → 値 | §5 |
 | `events` | | 名前 → ハンドラ名 | §6 |
 | `actions` | | Action の名前の配列 | `Widget::add_action`(右クリックのメニュー等に出る Action) |
@@ -241,6 +244,21 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 
 所有者はウィンドウ(`new tokotachi::Variable<std::string>(this, "メモ.txt")`)。
 
+### 4.9 部品ファイル
+
+部品の組み合わせ(検索欄とボタンなど)を別の定義ファイルにして、ほかのウィンドウから置く([ADR 0043](../adr/0043-designer-component-files.md))。
+
+- 部品ファイルは、ウィンドウのノードの `class` を `Widget` にした定義ファイル(拡張子は同じ `.ttui.json`)。`name` は生成するクラスの名前。
+  メニューバー・ツールバー・ステータスバー・`buttons` は書けない。`width`・`height` はデザイナーで描く大きさで、生成するコードには書かない
+  (置いた側のレイアウトが大きさを決める)。
+- 置く側は、部品のノードに `component`(定義ファイルのフォルダからの相対パス)を書く。設定できるのは Widget のプロパティ・ハンドラ・`actions` だけ。
+
+```json
+{ "name": "search_bar_1", "class": "Widget", "component": "parts/search_bar.ttui.json", "properties": { "tooltip": "検索" } }
+```
+
+- 部品ファイルの中の部品・ハンドラは、部品ファイルのクラスのもの(置いた側から `search_bar_1->button_search` で触れる)。
+
 ## 5. プロパティ
 
 `properties` のキーは Tokotachi のプロパティの名前、値の書き方はプロパティの型(カタログ)で決まる。
@@ -257,6 +275,9 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 | `Font` | メンバの名前のオブジェクト | `{ "size": 18 }` |
 | `ThemeColor` | 役割の名前、または `"#RRGGBB"`・`"#RRGGBBAA"` | `"ACCENT"`、`"#FF8000"`(§10 Q7) |
 | `Shortcut` | 表記の文字列(`Shortcut(const char*)` と同じ) | `"Ctrl+S"` |
+| `Color` | `"#RRGGBB"`・`"#RRGGBBAA"`(`r`・`g`・`b`・`a` のオブジェクトも書ける) | `"#2563EB"` |
+| `Date` | `"YYYY-MM-DD"`(空の文字は空の日付) | `"2026-10-11"` |
+| `ThemeOverride` | `colors`(役割の名前 → 色か `{ "light", "dark" }`)と寸法(`radius`・`field_radius`・`field_padding`)のオブジェクト(§5.3) | `{ "colors": { "ACCENT": "#DC2626" }, "radius": 0 }` |
 | `std::vector<std::string>` | 文字列の配列 | `["小", "中", "大"]` |
 | `std::vector<float>` | 数値の配列 | `[160, 360]` |
 | 部品・Action・メニューへのポインタ | 同じファイルのノードの `name` | `"action_open"` |
@@ -273,7 +294,12 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 - 区切りは `/`。`../` で上のフォルダも指せる。絶対パス・`\`・ドライブ名は使えない。拡張子は `png`・`jpg`・`jpeg`・`bmp`・`gif`(大文字も可)。
 - 生成するコードには、**画像のファイルの中身を埋め込む**(codegen-design.md N8)。実行するときに画像のファイルは要らず、
   作業フォルダ・実行ファイルの場所に依らない。画像のファイルを変えたら、コードを生成し直す。
+  埋め込む配列は、ウィンドウのソースとは別のソース(`main_window_images.cpp`)に書く([ADR 0053](../adr/0053-designer-image-source-file.md))。
+- 埋め込むとソースが画像の 6 倍ほどになるので、256 KB を超える画像のファイルは、拡張が問題パネルに警告を出す(`large-image`)。
 - ファイルが無いと、コードを生成できない(拡張は問題パネルにエラーを出す)。キャンバスは、拡張が読んだ中身で描く(無ければ画像なしで描く)。
+- **よく使うアイコン**は、パスの代わりに `"icon:<名前>"` と書く(`"icon:folder_open"`。名前はライブラリの列挙型 `tokotachi::Icon` を
+  小文字にしたもの。[ADR 0054](../adr/0054-icons.md))。ファイルは要らず、埋め込まない。生成するコードは
+  `tokotachi::Image::icon(tokotachi::Icon::FOLDER_OPEN)`。知らない名前は検証のエラー。
 
 ### 5.2 Variable との結びつけ
 
@@ -284,6 +310,27 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 - 結びつけられるのは、型が `bool`・`int`・`float`・`double`・`string` のプロパティで、Variable の型と同じもの(`bind` は同じ型どうしだけ)。
 - 位置と大きさ(`x`・`y`・`width`・`height`)は結びつけられない(レイアウト・デザイナーのつまみで決めるため)。
 - Variable を消すと、結びつけていたプロパティには Variable の初期値を書く(見た目は変わらない)。名前を変えると、結びつけも書き換える。
+
+### 5.3 テーマの上書き(`theme_override`)
+
+部品の `theme_override`([ADR 0042](../adr/0042-widget-theme-override.md))は、その部品と子孫に効くテーマの一部の上書き。
+
+```json
+"theme_override": {
+  "colors": {
+    "ACCENT": { "light": "#059669", "dark": "#34D399" },
+    "ON_ACCENT": "#FFFFFF"
+  },
+  "radius": 0
+}
+```
+
+- `colors` は役割(`ColorRole` の値)から色へ。色は `"#RRGGBB"`・`"#RRGGBBAA"`(ライト・ダークで同じ)か、`{ "light": ..., "dark": ... }`。
+- 寸法は 0 以上の数(dp)。書いていない役割・寸法は親から継ぐ。
+- 生成するコードは 1 つの式にする(`tokotachi::ThemeOverride().set(...).set_radius(0)`)。キャンバスも同じ値を設定して描く。
+- `"preset": "名前"` で、プロジェクトに登録したテーマ(project-spec.md §4.2)を参照できる。`colors`・寸法を一緒に書くと、テーマの上に重なる
+  (`{ "preset": "danger", "radius": 0 }`)。プロジェクトに属するウィンドウだけが使える。
+- プロジェクトのテーマの上書き(project-spec.md §4.1)も同じ書き方(`preset` は書けない)。
 
 ## 6. ハンドラ
 
@@ -301,7 +348,9 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
 - `name`・メンバ関数の名前の重複と、識別子・予約語・基底クラスのメンバとの衝突
 - クラス・プロパティ・ハンドラがカタログにあること、値が型に合うこと
 - 参照(Action・部品・メニュー)の解決と型の一致
-- 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content`・`columns` は対応するクラスだけ、`buttons` は Dialog だけ)
+- 親子の制約(`layout` と `children` は同時に書けない、`tabs`・`panes`・`content`・`columns` は対応するクラスだけ、`buttons` は Dialog だけ、
+  部品ファイルの根はバーを持たない、部品ファイルを置いた部品は子を持たない)
+- 部品ファイルの参照の書き方(`.ttui.json` で終わる相対パス・区切りは `/`)。ファイルが有るか・根が Widget か・循環していないかは拡張が調べる
 - レイアウトの項目の制約(GridLayout のセルの重なり、BoxLayout の項目のキー)
 - 同じメンバ関数を書いたハンドラの型が一致すること
 - 生成したコードの一時的な変数の名前(codegen-design.md N3)とノードの `name` が重ならないこと
@@ -333,7 +382,7 @@ Bethany と同じ。
 | Q1 | ファイルの拡張子 | **決定(2026-10-10)**: `*.ttui.json`(Tokotachi の UI。`tk` は cpp_tk(Tcl/Tk のラッパー)と紛らわしいので `tt` にする。JSON であることが分かり、`jsonValidation` で関連付けられる)。プロジェクトファイルも同じく `*.ttproj.json` |
 | Q2 | 生成するファイルの名前 | 定義ファイルの名前から(`main_window.ttui.json` → `main_window.hpp`・`main_window.cpp`)。クラス名は `window.name` |
 | Q3 | Variable と結びつけ(`bind`) | **決定(2026-10-10)**: 案のとおり、`variables`(名前・型・初期値・ハンドラ。§4.8)をドキュメントに置き、プロパティに `{ "bind": "変数の名前" }` と書く(§5.2)。部品どうしを直接結ぶこと(読み取り専用のプロパティからの一方向の結びつけ)は扱わない(Variable を介せば同じことができる) |
-| Q4 | 画像(Action・ボタンの `icon` 等) | **決定(2026-10-10)**: 定義ファイルからの相対パスを書き、生成するコードには中身を埋め込む(§5.1)。実行時に読むと、作業フォルダ・インストール先に依って見つからなくなるため。アイコンは小さいので、ソースが大きくなるのは許す |
+| Q4 | 画像(Action・ボタンの `icon` 等) | **決定(2026-10-10)**: 定義ファイルからの相対パスを書き、生成するコードには中身を埋め込む(§5.1)。実行時に読むと、作業フォルダ・インストール先に依って見つからなくなるため。アイコンは小さいので、ソースが大きくなるのは許す。**追記(2026-10-12)**: ImageBox で大きい画像も参照できるので、配列は別のソースに書き、大きい画像は警告する([ADR 0053](../adr/0053-designer-image-source-file.md)) |
 | Q5 | 一覧の列・モデル(ListView の `add_column`、ListModel・TreeModel の項目) | **決定(2026-10-10)**: 列は部品の `columns` に書く(§4.2.1)。モデル(ListModel・TreeModel)とその中身はふつうコードで作るので、デザイナーでは扱わない |
 | Q6 | 再利用できる部品の組み合わせ(C++Builder のフレーム) | ルートを `Widget` にしたファイルを認め、別のファイルから部品として置く。MVP の後 |
 | Q7 | 色の書き方 | ThemeColor は役割(テーマに従う)と具体的な色の両方を持つので、役割の名前と `#RRGGBB(AA)` の両方を書けるようにする |

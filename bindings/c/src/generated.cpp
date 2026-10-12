@@ -95,6 +95,60 @@ TOKOTACHI_C_API void tokotachi_application_get_theme(tokotachi_application* self
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API char* tokotachi_application_get_language(tokotachi_application* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::Application>(self, __func__)->language.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_application_set_language(tokotachi_application* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Application>(self, __func__)->language = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_window* tokotachi_application_get_main_window(tokotachi_application* self)
+{
+    try
+    {
+        return c::handle(c::self_as<tokotachi::Application>(self, __func__)->main_window.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_application_set_main_window(tokotachi_application* self, tokotachi_window* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Application>(self, __func__)->main_window = c::arg_as<tokotachi::Window>(value, __func__);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_application_get_auto_quit_enabled(tokotachi_application* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Application>(self, __func__)->auto_quit_enabled.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_application_set_auto_quit_enabled(tokotachi_application* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::Application>(self, __func__)->auto_quit_enabled = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API void tokotachi_application_set_on_theme_change(tokotachi_application* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
 {
     try
@@ -186,12 +240,12 @@ TOKOTACHI_C_API void tokotachi_timer_set_enabled(tokotachi_timer* self, bool val
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API void tokotachi_timer_set_on_timer(tokotachi_timer* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+TOKOTACHI_C_API void tokotachi_timer_set_on_timeout(tokotachi_timer* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
 {
     try
     {
         tokotachi::NotifyHandler handler = c::notify_handler(fn, user_data, destroy);
-        c::self_as<tokotachi::Timer>(self, __func__)->on_timer = handler;
+        c::self_as<tokotachi::Timer>(self, __func__)->on_timeout = handler;
     }
     TOKOTACHI_C_CATCH()
 }
@@ -1058,11 +1112,11 @@ TOKOTACHI_C_API void tokotachi_combo_box_close_popup(tokotachi_combo_box* self)
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API bool tokotachi_combo_box_is_popup_open(tokotachi_combo_box* self)
+TOKOTACHI_C_API bool tokotachi_combo_box_get_popup_open(tokotachi_combo_box* self)
 {
     try
     {
-        return c::self_as<tokotachi::ComboBox>(self, __func__)->is_popup_open();
+        return c::self_as<tokotachi::ComboBox>(self, __func__)->popup_open.get();
     }
     TOKOTACHI_C_CATCH({})
 }
@@ -1112,20 +1166,20 @@ TOKOTACHI_C_API void tokotachi_label_set_font(tokotachi_label* self, tokotachi_f
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API tokotachi_theme_color tokotachi_label_get_color(tokotachi_label* self)
+TOKOTACHI_C_API tokotachi_theme_color tokotachi_label_get_text_color(tokotachi_label* self)
 {
     try
     {
-        return c::to_c(c::self_as<tokotachi::Label>(self, __func__)->color.get());
+        return c::to_c(c::self_as<tokotachi::Label>(self, __func__)->text_color.get());
     }
     TOKOTACHI_C_CATCH(tokotachi_theme_color())
 }
 
-TOKOTACHI_C_API void tokotachi_label_set_color(tokotachi_label* self, tokotachi_theme_color value)
+TOKOTACHI_C_API void tokotachi_label_set_text_color(tokotachi_label* self, tokotachi_theme_color value)
 {
     try
     {
-        c::self_as<tokotachi::Label>(self, __func__)->color = c::from_c(value);
+        c::self_as<tokotachi::Label>(self, __func__)->text_color = c::from_c(value);
     }
     TOKOTACHI_C_CATCH()
 }
@@ -1275,11 +1329,11 @@ TOKOTACHI_C_API void tokotachi_text_input_base_select_all(tokotachi_text_input_b
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API void tokotachi_text_input_base_deselect(tokotachi_text_input_base* self)
+TOKOTACHI_C_API void tokotachi_text_input_base_clear_selection(tokotachi_text_input_base* self)
 {
     try
     {
-        c::self_as<tokotachi::TextInputBase>(self, __func__)->deselect();
+        c::self_as<tokotachi::TextInputBase>(self, __func__)->clear_selection();
     }
     TOKOTACHI_C_CATCH()
 }
@@ -2207,6 +2261,24 @@ TOKOTACHI_C_API void tokotachi_window_set_status_bar(tokotachi_window* self, tok
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API bool tokotachi_window_get_destroy_on_close(tokotachi_window* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Window>(self, __func__)->destroy_on_close.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_window_set_destroy_on_close(tokotachi_window* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::Window>(self, __func__)->destroy_on_close = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API void tokotachi_window_set_on_close(tokotachi_window* self, tokotachi_close_fn fn, void* user_data, tokotachi_destroy_fn destroy)
 {
     try
@@ -2425,20 +2497,20 @@ TOKOTACHI_C_API void tokotachi_file_dialog_set_location(tokotachi_file_dialog* s
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API bool tokotachi_file_dialog_get_allow_many(tokotachi_file_dialog* self)
+TOKOTACHI_C_API bool tokotachi_file_dialog_get_multi_enabled(tokotachi_file_dialog* self)
 {
     try
     {
-        return c::self_as<tokotachi::FileDialog>(self, __func__)->allow_many.get();
+        return c::self_as<tokotachi::FileDialog>(self, __func__)->multi_enabled.get();
     }
     TOKOTACHI_C_CATCH({})
 }
 
-TOKOTACHI_C_API void tokotachi_file_dialog_set_allow_many(tokotachi_file_dialog* self, bool value)
+TOKOTACHI_C_API void tokotachi_file_dialog_set_multi_enabled(tokotachi_file_dialog* self, bool value)
 {
     try
     {
-        c::self_as<tokotachi::FileDialog>(self, __func__)->allow_many = value;
+        c::self_as<tokotachi::FileDialog>(self, __func__)->multi_enabled = value;
     }
     TOKOTACHI_C_CATCH()
 }
@@ -3184,11 +3256,11 @@ TOKOTACHI_C_API void tokotachi_menu_close(tokotachi_menu* self)
     TOKOTACHI_C_CATCH()
 }
 
-TOKOTACHI_C_API bool tokotachi_menu_is_open(tokotachi_menu* self)
+TOKOTACHI_C_API bool tokotachi_menu_get_opened(tokotachi_menu* self)
 {
     try
     {
-        return c::self_as<tokotachi::Menu>(self, __func__)->is_open();
+        return c::self_as<tokotachi::Menu>(self, __func__)->opened.get();
     }
     TOKOTACHI_C_CATCH({})
 }
@@ -4240,6 +4312,8 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("dark_theme", &tokotachi::Application::dark_theme);
     TOKOTACHI_C_ADD_PROPERTY("dark", &tokotachi::Application::dark);
     TOKOTACHI_C_ADD_PROPERTY("theme", &tokotachi::Application::theme);
+    TOKOTACHI_C_ADD_PROPERTY("language", &tokotachi::Application::language);
+    TOKOTACHI_C_ADD_PROPERTY("auto_quit_enabled", &tokotachi::Application::auto_quit_enabled);
     TOKOTACHI_C_ADD_PROPERTY("interval", &tokotachi::Timer::interval);
     TOKOTACHI_C_ADD_PROPERTY("repeat", &tokotachi::Timer::repeat);
     TOKOTACHI_C_ADD_PROPERTY("enabled", &tokotachi::Timer::enabled);
@@ -4275,9 +4349,10 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("current_text", &tokotachi::ComboBox::current_text);
     TOKOTACHI_C_ADD_PROPERTY("placeholder_text", &tokotachi::ComboBox::placeholder_text);
     TOKOTACHI_C_ADD_PROPERTY("font", &tokotachi::ComboBox::font);
+    TOKOTACHI_C_ADD_PROPERTY("popup_open", &tokotachi::ComboBox::popup_open);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::Label::text);
     TOKOTACHI_C_ADD_PROPERTY("font", &tokotachi::Label::font);
-    TOKOTACHI_C_ADD_PROPERTY("color", &tokotachi::Label::color);
+    TOKOTACHI_C_ADD_PROPERTY("text_color", &tokotachi::Label::text_color);
     TOKOTACHI_C_ADD_PROPERTY("alignment", &tokotachi::Label::alignment);
     TOKOTACHI_C_ADD_PROPERTY("word_wrap", &tokotachi::Label::word_wrap);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::TextInputBase::text);
@@ -4317,13 +4392,14 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("current_index", &tokotachi::TabWidget::current_index);
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::Window::title);
     TOKOTACHI_C_ADD_PROPERTY("background", &tokotachi::Window::background);
+    TOKOTACHI_C_ADD_PROPERTY("destroy_on_close", &tokotachi::Window::destroy_on_close);
     TOKOTACHI_C_ADD_PROPERTY("result", &tokotachi::Dialog::result);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::MessageDialog::text);
     TOKOTACHI_C_ADD_PROPERTY("type", &tokotachi::MessageDialog::type);
     TOKOTACHI_C_ADD_PROPERTY("mode", &tokotachi::FileDialog::mode);
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::FileDialog::title);
     TOKOTACHI_C_ADD_PROPERTY("location", &tokotachi::FileDialog::location);
-    TOKOTACHI_C_ADD_PROPERTY("allow_many", &tokotachi::FileDialog::allow_many);
+    TOKOTACHI_C_ADD_PROPERTY("multi_enabled", &tokotachi::FileDialog::multi_enabled);
     TOKOTACHI_C_ADD_PROPERTY("paths", &tokotachi::FileDialog::paths);
     TOKOTACHI_C_ADD_PROPERTY("error", &tokotachi::FileDialog::error);
     TOKOTACHI_C_ADD_PROPERTY("selected_filter", &tokotachi::FileDialog::selected_filter);
@@ -4344,6 +4420,7 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("checkable", &tokotachi::Action::checkable);
     TOKOTACHI_C_ADD_PROPERTY("checked", &tokotachi::Action::checked);
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::Menu::title);
+    TOKOTACHI_C_ADD_PROPERTY("opened", &tokotachi::Menu::opened);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::Item::text);
     TOKOTACHI_C_ADD_PROPERTY("column_texts", &tokotachi::Item::column_texts);
     TOKOTACHI_C_ADD_PROPERTY("enabled", &tokotachi::Item::enabled);

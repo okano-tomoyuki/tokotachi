@@ -8,13 +8,24 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buildSetup, type Op } from '@tokotachi-designer/codegen';
-import { isImageType, normalizePath, type TtuiDocument } from '@tokotachi-designer/core';
-import { systemFonts } from './fonts.ts';
+import { type ComponentResolver, type Op } from '@tokotachi-designer/codegen';
+import {
+  ICON_PREFIX,
+  iconOf,
+  isIconValue,
+  isImageType,
+  normalizePath,
+  resolveThemePresets,
+  type ThemePresets,
+  type TtuiDocument,
+} from '@tokotachi-designer/core';
+import { canvasSetup } from './components.ts';
+import { systemFontSources, systemFonts } from './fonts.ts';
 import { withPlaceholders } from './placeholders.ts';
 
 export { systemFonts } from './fonts.ts';
-export { PLACEHOLDER_SIZE, withPlaceholders } from './placeholders.ts';
+export { CUSTOM_PLACEHOLDER_SIZE, PLACEHOLDER_SIZE, withPlaceholders } from './placeholders.ts';
+export { CUSTOM_PLACEHOLDER_BASES, substituteCustomClasses } from './custom.ts';
 
 /** 部品の位置と大きさ(ウィンドウの座標。dp)。 */
 export interface WidgetRect {
@@ -54,6 +65,32 @@ export type ColorScheme = 'LIGHT' | 'DARK';
 interface Module {
   ccall(name: string, returnType: 'string' | null, argTypes: string[], args: unknown[]): unknown;
   HEAPU8: Uint8Array;
+  _malloc(size: number): number;
+  _free(pointer: number): void;
+}
+
+/**
+ * 文字列を引数にして呼ぶ。ccall の 'string' の引数は wasm のスタック(64 KB)に置かれ、大きい要求(画像を含む描画の要求)で
+ * あふれるので、ヒープに置いて渡す。
+ */
+function callWithText(
+  module: Module,
+  name: string,
+  returnType: 'string' | null,
+  text: string,
+): unknown {
+  const bytes = new TextEncoder().encode(text);
+  const pointer = module._malloc(bytes.length + 1);
+  if (pointer === 0) {
+    throw new Error(`${name}: out of memory`);
+  }
+  try {
+    module.HEAPU8.set(bytes, pointer);
+    module.HEAPU8[pointer + bytes.length] = 0;
+    return module.ccall(name, returnType, ['number'], [pointer]);
+  } finally {
+    module._free(pointer);
+  }
 }
 
 /** wasm/ の場所(既定はこのパッケージの wasm/)。拡張にまとめるときは、読み込むときに場所を渡す。 */
@@ -78,7 +115,7 @@ export class Canvas {
    * @param fonts 使うフォントのファイル(既定は OS のフォント)
    */
   static async load(
-    options: { wasmDir?: string; fonts?: readonly string[] } = {},
+    options: { wasmDir?: string; fonts?: readonly string[]; language?: string } = {},
   ): Promise<Canvas> {
     const dir = options.wasmDir ?? defaultWasmDir();
     const file = join(dir, MODULE_FILE);
@@ -92,10 +129,22 @@ export class Canvas {
     // ネイティブの Tokotachi が OS から得るもの(フォント・ダイアログのボタンの順)を渡す
     const config = {
       fonts: options.fonts ?? systemFonts(),
+      // Linux: 書体ごとの面(ネイティブと同じく fontconfig で太字・斜体を探した結果)。あれば fonts の代わりに使う
+      font_sources: options.fonts
+        ? []
+        : systemFontSources().map((s) => ({
+            style: s.style,
+            file: s.file,
+            index: s.index,
+            synthetic_bold: s.syntheticBold,
+            synthetic_italic: s.syntheticItalic,
+          })),
       os: process.platform === 'win32' ? 'windows' : process.platform,
       desktop: process.env['XDG_CURRENT_DESKTOP'] ?? '',
+      // 利用者の言語(既定は OS の言語。暦の月・曜日、ダイアログのボタンの文字を選ぶ)
+      language: options.language ?? Intl.DateTimeFormat().resolvedOptions().locale,
     };
-    module.ccall('ttc_configure', null, ['string'], [JSON.stringify(config)]);
+    callWithText(module, 'ttc_configure', null, JSON.stringify(config));
     return new Canvas(module);
   }
 
@@ -104,6 +153,9 @@ export class Canvas {
    * @param options.placeholders 中身が空の入れ物に最小の大きさを与える(デザイナーで使う。placeholders.ts)
    * @param options.tabs 表示するタブ(TabWidget の名前 → 位置。デザイナーで、選んだ部品が入っているタブを出す)
    * @param options.images 定義ファイルが参照する画像の中身(正規化したパス → 中身)。無い画像は描かない
+   * @param options.themeOverride アプリケーションのテーマに重ねる上書き(プロジェクトの theme.override。検証済みのもの)
+   * @param options.themePresets プロジェクトに登録したテーマ(theme.presets)。部品の theme_override の preset を展開する
+   * @param options.components 置いた部品ファイルを読む(docs/adr/0043)。読めない部品ファイルは空の Widget として描く
    */
   render(
     doc: TtuiDocument,
@@ -112,9 +164,14 @@ export class Canvas {
       placeholders?: boolean;
       tabs?: Readonly<Record<string, number>>;
       images?: ReadonlyMap<string, Uint8Array>;
+      themeOverride?: Readonly<Record<string, unknown>> | undefined;
+      themePresets?: ThemePresets | undefined;
+      components?: ComponentResolver | undefined;
     } = {},
   ): RenderResult {
-    const target = options.placeholders === true ? withPlaceholders(doc) : doc;
+    // プロジェクトに登録したテーマの参照は、その中身に展開して描く(生成するコードの <名前>_theme() と同じ)
+    const resolved = resolveThemePresets(doc, options.themePresets);
+    const target = options.placeholders === true ? withPlaceholders(resolved) : resolved;
     // タブは、すべての部品を組んだ後に選ぶ(タブが無いと効かない)
     const show = Object.entries(options.tabs ?? {}).map(([name, index]): Op => ({
       op: 'set',
@@ -123,23 +180,31 @@ export class Canvas {
       type: 'int',
       value: index,
     }));
-    // 画像のプロパティの値は、正規化したパスにして、その中身と一緒に渡す
-    const ops = buildSetup(target).ops.map((op): Op =>
-      op.op === 'set' && isImageType(op.type) && typeof op.value === 'string'
-        ? { ...op, value: normalizePath(op.value) }
-        : op,
-    );
+    const setup = canvasSetup(target, options.components, options.themePresets);
+    // 画像のプロパティの値は、正規化したパスにして、その中身と一緒に渡す。アイコンは列挙の値(`icon:3`)にする
+    const ops = setup.ops.map((op): Op => {
+      if (op.op !== 'set' || !isImageType(op.type) || typeof op.value !== 'string') {
+        return op;
+      }
+      const icon = iconOf(op.value);
+      return icon !== undefined
+        ? { ...op, value: `${ICON_PREFIX}${String(icon.index)}` }
+        : isIconValue(op.value)
+          ? { ...op, value: '' }
+          : { ...op, value: normalizePath(op.value) };
+    });
     const images: Record<string, string> = {};
     for (const [path, data] of options.images ?? []) {
       images[path] = Buffer.from(data).toString('base64');
     }
     const request = {
-      window_class: target.window.class,
+      window_class: setup.windowClass,
       color_scheme: options.colorScheme ?? 'LIGHT',
+      ...(options.themeOverride !== undefined ? { theme_override: options.themeOverride } : {}),
       images,
       ops: [...ops, ...show],
     };
-    const text = this.module.ccall('ttc_render', 'string', ['string'], [JSON.stringify(request)]);
+    const text = callWithText(this.module, 'ttc_render', 'string', JSON.stringify(request));
     const r = JSON.parse(String(text)) as {
       error?: string;
       width: number;

@@ -20,11 +20,11 @@ Tokotachi は、SDL3 を土台にした C++11 のクロスプラットフォー�
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("hello", 320, 160);
+    tokotachi::Window* window_main = new tokotachi::Window("hello", 320, 160);
 
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);   // 並べ方はレイアウトに任せる
-    tokotachi::Label* label_count = new tokotachi::Label(&window, "こんにちは");
-    tokotachi::Button* button_push = new tokotachi::Button(&window, "押す");  // 親(window)が所有する
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);   // 並べ方はレイアウトに任せる
+    tokotachi::Label* label_count = new tokotachi::Label(window_main, "こんにちは");
+    tokotachi::Button* button_push = new tokotachi::Button(window_main, "押す");  // 親(window_main)が所有する
     box->add(label_count);
     box->add(button_push);
 
@@ -34,7 +34,8 @@ int main(int argc, char** argv)
         label_count->text = "押した回数: " + std::to_string(++count);           // 状態はプロパティで読み書きする
     };
 
-    window.visible = true;
+    app.main_window = window_main;      // 閉じたら終える
+    window_main->visible = true;
     return app.exec();
 }
 ```
@@ -43,18 +44,35 @@ int main(int argc, char** argv)
 
 | ページ | 内容 |
 |---|---|
-| @ref getting_started | ビルド・インストール・自分のプロジェクトから使う |
-| @ref basics | 親子と所有・プロパティ・ハンドラ・変数と結びつけ・テーマ |
-| @ref layout_guide | BoxLayout・GridLayout・PlaceLayout・スクロール・分割 |
-| @ref windows_guide | メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
-| @ref views_guide | ListView・TreeView とモデル |
-| @ref drawing_guide | Canvas・PaintBox・Bitmap・変換・透過 |
-| @ref threads_guide | メインスレッドの決まり・post・WeakRef・Task |
-| @ref gallery | 部品ごとのサンプルと画面 |
+| @subpage getting_started | ビルド・インストール・自分のプロジェクトから使う |
+| @subpage basics | 親子と所有・new で作る・プロパティ・ハンドラ・変数と結びつけ・テーマ・ドラッグ&ドロップ |
+| @subpage widgets_guide | ボタン・文字の入力・選ぶ・数の値・日付と色・表示、フォーカス・ニーモニック |
+| @subpage layout_guide | BoxLayout・GridLayout・PlaceLayout・スクロール・分割 |
+| @subpage windows_guide | 複数のウィンドウ・メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
+| @subpage views_guide | ListView・TreeView・TableView とモデル |
+| @subpage drawing_guide | Canvas・PaintBox・Bitmap・変換・透過・画像とアイコン |
+| @subpage custom_widgets_guide | 自作の部品: どのクラスから作るか・上書きする口・プロパティ・標準の見た目を描く関数 |
+| @subpage threads_guide | メインスレッドの決まり・post・WeakRef・Task |
+| @subpage designer_guide | デザイナーで画面を作る: 流れ・生成するコード・ハンドラ・プロジェクト |
+| @subpage compatibility | 版と互換の約束: 版の付け方・ソースと ABI の互換・派生してよいクラス |
+| @subpage gallery | 部品ごとのサンプルと画面 |
 
 ## API リファレンス
 
-上の「クラス」「ファイル」から、すべてのクラスと関数を引けます。ヘッダは役割ごとのディレクトリに分かれています。
+左の「トピック」から、分類ごとにクラスを引けます(部品は入力・表示・入れ物などに分けています)。「クラス」「ファイル」からは、すべてのクラスと関数を引けます。
+部品のページには、その部品の画面の画像を載せています。
+
+| 分類 | 内容 |
+|---|---|
+| @ref core | オブジェクトとプロパティ・イベント・スレッド・基本の値 |
+| @ref graphics | Canvas・Image・Bitmap・文字のレイアウト・テーマ |
+| @ref layout | BoxLayout・GridLayout・PlaceLayout |
+| @ref widgets | 部品(入力・表示・入れ物・描画・基底) |
+| @ref windows | Window・ダイアログ・メニューバー・ツールバー・ステータスバー |
+| @ref actions | Action・Menu・Shortcut |
+| @ref views | 一覧と木と表のビューとモデル |
+
+ヘッダは役割ごとのディレクトリに分かれています。
 
 | インクルード | 内容 |
 |---|---|

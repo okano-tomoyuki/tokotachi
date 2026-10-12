@@ -1,4 +1,14 @@
 /// @file
+/// tokotachi::RangeBase の宣言。
+#ifndef TOKOTACHI_WIDGETS_RANGE_BASE_HPP
+#define TOKOTACHI_WIDGETS_RANGE_BASE_HPP
+
+#include "../core/export.hpp"
+#include "widget.hpp"
+
+namespace tokotachi
+{
+
 /// 範囲の中の値を持ち、利用者が動かせるウィジェットの共通の基底(Slider・SpinBox。docs/adr/0024)。
 ///
 /// @code
@@ -7,19 +17,16 @@
 /// slider_volume->value = 25;
 /// tokotachi::bind(slider_volume->value, volume->value);  // DoubleVariable と結ぶ
 /// @endcode
-#ifndef TOKOTACHI_WIDGETS_RANGE_BASE_HPP
-#define TOKOTACHI_WIDGETS_RANGE_BASE_HPP
-
-#include "widget.hpp"
-
-namespace tokotachi
-{
-
-class RangeBase : public Widget
+///
+/// @ingroup widgets_base
+class TOKOTACHI_API RangeBase : public Widget
 {
 public:
+    ~RangeBase() override;
+
     /// 範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
     Property<double> minimum;
+    /// 範囲の終わり。
     Property<double> maximum;
     /// 値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。
     Property<double> value;
@@ -32,6 +39,7 @@ public:
     Property<NotifyHandler> on_change;
 
 protected:
+    /// parent の子として作る(parent が所有する)。
     explicit RangeBase(Widget* parent);
 
     /// 値を amount だけ動かし、single_step に合わせる(利用者の操作)。
@@ -44,26 +52,8 @@ protected:
     virtual void range_changed();
 
 private:
-    double get_minimum() const { return minimum_; }
-    void set_minimum(const double& v);
-    double get_maximum() const { return maximum_; }
-    void set_maximum(const double& v);
-    double get_value() const { return value_; }
-    void set_value(const double& v);
-    double get_single_step() const { return single_step_; }
-    void set_single_step(const double& v);
-    double get_page_step() const { return page_step_; }
-    void set_page_step(const double& v);
-
-    /// 範囲に収めた値を value_ にする。変わったら range_changed を呼び、知らせ、on_change を呼ぶ。
-    void apply_value(double v);
-
-    double minimum_;
-    double maximum_;
-    double value_;
-    double single_step_;
-    double page_step_;
-    NotifyHandler on_change_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

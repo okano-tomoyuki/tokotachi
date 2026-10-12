@@ -1,10 +1,20 @@
 # リファレンス(Doxygen)を作り、GitHub Pages に出す(docs/adr/0038)。
-# master に push したとき・手で実行したときに動く。サンプルの一覧の画像は、ここで実際にサンプルを動かして撮る。
+# master に push したとき・手で実行したときに出す。サンプルの一覧の画像は、ここで実際にサンプルを動かして撮る。
+# 公開のメンバーに説明が無い・Doxygen が警告を出すと失敗する(Doxyfile の WARN_AS_ERROR)。PR では作るだけで、出さない。
 name: リファレンス
 
 on:
   push:
     branches: [master]
+  pull_request:
+    paths:
+      - 'include/**'
+      - 'docs/guide/**'
+      - 'docs/Doxyfile.in'
+      - 'docs/DoxygenLayout.xml'
+      - 'docs/widget_images.cpp'
+      - 'examples/**'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -13,7 +23,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -53,10 +63,12 @@ jobs:
           cmake --build build --target docs
 
       - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
         with:
           path: build/docs/html
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-24.04
     environment:

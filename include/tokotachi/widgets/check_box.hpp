@@ -1,23 +1,32 @@
 /// @file
-/// チェックボックス。押すと checked が切り替わる。
-///
-/// @code
-/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(&window, "通知を受け取る");
-/// tokotachi::bind(check_box_notify->checked, notify->value);   // BoolVariable と結ぶ
-/// @endcode
+/// tokotachi::CheckBox の宣言。
 #ifndef TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 #define TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 
+#include "../core/export.hpp"
 #include "button_base.hpp"
 
 namespace tokotachi
 {
 
-class CheckBox : public ButtonBase
+/// チェックボックス。押すと checked が切り替わる。
+///
+/// @image html widget_check_box.png
+///
+/// @code
+/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(window_main, "通知を受け取る");
+/// tokotachi::bind(check_box_notify->checked, notify->value);   // BoolVariable と結ぶ
+/// @endcode
+///
+/// @ingroup widgets_input
+class TOKOTACHI_API CheckBox : public ButtonBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit CheckBox(Widget* parent = nullptr, const std::string& text = std::string());
+    ~CheckBox() override;
 
+    /// チェックしているか(既定 false)。
     Property<bool> checked;
 
     /// checked が変わった(利用者の操作・代入のどちらでも。docs/adr/0016)。押したときは on_change の後に on_click を呼ぶ。
@@ -31,10 +40,8 @@ protected:
     Size compute_preferred_size() const override;
 
 private:
-    void set_checked(const bool& v);
-
-    bool checked_;
-    NotifyHandler on_change_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

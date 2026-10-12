@@ -1,0 +1,197 @@
+# ライブラリ(Tokotachi 本体)の CI。ライブラリ・サンプル・テストをビルドし、テストを画面なしで動かす。
+#   linux:   Ubuntu 24.04 の x86_64 と aarch64(GitHub の Arm のランナー)
+#   windows: MSYS2 の mingw64(docs/adr/0004)
+#   release: タグ v<版>(version.hpp の版と同じ)を push したときに、GitHub の Release の下書きを作り、パッケージを添える
+# テストは CMake が SDL の offscreen のビデオドライバを設定するので、画面は要らない。
+# 共有ライブラリ・静的ライブラリのそれぞれをインストールし、利用者のプロジェクトから使えるかを確かめる(tests/install。docs/adr/0061)。
+name: ライブラリ
+
+on:
+  # タグの push にはパスの絞り込みが効かないので、push は絞り込まない
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+    paths:
+      - 'include/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'examples/**'
+      - 'deps/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/library.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: library-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux-x86_64
+          - runner: ubuntu-24.04-arm
+            platform: linux-aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 開発用のパッケージ・日本語のフォント
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libwayland-dev libxkbcommon-dev libdecor-0-dev libegl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libdrm-dev libgbm-dev libfontconfig-dev \
+            fonts-noto-cjk
+
+      # 依存ライブラリのビルドは数分かかるので、deps/ が変わらない限り使い回す。
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/${{ matrix.platform }}
+            deps/download
+          key: deps-${{ matrix.platform }}-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - name: ビルド
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: テスト
+        run: ctest --test-dir build --output-on-failure
+
+      - name: 静的ライブラリのビルド
+        run: |
+          cmake -S . -B build-static -G Ninja -DCMAKE_BUILD_TYPE=Release -DTOKOTACHI_SHARED=OFF \
+            -DTOKOTACHI_BUILD_EXAMPLES=OFF -DTOKOTACHI_BUILD_TESTS=OFF
+          cmake --build build-static
+
+      - name: インストールして利用者のプロジェクトから使う
+        run: |
+          cmake --install build --prefix "$RUNNER_TEMP/install/shared"
+          cmake --install build-static --prefix "$RUNNER_TEMP/install/static"
+          tests/install/check.sh "$RUNNER_TEMP/install/shared" "$RUNNER_TEMP/check/shared"
+          tests/install/check.sh "$RUNNER_TEMP/install/static" "$RUNNER_TEMP/check/static"
+
+      - name: パッケージ
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: tests/install/package.sh "$RUNNER_TEMP/install" ${{ matrix.platform }} dist
+
+      - uses: actions/upload-artifact@v7
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: package-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/windows-x86_64
+            deps/download
+          key: deps-windows-x86_64-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - name: ビルド
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: テスト
+        run: ctest --test-dir build --output-on-failure
+
+      - name: 静的ライブラリのビルド
+        run: |
+          cmake -S . -B build-static -G Ninja -DCMAKE_BUILD_TYPE=Release -DTOKOTACHI_SHARED=OFF \
+            -DTOKOTACHI_BUILD_EXAMPLES=OFF -DTOKOTACHI_BUILD_TESTS=OFF
+          cmake --build build-static
+
+      - name: インストールして利用者のプロジェクトから使う
+        run: |
+          tmp=$(cygpath -m "$RUNNER_TEMP")
+          cmake --install build --prefix "$tmp/install/shared"
+          cmake --install build-static --prefix "$tmp/install/static"
+          tests/install/check.sh "$tmp/install/shared" "$tmp/check/shared"
+          tests/install/check.sh "$tmp/install/static" "$tmp/check/static"
+
+      - name: パッケージ
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: tests/install/package.sh "$(cygpath -m "$RUNNER_TEMP")/install" windows-x86_64-mingw64 dist
+
+      - uses: actions/upload-artifact@v7
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: package-windows-x86_64
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: タグと version.hpp の版が同じか
+        run: |
+          version=$(sed -n 's/^#define TOKOTACHI_VERSION_STRING "\(.*\)"$/\1/p' include/tokotachi/core/version.hpp)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::タグ $GITHUB_REF_NAME と version.hpp の版 $version が違う"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: 変更履歴から、この版の節を取り出す
+        run: |
+          awk -v v="$VERSION" '
+            /^## / { if (found) exit; if (index($0, "## " v) == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md に ## $VERSION の節が無い"
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: package-*
+          path: dist
+          merge-multiple: true
+
+      # 下書きにする。中身を確かめてから、GitHub の画面で公開する(0.x の間はプレリリースの印を付ける)
+      - name: Release の下書きを作る
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=
+          case "$VERSION" in 0.*) prerelease=--prerelease ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag $prerelease \
+            --title "Tokotachi $VERSION" --notes-file notes.md

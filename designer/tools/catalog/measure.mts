@@ -26,6 +26,10 @@ for (const [cls, info] of Object.entries(catalog.classes)) {
     continue;
   }
   for (const [name, p] of Object.entries(info.properties)) {
+    if (typeof p.type === 'object' && 'ref' in p.type) {
+      // 参照の既定値はいつも「無し」(書かない)
+      continue;
+    }
     if (m.properties[name] === null) {
       // 値で書けない既定値(画像の「無し」)は書かない
       delete p.default;

@@ -79,9 +79,180 @@ textarea.invalid {
   overflow: auto;
 }
 
-.tree-pane {
-  width: 220px;
+/* ---- 左のペイン(Sidebar.tsx): 上にパレット、下に構造の木。間の仕切りと右の端で大きさを変える ---- */
+
+.sidebar {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  overflow: hidden;
   border-right: 1px solid var(--vscode-panel-border);
+}
+
+.sidebar-palette {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.sidebar-structure {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sidebar-split {
+  flex: none;
+  height: 4px;
+  cursor: ns-resize;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.sidebar-split:hover,
+.sidebar-resize:hover {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+.sidebar-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Action・オブジェクト・変数の欄(ウィンドウの木の下に分けて、常に出す) */
+.tree-area {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tree-groups {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tree-group-head {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding-left: 4px;
+  line-height: 22px;
+  font-size: 0.85em;
+  opacity: 0.85;
+  cursor: default;
+  user-select: none;
+}
+
+.tree-group-head:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.tree-group-head .tree-label {
+  flex: 1;
+}
+
+.tree-count {
+  padding: 0 5px;
+  border-radius: 8px;
+  line-height: 16px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+}
+
+/* 整列のボタン(AlignBar.tsx) */
+.align-bar {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  color: var(--vscode-icon-foreground, var(--vscode-foreground));
+  background: transparent;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--vscode-toolbar-hoverBackground, var(--vscode-list-hoverBackground));
+}
+
+.icon-button.group-start {
+  margin-left: 6px;
+}
+
+.toolbar .toggle {
+  color: var(--vscode-foreground);
+  background: transparent;
+}
+
+.toolbar .toggle.on {
+  background: var(
+    --vscode-toolbar-activeBackground,
+    var(--vscode-list-inactiveSelectionBackground)
+  );
+}
+
+/* ---- 右クリックのメニュー(ContextMenu.tsx) ---- */
+
+.context-menu {
+  position: fixed;
+  z-index: 100;
+  min-width: 160px;
+  padding: 4px 0;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(
+    --vscode-menu-background,
+    var(--vscode-editorWidget-background, var(--vscode-editor-background))
+  );
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.context-menu button {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  width: 100%;
+  padding: 3px 16px;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+}
+
+.context-menu button:hover:not(:disabled),
+.context-menu button:focus {
+  outline: none;
+  color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground));
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground));
+}
+
+.context-menu-hint {
+  opacity: 0.7;
+}
+
+.context-menu hr {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-panel-border));
 }
 
 .canvas-pane {
@@ -91,9 +262,38 @@ textarea.invalid {
   background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
 }
 
+/* 右のペイン(InspectorPane.tsx)。左の端で幅を変える */
 .inspector-pane {
-  width: 300px;
+  position: relative;
+  display: flex;
+  flex: none;
+  overflow: hidden;
   border-left: 1px solid var(--vscode-panel-border);
+}
+
+.inspector-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.inspector-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.inspector-resize:hover {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+/* ツールバーの右の端に寄せる */
+.toolbar .toolbar-end {
+  margin-left: auto;
 }
 
 /* ---- 構造の木 ---- */
@@ -120,6 +320,52 @@ textarea.invalid {
   display: inline-block;
   width: 12px;
   text-align: center;
+}
+
+/* ---- クラスのアイコン(ClassIcon.tsx) ---- */
+
+.class-icon {
+  --tt-icon-accent: var(--vscode-charts-blue, #3794ff);
+
+  flex: none;
+  overflow: visible;
+}
+
+.class-icon .a {
+  stroke: var(--tt-icon-accent);
+}
+
+.class-icon .af {
+  fill: var(--tt-icon-accent);
+  stroke: none;
+}
+
+.class-icon .sf {
+  fill: currentColor;
+  fill-opacity: 0.15;
+  stroke: none;
+}
+
+/* 選んでいる行では、背景の色に埋もれないよう強調色も文字の色にする */
+.tree-row.selected .class-icon {
+  --tt-icon-accent: currentColor;
+}
+
+/* visible を false にした部品と、その子孫(実行すると表示されない) */
+.tree-row.hidden > :not(.twisty) {
+  opacity: 0.5;
+}
+
+.tree-row.hidden .tree-label {
+  font-style: italic;
+}
+
+.tree-hidden {
+  padding: 0 4px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.8em;
+  line-height: 14px;
 }
 
 .tree-class {
@@ -167,6 +413,32 @@ textarea.invalid {
   outline-offset: -1px;
 }
 
+/* 複数選択では、どれも同じ点線の枠にする(大きさを変える取っ手は出さない) */
+.selection.multiple {
+  outline-style: dashed;
+}
+
+/* 範囲で囲んで選ぶときの四角 */
+.rubber-band {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--vscode-focusBorder);
+  background: color-mix(in srgb, var(--vscode-focusBorder) 15%, transparent);
+}
+
+/* 入れ物の外にはみ出した部品(入れ物の外は描かれないので、本来の位置を点線で示す) */
+.outside-parent {
+  position: absolute;
+  pointer-events: none;
+  outline: 1px dashed var(--vscode-editorWarning-foreground);
+  outline-offset: -1px;
+}
+
+.tree-warning {
+  margin-left: 4px;
+  color: var(--vscode-editorWarning-foreground);
+}
+
 .problems {
   margin: 0;
   padding: 6px 12px;
@@ -204,6 +476,83 @@ textarea.invalid {
 
 .inspector-class {
   font-weight: bold;
+}
+
+.inspector-component {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 0 8px 8px;
+  opacity: 0.9;
+}
+
+.font-field {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.font-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.font-toggle {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+.font-toggle:hover {
+  border-color: var(--vscode-panel-border);
+}
+
+.font-toggle.on {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.font-italic {
+  font-style: italic;
+  font-family: serif;
+}
+
+.custom-placeholder {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 12px;
+  color: #6b7280;
+  pointer-events: none;
+  border: 1px dashed #9ca3af;
+}
+
+.link-button {
+  padding: 0;
+  overflow: hidden;
+  color: var(--vscode-textLink-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.link-button:hover {
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: underline;
 }
 
 .name-field {
@@ -298,9 +647,89 @@ textarea.invalid {
   min-width: 0;
 }
 
+/* よく使うアイコンを選ぶ(IconPicker) */
+.icon-picker {
+  position: relative;
+  display: flex;
+}
+
+.icon-picker-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+}
+
+.icon-glyph {
+  display: block;
+}
+
+.icon-picker-panel {
+  position: fixed;
+  z-index: 100;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(
+    --vscode-menu-background,
+    var(--vscode-editorWidget-background, var(--vscode-editor-background))
+  );
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.icon-picker-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.icon-picker-category {
+  margin: 4px 0 2px;
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+
+.icon-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.icon-cell:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.icon-cell.selected {
+  border-color: var(--vscode-focusBorder);
+}
+
+.icon-picker-empty {
+  padding: 8px;
+  opacity: 0.7;
+}
+
 /* ---- パレットとドラッグ ---- */
 
 .section-head {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
   padding: 4px 6px;
   font-weight: bold;
   cursor: default;
@@ -308,19 +737,68 @@ textarea.invalid {
 }
 
 .palette {
-  border-bottom: 1px solid var(--vscode-panel-border);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.palette-filter {
+  flex: 1;
+  min-width: 0;
+  font-weight: normal;
+}
+
+.palette-body {
+  flex: 1;
+  overflow: auto;
 }
 
 .palette-category {
-  padding: 4px 6px 2px;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 4px 6px 2px 2px;
   font-size: 0.85em;
   opacity: 0.7;
+  cursor: default;
+  user-select: none;
 }
 
 .palette-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
   padding: 2px 6px 2px 14px;
   cursor: grab;
   user-select: none;
+}
+
+.palette-item.non-visual {
+  cursor: default;
+}
+
+.palette-item.non-visual .palette-label {
+  flex: 1;
+}
+
+.palette-add {
+  min-width: 22px;
+  padding: 0 6px;
+  line-height: 18px;
+  font-weight: bold;
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  background: var(--vscode-button-secondaryBackground, rgba(127, 127, 127, 0.25));
+  border-radius: 2px;
+}
+
+.palette-add:hover:not(:disabled) {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+.palette-tabs {
+  flex: none;
 }
 
 .palette-item:hover {
@@ -402,18 +880,247 @@ textarea.invalid {
   background: rgba(127, 127, 127, 0.15);
 }
 
-.tree-toolbar {
+.zoom {
+  margin-left: auto;
+}
+
+/* ---- テーマの上書き(ThemeOverrideField.tsx) ---- */
+
+.theme-override {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-override-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.theme-override-role {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9em;
+}
+
+.theme-override-row input[type='color'] {
+  width: 28px;
+  height: 20px;
+  padding: 0;
+}
+
+.theme-override-row input[type='number'] {
+  width: 64px;
+}
+
+/* ---- プロジェクトの設定画面(project/ProjectApp.tsx) ---- */
+
+button.secondary {
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  background: var(--vscode-button-secondaryBackground, rgba(127, 127, 127, 0.25));
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground, rgba(127, 127, 127, 0.4));
+}
+
+.project {
+  max-width: 1100px;
+  padding: 0 20px 24px;
+}
+
+.project-header {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 0;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-.tree-toolbar button {
-  padding: 1px 6px;
+.project-header h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: normal;
 }
 
-.zoom {
-  margin-left: auto;
+.settings-section h2 {
+  margin: 20px 0 8px;
+  font-size: 1.15em;
+  font-weight: 600;
+}
+
+.settings-field {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 3px 0;
+}
+
+.settings-label {
+  flex: none;
+  width: 180px;
+  opacity: 0.9;
+}
+
+.settings-value {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.settings-value input[type='text'],
+.settings-value select {
+  width: 100%;
+  padding: 2px 4px;
+}
+
+.settings-problem {
+  margin-top: 2px;
+  color: var(--vscode-errorForeground);
+}
+
+.settings-note {
+  margin: 4px 0 8px;
+  opacity: 0.75;
+}
+
+.settings-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  max-width: 600px;
+}
+
+.settings-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-table {
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.settings-table th {
+  padding: 2px 8px;
+  text-align: left;
+  font-weight: normal;
+  opacity: 0.75;
+}
+
+.settings-table td {
+  padding: 2px 8px;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.settings-table a {
+  color: var(--vscode-textLink-foreground);
+}
+
+.settings-center {
+  text-align: center;
+}
+
+.settings-table button {
+  padding: 0 6px;
+}
+
+.theme-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+.theme-list {
+  flex: none;
+  width: 200px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.theme-list-head {
+  padding: 6px 8px 2px;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.theme-list-item {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 4px 2px 8px;
+  line-height: 22px;
+  cursor: default;
+}
+
+.theme-list-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.theme-list-item.selected {
+  color: var(--vscode-list-activeSelectionForeground);
+  background: var(--vscode-list-activeSelectionBackground);
+}
+
+.theme-list-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theme-list-item button {
+  padding: 0 5px;
+  line-height: 18px;
+  visibility: hidden;
+}
+
+.theme-list-item:hover button,
+.theme-list-item.selected button {
+  visibility: visible;
+}
+
+.theme-name-input {
+  padding: 2px 4px;
+}
+
+.theme-name-input input {
+  width: 100%;
+}
+
+.theme-add {
+  width: calc(100% - 8px);
+  margin: 4px;
+}
+
+.theme-editor {
+  flex: 1;
+  min-width: 260px;
+  max-width: 340px;
+}
+
+.theme-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.theme-preview figure {
+  margin: 0;
+}
+
+.theme-preview figcaption {
+  margin-top: 4px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.theme-preview-image {
+  display: block;
+  border: 1px solid var(--vscode-panel-border);
 }

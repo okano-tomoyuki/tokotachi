@@ -12,7 +12,7 @@ from ._core import (_in_Point, _out_Point, _in_Size, _out_Size, _in_Rect, _out_R
                     _in_Margins, _out_Margins, _in_Font, _out_Font, _in_Shortcut, _out_Shortcut,
                     _in_ThemeColor, _out_ThemeColor, _in_ModelIndex, _out_ModelIndex, _in_Placement,
                     _out_Placement)
-from ._core import (_ApplicationMixin, _MessageDialogMixin, _VariableMixin, _TaskMixin, _CustomModelMixin)
+from ._core import (_ApplicationMixin, _WindowMixin, _MessageDialogMixin, _VariableMixin, _TaskMixin, _CustomModelMixin)
 
 # ---- 列挙 ----
 
@@ -357,7 +357,7 @@ _proto('tokotachi_path_add_round_rect', None, [c_void_p, CRect, c_float])
 _proto('tokotachi_path_add_ellipse', None, [c_void_p, CPoint, c_float, c_float])
 _proto('tokotachi_path_add_arc', None, [c_void_p, CPoint, c_float, c_float, c_float, c_float, c_bool])
 _proto('tokotachi_path_add_polyline', None, [c_void_p, POINTER(CPoint), c_size_t, c_bool])
-_proto('tokotachi_path_empty', c_bool, [c_void_p])
+_proto('tokotachi_path_is_empty', c_bool, [c_void_p])
 _proto('tokotachi_text_layout_new', c_void_p, [c_char_p, CFont, c_float, c_float, c_int])
 _proto('tokotachi_text_layout_free', None, [c_void_p])
 _proto('tokotachi_text_layout_width', c_float, [c_void_p])
@@ -402,6 +402,12 @@ _proto('tokotachi_application_get_dark_theme', None, [c_void_p, POINTER(CTheme)]
 _proto('tokotachi_application_set_dark_theme', None, [c_void_p, POINTER(CTheme)])
 _proto('tokotachi_application_get_dark', c_bool, [c_void_p])
 _proto('tokotachi_application_get_theme', None, [c_void_p, POINTER(CTheme)])
+_proto('tokotachi_application_get_language', c_void_p, [c_void_p])
+_proto('tokotachi_application_set_language', None, [c_void_p, c_char_p])
+_proto('tokotachi_application_get_main_window', c_void_p, [c_void_p])
+_proto('tokotachi_application_set_main_window', None, [c_void_p, c_void_p])
+_proto('tokotachi_application_get_auto_quit_enabled', c_bool, [c_void_p])
+_proto('tokotachi_application_set_auto_quit_enabled', None, [c_void_p, c_bool])
 _proto('tokotachi_application_set_on_theme_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_application_exec', c_int, [c_void_p])
 _proto('tokotachi_application_quit', None, [c_void_p, c_int])
@@ -413,7 +419,7 @@ _proto('tokotachi_timer_get_repeat', c_bool, [c_void_p])
 _proto('tokotachi_timer_set_repeat', None, [c_void_p, c_bool])
 _proto('tokotachi_timer_get_enabled', c_bool, [c_void_p])
 _proto('tokotachi_timer_set_enabled', None, [c_void_p, c_bool])
-_proto('tokotachi_timer_set_on_timer', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_timer_set_on_timeout', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_widget_new', c_void_p, [c_void_p])
 _proto('tokotachi_widget_get_parent', c_void_p, [c_void_p])
 _proto('tokotachi_widget_set_parent', None, [c_void_p, c_void_p])
@@ -508,14 +514,14 @@ _proto('tokotachi_combo_box_set_font', None, [c_void_p, CFont])
 _proto('tokotachi_combo_box_set_on_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_combo_box_open_popup', None, [c_void_p])
 _proto('tokotachi_combo_box_close_popup', None, [c_void_p])
-_proto('tokotachi_combo_box_is_popup_open', c_bool, [c_void_p])
+_proto('tokotachi_combo_box_get_popup_open', c_bool, [c_void_p])
 _proto('tokotachi_label_new', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_label_get_text', c_void_p, [c_void_p])
 _proto('tokotachi_label_set_text', None, [c_void_p, c_char_p])
 _proto('tokotachi_label_get_font', CFont, [c_void_p])
 _proto('tokotachi_label_set_font', None, [c_void_p, CFont])
-_proto('tokotachi_label_get_color', CThemeColor, [c_void_p])
-_proto('tokotachi_label_set_color', None, [c_void_p, CThemeColor])
+_proto('tokotachi_label_get_text_color', CThemeColor, [c_void_p])
+_proto('tokotachi_label_set_text_color', None, [c_void_p, CThemeColor])
 _proto('tokotachi_label_get_alignment', c_int, [c_void_p])
 _proto('tokotachi_label_set_alignment', None, [c_void_p, c_int])
 _proto('tokotachi_label_get_word_wrap', c_bool, [c_void_p])
@@ -532,7 +538,7 @@ _proto('tokotachi_text_input_base_get_has_selection', c_bool, [c_void_p])
 _proto('tokotachi_text_input_base_get_selected_text', c_void_p, [c_void_p])
 _proto('tokotachi_text_input_base_set_on_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_text_input_base_select_all', None, [c_void_p])
-_proto('tokotachi_text_input_base_deselect', None, [c_void_p])
+_proto('tokotachi_text_input_base_clear_selection', None, [c_void_p])
 _proto('tokotachi_text_input_base_cut', None, [c_void_p])
 _proto('tokotachi_text_input_base_copy', None, [c_void_p])
 _proto('tokotachi_text_input_base_paste', None, [c_void_p])
@@ -635,8 +641,11 @@ _proto('tokotachi_window_get_tool_bar', c_void_p, [c_void_p])
 _proto('tokotachi_window_set_tool_bar', None, [c_void_p, c_void_p])
 _proto('tokotachi_window_get_status_bar', c_void_p, [c_void_p])
 _proto('tokotachi_window_set_status_bar', None, [c_void_p, c_void_p])
+_proto('tokotachi_window_get_destroy_on_close', c_bool, [c_void_p])
+_proto('tokotachi_window_set_destroy_on_close', None, [c_void_p, c_bool])
 _proto('tokotachi_window_set_on_close', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_window_close', None, [c_void_p])
+_proto('tokotachi_window_new_owned', c_void_p, [c_void_p, c_char_p, c_float, c_float])
 _proto('tokotachi_window_save_png', c_bool, [c_void_p, c_char_p])
 _proto('tokotachi_window_capture', c_void_p, [c_void_p])
 _proto('tokotachi_dialog_new', c_void_p, [c_void_p, c_char_p])
@@ -660,8 +669,8 @@ _proto('tokotachi_file_dialog_get_filters', c_void_p, [c_void_p])
 _proto('tokotachi_file_dialog_set_filters', None, [c_void_p, POINTER(c_char_p), c_size_t])
 _proto('tokotachi_file_dialog_get_location', c_void_p, [c_void_p])
 _proto('tokotachi_file_dialog_set_location', None, [c_void_p, c_char_p])
-_proto('tokotachi_file_dialog_get_allow_many', c_bool, [c_void_p])
-_proto('tokotachi_file_dialog_set_allow_many', None, [c_void_p, c_bool])
+_proto('tokotachi_file_dialog_get_multi_enabled', c_bool, [c_void_p])
+_proto('tokotachi_file_dialog_set_multi_enabled', None, [c_void_p, c_bool])
 _proto('tokotachi_file_dialog_get_paths', c_void_p, [c_void_p])
 _proto('tokotachi_file_dialog_get_error', c_void_p, [c_void_p])
 _proto('tokotachi_file_dialog_get_selected_filter', c_int, [c_void_p])
@@ -744,7 +753,7 @@ _proto('tokotachi_menu_add_separator', None, [c_void_p])
 _proto('tokotachi_menu_add_submenu', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_menu_popup', None, [c_void_p, c_void_p, CPoint])
 _proto('tokotachi_menu_close', None, [c_void_p])
-_proto('tokotachi_menu_is_open', c_bool, [c_void_p])
+_proto('tokotachi_menu_get_opened', c_bool, [c_void_p])
 _proto('tokotachi_item_model_row_count', c_int, [c_void_p, CModelIndex])
 _proto('tokotachi_item_model_index', CModelIndex, [c_void_p, c_int, CModelIndex])
 _proto('tokotachi_item_model_parent_of', CModelIndex, [c_void_p, CModelIndex])
@@ -882,6 +891,9 @@ class Application(_ApplicationMixin, Object):
     dark_theme = _Property(lambda h: _out_Theme(_get_out(_lib.tokotachi_application_get_dark_theme, h, CTheme)), lambda h, v: _lib.tokotachi_application_set_dark_theme(h, _in_Theme(v)))
     dark = _Property(lambda h: _lib.tokotachi_application_get_dark(h), None)
     theme = _Property(lambda h: _out_Theme(_get_out(_lib.tokotachi_application_get_theme, h, CTheme)), None)
+    language = _Property(lambda h: _out_string(_lib.tokotachi_application_get_language(h)), lambda h, v: _lib.tokotachi_application_set_language(h, _in_string(v)))
+    main_window = _Property(lambda h: _wrap(_lib.tokotachi_application_get_main_window(h)), lambda h, v: _lib.tokotachi_application_set_main_window(h, _in_obj(v, 'Window')), repin=True)
+    auto_quit_enabled = _Property(lambda h: _lib.tokotachi_application_get_auto_quit_enabled(h), lambda h, v: _lib.tokotachi_application_set_auto_quit_enabled(h, v))
     on_theme_change = _Handler('notify', 'tokotachi_application_set_on_theme_change')
 
     def exec(self):
@@ -906,7 +918,7 @@ class Timer(Object):
     interval = _Property(lambda h: _lib.tokotachi_timer_get_interval(h), lambda h, v: _lib.tokotachi_timer_set_interval(h, v))
     repeat = _Property(lambda h: _lib.tokotachi_timer_get_repeat(h), lambda h, v: _lib.tokotachi_timer_set_repeat(h, v))
     enabled = _Property(lambda h: _lib.tokotachi_timer_get_enabled(h), lambda h, v: _lib.tokotachi_timer_set_enabled(h, v))
-    on_timer = _Handler('notify', 'tokotachi_timer_set_on_timer')
+    on_timeout = _Handler('notify', 'tokotachi_timer_set_on_timeout')
 
 
 _register(Timer)
@@ -1061,6 +1073,7 @@ class ComboBox(Widget):
     current_text = _Property(lambda h: _out_string(_lib.tokotachi_combo_box_get_current_text(h)), None)
     placeholder_text = _Property(lambda h: _out_string(_lib.tokotachi_combo_box_get_placeholder_text(h)), lambda h, v: _lib.tokotachi_combo_box_set_placeholder_text(h, _in_string(v)))
     font = _Property(lambda h: _out_Font(_lib.tokotachi_combo_box_get_font(h)), lambda h, v: _lib.tokotachi_combo_box_set_font(h, _in_Font(v)))
+    popup_open = _Property(lambda h: _lib.tokotachi_combo_box_get_popup_open(h), None)
     on_change = _Handler('notify', 'tokotachi_combo_box_set_on_change')
 
     def open_popup(self):
@@ -1068,10 +1081,6 @@ class ComboBox(Widget):
 
     def close_popup(self):
         _lib.tokotachi_combo_box_close_popup(self._h)
-
-    def is_popup_open(self):
-        result = _lib.tokotachi_combo_box_is_popup_open(self._h)
-        return result
 
 
 _register(ComboBox)
@@ -1086,7 +1095,7 @@ class Label(Widget):
 
     text = _Property(lambda h: _out_string(_lib.tokotachi_label_get_text(h)), lambda h, v: _lib.tokotachi_label_set_text(h, _in_string(v)))
     font = _Property(lambda h: _out_Font(_lib.tokotachi_label_get_font(h)), lambda h, v: _lib.tokotachi_label_set_font(h, _in_Font(v)))
-    color = _Property(lambda h: _out_ThemeColor(_lib.tokotachi_label_get_color(h)), lambda h, v: _lib.tokotachi_label_set_color(h, _in_ThemeColor(v)))
+    text_color = _Property(lambda h: _out_ThemeColor(_lib.tokotachi_label_get_text_color(h)), lambda h, v: _lib.tokotachi_label_set_text_color(h, _in_ThemeColor(v)))
     alignment = _Property(lambda h: Align(_lib.tokotachi_label_get_alignment(h)), lambda h, v: _lib.tokotachi_label_set_alignment(h, int(v)))
     word_wrap = _Property(lambda h: _lib.tokotachi_label_get_word_wrap(h), lambda h, v: _lib.tokotachi_label_set_word_wrap(h, v))
 
@@ -1109,8 +1118,8 @@ class TextInputBase(Widget):
     def select_all(self):
         _lib.tokotachi_text_input_base_select_all(self._h)
 
-    def deselect(self):
-        _lib.tokotachi_text_input_base_deselect(self._h)
+    def clear_selection(self):
+        _lib.tokotachi_text_input_base_clear_selection(self._h)
 
     def cut(self):
         _lib.tokotachi_text_input_base_cut(self._h)
@@ -1355,18 +1364,15 @@ class TabWidget(Widget):
 _register(TabWidget)
 
 
-class Window(Widget):
-    """C++ の tokotachi::Window(include/tokotachi/windows/window.hpp)。Application を作った後に作る。所有者を持たない(利用者が破棄する)"""
-
-    def __init__(self, title='', width=640, height=480):
-        self._attach(_lib.tokotachi_window_new(_in_string(title), width, height), True)
-
+class Window(_WindowMixin, Widget):
+    """C++ の tokotachi::Window(include/tokotachi/windows/window.hpp)。Application を作った後に作る。Application が所有する(docs/adr/0062)"""
     title = _Property(lambda h: _out_string(_lib.tokotachi_window_get_title(h)), lambda h, v: _lib.tokotachi_window_set_title(h, _in_string(v)))
     background = _Property(lambda h: _out_ThemeColor(_lib.tokotachi_window_get_background(h)), lambda h, v: _lib.tokotachi_window_set_background(h, _in_ThemeColor(v)))
     focused_widget = _Property(lambda h: _wrap(_lib.tokotachi_window_get_focused_widget(h)), None)
     menu_bar = _Property(lambda h: _wrap(_lib.tokotachi_window_get_menu_bar(h)), lambda h, v: _lib.tokotachi_window_set_menu_bar(h, _in_obj(v, 'MenuBar')), repin=True)
     tool_bar = _Property(lambda h: _wrap(_lib.tokotachi_window_get_tool_bar(h)), lambda h, v: _lib.tokotachi_window_set_tool_bar(h, _in_obj(v, 'ToolBar')), repin=True)
     status_bar = _Property(lambda h: _wrap(_lib.tokotachi_window_get_status_bar(h)), lambda h, v: _lib.tokotachi_window_set_status_bar(h, _in_obj(v, 'StatusBar')), repin=True)
+    destroy_on_close = _Property(lambda h: _lib.tokotachi_window_get_destroy_on_close(h), lambda h, v: _lib.tokotachi_window_set_destroy_on_close(h, v))
     on_close = _Handler('close', 'tokotachi_window_set_on_close')
 
     def close(self):
@@ -1436,7 +1442,7 @@ class FileDialog(Object):
     title = _Property(lambda h: _out_string(_lib.tokotachi_file_dialog_get_title(h)), lambda h, v: _lib.tokotachi_file_dialog_set_title(h, _in_string(v)))
     filters = _Property(lambda h: _out_strings(_lib.tokotachi_file_dialog_get_filters(h)), lambda h, v: _lib.tokotachi_file_dialog_set_filters(h, *_in_strings(v)))
     location = _Property(lambda h: _out_string(_lib.tokotachi_file_dialog_get_location(h)), lambda h, v: _lib.tokotachi_file_dialog_set_location(h, _in_string(v)))
-    allow_many = _Property(lambda h: _lib.tokotachi_file_dialog_get_allow_many(h), lambda h, v: _lib.tokotachi_file_dialog_set_allow_many(h, v))
+    multi_enabled = _Property(lambda h: _lib.tokotachi_file_dialog_get_multi_enabled(h), lambda h, v: _lib.tokotachi_file_dialog_set_multi_enabled(h, v))
     paths = _Property(lambda h: _out_strings(_lib.tokotachi_file_dialog_get_paths(h)), None)
     error = _Property(lambda h: _out_string(_lib.tokotachi_file_dialog_get_error(h)), None)
     selected_filter = _Property(lambda h: _lib.tokotachi_file_dialog_get_selected_filter(h), None)
@@ -1666,6 +1672,7 @@ class Menu(Object):
 
     title = _Property(lambda h: _out_string(_lib.tokotachi_menu_get_title(h)), lambda h, v: _lib.tokotachi_menu_set_title(h, _in_string(v)))
     actions = _Property(lambda h: _get_objects(_lib.tokotachi_menu_get_actions, h), None)
+    opened = _Property(lambda h: _lib.tokotachi_menu_get_opened(h), None)
 
     def add_item(self, text):
         """Action を作って最後に加える(メニューが所有する)"""
@@ -1695,10 +1702,6 @@ class Menu(Object):
 
     def close(self):
         _lib.tokotachi_menu_close(self._h)
-
-    def is_open(self):
-        result = _lib.tokotachi_menu_is_open(self._h)
-        return result
 
 
 _register(Menu)

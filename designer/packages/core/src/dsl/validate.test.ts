@@ -145,7 +145,7 @@ describe('validateDocument', () => {
       'handler-signature-conflict',
     ]);
     const member = sampleCopy();
-    member.objects[0].events.on_timer = 'line_edit_search';
+    member.objects[0].events.on_timeout = 'line_edit_search';
     expect(codes(member)).toEqual(['duplicate-name']);
   });
 
@@ -164,6 +164,38 @@ describe('validateDocument', () => {
     dialog.window.class = 'Dialog';
     dialog.window.buttons = [{ button: 'OK' }, { button: 'NONE' }];
     expect(codes(dialog)).toEqual(['invalid-dialog-button']);
+  });
+
+  it('部品ファイル: 根の Widget はバーを持たず、置いた部品は中身を書かない', () => {
+    const component = {
+      format_version: 1,
+      window: {
+        name: 'SearchBar',
+        class: 'Widget',
+        properties: { width: 300, height: 40 },
+        layout: {
+          class: 'BoxLayout',
+          items: [{ widget: { name: 'edit_search', class: 'LineEdit' } }],
+        },
+      },
+    };
+    expect(codes(component)).toEqual([]);
+    expect(codes({ ...component, window: { ...component.window, status_bar: {} } })).toEqual([
+      'children-not-allowed',
+    ]);
+    const doc = sampleCopy();
+    items(doc)[0].widget = {
+      name: 'panel_search',
+      class: 'Widget',
+      component: 'parts/search_bar.ttui.json',
+    };
+    expect(codes(doc)).toEqual([]);
+    items(doc)[0].widget.class = 'Label';
+    items(doc)[0].widget.component = 'C:/parts/search_bar.json';
+    expect(codes(doc)).toEqual(['invalid-component', 'invalid-component']);
+    items(doc)[0].widget.class = 'Widget';
+    items(doc)[0].widget.children = [];
+    expect(codes(doc)).toEqual(['invalid-component', 'children-not-allowed']);
   });
 
   it('レイアウトの項目', () => {
@@ -190,5 +222,33 @@ describe('validateDocument', () => {
     doc.window.menu_bar.menus[0].items[0].separator = true;
     doc.window.tool_bar.items[1] = {};
     expect(codes(doc)).toEqual(['invalid-tool-item', 'invalid-menu-item']);
+  });
+
+  it('日付(「YYYY-MM-DD」・空)と色(「#RRGGBB」)の値', () => {
+    const doc = sampleCopy();
+    items(doc).push(
+      {
+        widget: {
+          name: 'date_edit_a',
+          class: 'DateEdit',
+          properties: { date: '2026-10-11', minimum: '' },
+        },
+      },
+      { widget: { name: 'date_edit_b', class: 'DateEdit', properties: { date: '2026-02-30' } } },
+      { widget: { name: 'date_edit_c', class: 'DateEdit', properties: { date: '2026/10/11' } } },
+      {
+        widget: {
+          name: 'color_button_a',
+          class: 'ColorButton',
+          properties: { color: '#2563EB80' },
+        },
+      },
+      { widget: { name: 'color_button_b', class: 'ColorButton', properties: { color: 'red' } } },
+    );
+    expect(codes(doc)).toEqual([
+      'invalid-property-value',
+      'invalid-property-value',
+      'invalid-property-value',
+    ]);
   });
 });

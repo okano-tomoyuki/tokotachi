@@ -108,9 +108,9 @@ Canvas& Bitmap::canvas()
     {
         // 空の画像の Canvas: 1 × 1 の捨てる先に描く(呼び出し側が is_null を確かめなくても落ちないように)。
         static Bitmap sink(1, 1);
-        return sink.d_->canvas;
+        return sink.d_->canvas.api();
     }
-    return d_->canvas;
+    return d_->canvas.api();
 }
 
 void Bitmap::clear(const Color& color)

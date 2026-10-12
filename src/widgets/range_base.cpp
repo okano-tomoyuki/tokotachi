@@ -3,28 +3,59 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 
 namespace tokotachi
 {
 
+class RangeBase::Impl
+{
+    TOKOTACHI_IMPL(RangeBase);
+
+    explicit Impl(RangeBase* object) : q(object) {}
+
+    double get_minimum() const { return minimum_; }
+    void set_minimum(const double& v);
+    double get_maximum() const { return maximum_; }
+    void set_maximum(const double& v);
+    double get_value() const { return value_; }
+    void set_value(const double& v);
+    double get_single_step() const { return single_step_; }
+    void set_single_step(const double& v);
+    double get_page_step() const { return page_step_; }
+    void set_page_step(const double& v);
+
+    /// 範囲に収めた値を value_ にする。変わったら range_changed を呼び、知らせ、on_change を呼ぶ。
+    void apply_value(double v);
+
+    double minimum_;
+    double maximum_;
+    double value_;
+    double single_step_;
+    double page_step_;
+    NotifyHandler on_change_;
+};
+
 RangeBase::RangeBase(Widget* parent_widget)
     : Widget(parent_widget),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, minimum),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, maximum),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(RangeBase, double, value),
-      TOKOTACHI_PROPERTY_GETTER(RangeBase, double, single_step),
-      TOKOTACHI_PROPERTY_GETTER(RangeBase, double, page_step),
-      TOKOTACHI_HANDLER_PROPERTY(RangeBase, NotifyHandler, on_change),
-      minimum_(0),
-      maximum_(100),
-      value_(0),
-      single_step_(1),
-      page_step_(10)
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, double, minimum),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, double, maximum),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, double, value),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, double, single_step),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, double, page_step),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      d_(new Impl(this))
 {
+    d_->minimum_ = 0;
+    d_->maximum_ = 100;
+    d_->value_ = 0;
+    d_->single_step_ = 1;
+    d_->page_step_ = 10;
 }
 
-void RangeBase::set_minimum(const double& v)
+RangeBase::~RangeBase() { delete d_; }
+
+void RangeBase::Impl::set_minimum(const double& v)
 {
     if (v == minimum_ || std::isnan(v))
     {
@@ -36,16 +67,16 @@ void RangeBase::set_minimum(const double& v)
     {
         maximum_ = v;
     }
-    range_changed();
-    notify_changed(minimum);
+    q->range_changed();
+    q->notify_changed(q->minimum);
     if (maximum_moved)
     {
-        notify_changed(maximum);
+        q->notify_changed(q->maximum);
     }
     apply_value(value_);
 }
 
-void RangeBase::set_maximum(const double& v)
+void RangeBase::Impl::set_maximum(const double& v)
 {
     if (v == maximum_ || std::isnan(v))
     {
@@ -57,16 +88,16 @@ void RangeBase::set_maximum(const double& v)
     {
         minimum_ = v;
     }
-    range_changed();
-    notify_changed(maximum);
+    q->range_changed();
+    q->notify_changed(q->maximum);
     if (minimum_moved)
     {
-        notify_changed(minimum);
+        q->notify_changed(q->minimum);
     }
     apply_value(value_);
 }
 
-void RangeBase::set_value(const double& v)
+void RangeBase::Impl::set_value(const double& v)
 {
     if (!std::isnan(v))
     {
@@ -74,11 +105,11 @@ void RangeBase::set_value(const double& v)
     }
 }
 
-void RangeBase::set_single_step(const double& v) { single_step_ = std::max(0.0, v); }
+void RangeBase::Impl::set_single_step(const double& v) { single_step_ = std::max(0.0, v); }
 
-void RangeBase::set_page_step(const double& v) { page_step_ = std::max(0.0, v); }
+void RangeBase::Impl::set_page_step(const double& v) { page_step_ = std::max(0.0, v); }
 
-void RangeBase::apply_value(double v)
+void RangeBase::Impl::apply_value(double v)
 {
     const double clamped = std::max(minimum_, std::min(v, maximum_));
     if (clamped == value_)
@@ -86,25 +117,25 @@ void RangeBase::apply_value(double v)
         return;
     }
     value_ = clamped;
-    range_changed();
+    q->range_changed();
     // 結びつけた相手へ伝えてから、ハンドラを呼ぶ。
-    notify_changed(value);
-    Object* self = this;
+    q->notify_changed(q->value);
+    Object* self = q;
     detail::fire(on_change_, self);
 }
 
 double RangeBase::snapped(double v) const
 {
-    if (single_step_ > 0)
+    if (d_->single_step_ > 0)
     {
-        v = minimum_ + std::floor((v - minimum_) / single_step_ + 0.5) * single_step_;
+        v = d_->minimum_ + std::floor((v - d_->minimum_) / d_->single_step_ + 0.5) * d_->single_step_;
     }
-    return std::max(minimum_, std::min(v, maximum_));
+    return std::max(d_->minimum_, std::min(v, d_->maximum_));
 }
 
-void RangeBase::step_by(double amount) { apply_value(snapped(value_ + amount)); }
+void RangeBase::step_by(double amount) { d_->apply_value(snapped(d_->value_ + amount)); }
 
-double RangeBase::ratio() const { return maximum_ > minimum_ ? (value_ - minimum_) / (maximum_ - minimum_) : 0.0; }
+double RangeBase::ratio() const { return d_->maximum_ > d_->minimum_ ? (d_->value_ - d_->minimum_) / (d_->maximum_ - d_->minimum_) : 0.0; }
 
 void RangeBase::range_changed() { invalidate(); }
 

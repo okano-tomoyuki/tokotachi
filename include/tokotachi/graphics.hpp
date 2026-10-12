@@ -5,6 +5,7 @@
 
 #include "graphics/bitmap.hpp"
 #include "graphics/canvas.hpp"
+#include "graphics/icon.hpp"
 #include "graphics/image.hpp"
 #include "graphics/text_layout.hpp"
 #include "graphics/theme.hpp"

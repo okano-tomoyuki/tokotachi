@@ -78,3 +78,8 @@
 - 同期の `exec()` は無い。続きの処理はハンドラに書く。
 - ボタンの標準の文字は日本語と英語だけ。他の言語は英語になる(翻訳の仕組みは対象外)。
 - ファイルの選択の見た目・使える機能は OS による。Linux では xdg-desktop-portal(または zenity・kdialog)が要る。
+
+## 後の変更
+
+- モーダルでない、所有者のウィンドウの上に出るウィンドウ(`Window(owner, title, ...)`)と、閉じたら破棄する `destroy_on_close` を加えた
+  ([ADR 0062](0062-window-ownership-and-quit.md))。

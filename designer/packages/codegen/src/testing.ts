@@ -1,11 +1,27 @@
 /** テスト用の見本(designer/samples。tools/codegen/verify-cpp.mts でビルド・実行して確かめているもの)。 */
-import { TtuiDocument } from '@tokotachi-designer/core';
+import { readCustomClasses, setCustomClasses, TtuiDocument } from '@tokotachi-designer/core';
+import { DEFAULT_CPP_OPTIONS, type CppOptions } from './names.ts';
+import levelBarHpp from '../../../samples/widgets/level_bar.hpp?raw';
 import mainWindow from '../../../samples/main_window.ttui.json' with { type: 'json' };
 import settingsDialog from '../../../samples/settings_dialog.ttui.json' with { type: 'json' };
+import labeledEdit from '../../../samples/parts/labeled_edit.ttui.json' with { type: 'json' };
 import openPng from '../../../samples/icons/open.png?inline';
+
+// 見本はプロジェクト(samples.ttproj.json)で、自作部品(docs/adr/0044)を登録している。テストでもカタログに足す
+setCustomClasses(readCustomClasses([{ path: 'widgets/level_bar.hpp', text: levelBarHpp }]).classes);
+
+/** 見本(プロジェクトのフォルダにある定義ファイル)のコード生成の設定。 */
+export const SAMPLE_OPTIONS: CppOptions = { ...DEFAULT_CPP_OPTIONS, projectDir: '' };
 
 export const MAIN_WINDOW: TtuiDocument = TtuiDocument.parse(mainWindow);
 export const SETTINGS_DIALOG: TtuiDocument = TtuiDocument.parse(settingsDialog);
+/** 部品ファイルの見本(settings_dialog が置いている)。 */
+export const LABELED_EDIT: TtuiDocument = TtuiDocument.parse(labeledEdit);
+
+/** 見本が置いている部品ファイルを読む(パスは samples/ からの相対パス。無ければ undefined)。 */
+export function readSampleComponent(path: string): TtuiDocument | undefined {
+  return path === 'parts/labeled_edit.ttui.json' ? LABELED_EDIT : undefined;
+}
 
 /** 見本の写し(テストで書き換える)。 */
 export function mainWindowCopy(): any {

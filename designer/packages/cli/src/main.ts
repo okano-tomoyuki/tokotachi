@@ -28,15 +28,19 @@ import {
 import {
   configureL10n,
   hasErrors,
+  isComponentDocument,
   isJapanese,
   isValidIdentifier,
   l10n,
   parseDocument,
   parseProject,
   PROJECT_EXTENSION,
+  readCustomClasses,
+  setCustomClasses,
   sameWindowPath,
   type Diagnostic,
   type TtprojDocument,
+  type TtuiDocument,
 } from '@tokotachi-designer/core';
 import ja from '../../extension/l10n/bundle.l10n.ja.json' with { type: 'json' };
 
@@ -89,6 +93,47 @@ function projectContaining(
   }
 }
 
+/**
+ * 置いた部品ファイル(docs/adr/0043)を読む。部品ファイルでない・誤りがあれば undefined(生成はエラーになる)。
+ * プロジェクトに属していればプロジェクトの設定、属していなければ置いた側と同じ設定で生成したヘッダを include する。
+ */
+function readComponent(
+  componentPath: string,
+  options: CppOptions,
+): { document: TtuiDocument; options: CppOptions } | undefined {
+  const parsed = parseDocument(readIfExists(componentPath) ?? '');
+  if (!parsed.document || hasErrors(parsed.diagnostics) || !isComponentDocument(parsed.document)) {
+    return undefined;
+  }
+  const owner = projectContaining(componentPath);
+  return {
+    document: parsed.document,
+    options: owner ? windowCppOptions(owner.doc, owner.windowPath) : options,
+  };
+}
+
+/**
+ * プロジェクトに登録した自作部品(docs/adr/0044)を読んでカタログに足す。読めないヘッダ・プロパティは警告にする。
+ * CLI は 1 つのプロジェクトだけを扱うので、カタログに足したままにする。
+ */
+function useProjectCustomClasses(projectPath: string, project: TtprojDocument): void {
+  const dir = dirname(projectPath);
+  const headers: { path: string; text: string }[] = [];
+  for (const path of project.custom_widgets ?? []) {
+    const text = readIfExists(resolve(dir, path));
+    if (text === undefined) {
+      console.error(`${projectPath}: warning: ${l10n.t('The header "{0}" is not found', path)}`);
+    } else {
+      headers.push({ path, text });
+    }
+  }
+  const { classes, problems } = readCustomClasses(headers);
+  for (const p of problems) {
+    console.error(`${resolve(dir, p.header)}:${String(p.line)}: warning: ${p.message}`);
+  }
+  setCustomClasses(classes);
+}
+
 /** ウィンドウのコードを生成して書く。 */
 function generateWindow(dslPath: string, options: CppOptions, flags: Flags): number {
   const text = readIfExists(dslPath);
@@ -108,6 +153,7 @@ function generateWindow(dslPath: string, options: CppOptions, flags: Flags): num
     (path) => readIfExists(resolve(outDir, path)),
     options,
     (path) => readBinaryIfExists(resolve(outDir, path)),
+    (path) => readComponent(resolve(outDir, path), options),
   );
   return write(generated, outDir, flags);
 }
@@ -125,6 +171,7 @@ function generateWholeProject(projectPath: string, flags: Flags): number {
     return 1;
   }
   const dir = dirname(projectPath);
+  useProjectCustomClasses(projectPath, project);
   let status = 0;
   const windows: ProjectWindow[] = [];
   for (const path of project.windows ?? []) {
@@ -174,6 +221,7 @@ function main(argv: readonly string[]): number {
   }
   const owner = projectContaining(path);
   if (owner) {
+    useProjectCustomClasses(owner.path, owner.doc);
     return generateWindow(path, windowCppOptions(owner.doc, owner.windowPath), flags);
   }
   // プロジェクトに属さなければ、引数の設定で生成する

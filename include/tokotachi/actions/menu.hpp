@@ -1,8 +1,26 @@
 /// @file
+/// tokotachi::Menu の宣言。
+#ifndef TOKOTACHI_ACTIONS_MENU_HPP
+#define TOKOTACHI_ACTIONS_MENU_HPP
+
+#include <string>
+#include <vector>
+
+#include "../core/export.hpp"
+#include "action.hpp"
+#include "../core/geometry.hpp"
+
+namespace tokotachi
+{
+
+class MenuBar;
+class Popup;
+class Widget;
+
 /// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
 ///
 /// @code
-/// tokotachi::Menu* menu_edit = new tokotachi::Menu(&window);                 // ウィンドウが所有する
+/// tokotachi::Menu* menu_edit = new tokotachi::Menu(window_main);                 // ウィンドウが所有する
 /// menu_edit->add_item("コピー(&C)", [](tokotachi::Object*) { ... })->shortcut = "Ctrl+C";
 /// menu_edit->add_action(action_save);                                   // 既にある Action を入れる
 /// menu_edit->add_separator();
@@ -18,31 +36,12 @@
 /// 項目のニーモニック(text の & の次の文字)のキーを押すと、その項目を選ぶ。
 /// 項目を選ぶと、メニューをすべて閉じてから Action を実行する。メニューは、開くウィジェットのウィンドウより先に破棄すること
 /// (ウィンドウに所有させればよい)。
-#ifndef TOKOTACHI_ACTIONS_MENU_HPP
-#define TOKOTACHI_ACTIONS_MENU_HPP
-
-#include <string>
-#include <vector>
-
-#include "action.hpp"
-#include "../core/geometry.hpp"
-
-namespace tokotachi
-{
-
-class MenuBar;
-class Popup;
-class Widget;
-
-namespace detail
-{
-class MenuView;
-struct MenuAccess;
-}
-
-class Menu : public Object
+///
+/// @ingroup actions
+class TOKOTACHI_API Menu : public Object
 {
 public:
+    /// 所有者と名前から作る(メニューバー・親のメニューに加えるときは add_menu・add_submenu を使う)。
     explicit Menu(Object* owner = nullptr, const std::string& title = std::string());
     ~Menu();
 
@@ -55,6 +54,7 @@ public:
     void add_action(Action* action);
     /// Action の項目を除く(このメニューが作った Action なら破棄する)。
     void remove_action(Action* action);
+    /// 区切りの線を最後に加える。
     void add_separator();
     /// サブメニューを開く項目を加え、サブメニューを返す(このメニューが所有する)。
     Menu* add_submenu(const std::string& title);
@@ -65,44 +65,15 @@ public:
     void popup(Widget* anchor_widget, const Point& at);
     /// このメニューと、開いているサブメニューを閉じる。
     void close();
-    bool is_open() const;
+    /// 開いているか(popup・メニューバー・親のメニューから開いてから、閉じるまで)。
+    ReadOnlyProperty<bool> opened;
 
 private:
     friend class MenuBar;
-    friend class detail::MenuView;
-    friend struct detail::MenuAccess;
-
-    /// 項目: action・submenu のどちらか(両方 nullptr なら区切り)。
-    struct Entry
-    {
-        Action* action;
-        Menu* submenu;
-        bool owned;  ///< action をこのメニューが作った
-    };
-
-    void set_title(const std::string& v);
-    std::vector<Action*> get_actions() const;
-    void changed();
-
-    std::string title_;
-    std::vector<Entry> entries_;
-    Menu* parent_menu_;
-    MenuBar* bar_;  ///< メニューバーのメニューならそのバー
-    Popup* popup_;
-    detail::MenuView* view_;
-    Widget* anchor_;  ///< popup_ を作ったときの基準のウィジェット
-    bool cues_;       ///< ニーモニックの下線を出す(キーボードで開いた)
-    bool destroying_;
-
-    /// popup_ と view_ を、anchor のウィンドウの上に作る(作ってあれば作り直さない)。
-    void ensure_popup(Widget* anchor);
-    /// anchor の座標系の矩形 r の下に開く(メニューバー)。keyboard なら最初の項目を強調する。
-    void open_below(Widget* anchor, const Rect& r, bool keyboard);
-    /// 親のメニューの項目の右に開く(サブメニュー)。
-    void open_beside(detail::MenuView* parent_view, const Rect& row);
-    /// 項目を選んだ: 一番上のメニューから閉じ、Action を実行する。
-    void activate(Action* action);
-    Menu* root();
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

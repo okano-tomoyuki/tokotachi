@@ -1,0 +1,6 @@
+{
+  "format_version": 1,
+  "main_window": "main_window.ttui.json",
+  "windows": ["main_window.ttui.json", "settings_dialog.ttui.json", "parts/labeled_edit.ttui.json"],
+  "custom_widgets": ["widgets/level_bar.hpp"]
+}

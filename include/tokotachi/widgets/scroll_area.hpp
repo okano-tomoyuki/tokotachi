@@ -1,8 +1,21 @@
 /// @file
+/// tokotachi::ScrollArea の宣言。
+#ifndef TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
+#define TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
+
+#include "../core/export.hpp"
+#include "scroll_bar.hpp"
+#include "widget.hpp"
+
+namespace tokotachi
+{
+
 /// 中身のウィジェットを、見えている範囲より大きくてもスクロールして見せる入れ物(docs/adr/0021)。
 ///
+/// @image html widget_scroll_area.png
+///
 /// @code
-/// tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(&window);
+/// tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(window_main);
 /// tokotachi::Widget* form = new tokotachi::Widget();         // 中身(親は content への代入で決まる)
 /// tokotachi::GridLayout* grid = new tokotachi::GridLayout(form);
 /// ...
@@ -11,19 +24,14 @@
 ///
 /// 中身の大きさは、中身の preferred_size(fit_width なら幅は見えている幅)。見えている範囲に収まらない向きにだけ
 /// スクロールバーを出す。ScrollArea 自身にレイアウトを付けてはいけない(子の配置は ScrollArea が決める)。
-#ifndef TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
-#define TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
-
-#include "scroll_bar.hpp"
-#include "widget.hpp"
-
-namespace tokotachi
-{
-
-class ScrollArea : public Widget
+///
+/// @ingroup widgets_container
+class TOKOTACHI_API ScrollArea : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ScrollArea(Widget* parent = nullptr);
+    ~ScrollArea() override;
 
     /// 中身。代入すると中身はスクロール領域の中に移る(親が付け替わる)。前の中身は破棄する。
     Property<Widget*> content;
@@ -42,20 +50,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    Widget* get_content() const;
-    void set_content(Widget* const& v);
-    bool get_fit_width() const { return fit_width_; }
-    void set_fit_width(const bool& v);
-    Point get_scroll_position() const;
-    void set_scroll_position(const Point& p);
-    /// スクロールバーの値に合わせて中身を動かす。
-    void place_content();
-
-    Widget* viewport_;
-    ScrollBar* vertical_;
-    ScrollBar* horizontal_;
-    Widget* content_;
-    bool fit_width_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

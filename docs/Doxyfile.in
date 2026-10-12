@@ -5,14 +5,19 @@
 PROJECT_NAME           = "Tokotachi"
 PROJECT_NUMBER         = @PROJECT_VERSION@
 PROJECT_BRIEF          = "SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ"
+# 見出しのロゴとブラウザのタブのアイコン(デザイナーの拡張のアイコンと同じ。docs/adr/0055)
+PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/designer/packages/extension/images/icon.png
+PROJECT_ICON           = @CMAKE_CURRENT_SOURCE_DIR@/designer/packages/extension/images/icon.png
 OUTPUT_DIRECTORY       = @TOKOTACHI_DOCS_OUTPUT@
 OUTPUT_LANGUAGE        = Japanese
 CREATE_SUBDIRS         = NO
 
 # ---- 入力 ----
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/docs/guide @CMAKE_CURRENT_SOURCE_DIR@/include/tokotachi
-FILE_PATTERNS          = *.md *.hpp
+FILE_PATTERNS          = *.md *.hpp *.dox
 RECURSIVE              = YES
+# ページの並び(クラスの説明をメンバの一覧より前に出す)
+LAYOUT_FILE            = @CMAKE_CURRENT_SOURCE_DIR@/docs/DoxygenLayout.xml
 USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/guide/index.md
 STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@/include @CMAKE_CURRENT_SOURCE_DIR@/docs/guide
 STRIP_FROM_INC_PATH    = @CMAKE_CURRENT_SOURCE_DIR@/include
@@ -22,19 +27,24 @@ MARKDOWN_SUPPORT       = YES
 TOC_INCLUDE_HEADINGS   = 3
 
 # ---- 何を載せるか ----
-# 説明の無いメンバーも載せる。private と内部(detail)は載せない。
-EXTRACT_ALL            = YES
+# 公開のメンバーはすべて説明を書く(説明の無いメンバーは警告し、警告があれば失敗する)。private と内部(detail)は載せない。
+EXTRACT_ALL            = NO
 EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = YES
+# メンバのまとまり(///@{ ... ///@})の最初のメンバの説明を、まとまりのほかのメンバにも使う(演算子など)
+DISTRIBUTE_GROUP_DOC   = YES
 EXCLUDE_SYMBOLS        = tokotachi::detail tokotachi::detail::*
 HIDE_FRIEND_COMPOUNDS  = YES
 SORT_MEMBER_DOCS       = NO
 SHOW_USED_FILES        = YES
-WARN_IF_UNDOCUMENTED   = NO
-WARN_IF_INCOMPLETE_DOC = NO
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_INCOMPLETE_DOC = YES
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
 QUIET                  = YES
 ENABLE_PREPROCESSING   = YES
-MACRO_EXPANSION        = NO
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = TOKOTACHI_API= "TOKOTACHI_DEPRECATED(message)="
 
 # ---- HTML ----
 GENERATE_HTML          = YES

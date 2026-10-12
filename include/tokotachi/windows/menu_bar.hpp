@@ -1,5 +1,21 @@
 /// @file
+/// tokotachi::MenuBar の宣言。
+#ifndef TOKOTACHI_WINDOWS_MENU_BAR_HPP
+#define TOKOTACHI_WINDOWS_MENU_BAR_HPP
+
+#include <string>
+#include <vector>
+
+#include "../actions/menu.hpp"
+#include "../core/export.hpp"
+#include "../widgets/widget.hpp"
+
+namespace tokotachi
+{
+
 /// ウィンドウの上端のメニューバー(docs/adr/0027)。
+///
+/// @image html widget_window_bars.png
 ///
 /// @code
 /// tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
@@ -12,26 +28,12 @@
 /// メニューバーのメニューの Action のショートカットは、ウィンドウ全体で効く。
 /// キーボード: Alt+ニーモニックでそのメニューを開く。Alt を押して離す・F10 でメニューバーへ移り、←→ で選び、↓・Enter で開き、
 /// Esc で戻る。開いたメニューの中の ←→ は隣のメニューへ移る。Alt を押している間は、ニーモニックの下線を出す。
-#ifndef TOKOTACHI_WINDOWS_MENU_BAR_HPP
-#define TOKOTACHI_WINDOWS_MENU_BAR_HPP
-
-#include <string>
-#include <vector>
-
-#include "../actions/menu.hpp"
-#include "../widgets/widget.hpp"
-
-namespace tokotachi
-{
-
-namespace detail
-{
-struct MenuBarAccess;
-}
-
-class MenuBar : public Widget
+///
+/// @ingroup windows
+class TOKOTACHI_API MenuBar : public Widget
 {
 public:
+    /// ふつうは nullptr で作り、Window::menu_bar に代入する。
     explicit MenuBar(Widget* parent = nullptr);
     ~MenuBar();
 
@@ -39,6 +41,7 @@ public:
     Menu* add_menu(const std::string& title);
     /// メニューを除いて破棄する。
     void remove_menu(Menu* menu);
+    /// メニュー(並んだ順)。
     ReadOnlyProperty<std::vector<Menu*> > menus;
 
 protected:
@@ -51,39 +54,10 @@ protected:
 
 private:
     friend class Menu;
-    friend class detail::MenuView;
-    friend struct detail::MenuBarAccess;
-
-    std::vector<Menu*> get_menus() const { return menus_; }
-
-    /// ウィンドウがフォーカスのあるウィジェットより先に渡すキー。使ったら true。
-    bool handle_key(const KeyEvent& e, bool down);
-    /// ショートカットが一致する Action を実行する(メニューとサブメニューをすべて探す)。実行したら true。
-    bool trigger_shortcut(const KeyEvent& e);
-    /// キーボードの操作の状態をやめる(ウィンドウを押した・フォーカスを失った)。
-    void cancel();
-
-    void open(int i, bool keyboard);
-    void open_adjacent(Menu* from, int step);
-    /// メニューが閉じた・Esc でメニューバーへ戻る・項目を選んだ。
-    void menu_closed(Menu* menu);
-    void menu_escaped(Menu* menu);
-    void menu_activated();
-    void enter_keyboard_mode(int i);
-    void leave_keyboard_mode();
-    int index_of(const Menu* menu) const;
-    int mnemonic_at(Key key) const;
-
-    float bar_height() const;
-    Rect title_rect(int i) const;
-    int title_at(const Point& p) const;
-
-    std::vector<Menu*> menus_;
-    int open_;     ///< 開いているメニュー(-1 なら無し)
-    int hover_;    ///< ポインタが乗っている見出し
-    int active_;   ///< キーボードで選んでいる見出し(-1 なら無し)
-    bool alt_alone_;  ///< Alt を押してから他のキーを押していない
-    bool cues_;       ///< ニーモニックの下線を出す
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

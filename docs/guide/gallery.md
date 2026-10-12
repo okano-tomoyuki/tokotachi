@@ -7,7 +7,8 @@
 
 ## ボタン
 
-Button(PRIMARY・SECONDARY・無効)、CheckBox、RadioButton(変数に結んだグループ)。
+Button(PRIMARY・SECONDARY・無効)、CheckBox、RadioButton(変数に結んだグループ)を GroupBox(見出しの付いた枠)にまとめています。
+「(&S)」などは Alt と一緒に押すキー(ニーモニック)です。
 
 ![ボタン](buttons.png)
 
@@ -15,11 +16,22 @@ Button(PRIMARY・SECONDARY・無効)、CheckBox、RadioButton(変数に結んだ
 
 ## 入力
 
-LineEdit、ComboBox、SpinBox、TextEdit、Slider と ProgressBar(同じ変数に結ぶ)。GridLayout で項目名と並べています。
+LineEdit、ComboBox、SpinBox(単位)、TextEdit、Slider(目盛り)と ProgressBar(同じ変数に結ぶ)、進み具合の分からない ProgressBar。
+GridLayout で項目名と並べ、項目名のニーモニック(Alt+N など)で入力欄へ移ります。
 
 ![入力](inputs.png)
 
 @include inputs.cpp
+
+## 日付と色
+
+DateEdit(書式・暦のポップアップ)・Calendar・ColorButton(押すと ColorDialog を開く。不透明度も選べる)。
+
+![日付と色](pickers.png)
+
+![色の選択](color_dialog.png)
+
+@include pickers.cpp
 
 ## 一覧と木
 
@@ -29,6 +41,14 @@ TreeView と ListView(列・並べ替え・チェック・複数選択)を Split
 
 @include views.cpp
 
+## 表
+
+TableView(セルの矩形の選択・その場での編集・写す・貼る)。点を書き換えると、モデルが合計を計算し直します。
+
+![表](table.png)
+
+@include table.cpp
+
 ## ウィンドウの部品
 
 メニューバー・ツールバー・ステータスバー・タブ。メニューとツールバーは同じ Action を共有しています。
@@ -36,6 +56,15 @@ TreeView と ListView(列・並べ替え・チェック・複数選択)を Split
 ![ウィンドウの部品](window.png)
 
 @include window.cpp
+
+## 複数のウィンドウ
+
+メインのウィンドウ(閉じると終える)、メインのウィンドウが所有するツールのウィンドウ(その上に出て、閉じても隠すだけ)、
+開くたびに作り閉じたら破棄するメモのウィンドウ(`destroy_on_close`)。ウィンドウはすべて `new` で作ります。
+
+![複数のウィンドウ](windows.png)
+
+@include windows.cpp
 
 ## ダイアログ
 
@@ -50,3 +79,28 @@ PaintBox の Canvas に、棒グラフ・円グラフ・回転とグラデーシ
 ![描画](drawing.png)
 
 @include drawing.cpp
+
+## ドラッグ&ドロップ
+
+エクスプローラー・ファイルマネージャーからファイルや文字を落とします。左の枠はドラッグが来ると色を変え、落としたものを表示します。
+右の一覧は落としたファイルを加え、中の項目はドラッグで並べ替えられます。
+
+![ドラッグ&ドロップ](drop.png)
+
+@include drop.cpp
+
+## 画像
+
+`ImageBox` の合わせ方(`fit`)を並べ、ラベル・ボタン・メニュー・ツールバーに画像を出します。
+
+![画像](images.png)
+
+@include images.cpp
+
+## アイコン
+
+よく使うアイコン(`Image::icon`)を、メニュー・ツールバー・ボタン(無効・色を決めたもの)に出し、すべてのアイコンを名前と一緒に並べます。
+
+![アイコン](icons.png)
+
+@include icons.cpp

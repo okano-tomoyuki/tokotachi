@@ -2,7 +2,9 @@
   "displayName": "Tokotachi Designer",
   "description": "C++ の GUI ライブラリ Tokotachi のデザイナー",
   "customEditor.displayName": "Tokotachi Designer",
+  "customEditor.project.displayName": "Tokotachi プロジェクトの設定",
   "command.newWindow.title": "新しいウィンドウ...",
+  "command.newComponent.title": "新しい部品ファイル...",
   "command.generateCode.title": "コードを生成",
   "command.openAsText.title": "テキストとして開く",
   "config.generateOnSave": "ウィンドウの定義(`*.ttui.json`)を保存したときに、C++ のコードを生成する。",
@@ -16,6 +18,7 @@
   "view.projects.welcome": "プロジェクトを作って、ウィンドウを設計し、C++ のコードを生成します(main.cpp と CMakeLists.txt も生成します)。\n[新しいプロジェクト](command:tokotachiDesigner.newProject)",
   "command.newProject.title": "新しいプロジェクト...",
   "command.generateProject.title": "プロジェクトのコードを生成",
+  "command.chooseColorScheme.title": "アプリケーションの配色を選ぶ",
   "command.setMainWindow.title": "メインのウィンドウに設定",
   "command.addToProject.title": "プロジェクトに追加...",
   "command.refreshProjects.title": "更新"
