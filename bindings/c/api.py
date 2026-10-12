@@ -85,6 +85,18 @@ KEYS = (
     + ['SHIFT', 'CONTROL', 'ALT', 'META']
 )
 
+def _icon_names():
+    """tokotachi::Icon の値(include/tokotachi/graphics/icon.hpp から読む。アイコンを足しても直さずに済むように)。"""
+    import os
+    import re
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'include', 'tokotachi', 'graphics',
+                        'icon.hpp')
+    text = open(path, encoding='utf-8').read()
+    body = text[text.index('enum class Icon'):]
+    body = body[body.index('{') + 1:body.index('};')]
+    return re.findall(r'^\s*([A-Z0-9_]+),', body, re.M)
+
+
 ENUMS = [
     Enum('MouseButton', 'tokotachi::MouseButton', ['NONE', 'LEFT', 'MIDDLE', 'RIGHT']),
     Enum('Key', 'tokotachi::Key', KEYS),
@@ -113,6 +125,12 @@ ENUMS = [
     Enum('LineCap', 'tokotachi::LineCap', ['BUTT', 'ROUND', 'SQUARE']),
     Enum('LineJoin', 'tokotachi::LineJoin', ['MITER', 'ROUND', 'BEVEL']),
     Enum('PaintType', 'tokotachi::Paint::Type', ['SOLID', 'LINEAR', 'RADIAL'], doc='塗りの種類(C++ の Paint::Type)'),
+    Enum('DayOfWeek', 'tokotachi::DayOfWeek',
+         ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']),
+    Enum('DropAction', 'tokotachi::DropAction', ['NONE', 'COPY', 'MOVE']),
+    Enum('SelectionBehavior', 'tokotachi::SelectionBehavior', ['CELLS', 'ROWS']),
+    Enum('ImageFit', 'tokotachi::ImageFit', ['NONE', 'CONTAIN', 'COVER', 'STRETCH']),
+    Enum('Icon', 'tokotachi::Icon', _icon_names(), doc='よく使うアイコン(C++ の tokotachi::Icon。docs/adr/0054)'),
     Enum('VariableType', None, ['BOOL', 'INT', 'FLOAT', 'DOUBLE', 'STRING'],
          doc='Variable の値の型(bool・int・float・double・std::string)'),
 ]
@@ -162,12 +180,53 @@ CORE = [
     F('tokotachi_theme_light', 'void', [('raw:tokotachi_theme*', 'out')]),
     F('tokotachi_theme_dark', 'void', [('raw:tokotachi_theme*', 'out')]),
     F('tokotachi_theme_color_resolve', 'Color', [('ThemeColor', 'color')], doc='今のアプリケーションのテーマで具体的な色にする'),
+    # ---- Date(docs/adr/0051) ----
+    F('tokotachi_date_today', 'Date', []),
+    F('tokotachi_date_parse', 'Date', [('string', 'text'), ('string', 'pattern')],
+      doc='pattern("yyyy/MM/dd" など。NULL なら "yyyy/MM/dd")で読む。読めなければ空の日付(すべて 0)'),
+    F('tokotachi_date_format', 'string', [('Date', 'date'), ('string', 'pattern')]),
+    F('tokotachi_date_is_valid', 'bool', [('Date', 'date')]),
+    F('tokotachi_date_day_of_week', 'DayOfWeek', [('Date', 'date')]),
+    F('tokotachi_date_add_days', 'Date', [('Date', 'date'), ('int', 'days')]),
+    F('tokotachi_date_add_months', 'Date', [('Date', 'date'), ('int', 'months')]),
+    F('tokotachi_date_add_years', 'Date', [('Date', 'date'), ('int', 'years')]),
+    F('tokotachi_date_days_to', 'int', [('Date', 'date'), ('Date', 'other')]),
+    F('tokotachi_date_days_in_month', 'int', [('int', 'year'), ('int', 'month')]),
+    F('tokotachi_date_is_leap_year', 'bool', [('int', 'year')]),
+    # ---- ドラッグの中身(docs/adr/0047) ----
+    F('tokotachi_drag_data_new', 'raw:tokotachi_drag_data*', [],
+      doc='Widget の start_drag に渡す中身を作る(tokotachi_drag_data_free で解放する)'),
+    F('tokotachi_drag_data_free', 'void', [('raw:tokotachi_drag_data*', 'data')]),
+    F('tokotachi_drag_data_get_text', 'string', [('raw:const tokotachi_drag_data*', 'data')]),
+    F('tokotachi_drag_data_set_text', 'void', [('raw:tokotachi_drag_data*', 'data'), ('string', 'text')]),
+    F('tokotachi_drag_data_get_files', 'strings', [('raw:const tokotachi_drag_data*', 'data')]),
+    F('tokotachi_drag_data_set_files', 'void', [('raw:tokotachi_drag_data*', 'data'), ('strings', 'files')]),
+    F('tokotachi_drag_data_get_format', 'string', [('raw:const tokotachi_drag_data*', 'data'), ('string', 'name')],
+      doc='名前の付いた中身(無ければ NULL)'),
+    F('tokotachi_drag_data_set_format', 'void',
+      [('raw:tokotachi_drag_data*', 'data'), ('string', 'name'), ('string', 'value')]),
+    F('tokotachi_drag_data_format_names', 'strings', [('raw:const tokotachi_drag_data*', 'data')]),
+    F('tokotachi_drag_data_source', 'obj:Widget', [('raw:const tokotachi_drag_data*', 'data')],
+      doc='ドラッグを始めた部品(OS からなら NULL)'),
+    F('tokotachi_drag_data_from_outside', 'bool', [('raw:const tokotachi_drag_data*', 'data')]),
+    # ---- 標準の見た目を描く関数(C++ の tokotachi::draw。docs/adr/0058) ----
+    F('tokotachi_draw_button_face', 'void',
+      [('raw:tokotachi_canvas*', 'canvas'), ('Rect', 'rect'), ('ControlState', 'state'), ('ButtonStyle', 'style')]),
+    F('tokotachi_draw_button_text_color', 'Color', [('ControlState', 'state'), ('ButtonStyle', 'style')]),
+    F('tokotachi_draw_check_mark', 'void', [('raw:tokotachi_canvas*', 'canvas'), ('Rect', 'rect'), ('ControlState', 'state')]),
+    F('tokotachi_draw_radio_mark', 'void', [('raw:tokotachi_canvas*', 'canvas'), ('Rect', 'rect'), ('ControlState', 'state')]),
+    F('tokotachi_draw_focus_ring', 'void', [('raw:tokotachi_canvas*', 'canvas'), ('Rect', 'rect')]),
+    F('tokotachi_draw_field_frame', 'void', [('raw:tokotachi_canvas*', 'canvas'), ('Rect', 'rect'), ('ControlState', 'state')]),
     # ---- Image(値。参照を数えて共有する) ----
     F('tokotachi_image_load', 'Image', [('string', 'path')], doc='PNG・JPEG・BMP・GIF を読む。読めなければ NULL'),
     F('tokotachi_image_load_from_data', 'Image', [('raw:const void*', 'data'), ('size_t', 'size')]),
     F('tokotachi_image_from_pixels', 'Image',
       [('int', 'width'), ('int', 'height'), ('raw:const tokotachi_color*', 'pixels'), ('size_t', 'count')],
       doc='画素(左上から行ごと。アルファは乗算していない)から作る。count が width × height でなければ NULL'),
+    F('tokotachi_image_icon', 'Image', [('Icon', 'icon')],
+      doc='よく使うアイコン(線画。使う部品の文字の色で塗る。docs/adr/0054)'),
+    F('tokotachi_image_icon_colored', 'Image', [('Icon', 'icon'), ('Color', 'color')], doc='決まった色で塗るアイコン'),
+    F('tokotachi_image_is_icon', 'bool', [('raw:const tokotachi_image*', 'image')]),
     F('tokotachi_image_copy', 'Image', [('raw:const tokotachi_image*', 'image')], doc='同じ画像を指す、別のハンドル'),
     F('tokotachi_image_free', 'void', [('raw:tokotachi_image*', 'image')]),
     F('tokotachi_image_width', 'int', [('raw:const tokotachi_image*', 'image')]),
@@ -290,6 +349,10 @@ WIDGET_HANDLERS = [
     H('on_key_up', 'key'),
     H('on_focus_in', 'notify'),
     H('on_focus_out', 'notify'),
+    H('on_drag_move', 'drag', doc='accepts_drops のとき、ドラッグが上を動いた(accepted を false にすると受け取らない)'),
+    H('on_drag_leave', 'notify'),
+    H('on_drop', 'drag'),
+    H('on_drag_finish', 'drag_finish', doc='start_drag で始めたドラッグが終わった'),
 ]
 
 PARENT = [('obj:Widget', 'parent', 'None')]
@@ -346,6 +409,9 @@ CLASSES = [
         P('display_scale', 'float', ro=True),
         P('tooltip', 'string'),
         P('actions', 'objs:Action', ro=True),
+        P('theme_override', 'ThemeOverride', doc='テーマの一部の上書き(docs/adr/0042)'),
+        P('theme', 'Theme', ro=True, doc='自分に効いているテーマ'),
+        P('accepts_drops', 'bool'),
         M('add_action', 'void', [('obj:Action', 'action')]),
         M('remove_action', 'void', [('obj:Action', 'action')]),
         M('invalidate', 'void'),
@@ -355,6 +421,10 @@ CLASSES = [
         M('map_to_window', 'Point', [('Point', 'p')]),
         M('map_from_window', 'Point', [('Point', 'p')]),
         M('child_at', 'obj:Widget', [('Point', 'p')]),
+        M('start_drag', 'bool', [('DragData', 'data'), ('string', 'label', "''")],
+          doc='ドラッグを始める(docs/adr/0047)。マウスのボタンを押している間だけ'),
+        M('focus_next_after', 'bool'),
+        M('focus_first_within', 'bool'),
     ] + WIDGET_HANDLERS, new=PARENT, doc='ウィジェットの基底。tokotachi_widget_new は中身の無い入れ物を作る'),
     # ---- widgets ----
     Cls('ButtonBase', 'tokotachi::ButtonBase', 'Widget', 'widgets/button_base.hpp', [
@@ -364,6 +434,8 @@ CLASSES = [
     ]),
     Cls('Button', 'tokotachi::Button', 'ButtonBase', 'widgets/button.hpp', [
         P('style', 'ButtonStyle'),
+        P('icon', 'Image', bindable=False),
+        P('icon_size', 'float'),
     ], new=PARENT_TEXT),
     Cls('CheckBox', 'tokotachi::CheckBox', 'ButtonBase', 'widgets/check_box.hpp', [
         P('checked', 'bool'),
@@ -392,6 +464,9 @@ CLASSES = [
         P('text_color', 'ThemeColor'),
         P('alignment', 'Align'),
         P('word_wrap', 'bool'),
+        P('icon', 'Image', bindable=False),
+        P('icon_size', 'float'),
+        P('buddy', 'obj:Widget', bindable=False, doc='ニーモニックでフォーカスを移す部品'),
     ], new=PARENT_TEXT),
     Cls('TextInputBase', 'tokotachi::TextInputBase', 'Widget', 'widgets/text_input_base.hpp', [
         P('text', 'string'),
@@ -400,6 +475,8 @@ CLASSES = [
         P('cursor_position', 'size_t'),
         P('has_selection', 'bool', ro=True),
         P('selected_text', 'string', ro=True),
+        P('can_undo', 'bool', ro=True),
+        P('can_redo', 'bool', ro=True),
         H('on_change', 'notify'),
         M('select_all', 'void'),
         M('clear_selection', 'void'),
@@ -407,6 +484,9 @@ CLASSES = [
         M('copy', 'void'),
         M('paste', 'void'),
         M('insert', 'void', [('string', 's')]),
+        M('undo', 'void'),
+        M('redo', 'void'),
+        M('clear_undo_history', 'void'),
     ]),
     Cls('LineEdit', 'tokotachi::LineEdit', 'TextInputBase', 'widgets/line_edit.hpp', [
         H('on_submit', 'notify'),
@@ -423,6 +503,7 @@ CLASSES = [
         P('maximum', 'double'),
         P('value', 'double'),
         P('text_visible', 'bool'),
+        P('indeterminate', 'bool'),
     ], new=PARENT),
     Cls('RangeBase', 'tokotachi::RangeBase', 'Widget', 'widgets/range_base.hpp', [
         P('minimum', 'double'),
@@ -434,9 +515,12 @@ CLASSES = [
     ]),
     Cls('Slider', 'tokotachi::Slider', 'RangeBase', 'widgets/slider.hpp', [
         P('orientation', 'Orientation'),
+        P('tick_interval', 'double'),
     ], new=PARENT + [('Orientation', 'orientation', 'Orientation.HORIZONTAL')]),
     Cls('SpinBox', 'tokotachi::SpinBox', 'RangeBase', 'widgets/spin_box.hpp', [
         P('decimals', 'int'),
+        P('prefix', 'string'),
+        P('suffix', 'string'),
         P('text', 'string', ro=True),
         M('commit', 'void'),
     ], new=PARENT),
@@ -483,6 +567,46 @@ CLASSES = [
         M('remove_tab', 'obj:Widget', [('obj:Tab', 'tab')],
           doc='タブを除き、ページを返す(ページは親が無くなり、呼んだ側が破棄する)'),
     ], new=PARENT),
+    Cls('GroupBox', 'tokotachi::GroupBox', 'Widget', 'widgets/group_box.hpp', [
+        P('title', 'string'),
+        P('content_rect', 'Rect', ro=True),
+    ], new=[('obj:Widget', 'parent', 'None'), ('string', 'title', "''")]),
+    Cls('ImageBox', 'tokotachi::ImageBox', 'Widget', 'widgets/image_box.hpp', [
+        P('image', 'Image', bindable=False),
+        P('fit', 'ImageFit'),
+    ], new=[('obj:Widget', 'parent', 'None'), ('Image', 'image', 'None')]),
+    Cls('Calendar', 'tokotachi::Calendar', 'Widget', 'widgets/calendar.hpp', [
+        P('date', 'Date'),
+        P('minimum', 'Date'),
+        P('maximum', 'Date'),
+        P('first_day_of_week', 'DayOfWeek'),
+        P('shown_year', 'int', ro=True),
+        P('shown_month', 'int', ro=True),
+        H('on_change', 'notify'),
+        H('on_activate', 'notify'),
+        M('show_month', 'void', [('int', 'year'), ('int', 'month')]),
+    ], new=PARENT),
+    Cls('DateEdit', 'tokotachi::DateEdit', 'Widget', 'widgets/date_edit.hpp', [
+        P('date', 'Date'),
+        P('minimum', 'Date'),
+        P('maximum', 'Date'),
+        P('format', 'string'),
+        P('first_day_of_week', 'DayOfWeek'),
+        P('placeholder_text', 'string'),
+        P('text', 'string', ro=True),
+        P('calendar_open', 'bool', ro=True),
+        H('on_change', 'notify'),
+        M('commit', 'void'),
+        M('open_calendar', 'void'),
+        M('close_calendar', 'void'),
+    ], new=PARENT),
+    Cls('ColorButton', 'tokotachi::ColorButton', 'ButtonBase', 'widgets/color_button.hpp', [
+        P('color', 'Color'),
+        P('alpha_enabled', 'bool'),
+        P('dialog_title', 'string'),
+        H('on_change', 'notify'),
+        M('open_dialog', 'void'),
+    ], new=[('obj:Widget', 'parent', 'None'), ('Color', 'color', 'Color(0, 0, 0)')]),
     # ---- windows ----
     Cls('Window', 'tokotachi::Window', 'Widget', 'windows/window.hpp', [
         P('title', 'string'),
@@ -521,6 +645,14 @@ CLASSES = [
           doc='作ってボタンを加えて開き、閉じたら on_finish を呼んで破棄する(button_count が 0 なら OK だけ)'),
     ], new=[('obj:Window', 'parent', None), ('string', 'title', "''"), ('string', 'text', "''"),
             ('MessageType', 'type', 'MessageType.INFORMATION')], py_mixin='_MessageDialogMixin'),
+    Cls('ColorDialog', 'tokotachi::ColorDialog', 'Dialog', 'windows/color_dialog.hpp', [
+        P('color', 'Color'),
+        P('alpha_enabled', 'bool'),
+        F('tokotachi_color_dialog_show', 'obj:ColorDialog',
+          [('obj:Window', 'parent'), ('Color', 'initial'), ('raw:tokotachi_notify_fn', 'on_finish'),
+           ('raw:void*', 'user_data'), ('raw:tokotachi_destroy_fn', 'destroy'), ('bool', 'alpha'), ('string', 'title')],
+          doc='作って開き、閉じたら on_finish を呼んで破棄する(決めた色は on_finish の中で color を読む)'),
+    ], new=[('obj:Window', 'parent', None), ('string', 'title', "''")], py_mixin='_ColorDialogMixin'),
     Cls('FileDialog', 'tokotachi::FileDialog', 'Object', 'windows/file_dialog.hpp', [
         P('mode', 'FileDialogMode'),
         P('title', 'string'),
@@ -623,6 +755,14 @@ CLASSES = [
         M('checkable', 'bool', [('ModelIndex', 'index')]),
         M('checked', 'bool', [('ModelIndex', 'index')]),
         M('set_checked', 'void', [('ModelIndex', 'index'), ('bool', 'checked')]),
+        M('text_color', 'ThemeColor', [('ModelIndex', 'index'), ('int', 'column', '0')]),
+        M('font', 'Font', [('ModelIndex', 'index'), ('int', 'column', '0')]),
+        M('editable', 'bool', [('ModelIndex', 'index'), ('int', 'column', '0')]),
+        M('set_text', 'void', [('ModelIndex', 'index'), ('int', 'column'), ('string', 'text')]),
+        M('can_move_rows', 'bool', [('ModelIndexes', 'indexes'), ('ModelIndex', 'parent'), ('int', 'row')]),
+        M('move_rows', 'bool', [('ModelIndexes', 'indexes'), ('ModelIndex', 'parent'), ('int', 'row')]),
+        M('can_drop', 'bool', [('DragData', 'data'), ('ModelIndex', 'parent'), ('int', 'row')]),
+        M('drop_data', 'bool', [('DragData', 'data'), ('DropAction', 'action'), ('ModelIndex', 'parent'), ('int', 'row')]),
         M('sort', 'void', [('int', 'column'), ('SortOrder', 'order')]),
         M('locate', 'ModelIndex', [('ModelIndex', 'index')]),
     ], doc='一覧・木のモデルの基底。独自のモデルは tokotachi_custom_model_new で作る'),
@@ -633,13 +773,18 @@ CLASSES = [
         P('enabled', 'bool'),
         P('checkable', 'bool'),
         P('checked', 'bool'),
+        P('text_color', 'ThemeColor'),
+        P('font', 'Font'),
+        P('editable', 'bool'),
         M('column_text', 'string', [('int', 'column')]),
+        M('set_column_text', 'void', [('int', 'column'), ('string', 'value')]),
     ], doc='ListModel・TreeModel の項目(モデルが所有する)'),
     Cls('ListModel', 'tokotachi::ListModel', 'ItemModel', 'views/list_model.hpp', [
         P('items', 'objs:Item', ro=True),
         M('add_item', 'obj:Item', [('string', 'text')]),
         M('insert_item', 'obj:Item', [('int', 'index'), ('string', 'text')]),
         M('remove_item', 'void', [('obj:Item', 'item')]),
+        M('move_item', 'void', [('obj:Item', 'item'), ('int', 'index')]),
         M('clear', 'void'),
         M('index_of', 'ModelIndex', [('obj:Item', 'item')]),
         M('item_at', 'obj:Item', [('ModelIndex', 'index')]),
@@ -655,6 +800,7 @@ CLASSES = [
         M('add_item', 'obj:TreeItem', [('string', 'text')]),
         M('insert_item', 'obj:TreeItem', [('int', 'index'), ('string', 'text')]),
         M('remove_item', 'void', [('obj:TreeItem', 'item')]),
+        M('move_item', 'void', [('obj:TreeItem', 'item'), ('obj:TreeItem', 'parent'), ('int', 'index')]),
         M('clear', 'void'),
         M('index_of', 'ModelIndex', [('obj:TreeItem', 'item')]),
         M('item_at', 'obj:TreeItem', [('ModelIndex', 'index')]),
@@ -674,6 +820,9 @@ CLASSES = [
         P('selection_mode', 'SelectionMode'),
         P('current', 'ModelIndex'),
         P('selection', 'ModelIndexes', ro=True),
+        P('editing', 'bool', ro=True),
+        P('drag_enabled', 'bool'),
+        P('drop_enabled', 'bool'),
         H('on_selection_change', 'notify'),
         H('on_activate', 'notify'),
         M('add_column', 'obj:Column', [('string', 'title'), ('float', 'width', '120')]),
@@ -684,8 +833,23 @@ CLASSES = [
         M('clear_selection', 'void'),
         M('scroll_to', 'void', [('ModelIndex', 'index')]),
         M('index_at', 'ModelIndex', [('Point', 'p')]),
+        M('edit', 'void', [('ModelIndex', 'index'), ('int', 'column', '0')]),
+        M('finish_editing', 'void', [('bool', 'commit', 'True')]),
     ], doc='ListView・TreeView の基底(モデルは所有しない)'),
     Cls('ListView', 'tokotachi::ListView', 'ItemView', 'views/list_view.hpp', [], new=PARENT),
+    Cls('TableView', 'tokotachi::TableView', 'ItemView', 'views/table_view.hpp', [
+        P('selection_behavior', 'SelectionBehavior'),
+        P('current_column', 'int'),
+        P('selected_ranges', 'CellRanges', ro=True),
+        P('grid_visible', 'bool'),
+        P('row_header_visible', 'bool'),
+        M('is_cell_selected', 'bool', [('int', 'row'), ('int', 'column')]),
+        M('select_range', 'void', [('CellRange', 'range'), ('bool', 'add', 'False')]),
+        M('selected_text', 'string'),
+        M('copy', 'void'),
+        M('paste', 'void'),
+        M('clear_selected_cells', 'void'),
+    ], new=PARENT),
     Cls('TreeView', 'tokotachi::TreeView', 'ItemView', 'views/tree_view.hpp', [
         P('indentation', 'float'),
         M('expand', 'void', [('ModelIndex', 'index')]),

@@ -12,7 +12,10 @@ from ._core import (_in_Point, _out_Point, _in_Size, _out_Size, _in_Rect, _out_R
                     _in_Margins, _out_Margins, _in_Font, _out_Font, _in_Shortcut, _out_Shortcut,
                     _in_ThemeColor, _out_ThemeColor, _in_ModelIndex, _out_ModelIndex, _in_Placement,
                     _out_Placement)
-from ._core import (_ApplicationMixin, _WindowMixin, _MessageDialogMixin, _VariableMixin, _TaskMixin, _CustomModelMixin)
+from ._core import (_in_indexes, _get_ranges, _in_DragData, _in_Date, _out_Date, _in_CellRange,
+                    _out_CellRange, _in_ThemeOverride, _out_ThemeOverride, _in_ControlState)
+from ._core import (_ApplicationMixin, _WindowMixin, _MessageDialogMixin, _ColorDialogMixin, _VariableMixin,
+                    _TaskMixin, _CustomModelMixin)
 
 # ---- 列挙 ----
 
@@ -286,6 +289,118 @@ class PaintType(enum.IntEnum):
     RADIAL = 2
 
 
+class DayOfWeek(enum.IntEnum):
+    """C++ の tokotachi::DayOfWeek"""
+
+    SUNDAY = 0
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+    THURSDAY = 4
+    FRIDAY = 5
+    SATURDAY = 6
+
+
+class DropAction(enum.IntEnum):
+    """C++ の tokotachi::DropAction"""
+
+    NONE = 0
+    COPY = 1
+    MOVE = 2
+
+
+class SelectionBehavior(enum.IntEnum):
+    """C++ の tokotachi::SelectionBehavior"""
+
+    CELLS = 0
+    ROWS = 1
+
+
+class ImageFit(enum.IntEnum):
+    """C++ の tokotachi::ImageFit"""
+
+    NONE = 0
+    CONTAIN = 1
+    COVER = 2
+    STRETCH = 3
+
+
+class Icon(enum.IntEnum):
+    """よく使うアイコン(C++ の tokotachi::Icon。docs/adr/0054)"""
+
+    FILE = 0
+    FILE_PLUS = 1
+    FILE_TEXT = 2
+    FOLDER = 3
+    FOLDER_OPEN = 4
+    SAVE = 5
+    PRINTER = 6
+    DOWNLOAD = 7
+    UPLOAD = 8
+    UNDO_2 = 9
+    REDO_2 = 10
+    SCISSORS = 11
+    COPY = 12
+    CLIPBOARD_PASTE = 13
+    TRASH = 14
+    PENCIL = 15
+    PLUS = 16
+    MINUS = 17
+    X = 18
+    CHECK = 19
+    ARROW_LEFT = 20
+    ARROW_RIGHT = 21
+    ARROW_UP = 22
+    ARROW_DOWN = 23
+    CHEVRON_LEFT = 24
+    CHEVRON_RIGHT = 25
+    CHEVRON_UP = 26
+    CHEVRON_DOWN = 27
+    HOUSE = 28
+    MENU = 29
+    ELLIPSIS = 30
+    REFRESH_CW = 31
+    EXTERNAL_LINK = 32
+    SEARCH = 33
+    ZOOM_IN = 34
+    ZOOM_OUT = 35
+    EYE = 36
+    EYE_OFF = 37
+    FUNNEL = 38
+    SETTINGS = 39
+    SLIDERS_HORIZONTAL = 40
+    LIST = 41
+    LAYOUT_GRID = 42
+    INFO = 43
+    TRIANGLE_ALERT = 44
+    CIRCLE_X = 45
+    CIRCLE_CHECK = 46
+    CIRCLE_QUESTION_MARK = 47
+    BELL = 48
+    PLAY = 49
+    PAUSE = 50
+    SQUARE = 51
+    SKIP_BACK = 52
+    SKIP_FORWARD = 53
+    VOLUME_2 = 54
+    VOLUME_X = 55
+    USER = 56
+    USERS = 57
+    MAIL = 58
+    CALENDAR = 59
+    CLOCK = 60
+    LOCK = 61
+    LOCK_OPEN = 62
+    STAR = 63
+    HEART = 64
+    LINK = 65
+    IMAGE = 66
+    LOG_IN = 67
+    LOG_OUT = 68
+    SUN = 69
+    MOON = 70
+
+
 class VariableType(enum.IntEnum):
     """Variable の値の型(bool・int・float・double・std::string)"""
 
@@ -323,9 +438,40 @@ _proto('tokotachi_shortcut_to_string', c_void_p, [CShortcut])
 _proto('tokotachi_theme_light', None, [POINTER(CTheme)])
 _proto('tokotachi_theme_dark', None, [POINTER(CTheme)])
 _proto('tokotachi_theme_color_resolve', CColor, [CThemeColor])
+_proto('tokotachi_date_today', CDate, [])
+_proto('tokotachi_date_parse', CDate, [c_char_p, c_char_p])
+_proto('tokotachi_date_format', c_void_p, [CDate, c_char_p])
+_proto('tokotachi_date_is_valid', c_bool, [CDate])
+_proto('tokotachi_date_day_of_week', c_int, [CDate])
+_proto('tokotachi_date_add_days', CDate, [CDate, c_int])
+_proto('tokotachi_date_add_months', CDate, [CDate, c_int])
+_proto('tokotachi_date_add_years', CDate, [CDate, c_int])
+_proto('tokotachi_date_days_to', c_int, [CDate, CDate])
+_proto('tokotachi_date_days_in_month', c_int, [c_int, c_int])
+_proto('tokotachi_date_is_leap_year', c_bool, [c_int])
+_proto('tokotachi_drag_data_new', c_void_p, [])
+_proto('tokotachi_drag_data_free', None, [c_void_p])
+_proto('tokotachi_drag_data_get_text', c_void_p, [c_void_p])
+_proto('tokotachi_drag_data_set_text', None, [c_void_p, c_char_p])
+_proto('tokotachi_drag_data_get_files', c_void_p, [c_void_p])
+_proto('tokotachi_drag_data_set_files', None, [c_void_p, POINTER(c_char_p), c_size_t])
+_proto('tokotachi_drag_data_get_format', c_void_p, [c_void_p, c_char_p])
+_proto('tokotachi_drag_data_set_format', None, [c_void_p, c_char_p, c_char_p])
+_proto('tokotachi_drag_data_format_names', c_void_p, [c_void_p])
+_proto('tokotachi_drag_data_source', c_void_p, [c_void_p])
+_proto('tokotachi_drag_data_from_outside', c_bool, [c_void_p])
+_proto('tokotachi_draw_button_face', None, [c_void_p, CRect, CControlState, c_int])
+_proto('tokotachi_draw_button_text_color', CColor, [CControlState, c_int])
+_proto('tokotachi_draw_check_mark', None, [c_void_p, CRect, CControlState])
+_proto('tokotachi_draw_radio_mark', None, [c_void_p, CRect, CControlState])
+_proto('tokotachi_draw_focus_ring', None, [c_void_p, CRect])
+_proto('tokotachi_draw_field_frame', None, [c_void_p, CRect, CControlState])
 _proto('tokotachi_image_load', c_void_p, [c_char_p])
 _proto('tokotachi_image_load_from_data', c_void_p, [c_void_p, c_size_t])
 _proto('tokotachi_image_from_pixels', c_void_p, [c_int, c_int, POINTER(CColor), c_size_t])
+_proto('tokotachi_image_icon', c_void_p, [c_int])
+_proto('tokotachi_image_icon_colored', c_void_p, [c_int, CColor])
+_proto('tokotachi_image_is_icon', c_bool, [c_void_p])
 _proto('tokotachi_image_copy', c_void_p, [c_void_p])
 _proto('tokotachi_image_free', None, [c_void_p])
 _proto('tokotachi_image_width', c_int, [c_void_p])
@@ -461,6 +607,11 @@ _proto('tokotachi_widget_get_display_scale', c_float, [c_void_p])
 _proto('tokotachi_widget_get_tooltip', c_void_p, [c_void_p])
 _proto('tokotachi_widget_set_tooltip', None, [c_void_p, c_char_p])
 _proto('tokotachi_widget_get_actions', c_size_t, [c_void_p, POINTER(c_void_p), c_size_t])
+_proto('tokotachi_widget_get_theme_override', None, [c_void_p, POINTER(CThemeOverride)])
+_proto('tokotachi_widget_set_theme_override', None, [c_void_p, POINTER(CThemeOverride)])
+_proto('tokotachi_widget_get_theme', None, [c_void_p, POINTER(CTheme)])
+_proto('tokotachi_widget_get_accepts_drops', c_bool, [c_void_p])
+_proto('tokotachi_widget_set_accepts_drops', None, [c_void_p, c_bool])
 _proto('tokotachi_widget_add_action', None, [c_void_p, c_void_p])
 _proto('tokotachi_widget_remove_action', None, [c_void_p, c_void_p])
 _proto('tokotachi_widget_invalidate', None, [c_void_p])
@@ -470,6 +621,9 @@ _proto('tokotachi_widget_apply_layout', None, [c_void_p])
 _proto('tokotachi_widget_map_to_window', CPoint, [c_void_p, CPoint])
 _proto('tokotachi_widget_map_from_window', CPoint, [c_void_p, CPoint])
 _proto('tokotachi_widget_child_at', c_void_p, [c_void_p, CPoint])
+_proto('tokotachi_widget_start_drag', c_bool, [c_void_p, c_void_p, c_char_p])
+_proto('tokotachi_widget_focus_next_after', c_bool, [c_void_p])
+_proto('tokotachi_widget_focus_first_within', c_bool, [c_void_p])
 _proto('tokotachi_widget_set_on_paint', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_widget_set_on_resize', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_widget_set_on_mouse_down', None, [c_void_p, c_void_p, c_void_p, c_void_p])
@@ -482,6 +636,10 @@ _proto('tokotachi_widget_set_on_key_down', None, [c_void_p, c_void_p, c_void_p, 
 _proto('tokotachi_widget_set_on_key_up', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_widget_set_on_focus_in', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_widget_set_on_focus_out', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_widget_set_on_drag_move', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_widget_set_on_drag_leave', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_widget_set_on_drop', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_widget_set_on_drag_finish', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_button_base_get_text', c_void_p, [c_void_p])
 _proto('tokotachi_button_base_set_text', None, [c_void_p, c_char_p])
 _proto('tokotachi_button_base_get_font', CFont, [c_void_p])
@@ -490,6 +648,10 @@ _proto('tokotachi_button_base_set_on_click', None, [c_void_p, c_void_p, c_void_p
 _proto('tokotachi_button_new', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_button_get_style', c_int, [c_void_p])
 _proto('tokotachi_button_set_style', None, [c_void_p, c_int])
+_proto('tokotachi_button_get_icon', c_void_p, [c_void_p])
+_proto('tokotachi_button_set_icon', None, [c_void_p, c_void_p])
+_proto('tokotachi_button_get_icon_size', c_float, [c_void_p])
+_proto('tokotachi_button_set_icon_size', None, [c_void_p, c_float])
 _proto('tokotachi_check_box_new', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_check_box_get_checked', c_bool, [c_void_p])
 _proto('tokotachi_check_box_set_checked', None, [c_void_p, c_bool])
@@ -526,6 +688,12 @@ _proto('tokotachi_label_get_alignment', c_int, [c_void_p])
 _proto('tokotachi_label_set_alignment', None, [c_void_p, c_int])
 _proto('tokotachi_label_get_word_wrap', c_bool, [c_void_p])
 _proto('tokotachi_label_set_word_wrap', None, [c_void_p, c_bool])
+_proto('tokotachi_label_get_icon', c_void_p, [c_void_p])
+_proto('tokotachi_label_set_icon', None, [c_void_p, c_void_p])
+_proto('tokotachi_label_get_icon_size', c_float, [c_void_p])
+_proto('tokotachi_label_set_icon_size', None, [c_void_p, c_float])
+_proto('tokotachi_label_get_buddy', c_void_p, [c_void_p])
+_proto('tokotachi_label_set_buddy', None, [c_void_p, c_void_p])
 _proto('tokotachi_text_input_base_get_text', c_void_p, [c_void_p])
 _proto('tokotachi_text_input_base_set_text', None, [c_void_p, c_char_p])
 _proto('tokotachi_text_input_base_get_placeholder_text', c_void_p, [c_void_p])
@@ -536,6 +704,8 @@ _proto('tokotachi_text_input_base_get_cursor_position', c_size_t, [c_void_p])
 _proto('tokotachi_text_input_base_set_cursor_position', None, [c_void_p, c_size_t])
 _proto('tokotachi_text_input_base_get_has_selection', c_bool, [c_void_p])
 _proto('tokotachi_text_input_base_get_selected_text', c_void_p, [c_void_p])
+_proto('tokotachi_text_input_base_get_can_undo', c_bool, [c_void_p])
+_proto('tokotachi_text_input_base_get_can_redo', c_bool, [c_void_p])
 _proto('tokotachi_text_input_base_set_on_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_text_input_base_select_all', None, [c_void_p])
 _proto('tokotachi_text_input_base_clear_selection', None, [c_void_p])
@@ -543,6 +713,9 @@ _proto('tokotachi_text_input_base_cut', None, [c_void_p])
 _proto('tokotachi_text_input_base_copy', None, [c_void_p])
 _proto('tokotachi_text_input_base_paste', None, [c_void_p])
 _proto('tokotachi_text_input_base_insert', None, [c_void_p, c_char_p])
+_proto('tokotachi_text_input_base_undo', None, [c_void_p])
+_proto('tokotachi_text_input_base_redo', None, [c_void_p])
+_proto('tokotachi_text_input_base_clear_undo_history', None, [c_void_p])
 _proto('tokotachi_line_edit_new', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_line_edit_set_on_submit', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_text_edit_new', c_void_p, [c_void_p, c_char_p])
@@ -561,6 +734,8 @@ _proto('tokotachi_progress_bar_get_value', c_double, [c_void_p])
 _proto('tokotachi_progress_bar_set_value', None, [c_void_p, c_double])
 _proto('tokotachi_progress_bar_get_text_visible', c_bool, [c_void_p])
 _proto('tokotachi_progress_bar_set_text_visible', None, [c_void_p, c_bool])
+_proto('tokotachi_progress_bar_get_indeterminate', c_bool, [c_void_p])
+_proto('tokotachi_progress_bar_set_indeterminate', None, [c_void_p, c_bool])
 _proto('tokotachi_range_base_get_minimum', c_double, [c_void_p])
 _proto('tokotachi_range_base_set_minimum', None, [c_void_p, c_double])
 _proto('tokotachi_range_base_get_maximum', c_double, [c_void_p])
@@ -575,9 +750,15 @@ _proto('tokotachi_range_base_set_on_change', None, [c_void_p, c_void_p, c_void_p
 _proto('tokotachi_slider_new', c_void_p, [c_void_p, c_int])
 _proto('tokotachi_slider_get_orientation', c_int, [c_void_p])
 _proto('tokotachi_slider_set_orientation', None, [c_void_p, c_int])
+_proto('tokotachi_slider_get_tick_interval', c_double, [c_void_p])
+_proto('tokotachi_slider_set_tick_interval', None, [c_void_p, c_double])
 _proto('tokotachi_spin_box_new', c_void_p, [c_void_p])
 _proto('tokotachi_spin_box_get_decimals', c_int, [c_void_p])
 _proto('tokotachi_spin_box_set_decimals', None, [c_void_p, c_int])
+_proto('tokotachi_spin_box_get_prefix', c_void_p, [c_void_p])
+_proto('tokotachi_spin_box_set_prefix', None, [c_void_p, c_char_p])
+_proto('tokotachi_spin_box_get_suffix', c_void_p, [c_void_p])
+_proto('tokotachi_spin_box_set_suffix', None, [c_void_p, c_char_p])
 _proto('tokotachi_spin_box_get_text', c_void_p, [c_void_p])
 _proto('tokotachi_spin_box_commit', None, [c_void_p])
 _proto('tokotachi_scroll_area_new', c_void_p, [c_void_p])
@@ -629,6 +810,57 @@ _proto('tokotachi_tab_widget_set_on_change', None, [c_void_p, c_void_p, c_void_p
 _proto('tokotachi_tab_widget_add_tab', c_void_p, [c_void_p, c_void_p, c_char_p])
 _proto('tokotachi_tab_widget_insert_tab', c_void_p, [c_void_p, c_int, c_void_p, c_char_p])
 _proto('tokotachi_tab_widget_remove_tab', c_void_p, [c_void_p, c_void_p])
+_proto('tokotachi_group_box_new', c_void_p, [c_void_p, c_char_p])
+_proto('tokotachi_group_box_get_title', c_void_p, [c_void_p])
+_proto('tokotachi_group_box_set_title', None, [c_void_p, c_char_p])
+_proto('tokotachi_group_box_get_content_rect', CRect, [c_void_p])
+_proto('tokotachi_image_box_new', c_void_p, [c_void_p, c_void_p])
+_proto('tokotachi_image_box_get_image', c_void_p, [c_void_p])
+_proto('tokotachi_image_box_set_image', None, [c_void_p, c_void_p])
+_proto('tokotachi_image_box_get_fit', c_int, [c_void_p])
+_proto('tokotachi_image_box_set_fit', None, [c_void_p, c_int])
+_proto('tokotachi_calendar_new', c_void_p, [c_void_p])
+_proto('tokotachi_calendar_get_date', CDate, [c_void_p])
+_proto('tokotachi_calendar_set_date', None, [c_void_p, CDate])
+_proto('tokotachi_calendar_get_minimum', CDate, [c_void_p])
+_proto('tokotachi_calendar_set_minimum', None, [c_void_p, CDate])
+_proto('tokotachi_calendar_get_maximum', CDate, [c_void_p])
+_proto('tokotachi_calendar_set_maximum', None, [c_void_p, CDate])
+_proto('tokotachi_calendar_get_first_day_of_week', c_int, [c_void_p])
+_proto('tokotachi_calendar_set_first_day_of_week', None, [c_void_p, c_int])
+_proto('tokotachi_calendar_get_shown_year', c_int, [c_void_p])
+_proto('tokotachi_calendar_get_shown_month', c_int, [c_void_p])
+_proto('tokotachi_calendar_set_on_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_calendar_set_on_activate', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_calendar_show_month', None, [c_void_p, c_int, c_int])
+_proto('tokotachi_date_edit_new', c_void_p, [c_void_p])
+_proto('tokotachi_date_edit_get_date', CDate, [c_void_p])
+_proto('tokotachi_date_edit_set_date', None, [c_void_p, CDate])
+_proto('tokotachi_date_edit_get_minimum', CDate, [c_void_p])
+_proto('tokotachi_date_edit_set_minimum', None, [c_void_p, CDate])
+_proto('tokotachi_date_edit_get_maximum', CDate, [c_void_p])
+_proto('tokotachi_date_edit_set_maximum', None, [c_void_p, CDate])
+_proto('tokotachi_date_edit_get_format', c_void_p, [c_void_p])
+_proto('tokotachi_date_edit_set_format', None, [c_void_p, c_char_p])
+_proto('tokotachi_date_edit_get_first_day_of_week', c_int, [c_void_p])
+_proto('tokotachi_date_edit_set_first_day_of_week', None, [c_void_p, c_int])
+_proto('tokotachi_date_edit_get_placeholder_text', c_void_p, [c_void_p])
+_proto('tokotachi_date_edit_set_placeholder_text', None, [c_void_p, c_char_p])
+_proto('tokotachi_date_edit_get_text', c_void_p, [c_void_p])
+_proto('tokotachi_date_edit_get_calendar_open', c_bool, [c_void_p])
+_proto('tokotachi_date_edit_set_on_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_date_edit_commit', None, [c_void_p])
+_proto('tokotachi_date_edit_open_calendar', None, [c_void_p])
+_proto('tokotachi_date_edit_close_calendar', None, [c_void_p])
+_proto('tokotachi_color_button_new', c_void_p, [c_void_p, CColor])
+_proto('tokotachi_color_button_get_color', CColor, [c_void_p])
+_proto('tokotachi_color_button_set_color', None, [c_void_p, CColor])
+_proto('tokotachi_color_button_get_alpha_enabled', c_bool, [c_void_p])
+_proto('tokotachi_color_button_set_alpha_enabled', None, [c_void_p, c_bool])
+_proto('tokotachi_color_button_get_dialog_title', c_void_p, [c_void_p])
+_proto('tokotachi_color_button_set_dialog_title', None, [c_void_p, c_char_p])
+_proto('tokotachi_color_button_set_on_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
+_proto('tokotachi_color_button_open_dialog', None, [c_void_p])
 _proto('tokotachi_window_new', c_void_p, [c_char_p, c_float, c_float])
 _proto('tokotachi_window_get_title', c_void_p, [c_void_p])
 _proto('tokotachi_window_set_title', None, [c_void_p, c_char_p])
@@ -660,6 +892,12 @@ _proto('tokotachi_message_dialog_set_text', None, [c_void_p, c_char_p])
 _proto('tokotachi_message_dialog_get_type', c_int, [c_void_p])
 _proto('tokotachi_message_dialog_set_type', None, [c_void_p, c_int])
 _proto('tokotachi_message_dialog_show', c_void_p, [c_void_p, c_char_p, c_char_p, POINTER(c_int), c_size_t, c_void_p, c_void_p, c_void_p, c_int])
+_proto('tokotachi_color_dialog_new', c_void_p, [c_void_p, c_char_p])
+_proto('tokotachi_color_dialog_get_color', CColor, [c_void_p])
+_proto('tokotachi_color_dialog_set_color', None, [c_void_p, CColor])
+_proto('tokotachi_color_dialog_get_alpha_enabled', c_bool, [c_void_p])
+_proto('tokotachi_color_dialog_set_alpha_enabled', None, [c_void_p, c_bool])
+_proto('tokotachi_color_dialog_show', c_void_p, [c_void_p, CColor, c_void_p, c_void_p, c_void_p, c_bool, c_char_p])
 _proto('tokotachi_file_dialog_new', c_void_p, [c_void_p, c_int])
 _proto('tokotachi_file_dialog_get_mode', c_int, [c_void_p])
 _proto('tokotachi_file_dialog_set_mode', None, [c_void_p, c_int])
@@ -763,6 +1001,14 @@ _proto('tokotachi_item_model_enabled', c_bool, [c_void_p, CModelIndex])
 _proto('tokotachi_item_model_checkable', c_bool, [c_void_p, CModelIndex])
 _proto('tokotachi_item_model_checked', c_bool, [c_void_p, CModelIndex])
 _proto('tokotachi_item_model_set_checked', None, [c_void_p, CModelIndex, c_bool])
+_proto('tokotachi_item_model_text_color', CThemeColor, [c_void_p, CModelIndex, c_int])
+_proto('tokotachi_item_model_font', CFont, [c_void_p, CModelIndex, c_int])
+_proto('tokotachi_item_model_editable', c_bool, [c_void_p, CModelIndex, c_int])
+_proto('tokotachi_item_model_set_text', None, [c_void_p, CModelIndex, c_int, c_char_p])
+_proto('tokotachi_item_model_can_move_rows', c_bool, [c_void_p, POINTER(CModelIndex), c_size_t, CModelIndex, c_int])
+_proto('tokotachi_item_model_move_rows', c_bool, [c_void_p, POINTER(CModelIndex), c_size_t, CModelIndex, c_int])
+_proto('tokotachi_item_model_can_drop', c_bool, [c_void_p, c_void_p, CModelIndex, c_int])
+_proto('tokotachi_item_model_drop_data', c_bool, [c_void_p, c_void_p, c_int, CModelIndex, c_int])
 _proto('tokotachi_item_model_sort', None, [c_void_p, c_int, c_int])
 _proto('tokotachi_item_model_locate', CModelIndex, [c_void_p, CModelIndex])
 _proto('tokotachi_item_get_text', c_void_p, [c_void_p])
@@ -777,12 +1023,20 @@ _proto('tokotachi_item_get_checkable', c_bool, [c_void_p])
 _proto('tokotachi_item_set_checkable', None, [c_void_p, c_bool])
 _proto('tokotachi_item_get_checked', c_bool, [c_void_p])
 _proto('tokotachi_item_set_checked', None, [c_void_p, c_bool])
+_proto('tokotachi_item_get_text_color', CThemeColor, [c_void_p])
+_proto('tokotachi_item_set_text_color', None, [c_void_p, CThemeColor])
+_proto('tokotachi_item_get_font', CFont, [c_void_p])
+_proto('tokotachi_item_set_font', None, [c_void_p, CFont])
+_proto('tokotachi_item_get_editable', c_bool, [c_void_p])
+_proto('tokotachi_item_set_editable', None, [c_void_p, c_bool])
 _proto('tokotachi_item_column_text', c_void_p, [c_void_p, c_int])
+_proto('tokotachi_item_set_column_text', None, [c_void_p, c_int, c_char_p])
 _proto('tokotachi_list_model_new', c_void_p, [c_void_p])
 _proto('tokotachi_list_model_get_items', c_size_t, [c_void_p, POINTER(c_void_p), c_size_t])
 _proto('tokotachi_list_model_add_item', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_list_model_insert_item', c_void_p, [c_void_p, c_int, c_char_p])
 _proto('tokotachi_list_model_remove_item', None, [c_void_p, c_void_p])
+_proto('tokotachi_list_model_move_item', None, [c_void_p, c_void_p, c_int])
 _proto('tokotachi_list_model_clear', None, [c_void_p])
 _proto('tokotachi_list_model_index_of', CModelIndex, [c_void_p, c_void_p])
 _proto('tokotachi_list_model_item_at', c_void_p, [c_void_p, CModelIndex])
@@ -795,6 +1049,7 @@ _proto('tokotachi_tree_model_get_items', c_size_t, [c_void_p, POINTER(c_void_p),
 _proto('tokotachi_tree_model_add_item', c_void_p, [c_void_p, c_char_p])
 _proto('tokotachi_tree_model_insert_item', c_void_p, [c_void_p, c_int, c_char_p])
 _proto('tokotachi_tree_model_remove_item', None, [c_void_p, c_void_p])
+_proto('tokotachi_tree_model_move_item', None, [c_void_p, c_void_p, c_void_p, c_int])
 _proto('tokotachi_tree_model_clear', None, [c_void_p])
 _proto('tokotachi_tree_model_index_of', CModelIndex, [c_void_p, c_void_p])
 _proto('tokotachi_tree_model_item_at', c_void_p, [c_void_p, CModelIndex])
@@ -820,6 +1075,11 @@ _proto('tokotachi_item_view_set_selection_mode', None, [c_void_p, c_int])
 _proto('tokotachi_item_view_get_current', CModelIndex, [c_void_p])
 _proto('tokotachi_item_view_set_current', None, [c_void_p, CModelIndex])
 _proto('tokotachi_item_view_get_selection', c_size_t, [c_void_p, POINTER(CModelIndex), c_size_t])
+_proto('tokotachi_item_view_get_editing', c_bool, [c_void_p])
+_proto('tokotachi_item_view_get_drag_enabled', c_bool, [c_void_p])
+_proto('tokotachi_item_view_set_drag_enabled', None, [c_void_p, c_bool])
+_proto('tokotachi_item_view_get_drop_enabled', c_bool, [c_void_p])
+_proto('tokotachi_item_view_set_drop_enabled', None, [c_void_p, c_bool])
 _proto('tokotachi_item_view_set_on_selection_change', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_item_view_set_on_activate', None, [c_void_p, c_void_p, c_void_p, c_void_p])
 _proto('tokotachi_item_view_add_column', c_void_p, [c_void_p, c_char_p, c_float])
@@ -830,7 +1090,25 @@ _proto('tokotachi_item_view_select_all', None, [c_void_p])
 _proto('tokotachi_item_view_clear_selection', None, [c_void_p])
 _proto('tokotachi_item_view_scroll_to', None, [c_void_p, CModelIndex])
 _proto('tokotachi_item_view_index_at', CModelIndex, [c_void_p, CPoint])
+_proto('tokotachi_item_view_edit', None, [c_void_p, CModelIndex, c_int])
+_proto('tokotachi_item_view_finish_editing', None, [c_void_p, c_bool])
 _proto('tokotachi_list_view_new', c_void_p, [c_void_p])
+_proto('tokotachi_table_view_new', c_void_p, [c_void_p])
+_proto('tokotachi_table_view_get_selection_behavior', c_int, [c_void_p])
+_proto('tokotachi_table_view_set_selection_behavior', None, [c_void_p, c_int])
+_proto('tokotachi_table_view_get_current_column', c_int, [c_void_p])
+_proto('tokotachi_table_view_set_current_column', None, [c_void_p, c_int])
+_proto('tokotachi_table_view_get_selected_ranges', c_size_t, [c_void_p, POINTER(CCellRange), c_size_t])
+_proto('tokotachi_table_view_get_grid_visible', c_bool, [c_void_p])
+_proto('tokotachi_table_view_set_grid_visible', None, [c_void_p, c_bool])
+_proto('tokotachi_table_view_get_row_header_visible', c_bool, [c_void_p])
+_proto('tokotachi_table_view_set_row_header_visible', None, [c_void_p, c_bool])
+_proto('tokotachi_table_view_is_cell_selected', c_bool, [c_void_p, c_int, c_int])
+_proto('tokotachi_table_view_select_range', None, [c_void_p, CCellRange, c_bool])
+_proto('tokotachi_table_view_selected_text', c_void_p, [c_void_p])
+_proto('tokotachi_table_view_copy', None, [c_void_p])
+_proto('tokotachi_table_view_paste', None, [c_void_p])
+_proto('tokotachi_table_view_clear_selected_cells', None, [c_void_p])
 _proto('tokotachi_tree_view_new', c_void_p, [c_void_p])
 _proto('tokotachi_tree_view_get_indentation', c_float, [c_void_p])
 _proto('tokotachi_tree_view_set_indentation', None, [c_void_p, c_float])
@@ -956,6 +1234,9 @@ class Widget(Object):
     display_scale = _Property(lambda h: _lib.tokotachi_widget_get_display_scale(h), None)
     tooltip = _Property(lambda h: _out_string(_lib.tokotachi_widget_get_tooltip(h)), lambda h, v: _lib.tokotachi_widget_set_tooltip(h, _in_string(v)))
     actions = _Property(lambda h: _get_objects(_lib.tokotachi_widget_get_actions, h), None)
+    theme_override = _Property(lambda h: _out_ThemeOverride(_get_out(_lib.tokotachi_widget_get_theme_override, h, CThemeOverride)), lambda h, v: _lib.tokotachi_widget_set_theme_override(h, _in_ThemeOverride(v)))
+    theme = _Property(lambda h: _out_Theme(_get_out(_lib.tokotachi_widget_get_theme, h, CTheme)), None)
+    accepts_drops = _Property(lambda h: _lib.tokotachi_widget_get_accepts_drops(h), lambda h, v: _lib.tokotachi_widget_set_accepts_drops(h, v))
     on_paint = _Handler('paint', 'tokotachi_widget_set_on_paint')
     on_resize = _Handler('notify', 'tokotachi_widget_set_on_resize')
     on_mouse_down = _Handler('mouse', 'tokotachi_widget_set_on_mouse_down')
@@ -968,6 +1249,10 @@ class Widget(Object):
     on_key_up = _Handler('key', 'tokotachi_widget_set_on_key_up')
     on_focus_in = _Handler('notify', 'tokotachi_widget_set_on_focus_in')
     on_focus_out = _Handler('notify', 'tokotachi_widget_set_on_focus_out')
+    on_drag_move = _Handler('drag', 'tokotachi_widget_set_on_drag_move')
+    on_drag_leave = _Handler('notify', 'tokotachi_widget_set_on_drag_leave')
+    on_drop = _Handler('drag', 'tokotachi_widget_set_on_drop')
+    on_drag_finish = _Handler('drag_finish', 'tokotachi_widget_set_on_drag_finish')
 
     def add_action(self, action):
         _lib.tokotachi_widget_add_action(self._h, _in_obj(action, 'Action'))
@@ -1002,6 +1287,19 @@ class Widget(Object):
         _repin(result)
         return result
 
+    def start_drag(self, data, label=''):
+        """ドラッグを始める(docs/adr/0047)。マウスのボタンを押している間だけ"""
+        result = _lib.tokotachi_widget_start_drag(self._h, _in_DragData(data), _in_string(label))
+        return result
+
+    def focus_next_after(self):
+        result = _lib.tokotachi_widget_focus_next_after(self._h)
+        return result
+
+    def focus_first_within(self):
+        result = _lib.tokotachi_widget_focus_first_within(self._h)
+        return result
+
 
 _register(Widget)
 
@@ -1026,6 +1324,8 @@ class Button(ButtonBase):
         _repin(parent)
 
     style = _Property(lambda h: ButtonStyle(_lib.tokotachi_button_get_style(h)), lambda h, v: _lib.tokotachi_button_set_style(h, int(v)))
+    icon = _Property(lambda h: _out_Image(_lib.tokotachi_button_get_icon(h)), lambda h, v: _lib.tokotachi_button_set_icon(h, _in_Image(v)))
+    icon_size = _Property(lambda h: _lib.tokotachi_button_get_icon_size(h), lambda h, v: _lib.tokotachi_button_set_icon_size(h, v))
 
 
 _register(Button)
@@ -1098,6 +1398,9 @@ class Label(Widget):
     text_color = _Property(lambda h: _out_ThemeColor(_lib.tokotachi_label_get_text_color(h)), lambda h, v: _lib.tokotachi_label_set_text_color(h, _in_ThemeColor(v)))
     alignment = _Property(lambda h: Align(_lib.tokotachi_label_get_alignment(h)), lambda h, v: _lib.tokotachi_label_set_alignment(h, int(v)))
     word_wrap = _Property(lambda h: _lib.tokotachi_label_get_word_wrap(h), lambda h, v: _lib.tokotachi_label_set_word_wrap(h, v))
+    icon = _Property(lambda h: _out_Image(_lib.tokotachi_label_get_icon(h)), lambda h, v: _lib.tokotachi_label_set_icon(h, _in_Image(v)))
+    icon_size = _Property(lambda h: _lib.tokotachi_label_get_icon_size(h), lambda h, v: _lib.tokotachi_label_set_icon_size(h, v))
+    buddy = _Property(lambda h: _wrap(_lib.tokotachi_label_get_buddy(h)), lambda h, v: _lib.tokotachi_label_set_buddy(h, _in_obj(v, 'Widget')), repin=True)
 
 
 _register(Label)
@@ -1113,6 +1416,8 @@ class TextInputBase(Widget):
     cursor_position = _Property(lambda h: _lib.tokotachi_text_input_base_get_cursor_position(h), lambda h, v: _lib.tokotachi_text_input_base_set_cursor_position(h, v))
     has_selection = _Property(lambda h: _lib.tokotachi_text_input_base_get_has_selection(h), None)
     selected_text = _Property(lambda h: _out_string(_lib.tokotachi_text_input_base_get_selected_text(h)), None)
+    can_undo = _Property(lambda h: _lib.tokotachi_text_input_base_get_can_undo(h), None)
+    can_redo = _Property(lambda h: _lib.tokotachi_text_input_base_get_can_redo(h), None)
     on_change = _Handler('notify', 'tokotachi_text_input_base_set_on_change')
 
     def select_all(self):
@@ -1132,6 +1437,15 @@ class TextInputBase(Widget):
 
     def insert(self, s):
         _lib.tokotachi_text_input_base_insert(self._h, _in_string(s))
+
+    def undo(self):
+        _lib.tokotachi_text_input_base_undo(self._h)
+
+    def redo(self):
+        _lib.tokotachi_text_input_base_redo(self._h)
+
+    def clear_undo_history(self):
+        _lib.tokotachi_text_input_base_clear_undo_history(self._h)
 
 
 _register(TextInputBase)
@@ -1190,6 +1504,7 @@ class ProgressBar(Widget):
     maximum = _Property(lambda h: _lib.tokotachi_progress_bar_get_maximum(h), lambda h, v: _lib.tokotachi_progress_bar_set_maximum(h, v))
     value = _Property(lambda h: _lib.tokotachi_progress_bar_get_value(h), lambda h, v: _lib.tokotachi_progress_bar_set_value(h, v))
     text_visible = _Property(lambda h: _lib.tokotachi_progress_bar_get_text_visible(h), lambda h, v: _lib.tokotachi_progress_bar_set_text_visible(h, v))
+    indeterminate = _Property(lambda h: _lib.tokotachi_progress_bar_get_indeterminate(h), lambda h, v: _lib.tokotachi_progress_bar_set_indeterminate(h, v))
 
 
 _register(ProgressBar)
@@ -1218,6 +1533,7 @@ class Slider(RangeBase):
         _repin(parent)
 
     orientation = _Property(lambda h: Orientation(_lib.tokotachi_slider_get_orientation(h)), lambda h, v: _lib.tokotachi_slider_set_orientation(h, int(v)))
+    tick_interval = _Property(lambda h: _lib.tokotachi_slider_get_tick_interval(h), lambda h, v: _lib.tokotachi_slider_set_tick_interval(h, v))
 
 
 _register(Slider)
@@ -1231,6 +1547,8 @@ class SpinBox(RangeBase):
         _repin(parent)
 
     decimals = _Property(lambda h: _lib.tokotachi_spin_box_get_decimals(h), lambda h, v: _lib.tokotachi_spin_box_set_decimals(h, v))
+    prefix = _Property(lambda h: _out_string(_lib.tokotachi_spin_box_get_prefix(h)), lambda h, v: _lib.tokotachi_spin_box_set_prefix(h, _in_string(v)))
+    suffix = _Property(lambda h: _out_string(_lib.tokotachi_spin_box_get_suffix(h)), lambda h, v: _lib.tokotachi_spin_box_set_suffix(h, _in_string(v)))
     text = _Property(lambda h: _out_string(_lib.tokotachi_spin_box_get_text(h)), None)
 
     def commit(self):
@@ -1364,6 +1682,106 @@ class TabWidget(Widget):
 _register(TabWidget)
 
 
+class GroupBox(Widget):
+    """C++ の tokotachi::GroupBox(include/tokotachi/widgets/group_box.hpp)。"""
+
+    def __init__(self, parent=None, title=''):
+        self._attach(_lib.tokotachi_group_box_new(_in_obj(parent, 'Widget'), _in_string(title)), True)
+        _repin(parent)
+
+    title = _Property(lambda h: _out_string(_lib.tokotachi_group_box_get_title(h)), lambda h, v: _lib.tokotachi_group_box_set_title(h, _in_string(v)))
+    content_rect = _Property(lambda h: _out_Rect(_lib.tokotachi_group_box_get_content_rect(h)), None)
+
+
+_register(GroupBox)
+
+
+class ImageBox(Widget):
+    """C++ の tokotachi::ImageBox(include/tokotachi/widgets/image_box.hpp)。"""
+
+    def __init__(self, parent=None, image=None):
+        self._attach(_lib.tokotachi_image_box_new(_in_obj(parent, 'Widget'), _in_Image(image)), True)
+        _repin(parent)
+
+    image = _Property(lambda h: _out_Image(_lib.tokotachi_image_box_get_image(h)), lambda h, v: _lib.tokotachi_image_box_set_image(h, _in_Image(v)))
+    fit = _Property(lambda h: ImageFit(_lib.tokotachi_image_box_get_fit(h)), lambda h, v: _lib.tokotachi_image_box_set_fit(h, int(v)))
+
+
+_register(ImageBox)
+
+
+class Calendar(Widget):
+    """C++ の tokotachi::Calendar(include/tokotachi/widgets/calendar.hpp)。"""
+
+    def __init__(self, parent=None):
+        self._attach(_lib.tokotachi_calendar_new(_in_obj(parent, 'Widget')), True)
+        _repin(parent)
+
+    date = _Property(lambda h: _out_Date(_lib.tokotachi_calendar_get_date(h)), lambda h, v: _lib.tokotachi_calendar_set_date(h, _in_Date(v)))
+    minimum = _Property(lambda h: _out_Date(_lib.tokotachi_calendar_get_minimum(h)), lambda h, v: _lib.tokotachi_calendar_set_minimum(h, _in_Date(v)))
+    maximum = _Property(lambda h: _out_Date(_lib.tokotachi_calendar_get_maximum(h)), lambda h, v: _lib.tokotachi_calendar_set_maximum(h, _in_Date(v)))
+    first_day_of_week = _Property(lambda h: DayOfWeek(_lib.tokotachi_calendar_get_first_day_of_week(h)), lambda h, v: _lib.tokotachi_calendar_set_first_day_of_week(h, int(v)))
+    shown_year = _Property(lambda h: _lib.tokotachi_calendar_get_shown_year(h), None)
+    shown_month = _Property(lambda h: _lib.tokotachi_calendar_get_shown_month(h), None)
+    on_change = _Handler('notify', 'tokotachi_calendar_set_on_change')
+    on_activate = _Handler('notify', 'tokotachi_calendar_set_on_activate')
+
+    def show_month(self, year, month):
+        _lib.tokotachi_calendar_show_month(self._h, year, month)
+
+
+_register(Calendar)
+
+
+class DateEdit(Widget):
+    """C++ の tokotachi::DateEdit(include/tokotachi/widgets/date_edit.hpp)。"""
+
+    def __init__(self, parent=None):
+        self._attach(_lib.tokotachi_date_edit_new(_in_obj(parent, 'Widget')), True)
+        _repin(parent)
+
+    date = _Property(lambda h: _out_Date(_lib.tokotachi_date_edit_get_date(h)), lambda h, v: _lib.tokotachi_date_edit_set_date(h, _in_Date(v)))
+    minimum = _Property(lambda h: _out_Date(_lib.tokotachi_date_edit_get_minimum(h)), lambda h, v: _lib.tokotachi_date_edit_set_minimum(h, _in_Date(v)))
+    maximum = _Property(lambda h: _out_Date(_lib.tokotachi_date_edit_get_maximum(h)), lambda h, v: _lib.tokotachi_date_edit_set_maximum(h, _in_Date(v)))
+    format = _Property(lambda h: _out_string(_lib.tokotachi_date_edit_get_format(h)), lambda h, v: _lib.tokotachi_date_edit_set_format(h, _in_string(v)))
+    first_day_of_week = _Property(lambda h: DayOfWeek(_lib.tokotachi_date_edit_get_first_day_of_week(h)), lambda h, v: _lib.tokotachi_date_edit_set_first_day_of_week(h, int(v)))
+    placeholder_text = _Property(lambda h: _out_string(_lib.tokotachi_date_edit_get_placeholder_text(h)), lambda h, v: _lib.tokotachi_date_edit_set_placeholder_text(h, _in_string(v)))
+    text = _Property(lambda h: _out_string(_lib.tokotachi_date_edit_get_text(h)), None)
+    calendar_open = _Property(lambda h: _lib.tokotachi_date_edit_get_calendar_open(h), None)
+    on_change = _Handler('notify', 'tokotachi_date_edit_set_on_change')
+
+    def commit(self):
+        _lib.tokotachi_date_edit_commit(self._h)
+
+    def open_calendar(self):
+        _lib.tokotachi_date_edit_open_calendar(self._h)
+
+    def close_calendar(self):
+        _lib.tokotachi_date_edit_close_calendar(self._h)
+
+
+_register(DateEdit)
+
+
+class ColorButton(ButtonBase):
+    """C++ の tokotachi::ColorButton(include/tokotachi/widgets/color_button.hpp)。"""
+
+    def __init__(self, parent=None, color=Color(0, 0, 0)):
+        self._attach(_lib.tokotachi_color_button_new(_in_obj(parent, 'Widget'), _in_Color(color)), True)
+        _repin(parent)
+
+    color = _Property(lambda h: _out_Color(_lib.tokotachi_color_button_get_color(h)), lambda h, v: _lib.tokotachi_color_button_set_color(h, _in_Color(v)))
+    alpha_enabled = _Property(lambda h: _lib.tokotachi_color_button_get_alpha_enabled(h), lambda h, v: _lib.tokotachi_color_button_set_alpha_enabled(h, v))
+    dialog_title = _Property(lambda h: _out_string(_lib.tokotachi_color_button_get_dialog_title(h)), lambda h, v: _lib.tokotachi_color_button_set_dialog_title(h, _in_string(v)))
+    on_change = _Handler('notify', 'tokotachi_color_button_set_on_change')
+
+    def open_dialog(self):
+        _lib.tokotachi_color_button_open_dialog(self._h)
+
+
+_register(ColorButton)
+
+
 class Window(_WindowMixin, Widget):
     """C++ の tokotachi::Window(include/tokotachi/windows/window.hpp)。Application を作った後に作る。Application が所有する(docs/adr/0062)"""
     title = _Property(lambda h: _out_string(_lib.tokotachi_window_get_title(h)), lambda h, v: _lib.tokotachi_window_set_title(h, _in_string(v)))
@@ -1429,6 +1847,20 @@ class MessageDialog(_MessageDialogMixin, Dialog):
 
 
 _register(MessageDialog)
+
+
+class ColorDialog(_ColorDialogMixin, Dialog):
+    """C++ の tokotachi::ColorDialog(include/tokotachi/windows/color_dialog.hpp)。"""
+
+    def __init__(self, parent, title=''):
+        self._attach(_lib.tokotachi_color_dialog_new(_in_obj(parent, 'Window'), _in_string(title)), True)
+        _repin(parent)
+
+    color = _Property(lambda h: _out_Color(_lib.tokotachi_color_dialog_get_color(h)), lambda h, v: _lib.tokotachi_color_dialog_set_color(h, _in_Color(v)))
+    alpha_enabled = _Property(lambda h: _lib.tokotachi_color_dialog_get_alpha_enabled(h), lambda h, v: _lib.tokotachi_color_dialog_set_alpha_enabled(h, v))
+
+
+_register(ColorDialog)
 
 
 class FileDialog(Object):
@@ -1747,6 +2179,37 @@ class ItemModel(Object):
     def set_checked(self, index, checked):
         _lib.tokotachi_item_model_set_checked(self._h, _in_ModelIndex(index), checked)
 
+    def text_color(self, index, column=0):
+        result = _out_ThemeColor(_lib.tokotachi_item_model_text_color(self._h, _in_ModelIndex(index), column))
+        return result
+
+    def font(self, index, column=0):
+        result = _out_Font(_lib.tokotachi_item_model_font(self._h, _in_ModelIndex(index), column))
+        return result
+
+    def editable(self, index, column=0):
+        result = _lib.tokotachi_item_model_editable(self._h, _in_ModelIndex(index), column)
+        return result
+
+    def set_text(self, index, column, text):
+        _lib.tokotachi_item_model_set_text(self._h, _in_ModelIndex(index), column, _in_string(text))
+
+    def can_move_rows(self, indexes, parent, row):
+        result = _lib.tokotachi_item_model_can_move_rows(self._h, *_in_indexes(indexes), _in_ModelIndex(parent), row)
+        return result
+
+    def move_rows(self, indexes, parent, row):
+        result = _lib.tokotachi_item_model_move_rows(self._h, *_in_indexes(indexes), _in_ModelIndex(parent), row)
+        return result
+
+    def can_drop(self, data, parent, row):
+        result = _lib.tokotachi_item_model_can_drop(self._h, _in_DragData(data), _in_ModelIndex(parent), row)
+        return result
+
+    def drop_data(self, data, action, parent, row):
+        result = _lib.tokotachi_item_model_drop_data(self._h, _in_DragData(data), int(action), _in_ModelIndex(parent), row)
+        return result
+
     def sort(self, column, order):
         _lib.tokotachi_item_model_sort(self._h, column, int(order))
 
@@ -1768,10 +2231,16 @@ class Item(Object):
     enabled = _Property(lambda h: _lib.tokotachi_item_get_enabled(h), lambda h, v: _lib.tokotachi_item_set_enabled(h, v))
     checkable = _Property(lambda h: _lib.tokotachi_item_get_checkable(h), lambda h, v: _lib.tokotachi_item_set_checkable(h, v))
     checked = _Property(lambda h: _lib.tokotachi_item_get_checked(h), lambda h, v: _lib.tokotachi_item_set_checked(h, v))
+    text_color = _Property(lambda h: _out_ThemeColor(_lib.tokotachi_item_get_text_color(h)), lambda h, v: _lib.tokotachi_item_set_text_color(h, _in_ThemeColor(v)))
+    font = _Property(lambda h: _out_Font(_lib.tokotachi_item_get_font(h)), lambda h, v: _lib.tokotachi_item_set_font(h, _in_Font(v)))
+    editable = _Property(lambda h: _lib.tokotachi_item_get_editable(h), lambda h, v: _lib.tokotachi_item_set_editable(h, v))
 
     def column_text(self, column):
         result = _out_string(_lib.tokotachi_item_column_text(self._h, column))
         return result
+
+    def set_column_text(self, column, value):
+        _lib.tokotachi_item_set_column_text(self._h, column, _in_string(value))
 
 
 _register(Item)
@@ -1798,6 +2267,10 @@ class ListModel(ItemModel):
 
     def remove_item(self, item):
         _lib.tokotachi_list_model_remove_item(self._h, _in_obj(item, 'Item'))
+        _repin(item)
+
+    def move_item(self, item, index):
+        _lib.tokotachi_list_model_move_item(self._h, _in_obj(item, 'Item'), index)
         _repin(item)
 
     def clear(self):
@@ -1861,6 +2334,11 @@ class TreeModel(ItemModel):
         _lib.tokotachi_tree_model_remove_item(self._h, _in_obj(item, 'TreeItem'))
         _repin(item)
 
+    def move_item(self, item, parent, index):
+        _lib.tokotachi_tree_model_move_item(self._h, _in_obj(item, 'TreeItem'), _in_obj(parent, 'TreeItem'), index)
+        _repin(item)
+        _repin(parent)
+
     def clear(self):
         _lib.tokotachi_tree_model_clear(self._h)
 
@@ -1903,6 +2381,9 @@ class ItemView(Widget):
     selection_mode = _Property(lambda h: SelectionMode(_lib.tokotachi_item_view_get_selection_mode(h)), lambda h, v: _lib.tokotachi_item_view_set_selection_mode(h, int(v)))
     current = _Property(lambda h: _out_ModelIndex(_lib.tokotachi_item_view_get_current(h)), lambda h, v: _lib.tokotachi_item_view_set_current(h, _in_ModelIndex(v)))
     selection = _Property(lambda h: _get_indexes(_lib.tokotachi_item_view_get_selection, h), None)
+    editing = _Property(lambda h: _lib.tokotachi_item_view_get_editing(h), None)
+    drag_enabled = _Property(lambda h: _lib.tokotachi_item_view_get_drag_enabled(h), lambda h, v: _lib.tokotachi_item_view_set_drag_enabled(h, v))
+    drop_enabled = _Property(lambda h: _lib.tokotachi_item_view_get_drop_enabled(h), lambda h, v: _lib.tokotachi_item_view_set_drop_enabled(h, v))
     on_selection_change = _Handler('notify', 'tokotachi_item_view_set_on_selection_change')
     on_activate = _Handler('notify', 'tokotachi_item_view_set_on_activate')
 
@@ -1935,6 +2416,12 @@ class ItemView(Widget):
         result = _out_ModelIndex(_lib.tokotachi_item_view_index_at(self._h, _in_Point(p)))
         return result
 
+    def edit(self, index, column=0):
+        _lib.tokotachi_item_view_edit(self._h, _in_ModelIndex(index), column)
+
+    def finish_editing(self, commit=True):
+        _lib.tokotachi_item_view_finish_editing(self._h, commit)
+
 
 _register(ItemView)
 
@@ -1949,6 +2436,43 @@ class ListView(ItemView):
 
 
 _register(ListView)
+
+
+class TableView(ItemView):
+    """C++ の tokotachi::TableView(include/tokotachi/views/table_view.hpp)。"""
+
+    def __init__(self, parent=None):
+        self._attach(_lib.tokotachi_table_view_new(_in_obj(parent, 'Widget')), True)
+        _repin(parent)
+
+    selection_behavior = _Property(lambda h: SelectionBehavior(_lib.tokotachi_table_view_get_selection_behavior(h)), lambda h, v: _lib.tokotachi_table_view_set_selection_behavior(h, int(v)))
+    current_column = _Property(lambda h: _lib.tokotachi_table_view_get_current_column(h), lambda h, v: _lib.tokotachi_table_view_set_current_column(h, v))
+    selected_ranges = _Property(lambda h: _get_ranges(_lib.tokotachi_table_view_get_selected_ranges, h), None)
+    grid_visible = _Property(lambda h: _lib.tokotachi_table_view_get_grid_visible(h), lambda h, v: _lib.tokotachi_table_view_set_grid_visible(h, v))
+    row_header_visible = _Property(lambda h: _lib.tokotachi_table_view_get_row_header_visible(h), lambda h, v: _lib.tokotachi_table_view_set_row_header_visible(h, v))
+
+    def is_cell_selected(self, row, column):
+        result = _lib.tokotachi_table_view_is_cell_selected(self._h, row, column)
+        return result
+
+    def select_range(self, range, add=False):
+        _lib.tokotachi_table_view_select_range(self._h, _in_CellRange(range), add)
+
+    def selected_text(self):
+        result = _out_string(_lib.tokotachi_table_view_selected_text(self._h))
+        return result
+
+    def copy(self):
+        _lib.tokotachi_table_view_copy(self._h)
+
+    def paste(self):
+        _lib.tokotachi_table_view_paste(self._h)
+
+    def clear_selected_cells(self):
+        _lib.tokotachi_table_view_clear_selected_cells(self._h)
+
+
+_register(TableView)
 
 
 class TreeView(ItemView):
@@ -2011,4 +2535,4 @@ class CustomModel(_CustomModelMixin, ItemModel):
 
 _register(CustomModel)
 
-__all__ = ['MouseButton', 'Key', 'FocusPolicy', 'MouseCursor', 'Orientation', 'Align', 'Anchor', 'ColorScheme', 'ColorRole', 'ButtonStyle', 'DialogButton', 'FileDialogMode', 'MessageType', 'PopupKind', 'PopupPlacement', 'ToolButtonStyle', 'SelectionMode', 'SortOrder', 'LineCap', 'LineJoin', 'PaintType', 'VariableType', 'Object', 'Application', 'Timer', 'Widget', 'ButtonBase', 'Button', 'CheckBox', 'RadioButton', 'ComboBox', 'Label', 'TextInputBase', 'LineEdit', 'TextEdit', 'PaintBox', 'ProgressBar', 'RangeBase', 'Slider', 'SpinBox', 'ScrollArea', 'ScrollBar', 'SplitterPane', 'Splitter', 'Tab', 'TabWidget', 'Window', 'Dialog', 'MessageDialog', 'FileDialog', 'MenuBar', 'Popup', 'StatusBar', 'ToolBar', 'Layout', 'BoxLayout', 'GridLayout', 'PlaceLayout', 'Action', 'Menu', 'ItemModel', 'Item', 'ListModel', 'TreeItem', 'TreeModel', 'Column', 'ItemView', 'ListView', 'TreeView', 'Variable', 'Task', 'CustomModel']
+__all__ = ['MouseButton', 'Key', 'FocusPolicy', 'MouseCursor', 'Orientation', 'Align', 'Anchor', 'ColorScheme', 'ColorRole', 'ButtonStyle', 'DialogButton', 'FileDialogMode', 'MessageType', 'PopupKind', 'PopupPlacement', 'ToolButtonStyle', 'SelectionMode', 'SortOrder', 'LineCap', 'LineJoin', 'PaintType', 'DayOfWeek', 'DropAction', 'SelectionBehavior', 'ImageFit', 'Icon', 'VariableType', 'Object', 'Application', 'Timer', 'Widget', 'ButtonBase', 'Button', 'CheckBox', 'RadioButton', 'ComboBox', 'Label', 'TextInputBase', 'LineEdit', 'TextEdit', 'PaintBox', 'ProgressBar', 'RangeBase', 'Slider', 'SpinBox', 'ScrollArea', 'ScrollBar', 'SplitterPane', 'Splitter', 'Tab', 'TabWidget', 'GroupBox', 'ImageBox', 'Calendar', 'DateEdit', 'ColorButton', 'Window', 'Dialog', 'MessageDialog', 'ColorDialog', 'FileDialog', 'MenuBar', 'Popup', 'StatusBar', 'ToolBar', 'Layout', 'BoxLayout', 'GridLayout', 'PlaceLayout', 'Action', 'Menu', 'ItemModel', 'Item', 'ListModel', 'TreeItem', 'TreeModel', 'Column', 'ItemView', 'ListView', 'TableView', 'TreeView', 'Variable', 'Task', 'CustomModel']

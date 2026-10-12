@@ -114,7 +114,20 @@ class CMargins(Structure):
 
 
 class CFont(Structure):
-    _fields_ = [('size', c_float)]
+    _fields_ = [('size', c_float), ('bold', c_bool), ('italic', c_bool)]
+
+
+class CDate(Structure):
+    _fields_ = [('year', c_int), ('month', c_int), ('day', c_int)]
+
+
+class CCellRange(Structure):
+    _fields_ = [('first_row', c_int), ('first_column', c_int), ('last_row', c_int), ('last_column', c_int)]
+
+
+class CControlState(Structure):
+    _fields_ = [('enabled', c_bool), ('hovered', c_bool), ('pressed', c_bool), ('focused', c_bool),
+                ('checked', c_bool)]
 
 
 class CShortcut(Structure):
@@ -141,6 +154,17 @@ COLOR_ROLE_COUNT = 24
 class CTheme(Structure):
     _fields_ = [('colors', CColor * COLOR_ROLE_COUNT), ('dark_colors', c_bool), ('radius', c_float),
                 ('field_radius', c_float), ('field_padding', c_float)]
+
+
+class CThemeOverride(Structure):
+    _fields_ = [('has', c_bool * COLOR_ROLE_COUNT), ('light', CColor * COLOR_ROLE_COUNT),
+                ('dark', CColor * COLOR_ROLE_COUNT), ('radius', c_float), ('field_radius', c_float),
+                ('field_padding', c_float)]
+
+
+class CDragEvent(Structure):
+    _fields_ = [('pos', CPoint), ('data', c_void_p), ('modifiers', ctypes.c_uint), ('action', c_int),
+                ('accepted', c_bool)]
 
 
 class CMouseEvent(Structure):
@@ -180,6 +204,8 @@ WHEEL_FN = CFUNCTYPE(None, c_void_p, POINTER(CWheelEvent), c_void_p)
 PAINT_FN = CFUNCTYPE(None, c_void_p, c_void_p, c_void_p)
 CLOSE_FN = CFUNCTYPE(None, c_void_p, POINTER(c_bool), c_void_p)
 TASK_FN = CFUNCTYPE(None, c_void_p, c_void_p)
+DRAG_FN = CFUNCTYPE(None, c_void_p, POINTER(CDragEvent), c_void_p)
+DRAG_FINISH_FN = CFUNCTYPE(None, c_void_p, c_int, c_void_p)
 
 _INDEX_P = POINTER(CModelIndex)
 
@@ -197,6 +223,14 @@ class CModelCallbacks(Structure):
         ('set_checked', CFUNCTYPE(None, _INDEX_P, c_bool, c_void_p)),
         ('sort', CFUNCTYPE(None, c_int, c_int, c_void_p)),
         ('locate', CFUNCTYPE(c_bool, _INDEX_P, _INDEX_P, c_void_p)),
+        ('text_color', CFUNCTYPE(c_bool, _INDEX_P, c_int, POINTER(CThemeColor), c_void_p)),
+        ('font', CFUNCTYPE(c_bool, _INDEX_P, c_int, POINTER(CFont), c_void_p)),
+        ('editable', CFUNCTYPE(c_bool, _INDEX_P, c_int, c_void_p)),
+        ('set_text', CFUNCTYPE(None, _INDEX_P, c_int, c_char_p, c_void_p)),
+        ('can_move_rows', CFUNCTYPE(c_bool, _INDEX_P, c_size_t, _INDEX_P, c_int, c_void_p)),
+        ('move_rows', CFUNCTYPE(c_bool, _INDEX_P, c_size_t, _INDEX_P, c_int, c_void_p)),
+        ('can_drop', CFUNCTYPE(c_bool, c_void_p, _INDEX_P, c_int, c_void_p)),
+        ('drop_data', CFUNCTYPE(c_bool, c_void_p, c_int, _INDEX_P, c_int, c_void_p)),
     ]
 
 
@@ -261,6 +295,82 @@ class Margins(NamedTuple):
 
 class Font(NamedTuple):
     size: float = 14.0
+    bold: bool = False
+    italic: bool = False
+
+
+class Date(NamedTuple):
+    """日付(すべて 0 なら空の日付)。"""
+
+    year: int = 0
+    month: int = 0
+    day: int = 0
+
+    @staticmethod
+    def today():
+        return _out_Date(_lib.tokotachi_date_today())
+
+    @staticmethod
+    def parse(text, pattern='yyyy/MM/dd'):
+        """pattern で読む。読めなければ空の日付。"""
+        return _out_Date(_lib.tokotachi_date_parse(_in_string(text), _in_string(pattern)))
+
+    @staticmethod
+    def days_in_month(year, month):
+        return _lib.tokotachi_date_days_in_month(year, month)
+
+    @staticmethod
+    def is_leap_year(year):
+        return bool(_lib.tokotachi_date_is_leap_year(year))
+
+    def is_null(self):
+        return self.year == 0 and self.month == 0 and self.day == 0
+
+    def is_valid(self):
+        return bool(_lib.tokotachi_date_is_valid(_in_Date(self)))
+
+    def day_of_week(self):
+        return _enums().DayOfWeek(_lib.tokotachi_date_day_of_week(_in_Date(self)))
+
+    def add_days(self, days):
+        return _out_Date(_lib.tokotachi_date_add_days(_in_Date(self), days))
+
+    def add_months(self, months):
+        return _out_Date(_lib.tokotachi_date_add_months(_in_Date(self), months))
+
+    def add_years(self, years):
+        return _out_Date(_lib.tokotachi_date_add_years(_in_Date(self), years))
+
+    def days_to(self, other):
+        return _lib.tokotachi_date_days_to(_in_Date(self), _in_Date(other))
+
+    def format(self, pattern='yyyy/MM/dd'):
+        return _out_string(_lib.tokotachi_date_format(_in_Date(self), _in_string(pattern)))
+
+
+class CellRange(NamedTuple):
+    """表のセルの矩形の範囲(行・列の番号。両端を含む)。"""
+
+    first_row: int = 0
+    first_column: int = 0
+    last_row: int = -1
+    last_column: int = -1
+
+    def is_empty(self):
+        return self.last_row < self.first_row or self.last_column < self.first_column
+
+    def contains(self, row, column):
+        return self.first_row <= row <= self.last_row and self.first_column <= column <= self.last_column
+
+
+class ControlState(NamedTuple):
+    """部品の状態(標準の見た目を描く関数 draw_* に渡す)。"""
+
+    enabled: bool = True
+    hovered: bool = False
+    pressed: bool = False
+    focused: bool = False
+    checked: bool = False
 
 
 class ModelIndex(NamedTuple):
@@ -347,6 +457,44 @@ class Theme:
 
     def __repr__(self):
         return 'Theme(dark_colors=%r, radius=%r)' % (self.dark_colors, self.radius)
+
+
+class ThemeOverride:
+    """テーマの一部の上書き(Widget.theme_override。docs/adr/0042)。
+
+    >>> o = ThemeOverride().set(ColorRole.ACCENT, Color.rgb(0x059669))
+    >>> widget.theme_override = o
+    """
+
+    def __init__(self):
+        self.light = {}  # ColorRole → Color
+        self.dark = {}
+        self.radius = -1.0  # 負なら上書きしない
+        self.field_radius = -1.0
+        self.field_padding = -1.0
+
+    def set(self, role, color, dark=None):
+        """役割の色を上書きする(dark を渡すと、ダークのテーマでの色を別にする)。"""
+        self.light[_enums().ColorRole(role)] = Color(*color)
+        self.dark[_enums().ColorRole(role)] = Color(*(dark if dark is not None else color))
+        return self
+
+    def unset(self, role):
+        self.light.pop(role, None)
+        self.dark.pop(role, None)
+        return self
+
+    def has(self, role):
+        return role in self.light
+
+    def is_empty(self):
+        return not self.light and self.radius < 0 and self.field_radius < 0 and self.field_padding < 0
+
+    def __eq__(self, other):
+        return isinstance(other, ThemeOverride) and vars(self) == vars(other)
+
+    def __repr__(self):
+        return 'ThemeOverride(%r)' % ({int(k): v for k, v in self.light.items()},)
 
 
 def resolve_color(color):
@@ -476,12 +624,13 @@ def _out_Margins(c):
 
 def _in_Font(v):
     if isinstance(v, (int, float)):
-        return CFont(v)
-    return CFont(*v)
+        return CFont(v, False, False)
+    v = Font(*v)
+    return CFont(v.size, v.bold, v.italic)
 
 
 def _out_Font(c):
-    return Font(c.size)
+    return Font(c.size, c.bold, c.italic)
 
 
 def _in_Shortcut(v):
@@ -542,6 +691,68 @@ def _in_Theme(v):
 def _out_Theme(c):
     return Theme([_out_Color(c.colors[i]) for i in range(COLOR_ROLE_COUNT)], c.dark_colors, c.radius, c.field_radius,
                  c.field_padding)
+
+
+def _in_Date(v):
+    if v is None:
+        return CDate()
+    return CDate(*v)
+
+
+def _out_Date(c):
+    return Date(c.year, c.month, c.day)
+
+
+def _in_CellRange(v):
+    return CCellRange(*v)
+
+
+def _out_CellRange(c):
+    return CellRange(c.first_row, c.first_column, c.last_row, c.last_column)
+
+
+def _in_ControlState(v):
+    return CControlState(*v)
+
+
+def _get_ranges(fn, h):
+    return [_out_CellRange(r) for r in _get_buffer(fn, h, CCellRange)]
+
+
+def _in_indexes(values):
+    values = [_in_ModelIndex(v) for v in values]
+    return (CModelIndex * max(len(values), 1))(*values), len(values)
+
+
+def _in_ThemeOverride(v):
+    o = CThemeOverride()
+    for role, color in v.light.items():
+        o.has[int(role)] = True
+        o.light[int(role)] = _in_Color(color)
+        o.dark[int(role)] = _in_Color(v.dark.get(role, color))
+    o.radius = v.radius
+    o.field_radius = v.field_radius
+    o.field_padding = v.field_padding
+    return byref(o)
+
+
+def _out_ThemeOverride(c):
+    roles = _enums().ColorRole
+    v = ThemeOverride()
+    for i in range(COLOR_ROLE_COUNT):
+        if c.has[i]:
+            v.light[roles(i)] = _out_Color(c.light[i])
+            v.dark[roles(i)] = _out_Color(c.dark[i])
+    v.radius = c.radius
+    v.field_radius = c.field_radius
+    v.field_padding = c.field_padding
+    return v
+
+
+def _in_DragData(v):
+    if not isinstance(v, DragData) or not v._p:
+        raise TypeError('expected DragData, got %r' % (v,))
+    return v._p
 
 
 def _in_Image(v):
@@ -793,6 +1004,90 @@ class WheelEvent:
         return (self.modifiers & m) == m
 
 
+class DragData:
+    """ドラッグの中身(文字・ファイル・名前の付いた中身)。DragData() で作って Widget.start_drag に渡す。
+
+    ドラッグのハンドラ(on_drag_move・on_drop)の e.data は借りもので、ハンドラの中だけで使える。
+    """
+
+    __slots__ = ('_p', '_owned')
+
+    def __init__(self, text=None, files=None, formats=None):
+        self._p = _lib.tokotachi_drag_data_new()
+        self._owned = True
+        if text is not None:
+            self.text = text
+        if files is not None:
+            self.files = files
+        for name, value in (formats or {}).items():
+            self.set_format(name, value)
+
+    @classmethod
+    def _borrow(cls, p):
+        self = object.__new__(cls)
+        self._p = p
+        self._owned = False
+        return self
+
+    def __del__(self):
+        p = getattr(self, '_p', None)
+        if p and self._owned:
+            self._p = None
+            _lib.tokotachi_drag_data_free(p)
+
+    @property
+    def _h(self):
+        if not self._p:
+            raise RuntimeError('the drag data can be used only inside the drag handler')
+        return self._p
+
+    @property
+    def text(self):
+        return _out_string(_lib.tokotachi_drag_data_get_text(self._h))
+
+    @text.setter
+    def text(self, value):
+        _lib.tokotachi_drag_data_set_text(self._h, _in_string(value))
+
+    @property
+    def files(self):
+        return _out_strings(_lib.tokotachi_drag_data_get_files(self._h))
+
+    @files.setter
+    def files(self, value):
+        _lib.tokotachi_drag_data_set_files(self._h, *_in_strings(value))
+
+    def format(self, name):
+        """名前の付いた中身(無ければ None)。"""
+        p = _lib.tokotachi_drag_data_get_format(self._h, _in_string(name))
+        return _out_string(p) if p else None
+
+    def set_format(self, name, value):
+        _lib.tokotachi_drag_data_set_format(self._h, _in_string(name), _in_string(value))
+
+    @property
+    def formats(self):
+        return {name: self.format(name) for name in _out_strings(_lib.tokotachi_drag_data_format_names(self._h))}
+
+    @property
+    def source(self):
+        """ドラッグを始めた部品(OS からなら None)。"""
+        return _wrap(_lib.tokotachi_drag_data_source(self._h))
+
+    @property
+    def from_outside(self):
+        return bool(_lib.tokotachi_drag_data_from_outside(self._h))
+
+
+class DragEvent:
+    """ドラッグが上を動いた・落とされた。accepted を False にすると受け取らない。action は受け取り方(変えてよい)。"""
+
+    __slots__ = ('pos', 'data', 'modifiers', 'action', 'accepted')
+
+    def has_modifier(self, m):
+        return (self.modifiers & m) == m
+
+
 class CloseEvent:
     """can_close を False にすると閉じない。"""
 
@@ -859,6 +1154,28 @@ def _dispatch_close(sender, can_close, token):
     can_close[0] = bool(ev.can_close)
 
 
+@DRAG_FN
+def _dispatch_drag(sender, e, token):
+    c = e.contents
+    ev = DragEvent()
+    ev.pos = _out_Point(c.pos)
+    ev.data = DragData._borrow(c.data)
+    ev.modifiers = Modifiers(c.modifiers)
+    ev.action = _enums().DropAction(c.action)
+    ev.accepted = c.accepted
+    try:
+        _call(token, _wrap(sender), ev)
+    finally:
+        ev.data._p = None
+    c.action = int(ev.action)
+    c.accepted = bool(ev.accepted)
+
+
+@DRAG_FINISH_FN
+def _dispatch_drag_finish(sender, action, token):
+    _call(token, _wrap(sender), _enums().DropAction(action))
+
+
 _DISPATCH = {
     'notify': _dispatch_notify,
     'mouse': _dispatch_mouse,
@@ -866,6 +1183,8 @@ _DISPATCH = {
     'wheel': _dispatch_wheel,
     'paint': _dispatch_paint,
     'close': _dispatch_close,
+    'drag': _dispatch_drag,
+    'drag_finish': _dispatch_drag_finish,
 }
 
 
@@ -987,6 +1306,17 @@ class Image:
     def load(path):
         """PNG・JPEG・BMP・GIF を読む。読めなければ None。"""
         return _out_Image(_lib.tokotachi_image_load(_in_string(os.fspath(path))))
+
+    @staticmethod
+    def icon(icon, color=None):
+        """よく使うアイコン(線画。docs/adr/0054)。color を渡さなければ、使う部品の文字の色で塗る。"""
+        if color is None:
+            return _out_Image(_lib.tokotachi_image_icon(int(icon)))
+        return _out_Image(_lib.tokotachi_image_icon_colored(int(icon), _in_Color(color)))
+
+    @property
+    def is_icon(self):
+        return bool(_lib.tokotachi_image_is_icon(self._p))
 
     @staticmethod
     def load_from_data(data):
@@ -1333,6 +1663,27 @@ class Canvas:
     def draw_image(self, image, dst, opacity=1.0):
         _lib.tokotachi_canvas_draw_image(self._h, image._p, _in_Rect(dst), opacity)
 
+    # 標準の見た目(C++ の tokotachi::draw。docs/adr/0058)
+    def draw_button_face(self, rect, state, style=0):
+        _lib.tokotachi_draw_button_face(self._h, _in_Rect(rect), _in_ControlState(state), int(style))
+
+    def draw_check_mark(self, rect, state):
+        _lib.tokotachi_draw_check_mark(self._h, _in_Rect(rect), _in_ControlState(state))
+
+    def draw_radio_mark(self, rect, state):
+        _lib.tokotachi_draw_radio_mark(self._h, _in_Rect(rect), _in_ControlState(state))
+
+    def draw_focus_ring(self, rect):
+        _lib.tokotachi_draw_focus_ring(self._h, _in_Rect(rect))
+
+    def draw_field_frame(self, rect, state):
+        _lib.tokotachi_draw_field_frame(self._h, _in_Rect(rect), _in_ControlState(state))
+
+
+def button_text_color(state, style=0):
+    """ボタンの面の上に描く文字・画像の色(C++ の tokotachi::draw::button_text_color)。"""
+    return _out_Color(_lib.tokotachi_draw_button_text_color(_in_ControlState(state), int(style)))
+
 
 # ---------------------------------------------------------------------------------------------------------------------
 # 生成したクラスに混ぜる手書きの部分
@@ -1392,6 +1743,19 @@ class _MessageDialogMixin:
             p = _lib.tokotachi_message_dialog_show(_in_obj(parent, 'Window'), _in_string(title), _in_string(text),
                                                    array, len(buttons), _dispatch_notify, _store(on_finish),
                                                    _release, int(type))
+        return _wrap(p)
+
+
+class _ColorDialogMixin:
+    @staticmethod
+    def show(parent, initial, on_finish=None, alpha=False, title=''):
+        """作って開き、閉じたら on_finish(dialog) を呼んで破棄する(決めた色は dialog.color、結果は dialog.result)。"""
+        if on_finish is None:
+            p = _lib.tokotachi_color_dialog_show(_in_obj(parent, 'Window'), _in_Color(initial), None, None, None,
+                                                 alpha, _in_string(title))
+        else:
+            p = _lib.tokotachi_color_dialog_show(_in_obj(parent, 'Window'), _in_Color(initial), _dispatch_notify,
+                                                 _store(on_finish), _release, alpha, _in_string(title))
         return _wrap(p)
 
 
@@ -1509,7 +1873,8 @@ class _CustomModelMixin:
     上書きしないメソッドは C++ の ItemModel の既定の答えになる。中身を変えたら notify_* で知らせる。
     """
 
-    _OPTIONAL = ('index_id', 'parent_of', 'icon', 'enabled', 'checkable', 'checked', 'set_checked', 'sort', 'locate')
+    _OPTIONAL = ('index_id', 'parent_of', 'icon', 'enabled', 'checkable', 'checked', 'set_checked', 'sort', 'locate',
+                 'text_color', 'font', 'editable', 'set_text', 'can_move_rows', 'move_rows', 'can_drop', 'drop_data')
 
     def __init__(self, owner=None):
         cls = type(self)
@@ -1550,6 +1915,32 @@ class _CustomModelMixin:
             model._keep['text'] = buf
             return ctypes.addressof(buf)
 
+        def text_color(model, p, column, out, ud):
+            v = model.text_color(index_of(p), column)
+            if v is None:
+                return False
+            out.contents.is_role, out.contents.role, out.contents.color = (
+                lambda t: (t.is_role, t.role, t.color))(_in_ThemeColor(v))
+            return True
+
+        def font(model, p, column, out, ud):
+            v = model.font(index_of(p), column)
+            if v is None:
+                return False
+            c = _in_Font(v)
+            out.contents.size, out.contents.bold, out.contents.italic = c.size, c.bold, c.italic
+            return True
+
+        def borrowed(p, fn):
+            data = DragData._borrow(p)
+            try:
+                return bool(fn(data))
+            finally:
+                data._p = None
+
+        def drop(fn):
+            return lambda model, p, parent, row, ud: borrowed(p, lambda data: fn(model, data, parent, row))
+
         def icon(model, p, ud):
             image = model.icon(index_of(p))
             model._keep['icon'] = image
@@ -1567,6 +1958,18 @@ class _CustomModelMixin:
             'set_checked': (None, lambda m, p, v, ud: m.set_checked(index_of(p), bool(v))),
             'sort': (None, lambda m, column, order, ud: m.sort(column, _enums().SortOrder(order))),
             'locate': (False, lambda m, p, out, ud: write(out, m.locate(index_of(p)))),
+            'text_color': (False, text_color),
+            'font': (False, font),
+            'editable': (False, lambda m, p, column, ud: bool(m.editable(index_of(p), column))),
+            'set_text': (None, lambda m, p, column, text, ud: m.set_text(index_of(p), column,
+                                                                          text.decode('utf-8', 'replace'))),
+            'can_move_rows': (False, lambda m, p, n, parent, row, ud: bool(m.can_move_rows(
+                [_out_ModelIndex(p[i]) for i in range(n)], index_of(parent), row))),
+            'move_rows': (False, lambda m, p, n, parent, row, ud: bool(m.move_rows(
+                [_out_ModelIndex(p[i]) for i in range(n)], index_of(parent), row))),
+            'can_drop': (False, drop(lambda m, data, parent, row: m.can_drop(data, index_of(parent), row))),
+            'drop_data': (False, lambda m, d, action, parent, row, ud: borrowed(
+                d, lambda data: m.drop_data(data, _enums().DropAction(action), index_of(parent), row))),
         }
         functions = []
         for name, (default, fn) in impl.items():

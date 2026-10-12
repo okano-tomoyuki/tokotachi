@@ -114,6 +114,8 @@ std::size_t fill_objects(const std::vector<T*>& v, tokotachi_object** out, std::
 
 std::size_t fill_floats(const std::vector<float>& v, float* out, std::size_t capacity);
 std::size_t fill_indexes(const std::vector<ModelIndex>& v, tokotachi_model_index* out, std::size_t capacity);
+std::size_t fill_ranges(const std::vector<CellRange>& v, tokotachi_cell_range* out, std::size_t capacity);
+std::vector<ModelIndex> indexes(const tokotachi_model_index* v, std::size_t count);
 std::vector<float> floats(const float* v, std::size_t count);
 
 // ---- 列挙 ----
@@ -140,8 +142,29 @@ inline Color from_c(const tokotachi_color& c) { return Color(c.r, c.g, c.b, c.a)
 inline tokotachi_color to_c(const Color& c) { return tokotachi_color{c.r, c.g, c.b, c.a}; }
 inline Margins from_c(const tokotachi_margins& m) { return Margins(m.left, m.top, m.right, m.bottom); }
 inline tokotachi_margins to_c(const Margins& m) { return tokotachi_margins{m.left, m.top, m.right, m.bottom}; }
-inline Font from_c(const tokotachi_font& f) { return Font(f.size); }
-inline tokotachi_font to_c(const Font& f) { return tokotachi_font{f.size}; }
+inline Font from_c(const tokotachi_font& f) { return Font(f.size, f.bold, f.italic); }
+inline tokotachi_font to_c(const Font& f) { return tokotachi_font{f.size, f.bold, f.italic}; }
+inline Date from_c(const tokotachi_date& d) { return Date(d.year, d.month, d.day); }
+inline tokotachi_date to_c(const Date& d) { return tokotachi_date{d.year, d.month, d.day}; }
+CellRange from_c(const tokotachi_cell_range& r);
+inline tokotachi_cell_range to_c(const CellRange& r)
+{
+    return tokotachi_cell_range{r.first_row, r.first_column, r.last_row, r.last_column};
+}
+ControlState from_c(const tokotachi_control_state& s);
+ThemeOverride from_c(const tokotachi_theme_override* o);
+tokotachi_theme_override to_c(const ThemeOverride& o);
+
+/// ドラッグの中身のハンドルは DragData そのものを指す。
+inline const DragData& drag_data_of(const tokotachi_drag_data* d)
+{
+    if (!d)
+    {
+        throw std::invalid_argument("the drag data is NULL");
+    }
+    return *reinterpret_cast<const DragData*>(d);
+}
+inline const tokotachi_drag_data* to_c(const DragData& d) { return reinterpret_cast<const tokotachi_drag_data*>(&d); }
 Shortcut from_c(const tokotachi_shortcut& s);
 tokotachi_shortcut to_c(const Shortcut& s);
 ThemeColor from_c(const tokotachi_theme_color& c);
@@ -191,6 +214,8 @@ KeyHandler key_handler(tokotachi_key_fn fn, void* user_data, tokotachi_destroy_f
 WheelHandler wheel_handler(tokotachi_wheel_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 PaintHandler paint_handler(tokotachi_paint_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 CloseHandler close_handler(tokotachi_close_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+DragHandler drag_handler(tokotachi_drag_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+DragFinishHandler drag_finish_handler(tokotachi_drag_finish_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 
 // ---- モデル ----
 
@@ -213,6 +238,14 @@ public:
     void set_checked(const ModelIndex& index, bool checked) override;
     void sort(int column, SortOrder order) override;
     ModelIndex locate(const ModelIndex& index) const override;
+    ThemeColor text_color(const ModelIndex& index, int column) const override;
+    Font font(const ModelIndex& index, int column) const override;
+    bool editable(const ModelIndex& index, int column) const override;
+    void set_text(const ModelIndex& index, int column, const std::string& text) override;
+    bool can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const override;
+    bool move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) override;
+    bool can_drop(const DragData& data, const ModelIndex& parent, int row) const override;
+    bool drop_data(const DragData& data, DropAction action, const ModelIndex& parent, int row) override;
 
     using ItemModel::make_index;
     using ItemModel::notify_data_changed;

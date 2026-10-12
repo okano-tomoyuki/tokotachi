@@ -280,6 +280,165 @@ class TestBasics(unittest.TestCase):
         self.assertIs(self.window.menu_bar, menu_bar)
 
 
+class TestNewWidgets(unittest.TestCase):
+    """0.2・0.3 で加わった部品と値。"""
+
+    def setUp(self):
+        self.window = tt.Window('new', 400, 300)
+
+    def tearDown(self):
+        self.window.delete()
+
+    def test_date(self):
+        d = tt.Date.parse('2026/10/12')
+        self.assertEqual(d, tt.Date(2026, 10, 12))
+        self.assertTrue(d.is_valid())
+        self.assertIs(d.day_of_week(), tt.DayOfWeek.MONDAY)
+        self.assertEqual(d.add_months(3), tt.Date(2027, 1, 12))
+        self.assertEqual(d.format('yyyy-MM-dd'), '2026-10-12')
+        self.assertTrue(tt.Date.parse('xx').is_null())
+        self.assertEqual(tt.Date.days_in_month(2026, 2), 28)
+        edit = tt.DateEdit(self.window)
+        edit.date = (2026, 1, 2)
+        self.assertEqual(edit.text, '2026/01/02')
+        calendar = tt.Calendar(self.window)
+        calendar.date = d
+        self.assertEqual((calendar.shown_year, calendar.shown_month), (2026, 10))
+        calendar.show_month(2027, 3)
+        self.assertEqual(calendar.shown_month, 3)
+
+    def test_widgets(self):
+        group = tt.GroupBox(self.window, '設定')
+        self.assertEqual(group.title, '設定')
+        icon = tt.Image.icon(tt.Icon.SAVE)
+        self.assertTrue(icon.is_icon)
+        box = tt.ImageBox(group, icon)
+        box.fit = tt.ImageFit.COVER
+        self.assertEqual(box.image, icon)
+        self.assertIs(box.fit, tt.ImageFit.COVER)
+        button = tt.ColorButton(self.window, tt.Color.rgb(0x2563eb))
+        self.assertEqual(button.color, tt.Color.rgb(0x2563eb))
+        tool = tt.Button(self.window, '保存')
+        tool.icon = tt.Image.icon(tt.Icon.SAVE, tt.Color(255, 0, 0))
+        tool.icon_size = 20
+        self.assertEqual(tool.icon_size, 20)
+        label = tt.Label(self.window, '&Name')
+        edit = tt.LineEdit(self.window)
+        label.buddy = edit
+        self.assertIs(label.buddy, edit)
+        label.font = tt.Font(16, bold=True)
+        self.assertEqual(label.font, tt.Font(16, True, False))
+        progress = tt.ProgressBar(self.window)
+        progress.indeterminate = True
+        self.assertTrue(progress.indeterminate)
+        spin = tt.SpinBox(self.window)
+        spin.suffix = ' kg'
+        spin.value = 3
+        self.assertEqual(spin.text, '3 kg')
+
+    def test_undo(self):
+        edit = tt.LineEdit(self.window)
+        edit.insert('abc')
+        self.assertTrue(edit.can_undo)
+        edit.undo()
+        self.assertEqual(edit.text, '')
+        self.assertTrue(edit.can_redo)
+        edit.redo()
+        self.assertEqual(edit.text, 'abc')
+        edit.clear_undo_history()
+        self.assertFalse(edit.can_undo)
+
+    def test_theme_override(self):
+        group = tt.GroupBox(self.window)
+        child = tt.Label(group, 'x')
+        group.theme_override = tt.ThemeOverride().set(tt.ColorRole.ACCENT, tt.Color(1, 2, 3))
+        self.assertTrue(group.theme_override.has(tt.ColorRole.ACCENT))
+        self.assertEqual(child.theme[tt.ColorRole.ACCENT], tt.Color(1, 2, 3))
+        self.assertNotEqual(self.window.theme[tt.ColorRole.ACCENT], tt.Color(1, 2, 3))
+
+    def test_table_view(self):
+        model = tt.ListModel(self.window)
+        a = model.add_item('a')
+        b = model.add_item('b')
+        a.editable = b.editable = True
+        a.set_column_text(1, 'x')
+        a.text_color = tt.ColorRole.ACCENT
+        self.assertIs(model.text_color(model.index(0)), tt.ColorRole.ACCENT)
+        table = tt.TableView(self.window)
+        table.model = model
+        table.add_column('1')
+        table.add_column('2')
+        table.selection_mode = tt.SelectionMode.MULTI
+        table.select_range(tt.CellRange(0, 0, 1, 1))
+        self.assertEqual(table.selected_ranges, [tt.CellRange(0, 0, 1, 1)])
+        self.assertEqual(table.selected_text(), 'a\tx\nb\t')
+        table.clear_selected_cells()
+        self.assertEqual(model.text(model.index(0)), '')
+        self.assertTrue(model.move_rows([model.index(0)], None, 2))
+
+    def test_drag_data_and_custom_model(self):
+        data = tt.DragData('落とす', files=['/tmp/a.txt'], formats={'x-test': '1'})
+        self.assertEqual(data.text, '落とす')
+        self.assertEqual(data.files, ['/tmp/a.txt'])
+        self.assertEqual(data.formats, {'x-test': '1'})
+        self.assertIsNone(data.source)
+        received = []
+
+        class Rows(tt.CustomModel):
+            def row_count(self, parent):
+                return 0 if parent.is_valid() else 2
+
+            def text(self, index, column):
+                return 'row %d' % index.row
+
+            def font(self, index, column):
+                return tt.Font(18, bold=True) if index.row == 0 else None
+
+            def editable(self, index, column):
+                return True
+
+            def set_text(self, index, column, text):
+                received.append(('set', index.row, text))
+
+            def can_drop(self, data, parent, row):
+                return data.text == '落とす'
+
+            def drop_data(self, data, action, parent, row):
+                received.append(('drop', data.text, action))
+                return True
+
+        model = Rows(self.window)
+        base = tt.ItemModel  # C++ を通して呼ぶ(ビューが呼ぶのと同じ)
+        self.assertEqual(base.font(model, model.index(0)), tt.Font(18, True))
+        self.assertEqual(base.font(model, model.index(1)), tt.Font())  # 既定
+        self.assertTrue(base.editable(model, model.index(1)))
+        base.set_text(model, model.index(1), 0, 'あ')
+        self.assertTrue(base.can_drop(model, data, None, 0))
+        self.assertFalse(base.can_drop(model, tt.DragData('ほか'), None, 0))
+        self.assertTrue(base.drop_data(model, data, tt.DropAction.COPY, None, 0))
+        self.assertEqual(received, [('set', 1, 'あ'), ('drop', '落とす', tt.DropAction.COPY)])
+        widget = tt.Widget(self.window)
+        widget.accepts_drops = True
+        widget.on_drop = lambda sender, e: None
+        widget.on_drag_finish = lambda sender, action: None
+        self.assertFalse(widget.start_drag(data))  # ボタンを押していないので始まらない
+
+    def test_color_dialog(self):
+        finished = []
+        dialog = tt.ColorDialog.show(self.window, tt.Color(10, 20, 30),
+                                     lambda d: finished.append((d.result, d.color)))
+        self.assertEqual(dialog.color, tt.Color(10, 20, 30))
+        dialog.finish(tt.DialogButton.OK)
+        self.assertEqual(finished, [(tt.DialogButton.OK, tt.Color(10, 20, 30))])
+
+    def test_draw_functions(self):
+        bitmap = tt.Bitmap(40, 20)
+        bitmap.clear(tt.Color(255, 255, 255))
+        canvas = bitmap.canvas
+        canvas.draw_button_face((0, 0, 40, 20), tt.ControlState())
+        self.assertEqual(bitmap.pixel(20, 10), tt.resolve_color(tt.ColorRole.ACCENT))
+
+
 class TestViews(unittest.TestCase):
     def setUp(self):
         self.window = tt.Window('views', 400, 300)

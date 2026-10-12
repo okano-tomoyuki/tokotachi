@@ -87,6 +87,11 @@ int main(int argc, char** argv)
 | 継承した仮想関数(`paint`・`mouse_down` など) | 無い(PaintBox とハンドラを使う) |
 | `MessageDialog::show(...)` | `tokotachi_message_dialog_show(...)`(ボタンは配列と数) |
 | `FileDialog::filters` | 名前と拡張子を交互に並べた文字列の並び |
+| `Image::icon(Icon::SAVE)` | `tokotachi_image_icon(TOKOTACHI_ICON_SAVE)`(色を決めるときは `tokotachi_image_icon_colored`) |
+| `Date`・`CellRange`・`ControlState` | `tokotachi_date`・`tokotachi_cell_range`・`tokotachi_control_state` の構造体。日付の計算は `tokotachi_date_*` |
+| `Theme`・`ThemeOverride` のプロパティ | 構造体へのポインタで渡し、呼んだ側の構造体に書いて受け取る(`tokotachi_widget_get_theme(w, &theme)`) |
+| `DragData` | `tokotachi_drag_data_new` で作るハンドル。ドラッグのハンドラ(`tokotachi_drag_event` の `data`)・独自のモデルの `can_drop`・`drop_data` では借りもの |
+| `tokotachi::draw::button_face(...)` など | `tokotachi_draw_button_face(canvas, rect, state, style)` など |
 
 ## API を変えるとき
 

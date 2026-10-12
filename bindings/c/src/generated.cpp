@@ -619,6 +619,51 @@ TOKOTACHI_C_API size_t tokotachi_widget_get_actions(tokotachi_widget* self, toko
     TOKOTACHI_C_CATCH(0)
 }
 
+TOKOTACHI_C_API void tokotachi_widget_get_theme_override(tokotachi_widget* self, tokotachi_theme_override* out)
+{
+    try
+    {
+        *out = c::to_c(c::self_as<tokotachi::Widget>(self, __func__)->theme_override.get());
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_widget_set_theme_override(tokotachi_widget* self, const tokotachi_theme_override* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Widget>(self, __func__)->theme_override = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_widget_get_theme(tokotachi_widget* self, tokotachi_theme* out)
+{
+    try
+    {
+        *out = c::to_c(c::self_as<tokotachi::Widget>(self, __func__)->theme.get());
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_widget_get_accepts_drops(tokotachi_widget* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Widget>(self, __func__)->accepts_drops.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_widget_set_accepts_drops(tokotachi_widget* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::Widget>(self, __func__)->accepts_drops = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API void tokotachi_widget_add_action(tokotachi_widget* self, tokotachi_action* action)
 {
     try
@@ -698,6 +743,33 @@ TOKOTACHI_C_API tokotachi_widget* tokotachi_widget_child_at(tokotachi_widget* se
         return c::handle(c::self_as<tokotachi::Widget>(self, __func__)->child_at(c::from_c(p)));
     }
     TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API bool tokotachi_widget_start_drag(tokotachi_widget* self, const tokotachi_drag_data* data, const char* label)
+{
+    try
+    {
+        return c::self_as<tokotachi::Widget>(self, __func__)->start_drag(c::drag_data_of(data), c::str(label));
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_widget_focus_next_after(tokotachi_widget* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Widget>(self, __func__)->focus_next_after();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_widget_focus_first_within(tokotachi_widget* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Widget>(self, __func__)->focus_first_within();
+    }
+    TOKOTACHI_C_CATCH({})
 }
 
 TOKOTACHI_C_API void tokotachi_widget_set_on_paint(tokotachi_widget* self, tokotachi_paint_fn fn, void* user_data, tokotachi_destroy_fn destroy)
@@ -820,6 +892,46 @@ TOKOTACHI_C_API void tokotachi_widget_set_on_focus_out(tokotachi_widget* self, t
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API void tokotachi_widget_set_on_drag_move(tokotachi_widget* self, tokotachi_drag_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::DragHandler handler = c::drag_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::Widget>(self, __func__)->on_drag_move = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_widget_set_on_drag_leave(tokotachi_widget* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::NotifyHandler handler = c::notify_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::Widget>(self, __func__)->on_drag_leave = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_widget_set_on_drop(tokotachi_widget* self, tokotachi_drag_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::DragHandler handler = c::drag_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::Widget>(self, __func__)->on_drop = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_widget_set_on_drag_finish(tokotachi_widget* self, tokotachi_drag_finish_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::DragFinishHandler handler = c::drag_finish_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::Widget>(self, __func__)->on_drag_finish = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API char* tokotachi_button_base_get_text(tokotachi_button_base* self)
 {
     try
@@ -889,6 +1001,42 @@ TOKOTACHI_C_API void tokotachi_button_set_style(tokotachi_button* self, tokotach
     try
     {
         c::self_as<tokotachi::Button>(self, __func__)->style = c::enum_in<tokotachi::ButtonStyle>(value, 2);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_image* tokotachi_button_get_icon(tokotachi_button* self)
+{
+    try
+    {
+        return c::to_c_image(c::self_as<tokotachi::Button>(self, __func__)->icon.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_button_set_icon(tokotachi_button* self, const tokotachi_image* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Button>(self, __func__)->icon = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API float tokotachi_button_get_icon_size(tokotachi_button* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Button>(self, __func__)->icon_size.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_button_set_icon_size(tokotachi_button* self, float value)
+{
+    try
+    {
+        c::self_as<tokotachi::Button>(self, __func__)->icon_size = value;
     }
     TOKOTACHI_C_CATCH()
 }
@@ -1220,6 +1368,60 @@ TOKOTACHI_C_API void tokotachi_label_set_word_wrap(tokotachi_label* self, bool v
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API tokotachi_image* tokotachi_label_get_icon(tokotachi_label* self)
+{
+    try
+    {
+        return c::to_c_image(c::self_as<tokotachi::Label>(self, __func__)->icon.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_label_set_icon(tokotachi_label* self, const tokotachi_image* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Label>(self, __func__)->icon = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API float tokotachi_label_get_icon_size(tokotachi_label* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Label>(self, __func__)->icon_size.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_label_set_icon_size(tokotachi_label* self, float value)
+{
+    try
+    {
+        c::self_as<tokotachi::Label>(self, __func__)->icon_size = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_widget* tokotachi_label_get_buddy(tokotachi_label* self)
+{
+    try
+    {
+        return c::handle(c::self_as<tokotachi::Label>(self, __func__)->buddy.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_label_set_buddy(tokotachi_label* self, tokotachi_widget* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Label>(self, __func__)->buddy = c::arg_as<tokotachi::Widget>(value, __func__);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API char* tokotachi_text_input_base_get_text(tokotachi_text_input_base* self)
 {
     try
@@ -1310,6 +1512,24 @@ TOKOTACHI_C_API char* tokotachi_text_input_base_get_selected_text(tokotachi_text
     TOKOTACHI_C_CATCH(nullptr)
 }
 
+TOKOTACHI_C_API bool tokotachi_text_input_base_get_can_undo(tokotachi_text_input_base* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::TextInputBase>(self, __func__)->can_undo.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_text_input_base_get_can_redo(tokotachi_text_input_base* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::TextInputBase>(self, __func__)->can_redo.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
 TOKOTACHI_C_API void tokotachi_text_input_base_set_on_change(tokotachi_text_input_base* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
 {
     try
@@ -1370,6 +1590,33 @@ TOKOTACHI_C_API void tokotachi_text_input_base_insert(tokotachi_text_input_base*
     try
     {
         c::self_as<tokotachi::TextInputBase>(self, __func__)->insert(c::str(s));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_text_input_base_undo(tokotachi_text_input_base* self)
+{
+    try
+    {
+        c::self_as<tokotachi::TextInputBase>(self, __func__)->undo();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_text_input_base_redo(tokotachi_text_input_base* self)
+{
+    try
+    {
+        c::self_as<tokotachi::TextInputBase>(self, __func__)->redo();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_text_input_base_clear_undo_history(tokotachi_text_input_base* self)
+{
+    try
+    {
+        c::self_as<tokotachi::TextInputBase>(self, __func__)->clear_undo_history();
     }
     TOKOTACHI_C_CATCH()
 }
@@ -1537,6 +1784,24 @@ TOKOTACHI_C_API void tokotachi_progress_bar_set_text_visible(tokotachi_progress_
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API bool tokotachi_progress_bar_get_indeterminate(tokotachi_progress_bar* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::ProgressBar>(self, __func__)->indeterminate.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_progress_bar_set_indeterminate(tokotachi_progress_bar* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::ProgressBar>(self, __func__)->indeterminate = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API double tokotachi_range_base_get_minimum(tokotachi_range_base* self)
 {
     try
@@ -1664,6 +1929,24 @@ TOKOTACHI_C_API void tokotachi_slider_set_orientation(tokotachi_slider* self, to
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API double tokotachi_slider_get_tick_interval(tokotachi_slider* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Slider>(self, __func__)->tick_interval.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_slider_set_tick_interval(tokotachi_slider* self, double value)
+{
+    try
+    {
+        c::self_as<tokotachi::Slider>(self, __func__)->tick_interval = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API tokotachi_spin_box* tokotachi_spin_box_new(tokotachi_widget* parent)
 {
     try
@@ -1687,6 +1970,42 @@ TOKOTACHI_C_API void tokotachi_spin_box_set_decimals(tokotachi_spin_box* self, i
     try
     {
         c::self_as<tokotachi::SpinBox>(self, __func__)->decimals = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_spin_box_get_prefix(tokotachi_spin_box* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::SpinBox>(self, __func__)->prefix.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_spin_box_set_prefix(tokotachi_spin_box* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::SpinBox>(self, __func__)->prefix = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_spin_box_get_suffix(tokotachi_spin_box* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::SpinBox>(self, __func__)->suffix.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_spin_box_set_suffix(tokotachi_spin_box* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::SpinBox>(self, __func__)->suffix = c::str(value);
     }
     TOKOTACHI_C_CATCH()
 }
@@ -2153,6 +2472,469 @@ TOKOTACHI_C_API tokotachi_widget* tokotachi_tab_widget_remove_tab(tokotachi_tab_
     TOKOTACHI_C_CATCH(nullptr)
 }
 
+TOKOTACHI_C_API tokotachi_group_box* tokotachi_group_box_new(tokotachi_widget* parent, const char* title)
+{
+    try
+    {
+        return c::handle(new tokotachi::GroupBox(c::arg_as<tokotachi::Widget>(parent, __func__), c::str(title)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API char* tokotachi_group_box_get_title(tokotachi_group_box* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::GroupBox>(self, __func__)->title.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_group_box_set_title(tokotachi_group_box* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::GroupBox>(self, __func__)->title = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_rect tokotachi_group_box_get_content_rect(tokotachi_group_box* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::GroupBox>(self, __func__)->content_rect.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_rect())
+}
+
+TOKOTACHI_C_API tokotachi_image_box* tokotachi_image_box_new(tokotachi_widget* parent, const tokotachi_image* image)
+{
+    try
+    {
+        return c::handle(new tokotachi::ImageBox(c::arg_as<tokotachi::Widget>(parent, __func__), c::from_c(image)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_image* tokotachi_image_box_get_image(tokotachi_image_box* self)
+{
+    try
+    {
+        return c::to_c_image(c::self_as<tokotachi::ImageBox>(self, __func__)->image.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_image_box_set_image(tokotachi_image_box* self, const tokotachi_image* value)
+{
+    try
+    {
+        c::self_as<tokotachi::ImageBox>(self, __func__)->image = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_image_fit tokotachi_image_box_get_fit(tokotachi_image_box* self)
+{
+    try
+    {
+        return static_cast<tokotachi_image_fit>(c::self_as<tokotachi::ImageBox>(self, __func__)->fit.get());
+    }
+    TOKOTACHI_C_CATCH(static_cast<tokotachi_image_fit>(0))
+}
+
+TOKOTACHI_C_API void tokotachi_image_box_set_fit(tokotachi_image_box* self, tokotachi_image_fit value)
+{
+    try
+    {
+        c::self_as<tokotachi::ImageBox>(self, __func__)->fit = c::enum_in<tokotachi::ImageFit>(value, 4);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_calendar* tokotachi_calendar_new(tokotachi_widget* parent)
+{
+    try
+    {
+        return c::handle(new tokotachi::Calendar(c::arg_as<tokotachi::Widget>(parent, __func__)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_calendar_get_date(tokotachi_calendar* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::Calendar>(self, __func__)->date.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_set_date(tokotachi_calendar* self, tokotachi_date value)
+{
+    try
+    {
+        c::self_as<tokotachi::Calendar>(self, __func__)->date = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_calendar_get_minimum(tokotachi_calendar* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::Calendar>(self, __func__)->minimum.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_set_minimum(tokotachi_calendar* self, tokotachi_date value)
+{
+    try
+    {
+        c::self_as<tokotachi::Calendar>(self, __func__)->minimum = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_calendar_get_maximum(tokotachi_calendar* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::Calendar>(self, __func__)->maximum.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_set_maximum(tokotachi_calendar* self, tokotachi_date value)
+{
+    try
+    {
+        c::self_as<tokotachi::Calendar>(self, __func__)->maximum = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_day_of_week tokotachi_calendar_get_first_day_of_week(tokotachi_calendar* self)
+{
+    try
+    {
+        return static_cast<tokotachi_day_of_week>(c::self_as<tokotachi::Calendar>(self, __func__)->first_day_of_week.get());
+    }
+    TOKOTACHI_C_CATCH(static_cast<tokotachi_day_of_week>(0))
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_set_first_day_of_week(tokotachi_calendar* self, tokotachi_day_of_week value)
+{
+    try
+    {
+        c::self_as<tokotachi::Calendar>(self, __func__)->first_day_of_week = c::enum_in<tokotachi::DayOfWeek>(value, 7);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API int tokotachi_calendar_get_shown_year(tokotachi_calendar* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Calendar>(self, __func__)->shown_year.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API int tokotachi_calendar_get_shown_month(tokotachi_calendar* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Calendar>(self, __func__)->shown_month.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_set_on_change(tokotachi_calendar* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::NotifyHandler handler = c::notify_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::Calendar>(self, __func__)->on_change = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_set_on_activate(tokotachi_calendar* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::NotifyHandler handler = c::notify_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::Calendar>(self, __func__)->on_activate = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_calendar_show_month(tokotachi_calendar* self, int year, int month)
+{
+    try
+    {
+        c::self_as<tokotachi::Calendar>(self, __func__)->show_month(year, month);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_date_edit* tokotachi_date_edit_new(tokotachi_widget* parent)
+{
+    try
+    {
+        return c::handle(new tokotachi::DateEdit(c::arg_as<tokotachi::Widget>(parent, __func__)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_edit_get_date(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::DateEdit>(self, __func__)->date.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_date(tokotachi_date_edit* self, tokotachi_date value)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->date = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_edit_get_minimum(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::DateEdit>(self, __func__)->minimum.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_minimum(tokotachi_date_edit* self, tokotachi_date value)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->minimum = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_edit_get_maximum(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::DateEdit>(self, __func__)->maximum.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_maximum(tokotachi_date_edit* self, tokotachi_date value)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->maximum = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_date_edit_get_format(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::DateEdit>(self, __func__)->format.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_format(tokotachi_date_edit* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->format = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_day_of_week tokotachi_date_edit_get_first_day_of_week(tokotachi_date_edit* self)
+{
+    try
+    {
+        return static_cast<tokotachi_day_of_week>(c::self_as<tokotachi::DateEdit>(self, __func__)->first_day_of_week.get());
+    }
+    TOKOTACHI_C_CATCH(static_cast<tokotachi_day_of_week>(0))
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_first_day_of_week(tokotachi_date_edit* self, tokotachi_day_of_week value)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->first_day_of_week = c::enum_in<tokotachi::DayOfWeek>(value, 7);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_date_edit_get_placeholder_text(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::DateEdit>(self, __func__)->placeholder_text.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_placeholder_text(tokotachi_date_edit* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->placeholder_text = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_date_edit_get_text(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::DateEdit>(self, __func__)->text.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API bool tokotachi_date_edit_get_calendar_open(tokotachi_date_edit* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::DateEdit>(self, __func__)->calendar_open.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_set_on_change(tokotachi_date_edit* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::NotifyHandler handler = c::notify_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::DateEdit>(self, __func__)->on_change = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_commit(tokotachi_date_edit* self)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->commit();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_open_calendar(tokotachi_date_edit* self)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->open_calendar();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_date_edit_close_calendar(tokotachi_date_edit* self)
+{
+    try
+    {
+        c::self_as<tokotachi::DateEdit>(self, __func__)->close_calendar();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_color_button* tokotachi_color_button_new(tokotachi_widget* parent, tokotachi_color color)
+{
+    try
+    {
+        return c::handle(new tokotachi::ColorButton(c::arg_as<tokotachi::Widget>(parent, __func__), c::from_c(color)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_color tokotachi_color_button_get_color(tokotachi_color_button* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::ColorButton>(self, __func__)->color.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_color())
+}
+
+TOKOTACHI_C_API void tokotachi_color_button_set_color(tokotachi_color_button* self, tokotachi_color value)
+{
+    try
+    {
+        c::self_as<tokotachi::ColorButton>(self, __func__)->color = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_color_button_get_alpha_enabled(tokotachi_color_button* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::ColorButton>(self, __func__)->alpha_enabled.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_color_button_set_alpha_enabled(tokotachi_color_button* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::ColorButton>(self, __func__)->alpha_enabled = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_color_button_get_dialog_title(tokotachi_color_button* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::ColorButton>(self, __func__)->dialog_title.get());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_color_button_set_dialog_title(tokotachi_color_button* self, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::ColorButton>(self, __func__)->dialog_title = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_color_button_set_on_change(tokotachi_color_button* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    try
+    {
+        tokotachi::NotifyHandler handler = c::notify_handler(fn, user_data, destroy);
+        c::self_as<tokotachi::ColorButton>(self, __func__)->on_change = handler;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_color_button_open_dialog(tokotachi_color_button* self)
+{
+    try
+    {
+        c::self_as<tokotachi::ColorButton>(self, __func__)->open_dialog();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API tokotachi_window* tokotachi_window_new(const char* title, float width, float height)
 {
     try
@@ -2412,6 +3194,51 @@ TOKOTACHI_C_API void tokotachi_message_dialog_set_type(tokotachi_message_dialog*
     try
     {
         c::self_as<tokotachi::MessageDialog>(self, __func__)->type = c::enum_in<tokotachi::MessageType>(value, 4);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_color_dialog* tokotachi_color_dialog_new(tokotachi_window* parent, const char* title)
+{
+    try
+    {
+        return c::handle(new tokotachi::ColorDialog(c::arg_as<tokotachi::Window>(parent, __func__), c::str(title)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_color tokotachi_color_dialog_get_color(tokotachi_color_dialog* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::ColorDialog>(self, __func__)->color.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_color())
+}
+
+TOKOTACHI_C_API void tokotachi_color_dialog_set_color(tokotachi_color_dialog* self, tokotachi_color value)
+{
+    try
+    {
+        c::self_as<tokotachi::ColorDialog>(self, __func__)->color = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_color_dialog_get_alpha_enabled(tokotachi_color_dialog* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::ColorDialog>(self, __func__)->alpha_enabled.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_color_dialog_set_alpha_enabled(tokotachi_color_dialog* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::ColorDialog>(self, __func__)->alpha_enabled = value;
     }
     TOKOTACHI_C_CATCH()
 }
@@ -3346,6 +4173,78 @@ TOKOTACHI_C_API void tokotachi_item_model_set_checked(tokotachi_item_model* self
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API tokotachi_theme_color tokotachi_item_model_text_color(tokotachi_item_model* self, tokotachi_model_index index, int column)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::ItemModel>(self, __func__)->text_color(c::from_c(index), column));
+    }
+    TOKOTACHI_C_CATCH(tokotachi_theme_color())
+}
+
+TOKOTACHI_C_API tokotachi_font tokotachi_item_model_font(tokotachi_item_model* self, tokotachi_model_index index, int column)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::ItemModel>(self, __func__)->font(c::from_c(index), column));
+    }
+    TOKOTACHI_C_CATCH(tokotachi_font())
+}
+
+TOKOTACHI_C_API bool tokotachi_item_model_editable(tokotachi_item_model* self, tokotachi_model_index index, int column)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemModel>(self, __func__)->editable(c::from_c(index), column);
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_item_model_set_text(tokotachi_item_model* self, tokotachi_model_index index, int column, const char* text)
+{
+    try
+    {
+        c::self_as<tokotachi::ItemModel>(self, __func__)->set_text(c::from_c(index), column, c::str(text));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_item_model_can_move_rows(tokotachi_item_model* self, const tokotachi_model_index* indexes, size_t indexes_count, tokotachi_model_index parent, int row)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemModel>(self, __func__)->can_move_rows(c::indexes(indexes, indexes_count), c::from_c(parent), row);
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_item_model_move_rows(tokotachi_item_model* self, const tokotachi_model_index* indexes, size_t indexes_count, tokotachi_model_index parent, int row)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemModel>(self, __func__)->move_rows(c::indexes(indexes, indexes_count), c::from_c(parent), row);
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_item_model_can_drop(tokotachi_item_model* self, const tokotachi_drag_data* data, tokotachi_model_index parent, int row)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemModel>(self, __func__)->can_drop(c::drag_data_of(data), c::from_c(parent), row);
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_item_model_drop_data(tokotachi_item_model* self, const tokotachi_drag_data* data, tokotachi_drop_action action, tokotachi_model_index parent, int row)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemModel>(self, __func__)->drop_data(c::drag_data_of(data), c::enum_in<tokotachi::DropAction>(action, 3), c::from_c(parent), row);
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
 TOKOTACHI_C_API void tokotachi_item_model_sort(tokotachi_item_model* self, int column, tokotachi_sort_order order)
 {
     try
@@ -3472,6 +4371,60 @@ TOKOTACHI_C_API void tokotachi_item_set_checked(tokotachi_item* self, bool value
     TOKOTACHI_C_CATCH()
 }
 
+TOKOTACHI_C_API tokotachi_theme_color tokotachi_item_get_text_color(tokotachi_item* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::Item>(self, __func__)->text_color.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_theme_color())
+}
+
+TOKOTACHI_C_API void tokotachi_item_set_text_color(tokotachi_item* self, tokotachi_theme_color value)
+{
+    try
+    {
+        c::self_as<tokotachi::Item>(self, __func__)->text_color = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_font tokotachi_item_get_font(tokotachi_item* self)
+{
+    try
+    {
+        return c::to_c(c::self_as<tokotachi::Item>(self, __func__)->font.get());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_font())
+}
+
+TOKOTACHI_C_API void tokotachi_item_set_font(tokotachi_item* self, tokotachi_font value)
+{
+    try
+    {
+        c::self_as<tokotachi::Item>(self, __func__)->font = c::from_c(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_item_get_editable(tokotachi_item* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::Item>(self, __func__)->editable.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_item_set_editable(tokotachi_item* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::Item>(self, __func__)->editable = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API char* tokotachi_item_column_text(tokotachi_item* self, int column)
 {
     try
@@ -3479,6 +4432,15 @@ TOKOTACHI_C_API char* tokotachi_item_column_text(tokotachi_item* self, int colum
         return c::dup(c::self_as<tokotachi::Item>(self, __func__)->column_text(column));
     }
     TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_item_set_column_text(tokotachi_item* self, int column, const char* value)
+{
+    try
+    {
+        c::self_as<tokotachi::Item>(self, __func__)->set_column_text(column, c::str(value));
+    }
+    TOKOTACHI_C_CATCH()
 }
 
 TOKOTACHI_C_API tokotachi_list_model* tokotachi_list_model_new(tokotachi_object* owner)
@@ -3522,6 +4484,15 @@ TOKOTACHI_C_API void tokotachi_list_model_remove_item(tokotachi_list_model* self
     try
     {
         c::self_as<tokotachi::ListModel>(self, __func__)->remove_item(c::arg_as<tokotachi::Item>(item, __func__));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_list_model_move_item(tokotachi_list_model* self, tokotachi_item* item, int index)
+{
+    try
+    {
+        c::self_as<tokotachi::ListModel>(self, __func__)->move_item(c::arg_as<tokotachi::Item>(item, __func__), index);
     }
     TOKOTACHI_C_CATCH()
 }
@@ -3630,6 +4601,15 @@ TOKOTACHI_C_API void tokotachi_tree_model_remove_item(tokotachi_tree_model* self
     try
     {
         c::self_as<tokotachi::TreeModel>(self, __func__)->remove_item(c::arg_as<tokotachi::TreeItem>(item, __func__));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_tree_model_move_item(tokotachi_tree_model* self, tokotachi_tree_item* item, tokotachi_tree_item* parent, int index)
+{
+    try
+    {
+        c::self_as<tokotachi::TreeModel>(self, __func__)->move_item(c::arg_as<tokotachi::TreeItem>(item, __func__), c::arg_as<tokotachi::TreeItem>(parent, __func__), index);
     }
     TOKOTACHI_C_CATCH()
 }
@@ -3859,6 +4839,51 @@ TOKOTACHI_C_API size_t tokotachi_item_view_get_selection(tokotachi_item_view* se
     TOKOTACHI_C_CATCH(0)
 }
 
+TOKOTACHI_C_API bool tokotachi_item_view_get_editing(tokotachi_item_view* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemView>(self, __func__)->editing.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API bool tokotachi_item_view_get_drag_enabled(tokotachi_item_view* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemView>(self, __func__)->drag_enabled.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_item_view_set_drag_enabled(tokotachi_item_view* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::ItemView>(self, __func__)->drag_enabled = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_item_view_get_drop_enabled(tokotachi_item_view* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::ItemView>(self, __func__)->drop_enabled.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_item_view_set_drop_enabled(tokotachi_item_view* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::ItemView>(self, __func__)->drop_enabled = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API void tokotachi_item_view_set_on_selection_change(tokotachi_item_view* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy)
 {
     try
@@ -3951,6 +4976,24 @@ TOKOTACHI_C_API tokotachi_model_index tokotachi_item_view_index_at(tokotachi_ite
     TOKOTACHI_C_CATCH(tokotachi_model_index())
 }
 
+TOKOTACHI_C_API void tokotachi_item_view_edit(tokotachi_item_view* self, tokotachi_model_index index, int column)
+{
+    try
+    {
+        c::self_as<tokotachi::ItemView>(self, __func__)->edit(c::from_c(index), column);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_item_view_finish_editing(tokotachi_item_view* self, bool commit)
+{
+    try
+    {
+        c::self_as<tokotachi::ItemView>(self, __func__)->finish_editing(commit);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 TOKOTACHI_C_API tokotachi_list_view* tokotachi_list_view_new(tokotachi_widget* parent)
 {
     try
@@ -3958,6 +5001,150 @@ TOKOTACHI_C_API tokotachi_list_view* tokotachi_list_view_new(tokotachi_widget* p
         return c::handle(new tokotachi::ListView(c::arg_as<tokotachi::Widget>(parent, __func__)));
     }
     TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_table_view* tokotachi_table_view_new(tokotachi_widget* parent)
+{
+    try
+    {
+        return c::handle(new tokotachi::TableView(c::arg_as<tokotachi::Widget>(parent, __func__)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_selection_behavior tokotachi_table_view_get_selection_behavior(tokotachi_table_view* self)
+{
+    try
+    {
+        return static_cast<tokotachi_selection_behavior>(c::self_as<tokotachi::TableView>(self, __func__)->selection_behavior.get());
+    }
+    TOKOTACHI_C_CATCH(static_cast<tokotachi_selection_behavior>(0))
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_set_selection_behavior(tokotachi_table_view* self, tokotachi_selection_behavior value)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->selection_behavior = c::enum_in<tokotachi::SelectionBehavior>(value, 2);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API int tokotachi_table_view_get_current_column(tokotachi_table_view* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::TableView>(self, __func__)->current_column.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_set_current_column(tokotachi_table_view* self, int value)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->current_column = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API size_t tokotachi_table_view_get_selected_ranges(tokotachi_table_view* self, tokotachi_cell_range* out, size_t capacity)
+{
+    try
+    {
+        return c::fill_ranges(c::self_as<tokotachi::TableView>(self, __func__)->selected_ranges.get(), out, capacity);
+    }
+    TOKOTACHI_C_CATCH(0)
+}
+
+TOKOTACHI_C_API bool tokotachi_table_view_get_grid_visible(tokotachi_table_view* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::TableView>(self, __func__)->grid_visible.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_set_grid_visible(tokotachi_table_view* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->grid_visible = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_table_view_get_row_header_visible(tokotachi_table_view* self)
+{
+    try
+    {
+        return c::self_as<tokotachi::TableView>(self, __func__)->row_header_visible.get();
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_set_row_header_visible(tokotachi_table_view* self, bool value)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->row_header_visible = value;
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API bool tokotachi_table_view_is_cell_selected(tokotachi_table_view* self, int row, int column)
+{
+    try
+    {
+        return c::self_as<tokotachi::TableView>(self, __func__)->is_cell_selected(row, column);
+    }
+    TOKOTACHI_C_CATCH({})
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_select_range(tokotachi_table_view* self, tokotachi_cell_range range, bool add)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->select_range(c::from_c(range), add);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_table_view_selected_text(tokotachi_table_view* self)
+{
+    try
+    {
+        return c::dup(c::self_as<tokotachi::TableView>(self, __func__)->selected_text());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_copy(tokotachi_table_view* self)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->copy();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_paste(tokotachi_table_view* self)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->paste();
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_table_view_clear_selected_cells(tokotachi_table_view* self)
+{
+    try
+    {
+        c::self_as<tokotachi::TableView>(self, __func__)->clear_selected_cells();
+    }
+    TOKOTACHI_C_CATCH()
 }
 
 TOKOTACHI_C_API tokotachi_tree_view* tokotachi_tree_view_new(tokotachi_widget* parent)
@@ -4108,6 +5295,10 @@ TOKOTACHI_C_API const char* tokotachi_object_class_name(tokotachi_object* object
     {
         return "MessageDialog";
     }
+    if (dynamic_cast<tokotachi::ColorDialog*>(o))
+    {
+        return "ColorDialog";
+    }
     if (dynamic_cast<tokotachi::Button*>(o))
     {
         return "Button";
@@ -4136,6 +5327,10 @@ TOKOTACHI_C_API const char* tokotachi_object_class_name(tokotachi_object* object
     {
         return "SpinBox";
     }
+    if (dynamic_cast<tokotachi::ColorButton*>(o))
+    {
+        return "ColorButton";
+    }
     if (dynamic_cast<tokotachi::Dialog*>(o))
     {
         return "Dialog";
@@ -4147,6 +5342,10 @@ TOKOTACHI_C_API const char* tokotachi_object_class_name(tokotachi_object* object
     if (dynamic_cast<tokotachi::ListView*>(o))
     {
         return "ListView";
+    }
+    if (dynamic_cast<tokotachi::TableView*>(o))
+    {
+        return "TableView";
     }
     if (dynamic_cast<tokotachi::TreeView*>(o))
     {
@@ -4195,6 +5394,22 @@ TOKOTACHI_C_API const char* tokotachi_object_class_name(tokotachi_object* object
     if (dynamic_cast<tokotachi::TabWidget*>(o))
     {
         return "TabWidget";
+    }
+    if (dynamic_cast<tokotachi::GroupBox*>(o))
+    {
+        return "GroupBox";
+    }
+    if (dynamic_cast<tokotachi::ImageBox*>(o))
+    {
+        return "ImageBox";
+    }
+    if (dynamic_cast<tokotachi::Calendar*>(o))
+    {
+        return "Calendar";
+    }
+    if (dynamic_cast<tokotachi::DateEdit*>(o))
+    {
+        return "DateEdit";
     }
     if (dynamic_cast<tokotachi::Window*>(o))
     {
@@ -4337,9 +5552,13 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("accepts_text_input", &tokotachi::Widget::accepts_text_input);
     TOKOTACHI_C_ADD_PROPERTY("display_scale", &tokotachi::Widget::display_scale);
     TOKOTACHI_C_ADD_PROPERTY("tooltip", &tokotachi::Widget::tooltip);
+    TOKOTACHI_C_ADD_PROPERTY("theme_override", &tokotachi::Widget::theme_override);
+    TOKOTACHI_C_ADD_PROPERTY("theme", &tokotachi::Widget::theme);
+    TOKOTACHI_C_ADD_PROPERTY("accepts_drops", &tokotachi::Widget::accepts_drops);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::ButtonBase::text);
     TOKOTACHI_C_ADD_PROPERTY("font", &tokotachi::ButtonBase::font);
     TOKOTACHI_C_ADD_PROPERTY("style", &tokotachi::Button::style);
+    TOKOTACHI_C_ADD_PROPERTY("icon_size", &tokotachi::Button::icon_size);
     TOKOTACHI_C_ADD_PROPERTY("checked", &tokotachi::CheckBox::checked);
     TOKOTACHI_C_ADD_PROPERTY("value", &tokotachi::RadioButton::value);
     TOKOTACHI_C_ADD_PROPERTY("group_value", &tokotachi::RadioButton::group_value);
@@ -4355,25 +5574,32 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("text_color", &tokotachi::Label::text_color);
     TOKOTACHI_C_ADD_PROPERTY("alignment", &tokotachi::Label::alignment);
     TOKOTACHI_C_ADD_PROPERTY("word_wrap", &tokotachi::Label::word_wrap);
+    TOKOTACHI_C_ADD_PROPERTY("icon_size", &tokotachi::Label::icon_size);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::TextInputBase::text);
     TOKOTACHI_C_ADD_PROPERTY("placeholder_text", &tokotachi::TextInputBase::placeholder_text);
     TOKOTACHI_C_ADD_PROPERTY("font", &tokotachi::TextInputBase::font);
     TOKOTACHI_C_ADD_PROPERTY("cursor_position", &tokotachi::TextInputBase::cursor_position);
     TOKOTACHI_C_ADD_PROPERTY("has_selection", &tokotachi::TextInputBase::has_selection);
     TOKOTACHI_C_ADD_PROPERTY("selected_text", &tokotachi::TextInputBase::selected_text);
+    TOKOTACHI_C_ADD_PROPERTY("can_undo", &tokotachi::TextInputBase::can_undo);
+    TOKOTACHI_C_ADD_PROPERTY("can_redo", &tokotachi::TextInputBase::can_redo);
     TOKOTACHI_C_ADD_PROPERTY("word_wrap", &tokotachi::TextEdit::word_wrap);
     TOKOTACHI_C_ADD_PROPERTY("cached", &tokotachi::PaintBox::cached);
     TOKOTACHI_C_ADD_PROPERTY("minimum", &tokotachi::ProgressBar::minimum);
     TOKOTACHI_C_ADD_PROPERTY("maximum", &tokotachi::ProgressBar::maximum);
     TOKOTACHI_C_ADD_PROPERTY("value", &tokotachi::ProgressBar::value);
     TOKOTACHI_C_ADD_PROPERTY("text_visible", &tokotachi::ProgressBar::text_visible);
+    TOKOTACHI_C_ADD_PROPERTY("indeterminate", &tokotachi::ProgressBar::indeterminate);
     TOKOTACHI_C_ADD_PROPERTY("minimum", &tokotachi::RangeBase::minimum);
     TOKOTACHI_C_ADD_PROPERTY("maximum", &tokotachi::RangeBase::maximum);
     TOKOTACHI_C_ADD_PROPERTY("value", &tokotachi::RangeBase::value);
     TOKOTACHI_C_ADD_PROPERTY("single_step", &tokotachi::RangeBase::single_step);
     TOKOTACHI_C_ADD_PROPERTY("page_step", &tokotachi::RangeBase::page_step);
     TOKOTACHI_C_ADD_PROPERTY("orientation", &tokotachi::Slider::orientation);
+    TOKOTACHI_C_ADD_PROPERTY("tick_interval", &tokotachi::Slider::tick_interval);
     TOKOTACHI_C_ADD_PROPERTY("decimals", &tokotachi::SpinBox::decimals);
+    TOKOTACHI_C_ADD_PROPERTY("prefix", &tokotachi::SpinBox::prefix);
+    TOKOTACHI_C_ADD_PROPERTY("suffix", &tokotachi::SpinBox::suffix);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::SpinBox::text);
     TOKOTACHI_C_ADD_PROPERTY("fit_width", &tokotachi::ScrollArea::fit_width);
     TOKOTACHI_C_ADD_PROPERTY("scroll_position", &tokotachi::ScrollArea::scroll_position);
@@ -4390,12 +5616,34 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::Tab::title);
     TOKOTACHI_C_ADD_PROPERTY("enabled", &tokotachi::Tab::enabled);
     TOKOTACHI_C_ADD_PROPERTY("current_index", &tokotachi::TabWidget::current_index);
+    TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::GroupBox::title);
+    TOKOTACHI_C_ADD_PROPERTY("content_rect", &tokotachi::GroupBox::content_rect);
+    TOKOTACHI_C_ADD_PROPERTY("fit", &tokotachi::ImageBox::fit);
+    TOKOTACHI_C_ADD_PROPERTY("date", &tokotachi::Calendar::date);
+    TOKOTACHI_C_ADD_PROPERTY("minimum", &tokotachi::Calendar::minimum);
+    TOKOTACHI_C_ADD_PROPERTY("maximum", &tokotachi::Calendar::maximum);
+    TOKOTACHI_C_ADD_PROPERTY("first_day_of_week", &tokotachi::Calendar::first_day_of_week);
+    TOKOTACHI_C_ADD_PROPERTY("shown_year", &tokotachi::Calendar::shown_year);
+    TOKOTACHI_C_ADD_PROPERTY("shown_month", &tokotachi::Calendar::shown_month);
+    TOKOTACHI_C_ADD_PROPERTY("date", &tokotachi::DateEdit::date);
+    TOKOTACHI_C_ADD_PROPERTY("minimum", &tokotachi::DateEdit::minimum);
+    TOKOTACHI_C_ADD_PROPERTY("maximum", &tokotachi::DateEdit::maximum);
+    TOKOTACHI_C_ADD_PROPERTY("format", &tokotachi::DateEdit::format);
+    TOKOTACHI_C_ADD_PROPERTY("first_day_of_week", &tokotachi::DateEdit::first_day_of_week);
+    TOKOTACHI_C_ADD_PROPERTY("placeholder_text", &tokotachi::DateEdit::placeholder_text);
+    TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::DateEdit::text);
+    TOKOTACHI_C_ADD_PROPERTY("calendar_open", &tokotachi::DateEdit::calendar_open);
+    TOKOTACHI_C_ADD_PROPERTY("color", &tokotachi::ColorButton::color);
+    TOKOTACHI_C_ADD_PROPERTY("alpha_enabled", &tokotachi::ColorButton::alpha_enabled);
+    TOKOTACHI_C_ADD_PROPERTY("dialog_title", &tokotachi::ColorButton::dialog_title);
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::Window::title);
     TOKOTACHI_C_ADD_PROPERTY("background", &tokotachi::Window::background);
     TOKOTACHI_C_ADD_PROPERTY("destroy_on_close", &tokotachi::Window::destroy_on_close);
     TOKOTACHI_C_ADD_PROPERTY("result", &tokotachi::Dialog::result);
     TOKOTACHI_C_ADD_PROPERTY("text", &tokotachi::MessageDialog::text);
     TOKOTACHI_C_ADD_PROPERTY("type", &tokotachi::MessageDialog::type);
+    TOKOTACHI_C_ADD_PROPERTY("color", &tokotachi::ColorDialog::color);
+    TOKOTACHI_C_ADD_PROPERTY("alpha_enabled", &tokotachi::ColorDialog::alpha_enabled);
     TOKOTACHI_C_ADD_PROPERTY("mode", &tokotachi::FileDialog::mode);
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::FileDialog::title);
     TOKOTACHI_C_ADD_PROPERTY("location", &tokotachi::FileDialog::location);
@@ -4426,6 +5674,9 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("enabled", &tokotachi::Item::enabled);
     TOKOTACHI_C_ADD_PROPERTY("checkable", &tokotachi::Item::checkable);
     TOKOTACHI_C_ADD_PROPERTY("checked", &tokotachi::Item::checked);
+    TOKOTACHI_C_ADD_PROPERTY("text_color", &tokotachi::Item::text_color);
+    TOKOTACHI_C_ADD_PROPERTY("font", &tokotachi::Item::font);
+    TOKOTACHI_C_ADD_PROPERTY("editable", &tokotachi::Item::editable);
     TOKOTACHI_C_ADD_PROPERTY("title", &tokotachi::Column::title);
     TOKOTACHI_C_ADD_PROPERTY("width", &tokotachi::Column::width);
     TOKOTACHI_C_ADD_PROPERTY("alignment", &tokotachi::Column::alignment);
@@ -4436,6 +5687,14 @@ void tokotachi::c::register_generated_properties()
     TOKOTACHI_C_ADD_PROPERTY("selection_mode", &tokotachi::ItemView::selection_mode);
     TOKOTACHI_C_ADD_PROPERTY("current", &tokotachi::ItemView::current);
     TOKOTACHI_C_ADD_PROPERTY("selection", &tokotachi::ItemView::selection);
+    TOKOTACHI_C_ADD_PROPERTY("editing", &tokotachi::ItemView::editing);
+    TOKOTACHI_C_ADD_PROPERTY("drag_enabled", &tokotachi::ItemView::drag_enabled);
+    TOKOTACHI_C_ADD_PROPERTY("drop_enabled", &tokotachi::ItemView::drop_enabled);
+    TOKOTACHI_C_ADD_PROPERTY("selection_behavior", &tokotachi::TableView::selection_behavior);
+    TOKOTACHI_C_ADD_PROPERTY("current_column", &tokotachi::TableView::current_column);
+    TOKOTACHI_C_ADD_PROPERTY("selected_ranges", &tokotachi::TableView::selected_ranges);
+    TOKOTACHI_C_ADD_PROPERTY("grid_visible", &tokotachi::TableView::grid_visible);
+    TOKOTACHI_C_ADD_PROPERTY("row_header_visible", &tokotachi::TableView::row_header_visible);
     TOKOTACHI_C_ADD_PROPERTY("indentation", &tokotachi::TreeView::indentation);
     TOKOTACHI_C_ADD_PROPERTY("running", &tokotachi::TaskBase::running);
     TOKOTACHI_C_ADD_PROPERTY("progress", &tokotachi::TaskBase::progress);
@@ -4629,3 +5888,95 @@ static_assert(static_cast<int>(tokotachi::Paint::Type::SOLID) == TOKOTACHI_PAINT
 static_assert(static_cast<int>(tokotachi::Paint::Type::LINEAR) == TOKOTACHI_PAINT_TYPE_LINEAR, "PaintType");
 static_assert(static_cast<int>(tokotachi::Paint::Type::RADIAL) == TOKOTACHI_PAINT_TYPE_RADIAL, "PaintType");
 static_assert(static_cast<int>(tokotachi::Paint::Type::RADIAL) == 2, "PaintType の数");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::SUNDAY) == TOKOTACHI_DAY_OF_WEEK_SUNDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::MONDAY) == TOKOTACHI_DAY_OF_WEEK_MONDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::TUESDAY) == TOKOTACHI_DAY_OF_WEEK_TUESDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::WEDNESDAY) == TOKOTACHI_DAY_OF_WEEK_WEDNESDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::THURSDAY) == TOKOTACHI_DAY_OF_WEEK_THURSDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::FRIDAY) == TOKOTACHI_DAY_OF_WEEK_FRIDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::SATURDAY) == TOKOTACHI_DAY_OF_WEEK_SATURDAY, "DayOfWeek");
+static_assert(static_cast<int>(tokotachi::DayOfWeek::SATURDAY) == 6, "DayOfWeek の数");
+static_assert(static_cast<int>(tokotachi::DropAction::NONE) == TOKOTACHI_DROP_ACTION_NONE, "DropAction");
+static_assert(static_cast<int>(tokotachi::DropAction::COPY) == TOKOTACHI_DROP_ACTION_COPY, "DropAction");
+static_assert(static_cast<int>(tokotachi::DropAction::MOVE) == TOKOTACHI_DROP_ACTION_MOVE, "DropAction");
+static_assert(static_cast<int>(tokotachi::DropAction::MOVE) == 2, "DropAction の数");
+static_assert(static_cast<int>(tokotachi::SelectionBehavior::CELLS) == TOKOTACHI_SELECTION_BEHAVIOR_CELLS, "SelectionBehavior");
+static_assert(static_cast<int>(tokotachi::SelectionBehavior::ROWS) == TOKOTACHI_SELECTION_BEHAVIOR_ROWS, "SelectionBehavior");
+static_assert(static_cast<int>(tokotachi::SelectionBehavior::ROWS) == 1, "SelectionBehavior の数");
+static_assert(static_cast<int>(tokotachi::ImageFit::NONE) == TOKOTACHI_IMAGE_FIT_NONE, "ImageFit");
+static_assert(static_cast<int>(tokotachi::ImageFit::CONTAIN) == TOKOTACHI_IMAGE_FIT_CONTAIN, "ImageFit");
+static_assert(static_cast<int>(tokotachi::ImageFit::COVER) == TOKOTACHI_IMAGE_FIT_COVER, "ImageFit");
+static_assert(static_cast<int>(tokotachi::ImageFit::STRETCH) == TOKOTACHI_IMAGE_FIT_STRETCH, "ImageFit");
+static_assert(static_cast<int>(tokotachi::ImageFit::STRETCH) == 3, "ImageFit の数");
+static_assert(static_cast<int>(tokotachi::Icon::FILE) == TOKOTACHI_ICON_FILE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::FILE_PLUS) == TOKOTACHI_ICON_FILE_PLUS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::FILE_TEXT) == TOKOTACHI_ICON_FILE_TEXT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::FOLDER) == TOKOTACHI_ICON_FOLDER, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::FOLDER_OPEN) == TOKOTACHI_ICON_FOLDER_OPEN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SAVE) == TOKOTACHI_ICON_SAVE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::PRINTER) == TOKOTACHI_ICON_PRINTER, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::DOWNLOAD) == TOKOTACHI_ICON_DOWNLOAD, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::UPLOAD) == TOKOTACHI_ICON_UPLOAD, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::UNDO_2) == TOKOTACHI_ICON_UNDO_2, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::REDO_2) == TOKOTACHI_ICON_REDO_2, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SCISSORS) == TOKOTACHI_ICON_SCISSORS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::COPY) == TOKOTACHI_ICON_COPY, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CLIPBOARD_PASTE) == TOKOTACHI_ICON_CLIPBOARD_PASTE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::TRASH) == TOKOTACHI_ICON_TRASH, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::PENCIL) == TOKOTACHI_ICON_PENCIL, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::PLUS) == TOKOTACHI_ICON_PLUS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::MINUS) == TOKOTACHI_ICON_MINUS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::X) == TOKOTACHI_ICON_X, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CHECK) == TOKOTACHI_ICON_CHECK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ARROW_LEFT) == TOKOTACHI_ICON_ARROW_LEFT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ARROW_RIGHT) == TOKOTACHI_ICON_ARROW_RIGHT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ARROW_UP) == TOKOTACHI_ICON_ARROW_UP, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ARROW_DOWN) == TOKOTACHI_ICON_ARROW_DOWN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CHEVRON_LEFT) == TOKOTACHI_ICON_CHEVRON_LEFT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CHEVRON_RIGHT) == TOKOTACHI_ICON_CHEVRON_RIGHT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CHEVRON_UP) == TOKOTACHI_ICON_CHEVRON_UP, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CHEVRON_DOWN) == TOKOTACHI_ICON_CHEVRON_DOWN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::HOUSE) == TOKOTACHI_ICON_HOUSE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::MENU) == TOKOTACHI_ICON_MENU, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ELLIPSIS) == TOKOTACHI_ICON_ELLIPSIS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::REFRESH_CW) == TOKOTACHI_ICON_REFRESH_CW, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::EXTERNAL_LINK) == TOKOTACHI_ICON_EXTERNAL_LINK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SEARCH) == TOKOTACHI_ICON_SEARCH, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ZOOM_IN) == TOKOTACHI_ICON_ZOOM_IN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::ZOOM_OUT) == TOKOTACHI_ICON_ZOOM_OUT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::EYE) == TOKOTACHI_ICON_EYE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::EYE_OFF) == TOKOTACHI_ICON_EYE_OFF, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::FUNNEL) == TOKOTACHI_ICON_FUNNEL, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SETTINGS) == TOKOTACHI_ICON_SETTINGS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SLIDERS_HORIZONTAL) == TOKOTACHI_ICON_SLIDERS_HORIZONTAL, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LIST) == TOKOTACHI_ICON_LIST, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LAYOUT_GRID) == TOKOTACHI_ICON_LAYOUT_GRID, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::INFO) == TOKOTACHI_ICON_INFO, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::TRIANGLE_ALERT) == TOKOTACHI_ICON_TRIANGLE_ALERT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CIRCLE_X) == TOKOTACHI_ICON_CIRCLE_X, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CIRCLE_CHECK) == TOKOTACHI_ICON_CIRCLE_CHECK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CIRCLE_QUESTION_MARK) == TOKOTACHI_ICON_CIRCLE_QUESTION_MARK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::BELL) == TOKOTACHI_ICON_BELL, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::PLAY) == TOKOTACHI_ICON_PLAY, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::PAUSE) == TOKOTACHI_ICON_PAUSE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SQUARE) == TOKOTACHI_ICON_SQUARE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SKIP_BACK) == TOKOTACHI_ICON_SKIP_BACK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SKIP_FORWARD) == TOKOTACHI_ICON_SKIP_FORWARD, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::VOLUME_2) == TOKOTACHI_ICON_VOLUME_2, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::VOLUME_X) == TOKOTACHI_ICON_VOLUME_X, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::USER) == TOKOTACHI_ICON_USER, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::USERS) == TOKOTACHI_ICON_USERS, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::MAIL) == TOKOTACHI_ICON_MAIL, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CALENDAR) == TOKOTACHI_ICON_CALENDAR, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::CLOCK) == TOKOTACHI_ICON_CLOCK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LOCK) == TOKOTACHI_ICON_LOCK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LOCK_OPEN) == TOKOTACHI_ICON_LOCK_OPEN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::STAR) == TOKOTACHI_ICON_STAR, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::HEART) == TOKOTACHI_ICON_HEART, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LINK) == TOKOTACHI_ICON_LINK, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::IMAGE) == TOKOTACHI_ICON_IMAGE, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LOG_IN) == TOKOTACHI_ICON_LOG_IN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::LOG_OUT) == TOKOTACHI_ICON_LOG_OUT, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::SUN) == TOKOTACHI_ICON_SUN, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::MOON) == TOKOTACHI_ICON_MOON, "Icon");
+static_assert(static_cast<int>(tokotachi::Icon::MOON) == 70, "Icon の数");

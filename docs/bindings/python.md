@@ -71,9 +71,16 @@ app.exec()
 | `Variable<std::string>`・`Variable<bool>` | `tt.Variable(owner, '初期値')`・`tt.Variable(owner, type=bool)`(float は C++ の double) |
 | `Task<T>`・`start([](TaskContext& ctx) { ... })` | `task = tt.Task(owner)`・`task.start(lambda ctx: ...)`(戻り値は `task.result`、例外は `task.error`) |
 | `tokotachi::post(fn)` | `tt.post(fn)`(どのスレッドからでも) |
-| `ItemModel` を継承したモデル | `tt.CustomModel` を継承して `row_count(parent)`・`text(index, column)` を上書きする(木なら `index_id`・`parent_of` も) |
+| `ItemModel` を継承したモデル | `tt.CustomModel` を継承して `row_count(parent)`・`text(index, column)` を上書きする(木なら `index_id`・`parent_of`、編集なら `editable`・`set_text`、ドラッグなら `can_move_rows`・`move_rows`・`can_drop`・`drop_data` も) |
 | `Image::load`・`Bitmap`・`Path`・`TextLayout` | `tt.Image.load`・`tt.Bitmap`・`tt.Path`・`tt.TextLayout` |
 | `Paint::linear(...)`・`StrokeStyle(2, LineCap::ROUND)` | `tt.Paint.linear(start, end, [(0, c0), (1, c1)])`・`tt.StrokeStyle(2, tt.LineCap.ROUND)`。塗りには Color もそのまま渡せる |
+| `Image::icon(Icon::SAVE)` | `tt.Image.icon(tt.Icon.SAVE)`(`tt.Image.icon(tt.Icon.SAVE, tt.Color(...))` で色を決める) |
+| `Font(16, true)` | `tt.Font(16, bold=True)` |
+| `Date(2026, 10, 12)`・`Date::parse("2026/10/12")` | `tt.Date(2026, 10, 12)`・`tt.Date.parse('2026/10/12')`(`add_days`・`format` なども) |
+| `ThemeOverride().set(ColorRole::ACCENT, c)` | `tt.ThemeOverride().set(tt.ColorRole.ACCENT, c)` |
+| `on_drop`(`DragEvent& e`) | `def f(sender, e)`。`e.data.text`・`e.data.files`・`e.action`・`e.accepted = False`(`e.data` はハンドラの中だけ) |
+| `start_drag(DragData)` | `widget.start_drag(tt.DragData('文字', files=[...]))` |
+| `tokotachi::draw::button_face(canvas, r, state)` | `canvas.draw_button_face(r, tt.ControlState(hovered=True))` |
 
 ## 寿命
 

@@ -103,13 +103,14 @@ class BufferType(Type):
 
     shape = 'buffer'
 
-    def __init__(self, element, ct_element, fill, py_get, cpp_in=None):
+    def __init__(self, element, ct_element, fill, py_get, cpp_in=None, py_in=None):
         super().__init__('const %s*' % element, 'POINTER(%s)' % ct_element)
         self.element = element
         self.ct_element = ct_element
         self.fill = fill
         self.py_get = py_get
         self.buffer_in = cpp_in
+        self.buffer_py_in = py_in
 
     def c_params(self, name):
         return [('const %s*' % self.element, name), ('size_t', name + '_count')]
@@ -121,7 +122,7 @@ class BufferType(Type):
         return self.buffer_in.format(name)
 
     def py_in(self, expr):
-        return '*_in_floats(%s)' % expr
+        return '*%s(%s)' % (self.buffer_py_in, expr)
 
 
 def simple(c, ct):
@@ -144,8 +145,15 @@ TYPES = {
                    '_in_string({})', '_out_string({})'),
     'strings': StringsType(),
     'file_filters': StringsType('c::file_filters_in({0}, {0}_count)', 'c::file_filters_out({})'),
-    'floats': BufferType('float', 'c_float', 'c::fill_floats', '_get_floats', 'c::floats({0}, {0}_count)'),
-    'ModelIndexes': BufferType('tokotachi_model_index', 'CModelIndex', 'c::fill_indexes', '_get_indexes'),
+    'floats': BufferType('float', 'c_float', 'c::fill_floats', '_get_floats', 'c::floats({0}, {0}_count)',
+                         '_in_floats'),
+    'ModelIndexes': BufferType('tokotachi_model_index', 'CModelIndex', 'c::fill_indexes', '_get_indexes',
+                               'c::indexes({0}, {0}_count)', '_in_indexes'),
+    'CellRanges': BufferType('tokotachi_cell_range', 'CCellRange', 'c::fill_ranges', '_get_ranges'),
+    'Date': struct('tokotachi_date', 'CDate', 'Date'),
+    'CellRange': struct('tokotachi_cell_range', 'CCellRange', 'CellRange'),
+    'ControlState': struct('tokotachi_control_state', 'CControlState', 'ControlState'),
+    'DragData': Type('const tokotachi_drag_data*', 'c_void_p', 'c::drag_data_of({})', py_in='_in_DragData({})'),
     'Point': struct('tokotachi_point', 'CPoint', 'Point'),
     'Size': struct('tokotachi_size', 'CSize', 'Size'),
     'Rect': struct('tokotachi_rect', 'CRect', 'Rect'),
@@ -162,16 +170,20 @@ TYPES = {
 }
 
 
-class ThemeType(Type):
-    """Theme: 大きいので、呼んだ側の構造体に書く・構造体へのポインタで渡す。"""
+class OutType(Type):
+    """大きい構造体(Theme・ThemeOverride): 呼んだ側の構造体に書く・構造体へのポインタで渡す。"""
 
     shape = 'out'
 
-    def __init__(self):
-        super().__init__('const tokotachi_theme*', 'POINTER(CTheme)', 'c::from_c({})', '', '', py_in='_in_Theme({})')
+    def __init__(self, c, ct, key):
+        super().__init__('const %s*' % c, 'POINTER(%s)' % ct, 'c::from_c({})', '', '', py_in='_in_%s({})' % key)
+        self.struct = c
+        self.ct_struct = ct
+        self.key = key
 
 
-TYPES['Theme'] = ThemeType()
+TYPES['Theme'] = OutType('tokotachi_theme', 'CTheme', 'Theme')
+TYPES['ThemeOverride'] = OutType('tokotachi_theme_override', 'CThemeOverride', 'ThemeOverride')
 
 RAW_CTYPES = {
     'int': 'c_int',
@@ -193,7 +205,7 @@ RAW_CTYPES = {
     'tokotachi_notify_fn': 'c_void_p',
     'tokotachi_task_fn': 'c_void_p',
 }
-for handle in ['image', 'bitmap', 'canvas', 'path', 'text_layout', 'task_context']:
+for handle in ['image', 'bitmap', 'canvas', 'path', 'text_layout', 'task_context', 'drag_data']:
     RAW_CTYPES['tokotachi_%s*' % handle] = 'c_void_p'
     RAW_CTYPES['const tokotachi_%s*' % handle] = 'c_void_p'
 
@@ -277,6 +289,8 @@ HANDLER_MAKERS = {
     'wheel': 'c::wheel_handler',
     'paint': 'c::paint_handler',
     'close': 'c::close_handler',
+    'drag': 'c::drag_handler',
+    'drag_finish': 'c::drag_finish_handler',
 }
 
 
@@ -329,9 +343,9 @@ def class_functions(cls):
                              m.doc, 'return %s(%s, out, capacity);' % (t.fill, get), kind='get')
                 f.ctypes = ['c_void_p', 'POINTER(%s)' % t.ct_element, 'c_size_t']
             elif t.shape == 'out':
-                f = Function('%s_get_%s' % (prefix, m.name), m.type, [self_param, ('tokotachi_theme*', 'out')],
+                f = Function('%s_get_%s' % (prefix, m.name), m.type, [self_param, (t.struct + '*', 'out')],
                              m.doc, '*out = c::to_c(%s);' % get, kind='get')
-                f.ctypes = ['c_void_p', 'POINTER(CTheme)']
+                f.ctypes = ['c_void_p', 'POINTER(%s)' % t.ct_struct]
             else:
                 f = Function('%s_get_%s' % (prefix, m.name), m.type, [self_param], m.doc,
                              'return %s;' % t.cpp_out(get), kind='get')
@@ -382,6 +396,8 @@ HANDLER_TYPES = {
     'wheel': 'tokotachi::WheelHandler',
     'paint': 'tokotachi::PaintHandler',
     'close': 'tokotachi::CloseHandler',
+    'drag': 'tokotachi::DragHandler',
+    'drag_finish': 'tokotachi::DragFinishHandler',
 }
 
 
@@ -480,7 +496,36 @@ typedef struct tokotachi_margins
 typedef struct tokotachi_font
 {
     float size; /* dp */
+    bool bold;
+    bool italic;
 } tokotachi_font;
+
+/* 日付(すべて 0 なら空の日付) */
+typedef struct tokotachi_date
+{
+    int year;
+    int month; /* 1〜12 */
+    int day;   /* 1〜31 */
+} tokotachi_date;
+
+/* 表のセルの矩形の範囲(両端を含む) */
+typedef struct tokotachi_cell_range
+{
+    int first_row;
+    int first_column;
+    int last_row;
+    int last_column;
+} tokotachi_cell_range;
+
+/* 部品の状態(標準の見た目を描く関数 tokotachi_draw_* に渡す) */
+typedef struct tokotachi_control_state
+{
+    bool enabled;
+    bool hovered;
+    bool pressed;
+    bool focused;
+    bool checked;
+} tokotachi_control_state;
 
 typedef struct tokotachi_shortcut
 {
@@ -512,8 +557,6 @@ typedef struct tokotachi_placement
     tokotachi_anchor anchor;
 } tokotachi_placement;
 
-#define TOKOTACHI_COLOR_ROLE_COUNT %(role_count)d
-
 typedef struct tokotachi_theme
 {
     tokotachi_color colors[TOKOTACHI_COLOR_ROLE_COUNT]; /* tokotachi_color_role の順 */
@@ -522,6 +565,17 @@ typedef struct tokotachi_theme
     float field_radius;
     float field_padding;
 } tokotachi_theme;
+
+/* テーマの一部の上書き(has が true の役割だけ。radius などは負なら上書きしない) */
+typedef struct tokotachi_theme_override
+{
+    bool has[TOKOTACHI_COLOR_ROLE_COUNT];
+    tokotachi_color light[TOKOTACHI_COLOR_ROLE_COUNT];
+    tokotachi_color dark[TOKOTACHI_COLOR_ROLE_COUNT];
+    float radius;
+    float field_radius;
+    float field_padding;
+} tokotachi_theme_override;
 
 /* ---- イベント(ハンドラが受け取る。accepted を false にすると親へ送る) ---- */
 typedef struct tokotachi_mouse_event
@@ -549,6 +603,19 @@ typedef struct tokotachi_wheel_event
     tokotachi_modifiers modifiers;
     bool accepted;
 } tokotachi_wheel_event;
+
+/* ドラッグの中身(tokotachi_drag_data_new で作るか、ドラッグのハンドラで借りる) */
+typedef struct tokotachi_drag_data tokotachi_drag_data;
+
+/* ドラッグが上を動いた・落とされた。data はハンドラの中だけで使える。action は受け取り方(変えてよい) */
+typedef struct tokotachi_drag_event
+{
+    tokotachi_point pos;
+    const tokotachi_drag_data* data;
+    tokotachi_modifiers modifiers;
+    tokotachi_drop_action action;
+    bool accepted;
+} tokotachi_drag_event;
 
 /* ---- 描画 ---- */
 typedef struct tokotachi_gradient_stop
@@ -602,6 +669,8 @@ typedef void (*tokotachi_wheel_fn)(tokotachi_object* sender, tokotachi_wheel_eve
 typedef void (*tokotachi_paint_fn)(tokotachi_object* sender, tokotachi_canvas* canvas, void* user_data);
 /* *can_close を false にすると閉じない */
 typedef void (*tokotachi_close_fn)(tokotachi_object* sender, bool* can_close, void* user_data);
+typedef void (*tokotachi_drag_fn)(tokotachi_object* sender, tokotachi_drag_event* e, void* user_data);
+typedef void (*tokotachi_drag_finish_fn)(tokotachi_object* sender, tokotachi_drop_action action, void* user_data);
 /* 別のスレッドで呼ぶ */
 typedef void (*tokotachi_task_fn)(tokotachi_task_context* context, void* user_data);
 
@@ -626,6 +695,21 @@ typedef struct tokotachi_model_callbacks
     void (*sort)(int column, tokotachi_sort_order order, void* user_data);
     /* 並びが変わった後の index の今の位置を *out に書いて true */
     bool (*locate)(const tokotachi_model_index* index, tokotachi_model_index* out, void* user_data);
+    /* 文字の色・フォントを *out に書いて true(false なら既定) */
+    bool (*text_color)(const tokotachi_model_index* index, int column, tokotachi_theme_color* out, void* user_data);
+    bool (*font)(const tokotachi_model_index* index, int column, tokotachi_font* out, void* user_data);
+    /* その場で編集できるか・編集した文字 */
+    bool (*editable)(const tokotachi_model_index* index, int column, void* user_data);
+    void (*set_text)(const tokotachi_model_index* index, int column, const char* text, void* user_data);
+    /* 項目を parent の row の位置へ移せるか・移す(ドラッグでの並べ替え) */
+    bool (*can_move_rows)(const tokotachi_model_index* indexes, size_t count, const tokotachi_model_index* parent,
+                          int row, void* user_data);
+    bool (*move_rows)(const tokotachi_model_index* indexes, size_t count, const tokotachi_model_index* parent, int row,
+                      void* user_data);
+    /* 外から落とされた中身を受け取れるか・受け取る */
+    bool (*can_drop)(const tokotachi_drag_data* data, const tokotachi_model_index* parent, int row, void* user_data);
+    bool (*drop_data)(const tokotachi_drag_data* data, tokotachi_drop_action action, const tokotachi_model_index* parent,
+                      int row, void* user_data);
 } tokotachi_model_callbacks;
 '''
 
@@ -673,7 +757,8 @@ def generate_header():
         prefix = 'TOKOTACHI_' + snake(e.name).upper()
         for i, v in enumerate(e.values):
             out.append('    %s_%s = %d,\n' % (prefix, v, i))
-        out.append('} %s;\n\n' % name)
+        out.append('} %s;\n' % name)
+        out.append('#define %s_COUNT %d\n\n' % (prefix, len(e.values)))
     aliases = ''.join('typedef tokotachi_object %s;\n' % c_class(c.name) for c in api.CLASSES if c.name != 'Object')
     out.append(HEADER_STRUCTS % dict(role_count=len(ENUMS['ColorRole'].values), aliases=aliases))
     for group in all_functions():
@@ -775,7 +860,10 @@ def generate_python():
            '                    _in_Margins, _out_Margins, _in_Font, _out_Font, _in_Shortcut, _out_Shortcut,\n'
            '                    _in_ThemeColor, _out_ThemeColor, _in_ModelIndex, _out_ModelIndex, _in_Placement,\n'
            '                    _out_Placement)\n',
-           'from ._core import (_ApplicationMixin, _WindowMixin, _MessageDialogMixin, _VariableMixin, _TaskMixin, _CustomModelMixin)\n',
+           'from ._core import (_in_indexes, _get_ranges, _in_DragData, _in_Date, _out_Date, _in_CellRange,\n'
+           '                    _out_CellRange, _in_ThemeOverride, _out_ThemeOverride, _in_ControlState)\n',
+           'from ._core import (_ApplicationMixin, _WindowMixin, _MessageDialogMixin, _ColorDialogMixin, _VariableMixin,\n'
+           '                    _TaskMixin, _CustomModelMixin)\n',
            ]
     names = []
     out.append('\n# ---- 列挙 ----\n')
@@ -827,7 +915,7 @@ def generate_python():
             if t.shape == 'buffer':
                 getter = "lambda h: %s(_lib.%s, h)" % (t.py_get, get.name)
             elif t.shape == 'out':
-                getter = "lambda h: _out_Theme(_get_out(_lib.%s, h, CTheme))" % get.name
+                getter = "lambda h: _out_%s(_get_out(_lib.%s, h, %s))" % (t.key, get.name, t.ct_struct)
             else:
                 getter = 'lambda h: %s' % t.py_out('_lib.%s(h)' % get.name)
             setter = 'None'

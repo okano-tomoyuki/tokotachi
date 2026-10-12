@@ -132,6 +132,25 @@ std::size_t fill_indexes(const std::vector<ModelIndex>& v, tokotachi_model_index
     return v.size();
 }
 
+std::size_t fill_ranges(const std::vector<CellRange>& v, tokotachi_cell_range* out, std::size_t capacity)
+{
+    for (std::size_t i = 0; i < v.size() && i < capacity; ++i)
+    {
+        out[i] = to_c(v[i]);
+    }
+    return v.size();
+}
+
+std::vector<ModelIndex> indexes(const tokotachi_model_index* v, std::size_t count)
+{
+    std::vector<ModelIndex> out;
+    for (std::size_t i = 0; v && i < count; ++i)
+    {
+        out.push_back(from_c(v[i]));
+    }
+    return out;
+}
+
 std::vector<float> floats(const float* v, std::size_t count)
 {
     return v ? std::vector<float>(v, v + count) : std::vector<float>();
@@ -193,6 +212,63 @@ ModelIndex from_c(const tokotachi_model_index& i)
 tokotachi_model_index to_c(const ModelIndex& i)
 {
     return tokotachi_model_index{i.row(), i.id()};
+}
+
+CellRange from_c(const tokotachi_cell_range& r)
+{
+    CellRange out;
+    out.first_row = r.first_row;
+    out.first_column = r.first_column;
+    out.last_row = r.last_row;
+    out.last_column = r.last_column;
+    return out;
+}
+
+ControlState from_c(const tokotachi_control_state& s)
+{
+    ControlState out;
+    out.enabled = s.enabled;
+    out.hovered = s.hovered;
+    out.pressed = s.pressed;
+    out.focused = s.focused;
+    out.checked = s.checked;
+    return out;
+}
+
+ThemeOverride from_c(const tokotachi_theme_override* o)
+{
+    if (!o)
+    {
+        throw std::invalid_argument("the theme override is NULL");
+    }
+    ThemeOverride out;
+    for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
+    {
+        if (o->has[i])
+        {
+            out.set(static_cast<ColorRole>(i), from_c(o->light[i]), from_c(o->dark[i]));
+        }
+    }
+    out.set_radius(o->radius);
+    out.set_field_radius(o->field_radius);
+    out.set_field_padding(o->field_padding);
+    return out;
+}
+
+tokotachi_theme_override to_c(const ThemeOverride& o)
+{
+    tokotachi_theme_override out;
+    for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
+    {
+        const ColorRole role = static_cast<ColorRole>(i);
+        out.has[i] = o.has(role);
+        out.light[i] = to_c(o.has(role) ? o.light(role) : Color(0, 0, 0, 0));
+        out.dark[i] = to_c(o.has(role) ? o.dark(role) : Color(0, 0, 0, 0));
+    }
+    out.radius = o.radius();
+    out.field_radius = o.field_radius();
+    out.field_padding = o.field_padding();
+    return out;
 }
 
 Placement from_c(const tokotachi_placement& p)
@@ -443,6 +519,38 @@ CloseHandler close_handler(tokotachi_close_fn fn, void* user_data, tokotachi_des
     };
 }
 
+DragHandler drag_handler(tokotachi_drag_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    std::shared_ptr<UserData> data = hold(fn, user_data, destroy);
+    if (!data)
+    {
+        return DragHandler();
+    }
+    return [fn, data](Object* sender, DragEvent& e)
+    {
+        tokotachi_drag_event ce;
+        ce.pos = c::to_c(e.pos);
+        ce.data = c::to_c(e.data);
+        ce.modifiers = e.modifiers;
+        ce.action = static_cast<tokotachi_drop_action>(e.action);
+        ce.accepted = e.accepted;
+        fn(handle(sender), &ce, data->data);
+        e.action = enum_in<DropAction>(ce.action, 3);
+        e.accepted = ce.accepted;
+    };
+}
+
+DragFinishHandler drag_finish_handler(tokotachi_drag_finish_fn fn, void* user_data, tokotachi_destroy_fn destroy)
+{
+    std::shared_ptr<UserData> data = hold(fn, user_data, destroy);
+    if (!data)
+    {
+        return DragFinishHandler();
+    }
+    return [fn, data](Object* sender, DropAction action)
+    { fn(handle(sender), static_cast<tokotachi_drop_action>(action), data->data); };
+}
+
 // ---- モデル ----
 
 CallbackModel::CallbackModel(Object* owner, const tokotachi_model_callbacks& callbacks, void* user_data,
@@ -572,6 +680,104 @@ ModelIndex CallbackModel::locate(const ModelIndex& index) const
     const tokotachi_model_index i = to_c(index);
     tokotachi_model_index out = {-1, nullptr};
     return callbacks_.locate(&i, &out, user_data_.data) ? from_c(out) : ModelIndex();
+}
+
+ThemeColor CallbackModel::text_color(const ModelIndex& index, int column) const
+{
+    const tokotachi_model_index i = to_c(index);
+    tokotachi_theme_color out = to_c(ThemeColor());
+    if (callbacks_.text_color && callbacks_.text_color(&i, column, &out, user_data_.data))
+    {
+        return from_c(out);
+    }
+    return ItemModel::text_color(index, column);
+}
+
+Font CallbackModel::font(const ModelIndex& index, int column) const
+{
+    const tokotachi_model_index i = to_c(index);
+    tokotachi_font out = to_c(Font());
+    if (callbacks_.font && callbacks_.font(&i, column, &out, user_data_.data))
+    {
+        return from_c(out);
+    }
+    return ItemModel::font(index, column);
+}
+
+bool CallbackModel::editable(const ModelIndex& index, int column) const
+{
+    if (!callbacks_.editable)
+    {
+        return ItemModel::editable(index, column);
+    }
+    const tokotachi_model_index i = to_c(index);
+    return callbacks_.editable(&i, column, user_data_.data);
+}
+
+void CallbackModel::set_text(const ModelIndex& index, int column, const std::string& text)
+{
+    if (!callbacks_.set_text)
+    {
+        ItemModel::set_text(index, column, text);
+        return;
+    }
+    const tokotachi_model_index i = to_c(index);
+    callbacks_.set_text(&i, column, text.c_str(), user_data_.data);
+}
+
+namespace
+{
+std::vector<tokotachi_model_index> to_c(const std::vector<ModelIndex>& v)
+{
+    std::vector<tokotachi_model_index> out;
+    for (std::size_t i = 0; i < v.size(); ++i)
+    {
+        out.push_back(c::to_c(v[i]));
+    }
+    return out;
+}
+}  // namespace
+
+bool CallbackModel::can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const
+{
+    if (!callbacks_.can_move_rows)
+    {
+        return ItemModel::can_move_rows(indexes, parent, row);
+    }
+    const std::vector<tokotachi_model_index> v = to_c(indexes);
+    const tokotachi_model_index p = c::to_c(parent);
+    return callbacks_.can_move_rows(v.empty() ? nullptr : &v[0], v.size(), &p, row, user_data_.data);
+}
+
+bool CallbackModel::move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row)
+{
+    if (!callbacks_.move_rows)
+    {
+        return ItemModel::move_rows(indexes, parent, row);
+    }
+    const std::vector<tokotachi_model_index> v = to_c(indexes);
+    const tokotachi_model_index p = c::to_c(parent);
+    return callbacks_.move_rows(v.empty() ? nullptr : &v[0], v.size(), &p, row, user_data_.data);
+}
+
+bool CallbackModel::can_drop(const DragData& data, const ModelIndex& parent, int row) const
+{
+    if (!callbacks_.can_drop)
+    {
+        return ItemModel::can_drop(data, parent, row);
+    }
+    const tokotachi_model_index p = c::to_c(parent);
+    return callbacks_.can_drop(c::to_c(data), &p, row, user_data_.data);
+}
+
+bool CallbackModel::drop_data(const DragData& data, DropAction action, const ModelIndex& parent, int row)
+{
+    if (!callbacks_.drop_data)
+    {
+        return ItemModel::drop_data(data, action, parent, row);
+    }
+    const tokotachi_model_index p = c::to_c(parent);
+    return callbacks_.drop_data(c::to_c(data), static_cast<tokotachi_drop_action>(action), &p, row, user_data_.data);
 }
 
 // ---- 名前からプロパティへの表 ----

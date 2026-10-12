@@ -52,6 +52,7 @@ typedef enum tokotachi_mouse_button
     TOKOTACHI_MOUSE_BUTTON_MIDDLE = 2,
     TOKOTACHI_MOUSE_BUTTON_RIGHT = 3,
 } tokotachi_mouse_button;
+#define TOKOTACHI_MOUSE_BUTTON_COUNT 4
 
 /* C++ の tokotachi::Key */
 typedef enum tokotachi_key
@@ -125,6 +126,7 @@ typedef enum tokotachi_key
     TOKOTACHI_KEY_ALT = 66,
     TOKOTACHI_KEY_META = 67,
 } tokotachi_key;
+#define TOKOTACHI_KEY_COUNT 68
 
 /* C++ の tokotachi::FocusPolicy */
 typedef enum tokotachi_focus_policy
@@ -134,6 +136,7 @@ typedef enum tokotachi_focus_policy
     TOKOTACHI_FOCUS_POLICY_CLICK = 2,
     TOKOTACHI_FOCUS_POLICY_TAB_AND_CLICK = 3,
 } tokotachi_focus_policy;
+#define TOKOTACHI_FOCUS_POLICY_COUNT 4
 
 /* C++ の tokotachi::MouseCursor */
 typedef enum tokotachi_mouse_cursor
@@ -146,6 +149,7 @@ typedef enum tokotachi_mouse_cursor
     TOKOTACHI_MOUSE_CURSOR_SIZE_HORIZONTAL = 5,
     TOKOTACHI_MOUSE_CURSOR_SIZE_VERTICAL = 6,
 } tokotachi_mouse_cursor;
+#define TOKOTACHI_MOUSE_CURSOR_COUNT 7
 
 /* C++ の tokotachi::Orientation */
 typedef enum tokotachi_orientation
@@ -153,6 +157,7 @@ typedef enum tokotachi_orientation
     TOKOTACHI_ORIENTATION_HORIZONTAL = 0,
     TOKOTACHI_ORIENTATION_VERTICAL = 1,
 } tokotachi_orientation;
+#define TOKOTACHI_ORIENTATION_COUNT 2
 
 /* C++ の tokotachi::Align */
 typedef enum tokotachi_align
@@ -162,6 +167,7 @@ typedef enum tokotachi_align
     TOKOTACHI_ALIGN_END = 2,
     TOKOTACHI_ALIGN_FILL = 3,
 } tokotachi_align;
+#define TOKOTACHI_ALIGN_COUNT 4
 
 /* C++ の tokotachi::Anchor */
 typedef enum tokotachi_anchor
@@ -176,6 +182,7 @@ typedef enum tokotachi_anchor
     TOKOTACHI_ANCHOR_BOTTOM = 7,
     TOKOTACHI_ANCHOR_BOTTOM_RIGHT = 8,
 } tokotachi_anchor;
+#define TOKOTACHI_ANCHOR_COUNT 9
 
 /* C++ の tokotachi::ColorScheme */
 typedef enum tokotachi_color_scheme
@@ -184,6 +191,7 @@ typedef enum tokotachi_color_scheme
     TOKOTACHI_COLOR_SCHEME_LIGHT = 1,
     TOKOTACHI_COLOR_SCHEME_DARK = 2,
 } tokotachi_color_scheme;
+#define TOKOTACHI_COLOR_SCHEME_COUNT 3
 
 /* C++ の tokotachi::ColorRole */
 typedef enum tokotachi_color_role
@@ -213,6 +221,7 @@ typedef enum tokotachi_color_role
     TOKOTACHI_COLOR_ROLE_TOOLTIP = 22,
     TOKOTACHI_COLOR_ROLE_ON_TOOLTIP = 23,
 } tokotachi_color_role;
+#define TOKOTACHI_COLOR_ROLE_COUNT 24
 
 /* C++ の tokotachi::ButtonStyle */
 typedef enum tokotachi_button_style
@@ -220,6 +229,7 @@ typedef enum tokotachi_button_style
     TOKOTACHI_BUTTON_STYLE_PRIMARY = 0,
     TOKOTACHI_BUTTON_STYLE_SECONDARY = 1,
 } tokotachi_button_style;
+#define TOKOTACHI_BUTTON_STYLE_COUNT 2
 
 /* C++ の tokotachi::DialogButton */
 typedef enum tokotachi_dialog_button
@@ -233,6 +243,7 @@ typedef enum tokotachi_dialog_button
     TOKOTACHI_DIALOG_BUTTON_CANCEL = 6,
     TOKOTACHI_DIALOG_BUTTON_CLOSE = 7,
 } tokotachi_dialog_button;
+#define TOKOTACHI_DIALOG_BUTTON_COUNT 8
 
 /* C++ の tokotachi::FileDialogMode */
 typedef enum tokotachi_file_dialog_mode
@@ -241,6 +252,7 @@ typedef enum tokotachi_file_dialog_mode
     TOKOTACHI_FILE_DIALOG_MODE_SAVE = 1,
     TOKOTACHI_FILE_DIALOG_MODE_FOLDER = 2,
 } tokotachi_file_dialog_mode;
+#define TOKOTACHI_FILE_DIALOG_MODE_COUNT 3
 
 /* C++ の tokotachi::MessageType */
 typedef enum tokotachi_message_type
@@ -250,6 +262,7 @@ typedef enum tokotachi_message_type
     TOKOTACHI_MESSAGE_TYPE_WARNING = 2,
     TOKOTACHI_MESSAGE_TYPE_CRITICAL = 3,
 } tokotachi_message_type;
+#define TOKOTACHI_MESSAGE_TYPE_COUNT 4
 
 /* C++ の tokotachi::PopupKind */
 typedef enum tokotachi_popup_kind
@@ -257,6 +270,7 @@ typedef enum tokotachi_popup_kind
     TOKOTACHI_POPUP_KIND_MENU = 0,
     TOKOTACHI_POPUP_KIND_TOOLTIP = 1,
 } tokotachi_popup_kind;
+#define TOKOTACHI_POPUP_KIND_COUNT 2
 
 /* C++ の tokotachi::PopupPlacement */
 typedef enum tokotachi_popup_placement
@@ -265,6 +279,7 @@ typedef enum tokotachi_popup_placement
     TOKOTACHI_POPUP_PLACEMENT_RIGHT = 1,
     TOKOTACHI_POPUP_PLACEMENT_AT = 2,
 } tokotachi_popup_placement;
+#define TOKOTACHI_POPUP_PLACEMENT_COUNT 3
 
 /* C++ の tokotachi::ToolButtonStyle */
 typedef enum tokotachi_tool_button_style
@@ -273,6 +288,7 @@ typedef enum tokotachi_tool_button_style
     TOKOTACHI_TOOL_BUTTON_STYLE_TEXT_BESIDE_ICON = 1,
     TOKOTACHI_TOOL_BUTTON_STYLE_TEXT_UNDER_ICON = 2,
 } tokotachi_tool_button_style;
+#define TOKOTACHI_TOOL_BUTTON_STYLE_COUNT 3
 
 /* C++ の tokotachi::SelectionMode */
 typedef enum tokotachi_selection_mode
@@ -281,6 +297,7 @@ typedef enum tokotachi_selection_mode
     TOKOTACHI_SELECTION_MODE_SINGLE = 1,
     TOKOTACHI_SELECTION_MODE_MULTI = 2,
 } tokotachi_selection_mode;
+#define TOKOTACHI_SELECTION_MODE_COUNT 3
 
 /* C++ の tokotachi::SortOrder */
 typedef enum tokotachi_sort_order
@@ -288,6 +305,7 @@ typedef enum tokotachi_sort_order
     TOKOTACHI_SORT_ORDER_ASCENDING = 0,
     TOKOTACHI_SORT_ORDER_DESCENDING = 1,
 } tokotachi_sort_order;
+#define TOKOTACHI_SORT_ORDER_COUNT 2
 
 /* C++ の tokotachi::LineCap */
 typedef enum tokotachi_line_cap
@@ -296,6 +314,7 @@ typedef enum tokotachi_line_cap
     TOKOTACHI_LINE_CAP_ROUND = 1,
     TOKOTACHI_LINE_CAP_SQUARE = 2,
 } tokotachi_line_cap;
+#define TOKOTACHI_LINE_CAP_COUNT 3
 
 /* C++ の tokotachi::LineJoin */
 typedef enum tokotachi_line_join
@@ -304,6 +323,7 @@ typedef enum tokotachi_line_join
     TOKOTACHI_LINE_JOIN_ROUND = 1,
     TOKOTACHI_LINE_JOIN_BEVEL = 2,
 } tokotachi_line_join;
+#define TOKOTACHI_LINE_JOIN_COUNT 3
 
 /* 塗りの種類(C++ の Paint::Type) */
 typedef enum tokotachi_paint_type
@@ -312,6 +332,124 @@ typedef enum tokotachi_paint_type
     TOKOTACHI_PAINT_TYPE_LINEAR = 1,
     TOKOTACHI_PAINT_TYPE_RADIAL = 2,
 } tokotachi_paint_type;
+#define TOKOTACHI_PAINT_TYPE_COUNT 3
+
+/* C++ の tokotachi::DayOfWeek */
+typedef enum tokotachi_day_of_week
+{
+    TOKOTACHI_DAY_OF_WEEK_SUNDAY = 0,
+    TOKOTACHI_DAY_OF_WEEK_MONDAY = 1,
+    TOKOTACHI_DAY_OF_WEEK_TUESDAY = 2,
+    TOKOTACHI_DAY_OF_WEEK_WEDNESDAY = 3,
+    TOKOTACHI_DAY_OF_WEEK_THURSDAY = 4,
+    TOKOTACHI_DAY_OF_WEEK_FRIDAY = 5,
+    TOKOTACHI_DAY_OF_WEEK_SATURDAY = 6,
+} tokotachi_day_of_week;
+#define TOKOTACHI_DAY_OF_WEEK_COUNT 7
+
+/* C++ の tokotachi::DropAction */
+typedef enum tokotachi_drop_action
+{
+    TOKOTACHI_DROP_ACTION_NONE = 0,
+    TOKOTACHI_DROP_ACTION_COPY = 1,
+    TOKOTACHI_DROP_ACTION_MOVE = 2,
+} tokotachi_drop_action;
+#define TOKOTACHI_DROP_ACTION_COUNT 3
+
+/* C++ の tokotachi::SelectionBehavior */
+typedef enum tokotachi_selection_behavior
+{
+    TOKOTACHI_SELECTION_BEHAVIOR_CELLS = 0,
+    TOKOTACHI_SELECTION_BEHAVIOR_ROWS = 1,
+} tokotachi_selection_behavior;
+#define TOKOTACHI_SELECTION_BEHAVIOR_COUNT 2
+
+/* C++ の tokotachi::ImageFit */
+typedef enum tokotachi_image_fit
+{
+    TOKOTACHI_IMAGE_FIT_NONE = 0,
+    TOKOTACHI_IMAGE_FIT_CONTAIN = 1,
+    TOKOTACHI_IMAGE_FIT_COVER = 2,
+    TOKOTACHI_IMAGE_FIT_STRETCH = 3,
+} tokotachi_image_fit;
+#define TOKOTACHI_IMAGE_FIT_COUNT 4
+
+/* よく使うアイコン(C++ の tokotachi::Icon。docs/adr/0054) */
+typedef enum tokotachi_icon
+{
+    TOKOTACHI_ICON_FILE = 0,
+    TOKOTACHI_ICON_FILE_PLUS = 1,
+    TOKOTACHI_ICON_FILE_TEXT = 2,
+    TOKOTACHI_ICON_FOLDER = 3,
+    TOKOTACHI_ICON_FOLDER_OPEN = 4,
+    TOKOTACHI_ICON_SAVE = 5,
+    TOKOTACHI_ICON_PRINTER = 6,
+    TOKOTACHI_ICON_DOWNLOAD = 7,
+    TOKOTACHI_ICON_UPLOAD = 8,
+    TOKOTACHI_ICON_UNDO_2 = 9,
+    TOKOTACHI_ICON_REDO_2 = 10,
+    TOKOTACHI_ICON_SCISSORS = 11,
+    TOKOTACHI_ICON_COPY = 12,
+    TOKOTACHI_ICON_CLIPBOARD_PASTE = 13,
+    TOKOTACHI_ICON_TRASH = 14,
+    TOKOTACHI_ICON_PENCIL = 15,
+    TOKOTACHI_ICON_PLUS = 16,
+    TOKOTACHI_ICON_MINUS = 17,
+    TOKOTACHI_ICON_X = 18,
+    TOKOTACHI_ICON_CHECK = 19,
+    TOKOTACHI_ICON_ARROW_LEFT = 20,
+    TOKOTACHI_ICON_ARROW_RIGHT = 21,
+    TOKOTACHI_ICON_ARROW_UP = 22,
+    TOKOTACHI_ICON_ARROW_DOWN = 23,
+    TOKOTACHI_ICON_CHEVRON_LEFT = 24,
+    TOKOTACHI_ICON_CHEVRON_RIGHT = 25,
+    TOKOTACHI_ICON_CHEVRON_UP = 26,
+    TOKOTACHI_ICON_CHEVRON_DOWN = 27,
+    TOKOTACHI_ICON_HOUSE = 28,
+    TOKOTACHI_ICON_MENU = 29,
+    TOKOTACHI_ICON_ELLIPSIS = 30,
+    TOKOTACHI_ICON_REFRESH_CW = 31,
+    TOKOTACHI_ICON_EXTERNAL_LINK = 32,
+    TOKOTACHI_ICON_SEARCH = 33,
+    TOKOTACHI_ICON_ZOOM_IN = 34,
+    TOKOTACHI_ICON_ZOOM_OUT = 35,
+    TOKOTACHI_ICON_EYE = 36,
+    TOKOTACHI_ICON_EYE_OFF = 37,
+    TOKOTACHI_ICON_FUNNEL = 38,
+    TOKOTACHI_ICON_SETTINGS = 39,
+    TOKOTACHI_ICON_SLIDERS_HORIZONTAL = 40,
+    TOKOTACHI_ICON_LIST = 41,
+    TOKOTACHI_ICON_LAYOUT_GRID = 42,
+    TOKOTACHI_ICON_INFO = 43,
+    TOKOTACHI_ICON_TRIANGLE_ALERT = 44,
+    TOKOTACHI_ICON_CIRCLE_X = 45,
+    TOKOTACHI_ICON_CIRCLE_CHECK = 46,
+    TOKOTACHI_ICON_CIRCLE_QUESTION_MARK = 47,
+    TOKOTACHI_ICON_BELL = 48,
+    TOKOTACHI_ICON_PLAY = 49,
+    TOKOTACHI_ICON_PAUSE = 50,
+    TOKOTACHI_ICON_SQUARE = 51,
+    TOKOTACHI_ICON_SKIP_BACK = 52,
+    TOKOTACHI_ICON_SKIP_FORWARD = 53,
+    TOKOTACHI_ICON_VOLUME_2 = 54,
+    TOKOTACHI_ICON_VOLUME_X = 55,
+    TOKOTACHI_ICON_USER = 56,
+    TOKOTACHI_ICON_USERS = 57,
+    TOKOTACHI_ICON_MAIL = 58,
+    TOKOTACHI_ICON_CALENDAR = 59,
+    TOKOTACHI_ICON_CLOCK = 60,
+    TOKOTACHI_ICON_LOCK = 61,
+    TOKOTACHI_ICON_LOCK_OPEN = 62,
+    TOKOTACHI_ICON_STAR = 63,
+    TOKOTACHI_ICON_HEART = 64,
+    TOKOTACHI_ICON_LINK = 65,
+    TOKOTACHI_ICON_IMAGE = 66,
+    TOKOTACHI_ICON_LOG_IN = 67,
+    TOKOTACHI_ICON_LOG_OUT = 68,
+    TOKOTACHI_ICON_SUN = 69,
+    TOKOTACHI_ICON_MOON = 70,
+} tokotachi_icon;
+#define TOKOTACHI_ICON_COUNT 71
 
 /* Variable の値の型(bool・int・float・double・std::string) */
 typedef enum tokotachi_variable_type
@@ -322,6 +460,7 @@ typedef enum tokotachi_variable_type
     TOKOTACHI_VARIABLE_TYPE_DOUBLE = 3,
     TOKOTACHI_VARIABLE_TYPE_STRING = 4,
 } tokotachi_variable_type;
+#define TOKOTACHI_VARIABLE_TYPE_COUNT 5
 
 
 /* ---- 修飾キー(ビットの組み合わせ) ---- */
@@ -361,7 +500,36 @@ typedef struct tokotachi_margins
 typedef struct tokotachi_font
 {
     float size; /* dp */
+    bool bold;
+    bool italic;
 } tokotachi_font;
+
+/* 日付(すべて 0 なら空の日付) */
+typedef struct tokotachi_date
+{
+    int year;
+    int month; /* 1〜12 */
+    int day;   /* 1〜31 */
+} tokotachi_date;
+
+/* 表のセルの矩形の範囲(両端を含む) */
+typedef struct tokotachi_cell_range
+{
+    int first_row;
+    int first_column;
+    int last_row;
+    int last_column;
+} tokotachi_cell_range;
+
+/* 部品の状態(標準の見た目を描く関数 tokotachi_draw_* に渡す) */
+typedef struct tokotachi_control_state
+{
+    bool enabled;
+    bool hovered;
+    bool pressed;
+    bool focused;
+    bool checked;
+} tokotachi_control_state;
 
 typedef struct tokotachi_shortcut
 {
@@ -393,8 +561,6 @@ typedef struct tokotachi_placement
     tokotachi_anchor anchor;
 } tokotachi_placement;
 
-#define TOKOTACHI_COLOR_ROLE_COUNT 24
-
 typedef struct tokotachi_theme
 {
     tokotachi_color colors[TOKOTACHI_COLOR_ROLE_COUNT]; /* tokotachi_color_role の順 */
@@ -403,6 +569,17 @@ typedef struct tokotachi_theme
     float field_radius;
     float field_padding;
 } tokotachi_theme;
+
+/* テーマの一部の上書き(has が true の役割だけ。radius などは負なら上書きしない) */
+typedef struct tokotachi_theme_override
+{
+    bool has[TOKOTACHI_COLOR_ROLE_COUNT];
+    tokotachi_color light[TOKOTACHI_COLOR_ROLE_COUNT];
+    tokotachi_color dark[TOKOTACHI_COLOR_ROLE_COUNT];
+    float radius;
+    float field_radius;
+    float field_padding;
+} tokotachi_theme_override;
 
 /* ---- イベント(ハンドラが受け取る。accepted を false にすると親へ送る) ---- */
 typedef struct tokotachi_mouse_event
@@ -430,6 +607,19 @@ typedef struct tokotachi_wheel_event
     tokotachi_modifiers modifiers;
     bool accepted;
 } tokotachi_wheel_event;
+
+/* ドラッグの中身(tokotachi_drag_data_new で作るか、ドラッグのハンドラで借りる) */
+typedef struct tokotachi_drag_data tokotachi_drag_data;
+
+/* ドラッグが上を動いた・落とされた。data はハンドラの中だけで使える。action は受け取り方(変えてよい) */
+typedef struct tokotachi_drag_event
+{
+    tokotachi_point pos;
+    const tokotachi_drag_data* data;
+    tokotachi_modifiers modifiers;
+    tokotachi_drop_action action;
+    bool accepted;
+} tokotachi_drag_event;
 
 /* ---- 描画 ---- */
 typedef struct tokotachi_gradient_stop
@@ -485,9 +675,15 @@ typedef tokotachi_object tokotachi_splitter_pane;
 typedef tokotachi_object tokotachi_splitter;
 typedef tokotachi_object tokotachi_tab;
 typedef tokotachi_object tokotachi_tab_widget;
+typedef tokotachi_object tokotachi_group_box;
+typedef tokotachi_object tokotachi_image_box;
+typedef tokotachi_object tokotachi_calendar;
+typedef tokotachi_object tokotachi_date_edit;
+typedef tokotachi_object tokotachi_color_button;
 typedef tokotachi_object tokotachi_window;
 typedef tokotachi_object tokotachi_dialog;
 typedef tokotachi_object tokotachi_message_dialog;
+typedef tokotachi_object tokotachi_color_dialog;
 typedef tokotachi_object tokotachi_file_dialog;
 typedef tokotachi_object tokotachi_menu_bar;
 typedef tokotachi_object tokotachi_popup;
@@ -507,6 +703,7 @@ typedef tokotachi_object tokotachi_tree_model;
 typedef tokotachi_object tokotachi_column;
 typedef tokotachi_object tokotachi_item_view;
 typedef tokotachi_object tokotachi_list_view;
+typedef tokotachi_object tokotachi_table_view;
 typedef tokotachi_object tokotachi_tree_view;
 typedef tokotachi_object tokotachi_variable;
 typedef tokotachi_object tokotachi_task;
@@ -532,6 +729,8 @@ typedef void (*tokotachi_wheel_fn)(tokotachi_object* sender, tokotachi_wheel_eve
 typedef void (*tokotachi_paint_fn)(tokotachi_object* sender, tokotachi_canvas* canvas, void* user_data);
 /* *can_close を false にすると閉じない */
 typedef void (*tokotachi_close_fn)(tokotachi_object* sender, bool* can_close, void* user_data);
+typedef void (*tokotachi_drag_fn)(tokotachi_object* sender, tokotachi_drag_event* e, void* user_data);
+typedef void (*tokotachi_drag_finish_fn)(tokotachi_object* sender, tokotachi_drop_action action, void* user_data);
 /* 別のスレッドで呼ぶ */
 typedef void (*tokotachi_task_fn)(tokotachi_task_context* context, void* user_data);
 
@@ -556,6 +755,21 @@ typedef struct tokotachi_model_callbacks
     void (*sort)(int column, tokotachi_sort_order order, void* user_data);
     /* 並びが変わった後の index の今の位置を *out に書いて true */
     bool (*locate)(const tokotachi_model_index* index, tokotachi_model_index* out, void* user_data);
+    /* 文字の色・フォントを *out に書いて true(false なら既定) */
+    bool (*text_color)(const tokotachi_model_index* index, int column, tokotachi_theme_color* out, void* user_data);
+    bool (*font)(const tokotachi_model_index* index, int column, tokotachi_font* out, void* user_data);
+    /* その場で編集できるか・編集した文字 */
+    bool (*editable)(const tokotachi_model_index* index, int column, void* user_data);
+    void (*set_text)(const tokotachi_model_index* index, int column, const char* text, void* user_data);
+    /* 項目を parent の row の位置へ移せるか・移す(ドラッグでの並べ替え) */
+    bool (*can_move_rows)(const tokotachi_model_index* indexes, size_t count, const tokotachi_model_index* parent,
+                          int row, void* user_data);
+    bool (*move_rows)(const tokotachi_model_index* indexes, size_t count, const tokotachi_model_index* parent, int row,
+                      void* user_data);
+    /* 外から落とされた中身を受け取れるか・受け取る */
+    bool (*can_drop)(const tokotachi_drag_data* data, const tokotachi_model_index* parent, int row, void* user_data);
+    bool (*drop_data)(const tokotachi_drag_data* data, tokotachi_drop_action action, const tokotachi_model_index* parent,
+                      int row, void* user_data);
 } tokotachi_model_callbacks;
 
 /* ======== 全体 ======== */
@@ -601,11 +815,48 @@ TOKOTACHI_C_API void tokotachi_theme_light(tokotachi_theme* out);
 TOKOTACHI_C_API void tokotachi_theme_dark(tokotachi_theme* out);
 /* 今のアプリケーションのテーマで具体的な色にする */
 TOKOTACHI_C_API tokotachi_color tokotachi_theme_color_resolve(tokotachi_theme_color color);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_today(void);
+/* pattern("yyyy/MM/dd" など。NULL なら "yyyy/MM/dd")で読む。読めなければ空の日付(すべて 0) */
+TOKOTACHI_C_API tokotachi_date tokotachi_date_parse(const char* text, const char* pattern);
+TOKOTACHI_C_API char* tokotachi_date_format(tokotachi_date date, const char* pattern);
+TOKOTACHI_C_API bool tokotachi_date_is_valid(tokotachi_date date);
+TOKOTACHI_C_API tokotachi_day_of_week tokotachi_date_day_of_week(tokotachi_date date);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_add_days(tokotachi_date date, int days);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_add_months(tokotachi_date date, int months);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_add_years(tokotachi_date date, int years);
+TOKOTACHI_C_API int tokotachi_date_days_to(tokotachi_date date, tokotachi_date other);
+TOKOTACHI_C_API int tokotachi_date_days_in_month(int year, int month);
+TOKOTACHI_C_API bool tokotachi_date_is_leap_year(int year);
+/* Widget の start_drag に渡す中身を作る(tokotachi_drag_data_free で解放する) */
+TOKOTACHI_C_API tokotachi_drag_data* tokotachi_drag_data_new(void);
+TOKOTACHI_C_API void tokotachi_drag_data_free(tokotachi_drag_data* data);
+TOKOTACHI_C_API char* tokotachi_drag_data_get_text(const tokotachi_drag_data* data);
+TOKOTACHI_C_API void tokotachi_drag_data_set_text(tokotachi_drag_data* data, const char* text);
+TOKOTACHI_C_API char** tokotachi_drag_data_get_files(const tokotachi_drag_data* data);
+TOKOTACHI_C_API void tokotachi_drag_data_set_files(tokotachi_drag_data* data, const char* const* files, size_t files_count);
+/* 名前の付いた中身(無ければ NULL) */
+TOKOTACHI_C_API char* tokotachi_drag_data_get_format(const tokotachi_drag_data* data, const char* name);
+TOKOTACHI_C_API void tokotachi_drag_data_set_format(tokotachi_drag_data* data, const char* name, const char* value);
+TOKOTACHI_C_API char** tokotachi_drag_data_format_names(const tokotachi_drag_data* data);
+/* ドラッグを始めた部品(OS からなら NULL) */
+TOKOTACHI_C_API tokotachi_widget* tokotachi_drag_data_source(const tokotachi_drag_data* data);
+TOKOTACHI_C_API bool tokotachi_drag_data_from_outside(const tokotachi_drag_data* data);
+TOKOTACHI_C_API void tokotachi_draw_button_face(tokotachi_canvas* canvas, tokotachi_rect rect, tokotachi_control_state state, tokotachi_button_style style);
+TOKOTACHI_C_API tokotachi_color tokotachi_draw_button_text_color(tokotachi_control_state state, tokotachi_button_style style);
+TOKOTACHI_C_API void tokotachi_draw_check_mark(tokotachi_canvas* canvas, tokotachi_rect rect, tokotachi_control_state state);
+TOKOTACHI_C_API void tokotachi_draw_radio_mark(tokotachi_canvas* canvas, tokotachi_rect rect, tokotachi_control_state state);
+TOKOTACHI_C_API void tokotachi_draw_focus_ring(tokotachi_canvas* canvas, tokotachi_rect rect);
+TOKOTACHI_C_API void tokotachi_draw_field_frame(tokotachi_canvas* canvas, tokotachi_rect rect, tokotachi_control_state state);
 /* PNG・JPEG・BMP・GIF を読む。読めなければ NULL */
 TOKOTACHI_C_API tokotachi_image* tokotachi_image_load(const char* path);
 TOKOTACHI_C_API tokotachi_image* tokotachi_image_load_from_data(const void* data, size_t size);
 /* 画素(左上から行ごと。アルファは乗算していない)から作る。count が width × height でなければ NULL */
 TOKOTACHI_C_API tokotachi_image* tokotachi_image_from_pixels(int width, int height, const tokotachi_color* pixels, size_t count);
+/* よく使うアイコン(線画。使う部品の文字の色で塗る。docs/adr/0054) */
+TOKOTACHI_C_API tokotachi_image* tokotachi_image_icon(tokotachi_icon icon);
+/* 決まった色で塗るアイコン */
+TOKOTACHI_C_API tokotachi_image* tokotachi_image_icon_colored(tokotachi_icon icon, tokotachi_color color);
+TOKOTACHI_C_API bool tokotachi_image_is_icon(const tokotachi_image* image);
 /* 同じ画像を指す、別のハンドル */
 TOKOTACHI_C_API tokotachi_image* tokotachi_image_copy(const tokotachi_image* image);
 TOKOTACHI_C_API void tokotachi_image_free(tokotachi_image* image);
@@ -760,6 +1011,13 @@ TOKOTACHI_C_API float tokotachi_widget_get_display_scale(tokotachi_widget* self)
 TOKOTACHI_C_API char* tokotachi_widget_get_tooltip(tokotachi_widget* self);
 TOKOTACHI_C_API void tokotachi_widget_set_tooltip(tokotachi_widget* self, const char* value);
 TOKOTACHI_C_API size_t tokotachi_widget_get_actions(tokotachi_widget* self, tokotachi_action** out, size_t capacity);
+/* テーマの一部の上書き(docs/adr/0042) */
+TOKOTACHI_C_API void tokotachi_widget_get_theme_override(tokotachi_widget* self, tokotachi_theme_override* out);
+TOKOTACHI_C_API void tokotachi_widget_set_theme_override(tokotachi_widget* self, const tokotachi_theme_override* value);
+/* 自分に効いているテーマ */
+TOKOTACHI_C_API void tokotachi_widget_get_theme(tokotachi_widget* self, tokotachi_theme* out);
+TOKOTACHI_C_API bool tokotachi_widget_get_accepts_drops(tokotachi_widget* self);
+TOKOTACHI_C_API void tokotachi_widget_set_accepts_drops(tokotachi_widget* self, bool value);
 TOKOTACHI_C_API void tokotachi_widget_add_action(tokotachi_widget* self, tokotachi_action* action);
 TOKOTACHI_C_API void tokotachi_widget_remove_action(tokotachi_widget* self, tokotachi_action* action);
 TOKOTACHI_C_API void tokotachi_widget_invalidate(tokotachi_widget* self);
@@ -769,6 +1027,10 @@ TOKOTACHI_C_API void tokotachi_widget_apply_layout(tokotachi_widget* self);
 TOKOTACHI_C_API tokotachi_point tokotachi_widget_map_to_window(tokotachi_widget* self, tokotachi_point p);
 TOKOTACHI_C_API tokotachi_point tokotachi_widget_map_from_window(tokotachi_widget* self, tokotachi_point p);
 TOKOTACHI_C_API tokotachi_widget* tokotachi_widget_child_at(tokotachi_widget* self, tokotachi_point p);
+/* ドラッグを始める(docs/adr/0047)。マウスのボタンを押している間だけ */
+TOKOTACHI_C_API bool tokotachi_widget_start_drag(tokotachi_widget* self, const tokotachi_drag_data* data, const char* label);
+TOKOTACHI_C_API bool tokotachi_widget_focus_next_after(tokotachi_widget* self);
+TOKOTACHI_C_API bool tokotachi_widget_focus_first_within(tokotachi_widget* self);
 /* 自分の描画の後に呼ぶ(子の描画の前) */
 TOKOTACHI_C_API void tokotachi_widget_set_on_paint(tokotachi_widget* self, tokotachi_paint_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_widget_set_on_resize(tokotachi_widget* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
@@ -782,6 +1044,12 @@ TOKOTACHI_C_API void tokotachi_widget_set_on_key_down(tokotachi_widget* self, to
 TOKOTACHI_C_API void tokotachi_widget_set_on_key_up(tokotachi_widget* self, tokotachi_key_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_widget_set_on_focus_in(tokotachi_widget* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_widget_set_on_focus_out(tokotachi_widget* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+/* accepts_drops のとき、ドラッグが上を動いた(accepted を false にすると受け取らない) */
+TOKOTACHI_C_API void tokotachi_widget_set_on_drag_move(tokotachi_widget* self, tokotachi_drag_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_widget_set_on_drag_leave(tokotachi_widget* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_widget_set_on_drop(tokotachi_widget* self, tokotachi_drag_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+/* start_drag で始めたドラッグが終わった */
+TOKOTACHI_C_API void tokotachi_widget_set_on_drag_finish(tokotachi_widget* self, tokotachi_drag_finish_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 
 /* ======== ButtonBase(include/tokotachi/widgets/button_base.hpp。基底は Widget) ======== */
 TOKOTACHI_C_API char* tokotachi_button_base_get_text(tokotachi_button_base* self);
@@ -794,6 +1062,10 @@ TOKOTACHI_C_API void tokotachi_button_base_set_on_click(tokotachi_button_base* s
 TOKOTACHI_C_API tokotachi_button* tokotachi_button_new(tokotachi_widget* parent, const char* text);
 TOKOTACHI_C_API tokotachi_button_style tokotachi_button_get_style(tokotachi_button* self);
 TOKOTACHI_C_API void tokotachi_button_set_style(tokotachi_button* self, tokotachi_button_style value);
+TOKOTACHI_C_API tokotachi_image* tokotachi_button_get_icon(tokotachi_button* self);
+TOKOTACHI_C_API void tokotachi_button_set_icon(tokotachi_button* self, const tokotachi_image* value);
+TOKOTACHI_C_API float tokotachi_button_get_icon_size(tokotachi_button* self);
+TOKOTACHI_C_API void tokotachi_button_set_icon_size(tokotachi_button* self, float value);
 
 /* ======== CheckBox(include/tokotachi/widgets/check_box.hpp。基底は ButtonBase) ======== */
 TOKOTACHI_C_API tokotachi_check_box* tokotachi_check_box_new(tokotachi_widget* parent, const char* text);
@@ -838,6 +1110,13 @@ TOKOTACHI_C_API tokotachi_align tokotachi_label_get_alignment(tokotachi_label* s
 TOKOTACHI_C_API void tokotachi_label_set_alignment(tokotachi_label* self, tokotachi_align value);
 TOKOTACHI_C_API bool tokotachi_label_get_word_wrap(tokotachi_label* self);
 TOKOTACHI_C_API void tokotachi_label_set_word_wrap(tokotachi_label* self, bool value);
+TOKOTACHI_C_API tokotachi_image* tokotachi_label_get_icon(tokotachi_label* self);
+TOKOTACHI_C_API void tokotachi_label_set_icon(tokotachi_label* self, const tokotachi_image* value);
+TOKOTACHI_C_API float tokotachi_label_get_icon_size(tokotachi_label* self);
+TOKOTACHI_C_API void tokotachi_label_set_icon_size(tokotachi_label* self, float value);
+/* ニーモニックでフォーカスを移す部品 */
+TOKOTACHI_C_API tokotachi_widget* tokotachi_label_get_buddy(tokotachi_label* self);
+TOKOTACHI_C_API void tokotachi_label_set_buddy(tokotachi_label* self, tokotachi_widget* value);
 
 /* ======== TextInputBase(include/tokotachi/widgets/text_input_base.hpp。基底は Widget) ======== */
 TOKOTACHI_C_API char* tokotachi_text_input_base_get_text(tokotachi_text_input_base* self);
@@ -850,6 +1129,8 @@ TOKOTACHI_C_API size_t tokotachi_text_input_base_get_cursor_position(tokotachi_t
 TOKOTACHI_C_API void tokotachi_text_input_base_set_cursor_position(tokotachi_text_input_base* self, size_t value);
 TOKOTACHI_C_API bool tokotachi_text_input_base_get_has_selection(tokotachi_text_input_base* self);
 TOKOTACHI_C_API char* tokotachi_text_input_base_get_selected_text(tokotachi_text_input_base* self);
+TOKOTACHI_C_API bool tokotachi_text_input_base_get_can_undo(tokotachi_text_input_base* self);
+TOKOTACHI_C_API bool tokotachi_text_input_base_get_can_redo(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_set_on_change(tokotachi_text_input_base* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_text_input_base_select_all(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_clear_selection(tokotachi_text_input_base* self);
@@ -857,6 +1138,9 @@ TOKOTACHI_C_API void tokotachi_text_input_base_cut(tokotachi_text_input_base* se
 TOKOTACHI_C_API void tokotachi_text_input_base_copy(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_paste(tokotachi_text_input_base* self);
 TOKOTACHI_C_API void tokotachi_text_input_base_insert(tokotachi_text_input_base* self, const char* s);
+TOKOTACHI_C_API void tokotachi_text_input_base_undo(tokotachi_text_input_base* self);
+TOKOTACHI_C_API void tokotachi_text_input_base_redo(tokotachi_text_input_base* self);
+TOKOTACHI_C_API void tokotachi_text_input_base_clear_undo_history(tokotachi_text_input_base* self);
 
 /* ======== LineEdit(include/tokotachi/widgets/line_edit.hpp。基底は TextInputBase) ======== */
 TOKOTACHI_C_API tokotachi_line_edit* tokotachi_line_edit_new(tokotachi_widget* parent, const char* text);
@@ -883,6 +1167,8 @@ TOKOTACHI_C_API double tokotachi_progress_bar_get_value(tokotachi_progress_bar* 
 TOKOTACHI_C_API void tokotachi_progress_bar_set_value(tokotachi_progress_bar* self, double value);
 TOKOTACHI_C_API bool tokotachi_progress_bar_get_text_visible(tokotachi_progress_bar* self);
 TOKOTACHI_C_API void tokotachi_progress_bar_set_text_visible(tokotachi_progress_bar* self, bool value);
+TOKOTACHI_C_API bool tokotachi_progress_bar_get_indeterminate(tokotachi_progress_bar* self);
+TOKOTACHI_C_API void tokotachi_progress_bar_set_indeterminate(tokotachi_progress_bar* self, bool value);
 
 /* ======== RangeBase(include/tokotachi/widgets/range_base.hpp。基底は Widget) ======== */
 TOKOTACHI_C_API double tokotachi_range_base_get_minimum(tokotachi_range_base* self);
@@ -901,11 +1187,17 @@ TOKOTACHI_C_API void tokotachi_range_base_set_on_change(tokotachi_range_base* se
 TOKOTACHI_C_API tokotachi_slider* tokotachi_slider_new(tokotachi_widget* parent, tokotachi_orientation orientation);
 TOKOTACHI_C_API tokotachi_orientation tokotachi_slider_get_orientation(tokotachi_slider* self);
 TOKOTACHI_C_API void tokotachi_slider_set_orientation(tokotachi_slider* self, tokotachi_orientation value);
+TOKOTACHI_C_API double tokotachi_slider_get_tick_interval(tokotachi_slider* self);
+TOKOTACHI_C_API void tokotachi_slider_set_tick_interval(tokotachi_slider* self, double value);
 
 /* ======== SpinBox(include/tokotachi/widgets/spin_box.hpp。基底は RangeBase) ======== */
 TOKOTACHI_C_API tokotachi_spin_box* tokotachi_spin_box_new(tokotachi_widget* parent);
 TOKOTACHI_C_API int tokotachi_spin_box_get_decimals(tokotachi_spin_box* self);
 TOKOTACHI_C_API void tokotachi_spin_box_set_decimals(tokotachi_spin_box* self, int value);
+TOKOTACHI_C_API char* tokotachi_spin_box_get_prefix(tokotachi_spin_box* self);
+TOKOTACHI_C_API void tokotachi_spin_box_set_prefix(tokotachi_spin_box* self, const char* value);
+TOKOTACHI_C_API char* tokotachi_spin_box_get_suffix(tokotachi_spin_box* self);
+TOKOTACHI_C_API void tokotachi_spin_box_set_suffix(tokotachi_spin_box* self, const char* value);
 TOKOTACHI_C_API char* tokotachi_spin_box_get_text(tokotachi_spin_box* self);
 TOKOTACHI_C_API void tokotachi_spin_box_commit(tokotachi_spin_box* self);
 
@@ -973,6 +1265,67 @@ TOKOTACHI_C_API tokotachi_tab* tokotachi_tab_widget_insert_tab(tokotachi_tab_wid
 /* タブを除き、ページを返す(ページは親が無くなり、呼んだ側が破棄する) */
 TOKOTACHI_C_API tokotachi_widget* tokotachi_tab_widget_remove_tab(tokotachi_tab_widget* self, tokotachi_tab* tab);
 
+/* ======== GroupBox(include/tokotachi/widgets/group_box.hpp。基底は Widget) ======== */
+TOKOTACHI_C_API tokotachi_group_box* tokotachi_group_box_new(tokotachi_widget* parent, const char* title);
+TOKOTACHI_C_API char* tokotachi_group_box_get_title(tokotachi_group_box* self);
+TOKOTACHI_C_API void tokotachi_group_box_set_title(tokotachi_group_box* self, const char* value);
+TOKOTACHI_C_API tokotachi_rect tokotachi_group_box_get_content_rect(tokotachi_group_box* self);
+
+/* ======== ImageBox(include/tokotachi/widgets/image_box.hpp。基底は Widget) ======== */
+TOKOTACHI_C_API tokotachi_image_box* tokotachi_image_box_new(tokotachi_widget* parent, const tokotachi_image* image);
+TOKOTACHI_C_API tokotachi_image* tokotachi_image_box_get_image(tokotachi_image_box* self);
+TOKOTACHI_C_API void tokotachi_image_box_set_image(tokotachi_image_box* self, const tokotachi_image* value);
+TOKOTACHI_C_API tokotachi_image_fit tokotachi_image_box_get_fit(tokotachi_image_box* self);
+TOKOTACHI_C_API void tokotachi_image_box_set_fit(tokotachi_image_box* self, tokotachi_image_fit value);
+
+/* ======== Calendar(include/tokotachi/widgets/calendar.hpp。基底は Widget) ======== */
+TOKOTACHI_C_API tokotachi_calendar* tokotachi_calendar_new(tokotachi_widget* parent);
+TOKOTACHI_C_API tokotachi_date tokotachi_calendar_get_date(tokotachi_calendar* self);
+TOKOTACHI_C_API void tokotachi_calendar_set_date(tokotachi_calendar* self, tokotachi_date value);
+TOKOTACHI_C_API tokotachi_date tokotachi_calendar_get_minimum(tokotachi_calendar* self);
+TOKOTACHI_C_API void tokotachi_calendar_set_minimum(tokotachi_calendar* self, tokotachi_date value);
+TOKOTACHI_C_API tokotachi_date tokotachi_calendar_get_maximum(tokotachi_calendar* self);
+TOKOTACHI_C_API void tokotachi_calendar_set_maximum(tokotachi_calendar* self, tokotachi_date value);
+TOKOTACHI_C_API tokotachi_day_of_week tokotachi_calendar_get_first_day_of_week(tokotachi_calendar* self);
+TOKOTACHI_C_API void tokotachi_calendar_set_first_day_of_week(tokotachi_calendar* self, tokotachi_day_of_week value);
+TOKOTACHI_C_API int tokotachi_calendar_get_shown_year(tokotachi_calendar* self);
+TOKOTACHI_C_API int tokotachi_calendar_get_shown_month(tokotachi_calendar* self);
+TOKOTACHI_C_API void tokotachi_calendar_set_on_change(tokotachi_calendar* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_calendar_set_on_activate(tokotachi_calendar* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_calendar_show_month(tokotachi_calendar* self, int year, int month);
+
+/* ======== DateEdit(include/tokotachi/widgets/date_edit.hpp。基底は Widget) ======== */
+TOKOTACHI_C_API tokotachi_date_edit* tokotachi_date_edit_new(tokotachi_widget* parent);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_edit_get_date(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_date(tokotachi_date_edit* self, tokotachi_date value);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_edit_get_minimum(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_minimum(tokotachi_date_edit* self, tokotachi_date value);
+TOKOTACHI_C_API tokotachi_date tokotachi_date_edit_get_maximum(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_maximum(tokotachi_date_edit* self, tokotachi_date value);
+TOKOTACHI_C_API char* tokotachi_date_edit_get_format(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_format(tokotachi_date_edit* self, const char* value);
+TOKOTACHI_C_API tokotachi_day_of_week tokotachi_date_edit_get_first_day_of_week(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_first_day_of_week(tokotachi_date_edit* self, tokotachi_day_of_week value);
+TOKOTACHI_C_API char* tokotachi_date_edit_get_placeholder_text(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_placeholder_text(tokotachi_date_edit* self, const char* value);
+TOKOTACHI_C_API char* tokotachi_date_edit_get_text(tokotachi_date_edit* self);
+TOKOTACHI_C_API bool tokotachi_date_edit_get_calendar_open(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_set_on_change(tokotachi_date_edit* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_date_edit_commit(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_open_calendar(tokotachi_date_edit* self);
+TOKOTACHI_C_API void tokotachi_date_edit_close_calendar(tokotachi_date_edit* self);
+
+/* ======== ColorButton(include/tokotachi/widgets/color_button.hpp。基底は ButtonBase) ======== */
+TOKOTACHI_C_API tokotachi_color_button* tokotachi_color_button_new(tokotachi_widget* parent, tokotachi_color color);
+TOKOTACHI_C_API tokotachi_color tokotachi_color_button_get_color(tokotachi_color_button* self);
+TOKOTACHI_C_API void tokotachi_color_button_set_color(tokotachi_color_button* self, tokotachi_color value);
+TOKOTACHI_C_API bool tokotachi_color_button_get_alpha_enabled(tokotachi_color_button* self);
+TOKOTACHI_C_API void tokotachi_color_button_set_alpha_enabled(tokotachi_color_button* self, bool value);
+TOKOTACHI_C_API char* tokotachi_color_button_get_dialog_title(tokotachi_color_button* self);
+TOKOTACHI_C_API void tokotachi_color_button_set_dialog_title(tokotachi_color_button* self, const char* value);
+TOKOTACHI_C_API void tokotachi_color_button_set_on_change(tokotachi_color_button* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
+TOKOTACHI_C_API void tokotachi_color_button_open_dialog(tokotachi_color_button* self);
+
 /* ======== Window(include/tokotachi/windows/window.hpp。基底は Widget) ======== */
 /* Application を作った後に作る。Application が所有する(docs/adr/0062) */
 TOKOTACHI_C_API tokotachi_window* tokotachi_window_new(const char* title, float width, float height);
@@ -1016,6 +1369,15 @@ TOKOTACHI_C_API tokotachi_message_type tokotachi_message_dialog_get_type(tokotac
 TOKOTACHI_C_API void tokotachi_message_dialog_set_type(tokotachi_message_dialog* self, tokotachi_message_type value);
 /* 作ってボタンを加えて開き、閉じたら on_finish を呼んで破棄する(button_count が 0 なら OK だけ) */
 TOKOTACHI_C_API tokotachi_message_dialog* tokotachi_message_dialog_show(tokotachi_window* parent, const char* title, const char* text, const tokotachi_dialog_button* buttons, size_t button_count, tokotachi_notify_fn on_finish, void* user_data, tokotachi_destroy_fn destroy, tokotachi_message_type type);
+
+/* ======== ColorDialog(include/tokotachi/windows/color_dialog.hpp。基底は Dialog) ======== */
+TOKOTACHI_C_API tokotachi_color_dialog* tokotachi_color_dialog_new(tokotachi_window* parent, const char* title);
+TOKOTACHI_C_API tokotachi_color tokotachi_color_dialog_get_color(tokotachi_color_dialog* self);
+TOKOTACHI_C_API void tokotachi_color_dialog_set_color(tokotachi_color_dialog* self, tokotachi_color value);
+TOKOTACHI_C_API bool tokotachi_color_dialog_get_alpha_enabled(tokotachi_color_dialog* self);
+TOKOTACHI_C_API void tokotachi_color_dialog_set_alpha_enabled(tokotachi_color_dialog* self, bool value);
+/* 作って開き、閉じたら on_finish を呼んで破棄する(決めた色は on_finish の中で color を読む) */
+TOKOTACHI_C_API tokotachi_color_dialog* tokotachi_color_dialog_show(tokotachi_window* parent, tokotachi_color initial, tokotachi_notify_fn on_finish, void* user_data, tokotachi_destroy_fn destroy, bool alpha, const char* title);
 
 /* ======== FileDialog(include/tokotachi/windows/file_dialog.hpp。基底は Object) ======== */
 TOKOTACHI_C_API tokotachi_file_dialog* tokotachi_file_dialog_new(tokotachi_window* parent, tokotachi_file_dialog_mode mode);
@@ -1148,6 +1510,14 @@ TOKOTACHI_C_API bool tokotachi_item_model_enabled(tokotachi_item_model* self, to
 TOKOTACHI_C_API bool tokotachi_item_model_checkable(tokotachi_item_model* self, tokotachi_model_index index);
 TOKOTACHI_C_API bool tokotachi_item_model_checked(tokotachi_item_model* self, tokotachi_model_index index);
 TOKOTACHI_C_API void tokotachi_item_model_set_checked(tokotachi_item_model* self, tokotachi_model_index index, bool checked);
+TOKOTACHI_C_API tokotachi_theme_color tokotachi_item_model_text_color(tokotachi_item_model* self, tokotachi_model_index index, int column);
+TOKOTACHI_C_API tokotachi_font tokotachi_item_model_font(tokotachi_item_model* self, tokotachi_model_index index, int column);
+TOKOTACHI_C_API bool tokotachi_item_model_editable(tokotachi_item_model* self, tokotachi_model_index index, int column);
+TOKOTACHI_C_API void tokotachi_item_model_set_text(tokotachi_item_model* self, tokotachi_model_index index, int column, const char* text);
+TOKOTACHI_C_API bool tokotachi_item_model_can_move_rows(tokotachi_item_model* self, const tokotachi_model_index* indexes, size_t indexes_count, tokotachi_model_index parent, int row);
+TOKOTACHI_C_API bool tokotachi_item_model_move_rows(tokotachi_item_model* self, const tokotachi_model_index* indexes, size_t indexes_count, tokotachi_model_index parent, int row);
+TOKOTACHI_C_API bool tokotachi_item_model_can_drop(tokotachi_item_model* self, const tokotachi_drag_data* data, tokotachi_model_index parent, int row);
+TOKOTACHI_C_API bool tokotachi_item_model_drop_data(tokotachi_item_model* self, const tokotachi_drag_data* data, tokotachi_drop_action action, tokotachi_model_index parent, int row);
 TOKOTACHI_C_API void tokotachi_item_model_sort(tokotachi_item_model* self, int column, tokotachi_sort_order order);
 TOKOTACHI_C_API tokotachi_model_index tokotachi_item_model_locate(tokotachi_item_model* self, tokotachi_model_index index);
 
@@ -1165,7 +1535,14 @@ TOKOTACHI_C_API bool tokotachi_item_get_checkable(tokotachi_item* self);
 TOKOTACHI_C_API void tokotachi_item_set_checkable(tokotachi_item* self, bool value);
 TOKOTACHI_C_API bool tokotachi_item_get_checked(tokotachi_item* self);
 TOKOTACHI_C_API void tokotachi_item_set_checked(tokotachi_item* self, bool value);
+TOKOTACHI_C_API tokotachi_theme_color tokotachi_item_get_text_color(tokotachi_item* self);
+TOKOTACHI_C_API void tokotachi_item_set_text_color(tokotachi_item* self, tokotachi_theme_color value);
+TOKOTACHI_C_API tokotachi_font tokotachi_item_get_font(tokotachi_item* self);
+TOKOTACHI_C_API void tokotachi_item_set_font(tokotachi_item* self, tokotachi_font value);
+TOKOTACHI_C_API bool tokotachi_item_get_editable(tokotachi_item* self);
+TOKOTACHI_C_API void tokotachi_item_set_editable(tokotachi_item* self, bool value);
 TOKOTACHI_C_API char* tokotachi_item_column_text(tokotachi_item* self, int column);
+TOKOTACHI_C_API void tokotachi_item_set_column_text(tokotachi_item* self, int column, const char* value);
 
 /* ======== ListModel(include/tokotachi/views/list_model.hpp。基底は ItemModel) ======== */
 TOKOTACHI_C_API tokotachi_list_model* tokotachi_list_model_new(tokotachi_object* owner);
@@ -1173,6 +1550,7 @@ TOKOTACHI_C_API size_t tokotachi_list_model_get_items(tokotachi_list_model* self
 TOKOTACHI_C_API tokotachi_item* tokotachi_list_model_add_item(tokotachi_list_model* self, const char* text);
 TOKOTACHI_C_API tokotachi_item* tokotachi_list_model_insert_item(tokotachi_list_model* self, int index, const char* text);
 TOKOTACHI_C_API void tokotachi_list_model_remove_item(tokotachi_list_model* self, tokotachi_item* item);
+TOKOTACHI_C_API void tokotachi_list_model_move_item(tokotachi_list_model* self, tokotachi_item* item, int index);
 TOKOTACHI_C_API void tokotachi_list_model_clear(tokotachi_list_model* self);
 TOKOTACHI_C_API tokotachi_model_index tokotachi_list_model_index_of(tokotachi_list_model* self, tokotachi_item* item);
 TOKOTACHI_C_API tokotachi_item* tokotachi_list_model_item_at(tokotachi_list_model* self, tokotachi_model_index index);
@@ -1189,6 +1567,7 @@ TOKOTACHI_C_API size_t tokotachi_tree_model_get_items(tokotachi_tree_model* self
 TOKOTACHI_C_API tokotachi_tree_item* tokotachi_tree_model_add_item(tokotachi_tree_model* self, const char* text);
 TOKOTACHI_C_API tokotachi_tree_item* tokotachi_tree_model_insert_item(tokotachi_tree_model* self, int index, const char* text);
 TOKOTACHI_C_API void tokotachi_tree_model_remove_item(tokotachi_tree_model* self, tokotachi_tree_item* item);
+TOKOTACHI_C_API void tokotachi_tree_model_move_item(tokotachi_tree_model* self, tokotachi_tree_item* item, tokotachi_tree_item* parent, int index);
 TOKOTACHI_C_API void tokotachi_tree_model_clear(tokotachi_tree_model* self);
 TOKOTACHI_C_API tokotachi_model_index tokotachi_tree_model_index_of(tokotachi_tree_model* self, tokotachi_tree_item* item);
 TOKOTACHI_C_API tokotachi_tree_item* tokotachi_tree_model_item_at(tokotachi_tree_model* self, tokotachi_model_index index);
@@ -1220,6 +1599,11 @@ TOKOTACHI_C_API void tokotachi_item_view_set_selection_mode(tokotachi_item_view*
 TOKOTACHI_C_API tokotachi_model_index tokotachi_item_view_get_current(tokotachi_item_view* self);
 TOKOTACHI_C_API void tokotachi_item_view_set_current(tokotachi_item_view* self, tokotachi_model_index value);
 TOKOTACHI_C_API size_t tokotachi_item_view_get_selection(tokotachi_item_view* self, tokotachi_model_index* out, size_t capacity);
+TOKOTACHI_C_API bool tokotachi_item_view_get_editing(tokotachi_item_view* self);
+TOKOTACHI_C_API bool tokotachi_item_view_get_drag_enabled(tokotachi_item_view* self);
+TOKOTACHI_C_API void tokotachi_item_view_set_drag_enabled(tokotachi_item_view* self, bool value);
+TOKOTACHI_C_API bool tokotachi_item_view_get_drop_enabled(tokotachi_item_view* self);
+TOKOTACHI_C_API void tokotachi_item_view_set_drop_enabled(tokotachi_item_view* self, bool value);
 TOKOTACHI_C_API void tokotachi_item_view_set_on_selection_change(tokotachi_item_view* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API void tokotachi_item_view_set_on_activate(tokotachi_item_view* self, tokotachi_notify_fn fn, void* user_data, tokotachi_destroy_fn destroy);
 TOKOTACHI_C_API tokotachi_column* tokotachi_item_view_add_column(tokotachi_item_view* self, const char* title, float width);
@@ -1230,9 +1614,29 @@ TOKOTACHI_C_API void tokotachi_item_view_select_all(tokotachi_item_view* self);
 TOKOTACHI_C_API void tokotachi_item_view_clear_selection(tokotachi_item_view* self);
 TOKOTACHI_C_API void tokotachi_item_view_scroll_to(tokotachi_item_view* self, tokotachi_model_index index);
 TOKOTACHI_C_API tokotachi_model_index tokotachi_item_view_index_at(tokotachi_item_view* self, tokotachi_point p);
+TOKOTACHI_C_API void tokotachi_item_view_edit(tokotachi_item_view* self, tokotachi_model_index index, int column);
+TOKOTACHI_C_API void tokotachi_item_view_finish_editing(tokotachi_item_view* self, bool commit);
 
 /* ======== ListView(include/tokotachi/views/list_view.hpp。基底は ItemView) ======== */
 TOKOTACHI_C_API tokotachi_list_view* tokotachi_list_view_new(tokotachi_widget* parent);
+
+/* ======== TableView(include/tokotachi/views/table_view.hpp。基底は ItemView) ======== */
+TOKOTACHI_C_API tokotachi_table_view* tokotachi_table_view_new(tokotachi_widget* parent);
+TOKOTACHI_C_API tokotachi_selection_behavior tokotachi_table_view_get_selection_behavior(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_set_selection_behavior(tokotachi_table_view* self, tokotachi_selection_behavior value);
+TOKOTACHI_C_API int tokotachi_table_view_get_current_column(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_set_current_column(tokotachi_table_view* self, int value);
+TOKOTACHI_C_API size_t tokotachi_table_view_get_selected_ranges(tokotachi_table_view* self, tokotachi_cell_range* out, size_t capacity);
+TOKOTACHI_C_API bool tokotachi_table_view_get_grid_visible(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_set_grid_visible(tokotachi_table_view* self, bool value);
+TOKOTACHI_C_API bool tokotachi_table_view_get_row_header_visible(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_set_row_header_visible(tokotachi_table_view* self, bool value);
+TOKOTACHI_C_API bool tokotachi_table_view_is_cell_selected(tokotachi_table_view* self, int row, int column);
+TOKOTACHI_C_API void tokotachi_table_view_select_range(tokotachi_table_view* self, tokotachi_cell_range range, bool add);
+TOKOTACHI_C_API char* tokotachi_table_view_selected_text(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_copy(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_paste(tokotachi_table_view* self);
+TOKOTACHI_C_API void tokotachi_table_view_clear_selected_cells(tokotachi_table_view* self);
 
 /* ======== TreeView(include/tokotachi/views/tree_view.hpp。基底は ItemView) ======== */
 TOKOTACHI_C_API tokotachi_tree_view* tokotachi_tree_view_new(tokotachi_widget* parent);

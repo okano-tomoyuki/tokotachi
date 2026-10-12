@@ -148,6 +148,11 @@ TOKOTACHI_C_API size_t tokotachi_struct_size(const char* name)
         {"tokotachi_paint", sizeof(tokotachi_paint)},
         {"tokotachi_stroke_style", sizeof(tokotachi_stroke_style)},
         {"tokotachi_model_callbacks", sizeof(tokotachi_model_callbacks)},
+        {"tokotachi_date", sizeof(tokotachi_date)},
+        {"tokotachi_cell_range", sizeof(tokotachi_cell_range)},
+        {"tokotachi_control_state", sizeof(tokotachi_control_state)},
+        {"tokotachi_theme_override", sizeof(tokotachi_theme_override)},
+        {"tokotachi_drag_event", sizeof(tokotachi_drag_event)},
     };
     for (size_t i = 0; name && i < sizeof(sizes) / sizeof(sizes[0]); ++i)
     {
@@ -375,7 +380,274 @@ TOKOTACHI_C_API tokotachi_color tokotachi_theme_color_resolve(tokotachi_theme_co
     TOKOTACHI_C_CATCH(tokotachi_color())
 }
 
+// ---- Date ----
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_today(void)
+{
+    try
+    {
+        return c::to_c(tokotachi::Date::today());
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_parse(const char* text, const char* pattern)
+{
+    try
+    {
+        return c::to_c(tokotachi::Date::parse(c::str(text), pattern ? std::string(pattern) : std::string("yyyy/MM/dd")));
+    }
+    TOKOTACHI_C_CATCH(tokotachi_date())
+}
+
+TOKOTACHI_C_API char* tokotachi_date_format(tokotachi_date date, const char* pattern)
+{
+    try
+    {
+        return c::dup(c::from_c(date).format(pattern ? std::string(pattern) : std::string("yyyy/MM/dd")));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API bool tokotachi_date_is_valid(tokotachi_date date) { return c::from_c(date).is_valid(); }
+
+TOKOTACHI_C_API tokotachi_day_of_week tokotachi_date_day_of_week(tokotachi_date date)
+{
+    return static_cast<tokotachi_day_of_week>(c::from_c(date).day_of_week());
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_add_days(tokotachi_date date, int days)
+{
+    return c::to_c(c::from_c(date).add_days(days));
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_add_months(tokotachi_date date, int months)
+{
+    return c::to_c(c::from_c(date).add_months(months));
+}
+
+TOKOTACHI_C_API tokotachi_date tokotachi_date_add_years(tokotachi_date date, int years)
+{
+    return c::to_c(c::from_c(date).add_years(years));
+}
+
+TOKOTACHI_C_API int tokotachi_date_days_to(tokotachi_date date, tokotachi_date other)
+{
+    return c::from_c(date).days_to(c::from_c(other));
+}
+
+TOKOTACHI_C_API int tokotachi_date_days_in_month(int year, int month)
+{
+    return tokotachi::Date::days_in_month(year, month);
+}
+
+TOKOTACHI_C_API bool tokotachi_date_is_leap_year(int year) { return tokotachi::Date::is_leap_year(year); }
+
+// ---- ドラッグの中身 ----
+
+TOKOTACHI_C_API tokotachi_drag_data* tokotachi_drag_data_new(void)
+{
+    try
+    {
+        return reinterpret_cast<tokotachi_drag_data*>(new tokotachi::DragData());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_drag_data_free(tokotachi_drag_data* data)
+{
+    delete reinterpret_cast<tokotachi::DragData*>(data);
+}
+
+namespace
+{
+tokotachi::DragData& writable(tokotachi_drag_data* d)
+{
+    return const_cast<tokotachi::DragData&>(c::drag_data_of(d));
+}
+}  // namespace
+
+TOKOTACHI_C_API char* tokotachi_drag_data_get_text(const tokotachi_drag_data* data)
+{
+    try
+    {
+        return c::dup(c::drag_data_of(data).text);
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_drag_data_set_text(tokotachi_drag_data* data, const char* text)
+{
+    try
+    {
+        writable(data).text = c::str(text);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char** tokotachi_drag_data_get_files(const tokotachi_drag_data* data)
+{
+    try
+    {
+        return c::dup_strv(c::drag_data_of(data).files);
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_drag_data_set_files(tokotachi_drag_data* data, const char* const* files,
+                                                   size_t files_count)
+{
+    try
+    {
+        writable(data).files = c::strv(files, files_count);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char* tokotachi_drag_data_get_format(const tokotachi_drag_data* data, const char* name)
+{
+    try
+    {
+        const std::map<std::string, std::string>& formats = c::drag_data_of(data).formats;
+        std::map<std::string, std::string>::const_iterator it = formats.find(c::str(name));
+        return it != formats.end() ? c::dup(it->second) : nullptr;
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API void tokotachi_drag_data_set_format(tokotachi_drag_data* data, const char* name, const char* value)
+{
+    try
+    {
+        writable(data).formats[c::str(name)] = c::str(value);
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API char** tokotachi_drag_data_format_names(const tokotachi_drag_data* data)
+{
+    try
+    {
+        std::vector<std::string> names;
+        const std::map<std::string, std::string>& formats = c::drag_data_of(data).formats;
+        for (std::map<std::string, std::string>::const_iterator it = formats.begin(); it != formats.end(); ++it)
+        {
+            names.push_back(it->first);
+        }
+        return c::dup_strv(names);
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_widget* tokotachi_drag_data_source(const tokotachi_drag_data* data)
+{
+    try
+    {
+        return c::handle(c::drag_data_of(data).source());
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API bool tokotachi_drag_data_from_outside(const tokotachi_drag_data* data)
+{
+    try
+    {
+        return c::drag_data_of(data).from_outside();
+    }
+    TOKOTACHI_C_CATCH(false)
+}
+
+// ---- 標準の見た目を描く関数 ----
+
+TOKOTACHI_C_API void tokotachi_draw_button_face(tokotachi_canvas* canvas, tokotachi_rect rect,
+                                                tokotachi_control_state state, tokotachi_button_style style)
+{
+    try
+    {
+        tokotachi::draw::button_face(canvas_of(canvas), c::from_c(rect), c::from_c(state),
+                                     c::enum_in<tokotachi::ButtonStyle>(style, 2));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API tokotachi_color tokotachi_draw_button_text_color(tokotachi_control_state state,
+                                                                 tokotachi_button_style style)
+{
+    try
+    {
+        return c::to_c(tokotachi::draw::button_text_color(c::from_c(state), c::enum_in<tokotachi::ButtonStyle>(style, 2)));
+    }
+    TOKOTACHI_C_CATCH(tokotachi_color())
+}
+
+TOKOTACHI_C_API void tokotachi_draw_check_mark(tokotachi_canvas* canvas, tokotachi_rect rect,
+                                               tokotachi_control_state state)
+{
+    try
+    {
+        tokotachi::draw::check_mark(canvas_of(canvas), c::from_c(rect), c::from_c(state));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_draw_radio_mark(tokotachi_canvas* canvas, tokotachi_rect rect,
+                                               tokotachi_control_state state)
+{
+    try
+    {
+        tokotachi::draw::radio_mark(canvas_of(canvas), c::from_c(rect), c::from_c(state));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_draw_focus_ring(tokotachi_canvas* canvas, tokotachi_rect rect)
+{
+    try
+    {
+        tokotachi::draw::focus_ring(canvas_of(canvas), c::from_c(rect));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
+TOKOTACHI_C_API void tokotachi_draw_field_frame(tokotachi_canvas* canvas, tokotachi_rect rect,
+                                                tokotachi_control_state state)
+{
+    try
+    {
+        tokotachi::draw::field_frame(canvas_of(canvas), c::from_c(rect), c::from_c(state));
+    }
+    TOKOTACHI_C_CATCH()
+}
+
 // ---- Image ----
+
+TOKOTACHI_C_API tokotachi_image* tokotachi_image_icon(tokotachi_icon icon)
+{
+    try
+    {
+        return c::to_c_image(tokotachi::Image::icon(c::enum_in<tokotachi::Icon>(icon, TOKOTACHI_ICON_COUNT)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_image* tokotachi_image_icon_colored(tokotachi_icon icon, tokotachi_color color)
+{
+    try
+    {
+        return c::to_c_image(
+            tokotachi::Image::icon(c::enum_in<tokotachi::Icon>(icon, TOKOTACHI_ICON_COUNT), c::from_c(color)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API bool tokotachi_image_is_icon(const tokotachi_image* image)
+{
+    try
+    {
+        return image_of(image).is_icon();
+    }
+    TOKOTACHI_C_CATCH(false)
+}
 
 TOKOTACHI_C_API tokotachi_image* tokotachi_image_load(const char* path)
 {
@@ -1030,6 +1302,20 @@ TOKOTACHI_C_API tokotachi_message_dialog* tokotachi_message_dialog_show(
         return c::handle(tokotachi::MessageDialog::show(c::self_as<tokotachi::Window>(parent, __func__), c::str(title),
                                                         c::str(text), v, handler,
                                                         c::enum_in<tokotachi::MessageType>(type, 4)));
+    }
+    TOKOTACHI_C_CATCH(nullptr)
+}
+
+TOKOTACHI_C_API tokotachi_color_dialog* tokotachi_color_dialog_show(tokotachi_window* parent, tokotachi_color initial,
+                                                                     tokotachi_notify_fn on_finish, void* user_data,
+                                                                     tokotachi_destroy_fn destroy, bool alpha,
+                                                                     const char* title)
+{
+    try
+    {
+        tokotachi::NotifyHandler handler = c::notify_handler(on_finish, user_data, destroy);
+        return c::handle(tokotachi::ColorDialog::show(c::self_as<tokotachi::Window>(parent, __func__),
+                                                      c::from_c(initial), handler, alpha, c::str(title)));
     }
     TOKOTACHI_C_CATCH(nullptr)
 }

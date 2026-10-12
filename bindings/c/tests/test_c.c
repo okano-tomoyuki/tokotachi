@@ -133,7 +133,7 @@ static void test_properties(tokotachi_window* window)
     tokotachi_label_set_text_color(label, color);
     CHECK(!tokotachi_label_get_text_color(label).is_role && tokotachi_label_get_text_color(label).color.r == 200);
 
-    tokotachi_font font = {22};
+    tokotachi_font font = {22, false, false};
     tokotachi_label_set_font(label, font);
     CHECK(tokotachi_label_get_font(label).size == 22);
 
@@ -178,6 +178,195 @@ static void test_properties(tokotachi_window* window)
     tokotachi_object_delete(combo);
     tokotachi_object_delete(splitter);
     tokotachi_object_delete(action);
+}
+
+/* ---- 0.2・0.3 で加わった部品と値 ---- */
+
+static int custom_row_count(const tokotachi_model_index* parent, void* user_data);
+static const char* custom_text(const tokotachi_model_index* index, int column, void* user_data);
+
+static int drags = 0;
+
+static void on_drop(tokotachi_object* sender, tokotachi_drag_event* e, void* user_data)
+{
+    (void)sender;
+    (void)user_data;
+    ++drags;
+    e->accepted = false;
+}
+
+static bool colored_text(const tokotachi_model_index* index, int column, tokotachi_theme_color* out, void* user_data)
+{
+    (void)column;
+    (void)user_data;
+    if (index->row != 1)
+    {
+        return false;
+    }
+    out->is_role = true;
+    out->role = TOKOTACHI_COLOR_ROLE_ACCENT;
+    return true;
+}
+
+static bool accept_text(const tokotachi_drag_data* data, const tokotachi_model_index* parent, int row, void* user_data)
+{
+    (void)parent;
+    (void)row;
+    (void)user_data;
+    char* text = tokotachi_drag_data_get_text(data);
+    const bool ok = text && strcmp(text, "落とす") == 0;
+    tokotachi_free(text);
+    return ok;
+}
+
+static void test_new_widgets(tokotachi_window* window)
+{
+    /* Date */
+    tokotachi_date d = tokotachi_date_parse("2026/10/12", NULL);
+    CHECK(d.year == 2026 && d.month == 10 && d.day == 12);
+    CHECK(tokotachi_date_is_valid(d));
+    CHECK(tokotachi_date_day_of_week(d) == TOKOTACHI_DAY_OF_WEEK_MONDAY);
+    tokotachi_date next = tokotachi_date_add_days(d, 20);
+    CHECK(next.month == 11 && next.day == 1);
+    CHECK(tokotachi_date_days_to(d, next) == 20);
+    CHECK(take_equal(tokotachi_date_format(d, "yyyy-MM-dd"), "2026-10-12"));
+    CHECK(tokotachi_date_days_in_month(2024, 2) == 29 && tokotachi_date_is_leap_year(2024));
+
+    tokotachi_date_edit* date_edit = tokotachi_date_edit_new(window);
+    tokotachi_date_edit_set_date(date_edit, d);
+    CHECK(tokotachi_date_edit_get_date(date_edit).day == 12);
+    CHECK(take_equal(tokotachi_date_edit_get_text(date_edit), "2026/10/12"));
+    tokotachi_calendar* calendar = tokotachi_calendar_new(window);
+    tokotachi_calendar_set_date(calendar, d);
+    CHECK(tokotachi_calendar_get_shown_month(calendar) == 10);
+
+    /* GroupBox・ImageBox・ColorButton */
+    tokotachi_group_box* group = tokotachi_group_box_new(window, "設定");
+    CHECK(take_equal(tokotachi_group_box_get_title(group), "設定"));
+    tokotachi_image* icon = tokotachi_image_icon(TOKOTACHI_ICON_SAVE);
+    CHECK(icon != NULL && tokotachi_image_is_icon(icon));
+    tokotachi_image_box* image_box = tokotachi_image_box_new(window, icon);
+    tokotachi_image_box_set_fit(image_box, TOKOTACHI_IMAGE_FIT_CONTAIN);
+    CHECK(tokotachi_image_box_get_fit(image_box) == TOKOTACHI_IMAGE_FIT_CONTAIN);
+    tokotachi_image* got = tokotachi_image_box_get_image(image_box);
+    CHECK(tokotachi_image_equal(got, icon));
+    tokotachi_image_free(got);
+    tokotachi_image_free(icon);
+    tokotachi_color green = {0, 160, 0, 255};
+    tokotachi_color_button* color_button = tokotachi_color_button_new(window, green);
+    CHECK(tokotachi_color_button_get_color(color_button).g == 160);
+
+    /* Font の太字・斜体 */
+    tokotachi_label* label = tokotachi_label_new(window, "太字");
+    tokotachi_font bold = {16, true, false};
+    tokotachi_label_set_font(label, bold);
+    CHECK(tokotachi_label_get_font(label).bold && !tokotachi_label_get_font(label).italic);
+
+    /* テーマの上書き */
+    tokotachi_theme_override o;
+    memset(&o, 0, sizeof(o));
+    o.has[TOKOTACHI_COLOR_ROLE_ACCENT] = true;
+    o.light[TOKOTACHI_COLOR_ROLE_ACCENT] = green;
+    o.dark[TOKOTACHI_COLOR_ROLE_ACCENT] = green;
+    o.radius = -1;
+    o.field_radius = -1;
+    o.field_padding = 2;
+    tokotachi_widget_set_theme_override(group, &o);
+    tokotachi_theme_override back;
+    tokotachi_widget_get_theme_override(group, &back);
+    CHECK(back.has[TOKOTACHI_COLOR_ROLE_ACCENT] && back.light[TOKOTACHI_COLOR_ROLE_ACCENT].g == 160);
+    CHECK(back.field_padding == 2 && back.radius < 0);
+    tokotachi_theme theme;
+    tokotachi_widget_get_theme(label, &theme); /* group の子ではないので上書きは効かない */
+    tokotachi_widget_set_parent(label, group);
+    tokotachi_widget_get_theme(label, &theme);
+    CHECK(theme.colors[TOKOTACHI_COLOR_ROLE_ACCENT].g == 160 && theme.field_padding == 2);
+
+    /* 元に戻す */
+    tokotachi_line_edit* edit = tokotachi_line_edit_new(window, "");
+    tokotachi_text_input_base_insert(edit, "abc");
+    CHECK(tokotachi_text_input_base_get_can_undo(edit));
+    tokotachi_text_input_base_undo(edit);
+    CHECK(take_equal(tokotachi_text_input_base_get_text(edit), ""));
+    tokotachi_text_input_base_redo(edit);
+    CHECK(take_equal(tokotachi_text_input_base_get_text(edit), "abc"));
+
+    /* TableView */
+    tokotachi_list_model* model = tokotachi_list_model_new(window);
+    tokotachi_item* a = tokotachi_list_model_add_item(model, "a");
+    tokotachi_list_model_add_item(model, "b");
+    tokotachi_item_set_column_text(a, 1, "x");
+    CHECK(take_equal(tokotachi_item_column_text(a, 1), "x"));
+    tokotachi_item_set_editable(a, true);
+    tokotachi_table_view* table = tokotachi_table_view_new(window);
+    tokotachi_item_view_set_model(table, model);
+    tokotachi_item_view_add_column(table, "1", 80);
+    tokotachi_item_view_add_column(table, "2", 80);
+    tokotachi_item_view_set_selection_mode(table, TOKOTACHI_SELECTION_MODE_MULTI);
+    tokotachi_table_view_set_selection_behavior(table, TOKOTACHI_SELECTION_BEHAVIOR_CELLS);
+    tokotachi_cell_range range = {0, 0, 1, 1};
+    tokotachi_table_view_select_range(table, range, false);
+    CHECK(tokotachi_table_view_is_cell_selected(table, 1, 1));
+    tokotachi_cell_range ranges[2];
+    CHECK(tokotachi_table_view_get_selected_ranges(table, ranges, 2) == 1 && ranges[0].last_column == 1);
+    CHECK(take_equal(tokotachi_table_view_selected_text(table), "a\tx\nb\t"));
+    tokotachi_model_index none = {-1, NULL};
+    tokotachi_model_index first = tokotachi_item_model_index(model, 0, none);
+    CHECK(tokotachi_item_model_editable(model, first, 0));
+    tokotachi_item_model_set_text(model, first, 0, "A");
+    CHECK(take_equal(tokotachi_item_get_text(a), "A"));
+    tokotachi_list_model_move_item(model, a, 1);
+    CHECK(tokotachi_item_model_index(model, 1, none).id == first.id);
+
+    /* ドラッグの中身と、独自のモデルの新しい関数 */
+    tokotachi_drag_data* data = tokotachi_drag_data_new();
+    tokotachi_drag_data_set_text(data, "落とす");
+    const char* files[] = {"/tmp/a.txt"};
+    tokotachi_drag_data_set_files(data, files, 1);
+    tokotachi_drag_data_set_format(data, "application/x-tokotachi", "1");
+    char** names = tokotachi_drag_data_format_names(data);
+    CHECK(names && strcmp(names[0], "application/x-tokotachi") == 0 && names[1] == NULL);
+    tokotachi_strv_free(names);
+    CHECK(tokotachi_drag_data_get_format(data, "none") == NULL);
+    CHECK(tokotachi_drag_data_source(data) == NULL && !tokotachi_drag_data_from_outside(data));
+    tokotachi_model_callbacks callbacks;
+    memset(&callbacks, 0, sizeof(callbacks));
+    callbacks.row_count = custom_row_count;
+    callbacks.text = custom_text;
+    callbacks.text_color = colored_text;
+    callbacks.can_drop = accept_text;
+    tokotachi_custom_model* custom = tokotachi_custom_model_new(window, &callbacks, NULL, NULL);
+    tokotachi_model_index second = tokotachi_item_model_index(custom, 1, none);
+    CHECK(tokotachi_item_model_text_color(custom, second, 0).is_role);
+    CHECK(tokotachi_item_model_text_color(custom, second, 0).role == TOKOTACHI_COLOR_ROLE_ACCENT);
+    CHECK(tokotachi_item_model_can_drop(custom, data, none, 0));
+    tokotachi_drag_data_set_text(data, "ほか");
+    CHECK(!tokotachi_item_model_can_drop(custom, data, none, 0));
+    tokotachi_drag_data_free(data);
+    tokotachi_widget_set_accepts_drops(group, true);
+    tokotachi_widget_set_on_drop(group, on_drop, NULL, NULL);
+    CHECK(drags == 0);
+
+    tokotachi_object_delete(custom);
+    tokotachi_object_delete(table);
+    tokotachi_object_delete(model);
+    tokotachi_object_delete(edit);
+    tokotachi_object_delete(color_button);
+    tokotachi_object_delete(image_box);
+    tokotachi_object_delete(group);
+    tokotachi_object_delete(calendar);
+    tokotachi_object_delete(date_edit);
+}
+
+static void on_paint_controls(tokotachi_object* sender, tokotachi_canvas* canvas, void* user_data)
+{
+    (void)sender;
+    (void)user_data;
+    tokotachi_control_state state = {true, false, false, false, true};
+    tokotachi_rect r = {0, 0, 60, 24};
+    tokotachi_draw_button_face(canvas, r, state, TOKOTACHI_BUTTON_STYLE_PRIMARY);
+    tokotachi_rect mark = {70, 4, 16, 16};
+    tokotachi_draw_check_mark(canvas, mark, state);
 }
 
 /* ---- 利用者のデータ ---- */
@@ -386,7 +575,7 @@ static void test_drawing(void)
     tokotachi_canvas_stroke_path(canvas, path, &style, &black);
     tokotachi_path_free(path);
 
-    tokotachi_font font = {14};
+    tokotachi_font font = {14, false, false};
     tokotachi_text_layout* layout = tokotachi_text_layout_new("Tokotachi", font, 1, 0, TOKOTACHI_ALIGN_START);
     CHECK(tokotachi_text_layout_width(layout) > 10);
     CHECK(tokotachi_text_layout_line_count(layout) == 1);
@@ -414,6 +603,21 @@ static void test_drawing(void)
     CHECK(tokotachi_image_load("/no/such/file.png") == NULL);
 
     tokotachi_bitmap_free(bitmap);
+
+    /* 標準の見た目を描く関数 */
+    tokotachi_paint_box* controls = tokotachi_paint_box_new(window);
+    tokotachi_rect area = {0, 0, 100, 30};
+    tokotachi_widget_set_bounds(controls, area);
+    tokotachi_widget_set_on_paint(controls, on_paint_controls, NULL, NULL);
+    shot = tokotachi_window_capture(window);
+    tokotachi_control_state state = {true, false, false, false, false};
+    tokotachi_color face = tokotachi_bitmap_pixel(shot, (int)(30 * s), (int)(12 * s));
+    tokotachi_color expected = tokotachi_draw_button_text_color(state, TOKOTACHI_BUTTON_STYLE_PRIMARY);
+    CHECK(face.r != expected.r || face.g != expected.g || face.b != expected.b); /* 面は文字の色と違う */
+    tokotachi_theme_color accent = {true, TOKOTACHI_COLOR_ROLE_ACCENT, {0, 0, 0, 0}};
+    tokotachi_color accent_color = tokotachi_theme_color_resolve(accent);
+    CHECK(face.r == accent_color.r && face.g == accent_color.g && face.b == accent_color.b);
+    tokotachi_bitmap_free(shot);
     tokotachi_object_delete(window);
 }
 
@@ -526,6 +730,7 @@ int main(int argc, char** argv)
     test_errors(window);
     test_bind(window);
     test_models(window);
+    test_new_widgets(window);
     test_user_data();
     test_drawing();
     test_layout();
