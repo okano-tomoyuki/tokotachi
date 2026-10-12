@@ -89,7 +89,7 @@ window_tool->visible = true;
   テーマを書きます。デザイナーのプロジェクトの設定画面で編集できます。
 - `CMakeLists.txt` は最初に雛形を作り、その後は**ソースの一覧の区間だけ**を置き換えます。区間の外(ライブラリのリンク・自分のソース)は
   自由に書き足せます。
-- `CMakeLists.txt` は、デザイナーを作ったときのライブラリの版を `find_package(tokotachi 0.2 REQUIRED)` のように求めます。ライブラリの
+- `CMakeLists.txt` は、デザイナーを作ったときのライブラリの版を `find_package(tokotachi 0.3 REQUIRED)` のように求めます。ライブラリの
   小さい版を上げたら(0.x の間)、この行を直します(雛形は作り直しません。@ref compatibility)。
 
 ## 使い回す・自作の部品

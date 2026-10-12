@@ -1,6 +1,6 @@
 # find_package(tokotachi) で読まれる設定(docs/adr/0037)。
 #
-#   find_package(tokotachi 0.2 REQUIRED)
+#   find_package(tokotachi 0.3 REQUIRED)
 #   target_link_libraries(app PRIVATE tokotachi::tokotachi)
 @PACKAGE_INIT@
 

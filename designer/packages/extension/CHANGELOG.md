@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-For Tokotachi 0.2.
+For Tokotachi 0.3.
 
 - **File formats**: window definitions and project files from older format versions are converted when opened (and
   written in the current format when saved). Files made by a newer designer are not opened; you are asked to update the
@@ -13,7 +13,7 @@ For Tokotachi 0.2.
   `app.main_window`, so closing it quits the application. Generated window classes take an optional owner window
   (`explicit MainWindow(tokotachi::Window* owner = nullptr)`); pass one to show the window above its owner and destroy it
   together. The constructor is outside the generated regions, so existing files keep their constructor until you edit it.
-- The generated `CMakeLists.txt` asks for the library version the designer was built for (`find_package(tokotachi 0.2)`).
+- The generated `CMakeLists.txt` asks for the library version the designer was built for (`find_package(tokotachi 0.3)`).
 - Windows and dialogs have the `destroy_on_close` property in the inspector.
 
 ## 0.2.0 (preview)

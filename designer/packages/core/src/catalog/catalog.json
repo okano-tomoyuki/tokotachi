@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "tokotachi_version": "0.2.0",
+  "tokotachi_version": "0.3.0",
   "window_members": [
     "accepts_drops",
     "accepts_text_input",

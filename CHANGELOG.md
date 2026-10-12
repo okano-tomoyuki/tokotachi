@@ -6,17 +6,27 @@
 版の付け方と互換の約束は [ADR 0057](docs/adr/0057-compatibility-abi-and-c-layer.md)、出し方は
 [ADR 0061](docs/adr/0061-library-release.md) を参照。0.x の間は、小さい版が上がると利用者のコードの修正が要ることがある。
 
-## 次の版(未公開)
+## 0.3.0
 
-加えたもの([ADR 0062](docs/adr/0062-window-ownership-and-quit.md)):
+ウィンドウの所有と終わり方を整え、入力欄に元に戻すを加え、リファレンスと手引きを 1.0 に向けて仕上げた版(プレビュー)。
+SONAME は `libtokotachi.so.0.3`(0.2 から ABI が変わった)。0.2 のコードは、そのままコンパイルできる。
 
-- 所有者を渡さずに作ったトップレベルのウィンドウは `Application` が所有し、`Application` の破棄で破棄する。
-- 所有者のウィンドウを渡して作るウィンドウ `Window(owner, title, width, height)`(所有者の上に出る。所有者と一緒に隠れ、破棄される)。
-- `Application::main_window`(閉じたら終える)・`Application::auto_quit_enabled`(false なら `quit()` まで終えない)。
-- `Window::destroy_on_close`(閉じたら破棄する)。
-- 入力欄(LineEdit・TextEdit)で元に戻す・やり直す(Ctrl+Z・Ctrl+Y。`undo`・`redo`・`can_undo`・`can_redo`。[ADR 0063](docs/adr/0063-text-undo.md))。
-- サンプル・手引きを、Object から派生したものは `new` で作り、スタックに置くのは `Application` だけにする書き方に揃えた。
-  デザイナーが生成する `main.cpp` も、メインのウィンドウを `new` で作り `app.main_window` に代入する。
+### 加えたもの
+
+- ウィンドウの所有と終わり方([ADR 0062](docs/adr/0062-window-ownership-and-quit.md)):
+  - 所有者を渡さずに作ったトップレベルのウィンドウは `Application` が所有し、`Application` の破棄で(SDL を終える前に)破棄する。
+  - 所有者のウィンドウを渡して作るウィンドウ `Window(owner, title, width, height)`(所有者の上に出る。所有者と一緒に隠れ、破棄される)。
+  - `Application::main_window`(閉じたら終える)・`Application::auto_quit_enabled`(false なら `quit()` まで終えない)。
+  - `Window::destroy_on_close`(閉じたら破棄する)。
+- 入力欄(LineEdit・TextEdit)で元に戻す・やり直す(Ctrl+Z・Ctrl+Y・Ctrl+Shift+Z。`undo`・`redo`・`can_undo`・`can_redo`・
+  `clear_undo_history`。[ADR 0063](docs/adr/0063-text-undo.md))。
+- 非推奨の印 `TOKOTACHI_DEPRECATED`(1.0 からの名前の変更に使う)。
+
+### 文書
+
+- 書き方: Object から派生したものは `new` で作り、スタックに置くのは `Application` だけにする形に、サンプル・手引き・ヘッダの例を揃えた。
+- 手引きに「部品の使い方」「デザイナーで画面を作る」「版と互換の約束」を加え、「複数のウィンドウ」の節とサンプルを加えた。
+- 公開のヘッダのすべてのメンバに説明を書いた(リファレンスは、説明の無いメンバがあると作れないようにした)。
 
 ## 0.2.0
 

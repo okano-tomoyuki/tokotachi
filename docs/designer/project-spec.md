@@ -119,7 +119,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
   ターゲットの名前はプロジェクトの名前(ファイルの名前。`my_app.ttproj.json` → `my_app`)。
   自作部品のソース(`.cpp`)は区間の外に利用者が足す(`target_sources(my_app PRIVATE widgets/gauge.cpp)`)。
   画像を参照するウィンドウの画像のソース(`main_window_images.cpp`。codegen-design.md N8)は、ウィンドウのソースの次に一覧に入れる。
-  `find_package` で求める版は、カタログを取り出したライブラリの版の major.minor(`find_package(tokotachi 0.2 REQUIRED)`。
+  `find_package` で求める版は、カタログを取り出したライブラリの版の major.minor(`find_package(tokotachi 0.3 REQUIRED)`。
   0.x の間は小さい版まで一致を求める。docs/adr/0061)。雛形は作り直さないので、ライブラリの小さい版が上がったら利用者が直す。
 - 生成した main.cpp・CMakeLists.txt でビルドできることを、`pnpm codegen:verify-project` で確かめる(見本のウィンドウ・部品ファイルを `ui/` に、自作部品を `widgets/` に置き、
   ヘッダを `include/`、ソースを `src/`、名前空間を `app` にしたプロジェクトを作り、インストールした Tokotachi でビルドする)。

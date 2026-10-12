@@ -125,7 +125,7 @@ cmake --install build --prefix <prefix>
 CMake から使う:
 
 ```cmake
-find_package(tokotachi 0.2 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
+find_package(tokotachi 0.3 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
 
@@ -139,7 +139,7 @@ g++ -std=c++11 main.cpp $(pkg-config --cflags --libs tokotachi)
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.2.0)
+FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.3.0)
 FetchContent_MakeAvailable(tokotachi)        # add_subdirectory(<ソースの場所>) でもよい
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```

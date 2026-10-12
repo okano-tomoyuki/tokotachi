@@ -23,7 +23,7 @@ SDL3・FreeType・HarfBuzz などの依存ライブラリは、Tokotachi がソ�
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.2.0)
+FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.3.0)
 FetchContent_MakeAvailable(tokotachi)
 
 add_executable(app main.cpp)
@@ -46,7 +46,7 @@ cmake --install build --prefix <prefix>
 ```
 
 ```cmake
-find_package(tokotachi 0.2 REQUIRED)          # -DCMAKE_PREFIX_PATH=<prefix>
+find_package(tokotachi 0.3 REQUIRED)          # -DCMAKE_PREFIX_PATH=<prefix>
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
 
