@@ -108,7 +108,11 @@ CMake のオプション:
 
 ## 使う(インストール・組み込み)
 
-インストールする(`<prefix>` は `/usr/local` や任意のフォルダ):
+ビルドしたパッケージ(Linux の x86_64・aarch64、Windows の MSYS2 MINGW64。共有ライブラリと静的ライブラリ)を
+[GitHub の Release](https://github.com/okano-tomoyuki/tokotachi/releases) に置いている。展開したフォルダを `<prefix>` として、
+下の CMake・pkg-config の方法で使える。変更は [CHANGELOG.md](CHANGELOG.md)、出し方は [ADR 0061](docs/adr/0061-library-release.md)。
+
+ソースからビルドしてインストールする(`<prefix>` は `/usr/local` や任意のフォルダ):
 
 ```bash
 cmake --install build --prefix <prefix>
@@ -120,7 +124,7 @@ cmake --install build --prefix <prefix>
 CMake から使う:
 
 ```cmake
-find_package(tokotachi 0.1 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
+find_package(tokotachi 0.2 REQUIRED)          # 見つからなければ -DCMAKE_PREFIX_PATH=<prefix>
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
 
@@ -134,7 +138,7 @@ g++ -std=c++11 main.cpp $(pkg-config --cflags --libs tokotachi)
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(tokotachi GIT_REPOSITORY <リポジトリ> GIT_TAG <タグ>)
+FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.2.0)
 FetchContent_MakeAvailable(tokotachi)        # add_subdirectory(<ソースの場所>) でもよい
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```

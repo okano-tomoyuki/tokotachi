@@ -6,6 +6,7 @@
  */
 import {
   dirname,
+  getCatalog,
   imageReferences,
   normalizePath,
   relativePath,
@@ -27,6 +28,14 @@ import {
   type CppOptions,
 } from './names.ts';
 import { createFile, mergeFile, type GeneratedCode, type LanguageSyntax } from './region.ts';
+
+/**
+ * find_package で求めるライブラリの版(カタログを取り出したライブラリの版の major.minor)。
+ * 0.x の間は小さい版が違うと互換が無いので、CMake のパッケージは小さい版まで一致を求める(docs/adr/0037)。
+ */
+export function requiredLibraryVersion(): string {
+  return getCatalog().tokotachi_version.split('.').slice(0, 2).join('.');
+}
 
 /** 仮の絶対パスの根(プロジェクトのフォルダ)。core のパスの計算は絶対パスを扱う。 */
 const ROOT = '/project';
@@ -318,7 +327,7 @@ export function generateProject(
         `project(${name} LANGUAGES CXX)`,
         '',
         ...comments.findPackage,
-        'find_package(tokotachi 0.1 REQUIRED)',
+        `find_package(tokotachi ${requiredLibraryVersion()} REQUIRED)`,
         '',
         rendered('tokotachi_sources'),
         '',

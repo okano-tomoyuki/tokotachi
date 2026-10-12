@@ -23,12 +23,19 @@ SDL3・FreeType・HarfBuzz などの依存ライブラリは、Tokotachi がソ�
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(tokotachi GIT_REPOSITORY <リポジトリ> GIT_TAG <タグ>)
+FetchContent_Declare(tokotachi GIT_REPOSITORY https://github.com/okano-tomoyuki/tokotachi.git GIT_TAG v0.2.0)
 FetchContent_MakeAvailable(tokotachi)
 
 add_executable(app main.cpp)
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
+
+### ビルドしたパッケージを使う
+
+[GitHub の Release](https://github.com/okano-tomoyuki/tokotachi/releases) に、Linux(x86_64・aarch64)と Windows(MSYS2 の MINGW64)の
+パッケージがあります(`-shared` が共有ライブラリ、`-static` が静的ライブラリ)。展開したフォルダを `<prefix>` として、下の
+`find_package` か pkg-config で使います。ビルドした環境(コンパイラ・glibc)はパッケージの `BUILD_INFO.txt` にあります。C++ のライブラリなので、
+同じ系統のコンパイラで使ってください(Windows は MSYS2 の MINGW64 の GCC)。
 
 ### インストールして使う
 
@@ -39,7 +46,7 @@ cmake --install build --prefix <prefix>
 ```
 
 ```cmake
-find_package(tokotachi 0.1 REQUIRED)          # -DCMAKE_PREFIX_PATH=<prefix>
+find_package(tokotachi 0.2 REQUIRED)          # -DCMAKE_PREFIX_PATH=<prefix>
 target_link_libraries(app PRIVATE tokotachi::tokotachi)
 ```
 

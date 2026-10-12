@@ -3,7 +3,7 @@
 ///
 /// @code
 /// #if TOKOTACHI_VERSION_AT_LEAST(0, 2, 0)   // コンパイル時の版で分ける
-/// std::string v = tokotachi::version();     // 実行時に読み込まれたライブラリの版("0.1.0")
+/// std::string v = tokotachi::version();     // 実行時に読み込まれたライブラリの版("0.2.0")
 /// @endcode
 #ifndef TOKOTACHI_CORE_VERSION_HPP
 #define TOKOTACHI_CORE_VERSION_HPP
@@ -11,9 +11,9 @@
 #include "export.hpp"
 
 #define TOKOTACHI_VERSION_MAJOR 0
-#define TOKOTACHI_VERSION_MINOR 1
+#define TOKOTACHI_VERSION_MINOR 2
 #define TOKOTACHI_VERSION_PATCH 0
-#define TOKOTACHI_VERSION_STRING "0.1.0"
+#define TOKOTACHI_VERSION_STRING "0.2.0"
 
 /// コンパイルに使ったヘッダの版が major.minor.patch 以上か。
 #define TOKOTACHI_VERSION_AT_LEAST(major, minor, patch)                                                               \

@@ -1,7 +1,12 @@
-import type { TtprojDocument } from '@tokotachi-designer/core';
+import { getCatalog, type TtprojDocument } from '@tokotachi-designer/core';
 import { describe, expect, it } from 'vitest';
 import { cppOutputPaths, generateCpp } from './index.ts';
-import { generateProject, projectOutputPaths, windowCppOptions } from './project.ts';
+import {
+  generateProject,
+  projectOutputPaths,
+  requiredLibraryVersion,
+  windowCppOptions,
+} from './project.ts';
 import { MAIN_WINDOW, readSampleComponent, SETTINGS_DIALOG } from './testing.ts';
 
 const PROJECT: TtprojDocument = {
@@ -80,6 +85,17 @@ describe('project', () => {
     );
     expect(cmake).toContain('set(TOKOTACHI_DESIGNER_INCLUDE_DIRS\n    include\n)');
     expect(cmake).toContain('add_executable(my_app ${TOKOTACHI_DESIGNER_SOURCES})');
+  });
+
+  it('find_package で、カタログを取り出したライブラリの版(major.minor)を求める', () => {
+    const version = getCatalog().tokotachi_version;
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(version.startsWith(`${requiredLibraryVersion()}.`)).toBe(true);
+    const cmake = text(
+      generateProject(PROJECT, 'my_app.ttproj.json', WINDOWS, () => undefined),
+      'CMakeLists.txt',
+    );
+    expect(cmake).toContain(`find_package(tokotachi ${requiredLibraryVersion()} REQUIRED)`);
   });
 
   it('CMakeLists.txt の区間の外の、利用者が書いたものは残す', () => {
