@@ -27,6 +27,8 @@ export function isImagePath(path: string): boolean {
     !path.startsWith('/') &&
     !path.includes('\\') &&
     !/^[A-Za-z]:/.test(path) &&
+    // 途中にドライブ(`../../d:/x.png`。ほかのドライブのファイルは相対パスにできない)は不可
+    !path.split('/').some((part) => /^[A-Za-z]:$/.test(part)) &&
     // ファイルの名前が拡張子だけ(`.png`)は不可
     !/^\.[A-Za-z0-9]+$/.test(normalizePath(path).split('/').pop() ?? '')
   );
