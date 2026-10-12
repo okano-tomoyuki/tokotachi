@@ -1,17 +1,5 @@
 /// @file
-/// レイアウトの基底(docs/adr/0017)。
-///
-/// レイアウトは親のウィジェットに 1 つだけ付き、子のウィジェットの bounds を決める(子は従う)。
-/// @code
-/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(panel);  // panel に付く(panel が所有する)
-/// box->add(button_ok);
-/// @endcode
-/// 2 つ目のレイアウトを作ると、古いレイアウトは破棄される。レイアウトを delete すると外れ、自由配置(bounds を利用者が決める)に戻る。
-/// レイアウトが管理する子の bounds に代入しても、次の配置で上書きされる。
-/// add に渡したウィジェットが付いているウィジェットの子でなければ、子にする(親を付け替える。docs/adr/0018)。
-///
-/// 配置は 2 段階: 子の望む大きさ(preferred_size)と最小の大きさ(minimum_hint)を集めて自分の大きさを決め(下から上)、
-/// 実際の大きさを受け取って子の bounds を決める(上から下)。配置のやり直しは印を付けるだけにし、描画の直前にまとめて行う。
+/// tokotachi::Layout の宣言。
 #ifndef TOKOTACHI_LAYOUT_LAYOUT_HPP
 #define TOKOTACHI_LAYOUT_LAYOUT_HPP
 
@@ -32,6 +20,7 @@ struct LayoutAccess;
 }
 
 /// レイアウトの内側の余白(dp)。
+/// @ingroup layout
 struct Margins
 {
     float left, top, right, bottom;
@@ -47,6 +36,21 @@ struct Margins
     bool operator!=(const Margins& o) const { return !(*this == o); }
 };
 
+/// レイアウトの基底(docs/adr/0017)。
+///
+/// レイアウトは親のウィジェットに 1 つだけ付き、子のウィジェットの bounds を決める(子は従う)。
+/// @code
+/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(panel);  // panel に付く(panel が所有する)
+/// box->add(button_ok);
+/// @endcode
+/// 2 つ目のレイアウトを作ると、古いレイアウトは破棄される。レイアウトを delete すると外れ、自由配置(bounds を利用者が決める)に戻る。
+/// レイアウトが管理する子の bounds に代入しても、次の配置で上書きされる。
+/// add に渡したウィジェットが付いているウィジェットの子でなければ、子にする(親を付け替える。docs/adr/0018)。
+///
+/// 配置は 2 段階: 子の望む大きさ(preferred_size)と最小の大きさ(minimum_hint)を集めて自分の大きさを決め(下から上)、
+/// 実際の大きさを受け取って子の bounds を決める(上から下)。配置のやり直しは印を付けるだけにし、描画の直前にまとめて行う。
+///
+/// @ingroup layout
 class Layout : public Object
 {
 public:

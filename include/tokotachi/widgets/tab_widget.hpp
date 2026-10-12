@@ -1,19 +1,5 @@
 /// @file
-/// タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。
-///
-/// @code
-/// tokotachi::TabWidget* tab_widget_settings = new tokotachi::TabWidget(&window);
-/// tokotachi::Tab* tab_general = tab_widget_settings->add_tab(page_general, "一般");
-/// tokotachi::Tab* tab_detail = tab_widget_settings->add_tab(page_detail, "詳細");
-/// tab_detail->enabled = false;
-/// tab_widget_settings->on_change = [=](tokotachi::Object*) { ... tab_widget_settings->current_index ... };
-/// @endcode
-///
-/// ページは TabWidget の子になり、選んでいるページだけを見せる(選んでいないページの visible は変えず、showing が false になる)。
-/// ページを破棄する・別の親へ移すと、そのタブも消える。
-/// 見出しが幅に収まらないときは、右端の ◀▶ とホイールで横にスクロールする。
-/// 見出しを押すと TabWidget にフォーカスが移り、←→ で選べる。中のどこにフォーカスがあっても、Ctrl+Tab・Ctrl+Shift+Tab・
-/// Ctrl+Page Up/Down で選べる。
+/// tokotachi::TabWidget の宣言。
 #ifndef TOKOTACHI_WIDGETS_TAB_WIDGET_HPP
 #define TOKOTACHI_WIDGETS_TAB_WIDGET_HPP
 
@@ -29,6 +15,7 @@ namespace tokotachi
 class TabWidget;
 
 /// 1 つのタブ。TabWidget が作り、所有する。
+/// @ingroup widgets_container
 class Tab : public Object
 {
 public:
@@ -55,6 +42,25 @@ private:
     mutable TextLayout layout_;
 };
 
+/// タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。
+///
+/// @image html widget_tab_widget.png
+///
+/// @code
+/// tokotachi::TabWidget* tab_widget_settings = new tokotachi::TabWidget(&window);
+/// tokotachi::Tab* tab_general = tab_widget_settings->add_tab(page_general, "一般");
+/// tokotachi::Tab* tab_detail = tab_widget_settings->add_tab(page_detail, "詳細");
+/// tab_detail->enabled = false;
+/// tab_widget_settings->on_change = [=](tokotachi::Object*) { ... tab_widget_settings->current_index ... };
+/// @endcode
+///
+/// ページは TabWidget の子になり、選んでいるページだけを見せる(選んでいないページの visible は変えず、showing が false になる)。
+/// ページを破棄する・別の親へ移すと、そのタブも消える。
+/// 見出しが幅に収まらないときは、右端の ◀▶ とホイールで横にスクロールする。
+/// 見出しを押すと TabWidget にフォーカスが移り、←→ で選べる。中のどこにフォーカスがあっても、Ctrl+Tab・Ctrl+Shift+Tab・
+/// Ctrl+Page Up/Down で選べる。
+///
+/// @ingroup widgets_container
 class TabWidget : public Widget
 {
 public:

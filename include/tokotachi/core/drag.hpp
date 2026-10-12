@@ -39,6 +39,7 @@ enum class DropAction
 };
 
 /// ドラッグするデータ(値)。
+/// @ingroup core_events
 class DragData
 {
 public:
@@ -64,6 +65,7 @@ private:
 };
 
 /// ドラッグの位置での知らせ(drag_move・drop)。位置は受け取るウィジェットの左上を原点とする dp。
+/// @ingroup core_events
 struct DragEvent
 {
     Point pos;

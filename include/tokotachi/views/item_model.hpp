@@ -1,20 +1,5 @@
 /// @file
-/// 項目の一覧・木のデータ(モデル)。ListView・TreeView が表示する(docs/adr/0026)。
-///
-/// 項目の数だけオブジェクトを作りたくないとき(数十万行・データベースの結果など)は ItemModel を派生し、
-/// row_count と text を実装する(表示するのは見えている行だけで、そのときに問い合わせる):
-///
-/// @code
-/// class LogModel : public tokotachi::ItemModel
-/// {
-/// public:
-///     int row_count(const tokotachi::ModelIndex& parent) const override { return parent.is_valid() ? 0 : lines.size(); }
-///     std::string text(const tokotachi::ModelIndex& index, int column) const override { return lines[index.row()]; }
-///     ...
-/// };
-/// @endcode
-///
-/// 手軽に使うときは、項目をオブジェクトで持つ ListModel・TreeModel(list_model.hpp・tree_model.hpp)を使う。
+/// tokotachi::ItemModel の宣言。
 #ifndef TOKOTACHI_VIEWS_ITEM_MODEL_HPP
 #define TOKOTACHI_VIEWS_ITEM_MODEL_HPP
 
@@ -35,6 +20,7 @@ class ItemView;
 
 /// モデルの中の項目の位置: 親の中での行の番号と、モデルが決める識別子(TreeModel・ListModel では項目のアドレス)。
 /// 項目を加える・除くと行の番号はずれるので、長く持たない(ビューは知らせを受けて直す)。
+/// @ingroup views
 class ModelIndex
 {
 public:
@@ -68,6 +54,24 @@ enum class SortOrder
     DESCENDING
 };
 
+/// 項目の一覧・木のデータ(モデル)。ListView・TreeView が表示する(docs/adr/0026)。
+///
+/// 項目の数だけオブジェクトを作りたくないとき(数十万行・データベースの結果など)は ItemModel を派生し、
+/// row_count と text を実装する(表示するのは見えている行だけで、そのときに問い合わせる):
+///
+/// @code
+/// class LogModel : public tokotachi::ItemModel
+/// {
+/// public:
+///     int row_count(const tokotachi::ModelIndex& parent) const override { return parent.is_valid() ? 0 : lines.size(); }
+///     std::string text(const tokotachi::ModelIndex& index, int column) const override { return lines[index.row()]; }
+///     ...
+/// };
+/// @endcode
+///
+/// 手軽に使うときは、項目をオブジェクトで持つ ListModel・TreeModel(list_model.hpp・tree_model.hpp)を使う。
+///
+/// @ingroup views
 class ItemModel : public Object
 {
 public:

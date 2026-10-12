@@ -1,24 +1,5 @@
 /// @file
-/// モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。
-///
-/// @code
-/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(&window, "名前の変更");    // 親のウィンドウが所有する
-/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_rename);                 // 中身はレイアウトで並べる
-/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(dialog_rename);
-/// box->add(line_edit_name);
-/// dialog_rename->add_button(tokotachi::DialogButton::OK);
-/// dialog_rename->add_button(tokotachi::DialogButton::CANCEL);
-/// dialog_rename->on_finish = [=](tokotachi::Object*)
-/// {
-///     if (dialog_rename->result == tokotachi::DialogButton::OK) { ... line_edit_name->text ... }
-/// };
-/// dialog_rename->open();   // すぐに戻る。結果は on_finish で受け取る
-/// @endcode
-///
-/// ボタンは下端に、OS の慣習の順に並べる(Windows・KDE は「OK キャンセル」、GNOME などは「キャンセル OK」)。
-/// Enter は最初の決定のボタン(OK・はい・保存)を、Esc・ウィンドウの閉じるボタンは取り消しのボタン(キャンセル・閉じる。
-/// ボタンが 1 つだけならそのボタン)を押す。
-/// 大きさは開くときに中身に合わせる(幅は 320〜560dp。minimum_size で広げられる)。
+/// tokotachi::Dialog の宣言。
 #ifndef TOKOTACHI_WINDOWS_DIALOG_HPP
 #define TOKOTACHI_WINDOWS_DIALOG_HPP
 
@@ -45,6 +26,28 @@ enum class DialogButton
     CLOSE     ///< 取り消し
 };
 
+/// モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。
+///
+/// @code
+/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(&window, "名前の変更");    // 親のウィンドウが所有する
+/// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_rename);                 // 中身はレイアウトで並べる
+/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(dialog_rename);
+/// box->add(line_edit_name);
+/// dialog_rename->add_button(tokotachi::DialogButton::OK);
+/// dialog_rename->add_button(tokotachi::DialogButton::CANCEL);
+/// dialog_rename->on_finish = [=](tokotachi::Object*)
+/// {
+///     if (dialog_rename->result == tokotachi::DialogButton::OK) { ... line_edit_name->text ... }
+/// };
+/// dialog_rename->open();   // すぐに戻る。結果は on_finish で受け取る
+/// @endcode
+///
+/// ボタンは下端に、OS の慣習の順に並べる(Windows・KDE は「OK キャンセル」、GNOME などは「キャンセル OK」)。
+/// Enter は最初の決定のボタン(OK・はい・保存)を、Esc・ウィンドウの閉じるボタンは取り消しのボタン(キャンセル・閉じる。
+/// ボタンが 1 つだけならそのボタン)を押す。
+/// 大きさは開くときに中身に合わせる(幅は 320〜560dp。minimum_size で広げられる)。
+///
+/// @ingroup windows
 class Dialog : public Window
 {
 public:

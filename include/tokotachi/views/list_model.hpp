@@ -1,13 +1,5 @@
 /// @file
-/// 項目をオブジェクト(Item)で持つ一覧のモデル(docs/adr/0026)。
-///
-/// @code
-/// tokotachi::ListModel* list = new tokotachi::ListModel(&window);
-/// list->add_item("りんご");
-/// tokotachi::Item* item = list->add_item("みかん");
-/// item->checkable = true;
-/// list_view_fruits->model = list;
-/// @endcode
+/// tokotachi::ListModel の宣言。
 #ifndef TOKOTACHI_VIEWS_LIST_MODEL_HPP
 #define TOKOTACHI_VIEWS_LIST_MODEL_HPP
 
@@ -17,6 +9,17 @@
 namespace tokotachi
 {
 
+/// 項目をオブジェクト(Item)で持つ一覧のモデル(docs/adr/0026)。
+///
+/// @code
+/// tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+/// list->add_item("りんご");
+/// tokotachi::Item* item = list->add_item("みかん");
+/// item->checkable = true;
+/// list_view_fruits->model = list;
+/// @endcode
+///
+/// @ingroup views
 class ListModel : public ItemModel, private detail::ItemHost
 {
 public:

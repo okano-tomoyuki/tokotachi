@@ -9,6 +9,9 @@
 namespace tokotachi
 {
 
+/// 点(dp)。
+///
+/// @ingroup core_values
 struct Point
 {
     float x, y;
@@ -22,6 +25,9 @@ struct Point
     bool operator!=(const Point& o) const { return !(*this == o); }
 };
 
+/// 大きさ(dp)。
+///
+/// @ingroup core_values
 struct Size
 {
     float width, height;
@@ -33,6 +39,9 @@ struct Size
     bool operator!=(const Size& o) const { return !(*this == o); }
 };
 
+/// 矩形(左上の点と大きさ。dp)。
+///
+/// @ingroup core_values
 struct Rect
 {
     float x, y, width, height;
@@ -89,6 +98,9 @@ struct Rect
     bool operator!=(const Rect& o) const { return !(*this == o); }
 };
 
+/// 色(sRGB の 8 ビットの成分と、アルファ。アルファは乗算していない)。
+///
+/// @ingroup core_values
 struct Color
 {
     std::uint8_t r, g, b, a;

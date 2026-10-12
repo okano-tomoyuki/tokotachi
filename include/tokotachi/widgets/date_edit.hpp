@@ -1,17 +1,5 @@
 /// @file
-/// 日付の入力欄(docs/adr/0051)。打ち込むか、↑↓・ホイールで年・月・日を増減するか、右のボタンで暦(Calendar)を開いて選ぶ。
-///
-/// @code
-/// tokotachi::DateEdit* date_edit_due = new tokotachi::DateEdit(&window);
-/// date_edit_due->date = tokotachi::Date::today();
-/// date_edit_due->format = "yyyy-MM-dd";                         // 既定は "yyyy/MM/dd"
-/// date_edit_due->on_change = [=](tokotachi::Object*) { ... date_edit_due->date ... };
-/// @endcode
-///
-/// 打ち込んだ文字は、Enter・フォーカスが外れたときに読む(数字の間の区切りは / - . 空白のどれでもよい。年が 2 桁以下なら 2000 年代)。
-/// 空にすると空の日付、読めなければ元に戻す。範囲の外は範囲に収める。
-/// ↑↓・ホイール(フォーカスがあるとき)は、キャレットのある欄(年・月・日)を 1 ずつ増減し、Page Up/Down は月を増減する。
-/// Alt+↓・F4 で暦を開き、暦では矢印で日を動かし、Enter・クリックで決め、Esc で閉じる。
+/// tokotachi::DateEdit の宣言。
 #ifndef TOKOTACHI_WIDGETS_DATE_EDIT_HPP
 #define TOKOTACHI_WIDGETS_DATE_EDIT_HPP
 
@@ -31,6 +19,23 @@ namespace detail
 class DateText;
 }
 
+/// 日付の入力欄(docs/adr/0051)。打ち込むか、↑↓・ホイールで年・月・日を増減するか、右のボタンで暦(Calendar)を開いて選ぶ。
+///
+/// @image html widget_date_edit.png
+///
+/// @code
+/// tokotachi::DateEdit* date_edit_due = new tokotachi::DateEdit(&window);
+/// date_edit_due->date = tokotachi::Date::today();
+/// date_edit_due->format = "yyyy-MM-dd";                         // 既定は "yyyy/MM/dd"
+/// date_edit_due->on_change = [=](tokotachi::Object*) { ... date_edit_due->date ... };
+/// @endcode
+///
+/// 打ち込んだ文字は、Enter・フォーカスが外れたときに読む(数字の間の区切りは / - . 空白のどれでもよい。年が 2 桁以下なら 2000 年代)。
+/// 空にすると空の日付、読めなければ元に戻す。範囲の外は範囲に収める。
+/// ↑↓・ホイール(フォーカスがあるとき)は、キャレットのある欄(年・月・日)を 1 ずつ増減し、Page Up/Down は月を増減する。
+/// Alt+↓・F4 で暦を開き、暦では矢印で日を動かし、Enter・クリックで決め、Esc で閉じる。
+///
+/// @ingroup widgets_input
 class DateEdit : public Widget
 {
 public:

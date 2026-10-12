@@ -1,17 +1,5 @@
 /// @file
-/// ウィンドウの上端のメニューバー(docs/adr/0027)。
-///
-/// @code
-/// tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
-/// tokotachi::Menu* menu_file = menu_bar->add_menu("ファイル(&F)");
-/// menu_file->add_action(action_save);
-/// menu_file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
-/// window.menu_bar = menu_bar;   // ウィンドウの上端に置く(レイアウトの領域はその下になる)
-/// @endcode
-///
-/// メニューバーのメニューの Action のショートカットは、ウィンドウ全体で効く。
-/// キーボード: Alt+ニーモニックでそのメニューを開く。Alt を押して離す・F10 でメニューバーへ移り、←→ で選び、↓・Enter で開き、
-/// Esc で戻る。開いたメニューの中の ←→ は隣のメニューへ移る。Alt を押している間は、ニーモニックの下線を出す。
+/// tokotachi::MenuBar の宣言。
 #ifndef TOKOTACHI_WINDOWS_MENU_BAR_HPP
 #define TOKOTACHI_WINDOWS_MENU_BAR_HPP
 
@@ -29,6 +17,23 @@ namespace detail
 struct MenuBarAccess;
 }
 
+/// ウィンドウの上端のメニューバー(docs/adr/0027)。
+///
+/// @image html widget_window_bars.png
+///
+/// @code
+/// tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
+/// tokotachi::Menu* menu_file = menu_bar->add_menu("ファイル(&F)");
+/// menu_file->add_action(action_save);
+/// menu_file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
+/// window.menu_bar = menu_bar;   // ウィンドウの上端に置く(レイアウトの領域はその下になる)
+/// @endcode
+///
+/// メニューバーのメニューの Action のショートカットは、ウィンドウ全体で効く。
+/// キーボード: Alt+ニーモニックでそのメニューを開く。Alt を押して離す・F10 でメニューバーへ移り、←→ で選び、↓・Enter で開き、
+/// Esc で戻る。開いたメニューの中の ←→ は隣のメニューへ移る。Alt を押している間は、ニーモニックの下線を出す。
+///
+/// @ingroup windows
 class MenuBar : public Widget
 {
 public:

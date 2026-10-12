@@ -1,4 +1,15 @@
 /// @file
+/// tokotachi::Shortcut の宣言。
+#ifndef TOKOTACHI_ACTIONS_SHORTCUT_HPP
+#define TOKOTACHI_ACTIONS_SHORTCUT_HPP
+
+#include <string>
+
+#include "../core/event.hpp"
+
+namespace tokotachi
+{
+
 /// キーの組み合わせ(ショートカット。docs/adr/0027)。
 ///
 /// @code
@@ -10,16 +21,8 @@
 /// 文字の書き方: 修飾キー(Ctrl・Shift・Alt・Meta)と 1 つのキーを + でつなぐ。大文字・小文字は問わない。
 /// キーの名前は A〜Z・0〜9・F1〜F12・Delete・Insert・Backspace・Tab・Enter・Escape・Space・Left・Right・Up・Down・
 /// Home・End・PageUp・PageDown。読めない文字なら空のショートカットになる。
-#ifndef TOKOTACHI_ACTIONS_SHORTCUT_HPP
-#define TOKOTACHI_ACTIONS_SHORTCUT_HPP
-
-#include <string>
-
-#include "../core/event.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup actions
 struct Shortcut
 {
     Key key;

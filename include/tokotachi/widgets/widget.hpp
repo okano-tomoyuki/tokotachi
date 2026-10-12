@@ -1,12 +1,5 @@
 /// @file
-/// ウィジェットの基底(docs/adr/0010、0012、0013)。
-///
-/// 所有: 親が子を所有する(親が Object の所有者を兼ねる。docs/adr/0015)。new Widget(parent) で作り、親が破棄されるときに
-/// 子も delete される。子を先に delete してもよい(親の一覧から外れる)。親を持つウィジェットをスタックに置いてはいけない。
-/// ウィジェットはメインスレッドだけで扱う。
-///
-/// イベント: 利用者は on_xxx にハンドラを代入する。派生クラスは protected の仮想関数(paint・mouse_down 等)を上書きし、
-/// ハンドラを呼ぶために基底の実装を呼ぶ。
+/// tokotachi::Widget の宣言。
 #ifndef TOKOTACHI_WIDGETS_WIDGET_HPP
 #define TOKOTACHI_WIDGETS_WIDGET_HPP
 
@@ -52,6 +45,16 @@ enum class MouseCursor
     SIZE_VERTICAL
 };
 
+/// ウィジェットの基底(docs/adr/0010、0012、0013)。
+///
+/// 所有: 親が子を所有する(親が Object の所有者を兼ねる。docs/adr/0015)。new Widget(parent) で作り、親が破棄されるときに
+/// 子も delete される。子を先に delete してもよい(親の一覧から外れる)。親を持つウィジェットをスタックに置いてはいけない。
+/// ウィジェットはメインスレッドだけで扱う。
+///
+/// イベント: 利用者は on_xxx にハンドラを代入する。派生クラスは protected の仮想関数(paint・mouse_down 等)を上書きし、
+/// ハンドラを呼ぶために基底の実装を呼ぶ。
+///
+/// @ingroup widgets_base
 class Widget : public Object
 {
 public:

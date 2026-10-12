@@ -1,17 +1,5 @@
 /// @file
-/// 項目の一覧・木・表を表示するビューの共通の部分(ListView・TreeView・TableView の基底。docs/adr/0026)。
-///
-/// 表示するのは見えている行だけで、そのときにモデル(item_model.hpp)へ文字などを問い合わせる。行の高さはすべて同じ。
-/// 列(Column)を加えると見出しを出す。列が無ければ 1 列で、ビューの幅いっぱいに描く。
-///
-/// @code
-/// tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
-/// list_view_files->add_column("名前", 200);
-/// list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
-/// list_view_files->model = files;
-/// list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
-/// list_view_files->on_activate = [=](tokotachi::Object*) { open(list_view_files->current); };
-/// @endcode
+/// tokotachi::ItemView の宣言。
 #ifndef TOKOTACHI_VIEWS_ITEM_VIEW_HPP
 #define TOKOTACHI_VIEWS_ITEM_VIEW_HPP
 
@@ -48,6 +36,7 @@ enum class SelectionBehavior
 };
 
 /// 表のセルの矩形の範囲(行・列の番号。両端を含む)。
+/// @ingroup views
 struct CellRange
 {
     int first_row;
@@ -73,6 +62,7 @@ struct CellRange
 };
 
 /// ビューの 1 つの列。ItemView が作り、所有する。
+/// @ingroup views
 class Column : public Object
 {
 public:
@@ -100,6 +90,21 @@ private:
     mutable TextLayout layout_;
 };
 
+/// 項目の一覧・木・表を表示するビューの共通の部分(ListView・TreeView・TableView の基底。docs/adr/0026)。
+///
+/// 表示するのは見えている行だけで、そのときにモデル(item_model.hpp)へ文字などを問い合わせる。行の高さはすべて同じ。
+/// 列(Column)を加えると見出しを出す。列が無ければ 1 列で、ビューの幅いっぱいに描く。
+///
+/// @code
+/// tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
+/// list_view_files->add_column("名前", 200);
+/// list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
+/// list_view_files->model = files;
+/// list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
+/// list_view_files->on_activate = [=](tokotachi::Object*) { open(list_view_files->current); };
+/// @endcode
+///
+/// @ingroup views
 class ItemView : public Widget
 {
 public:

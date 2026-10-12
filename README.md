@@ -1,3 +1,5 @@
+<img src="designer/packages/extension/images/icon.png" alt="Tokotachi" width="96" align="right">
+
 # Tokotachi
 
 SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ(開発中)。

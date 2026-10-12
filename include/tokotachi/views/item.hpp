@@ -1,14 +1,5 @@
 /// @file
-/// ListModel・TreeModel の 1 つの項目(docs/adr/0026)。モデルが作り、所有する。
-///
-/// @code
-/// tokotachi::Item* item = list->add_item("報告書.txt");
-/// item->column_texts = std::vector<std::string>{"12 KB", "2026-10-04"};  // 2 列目以降
-/// item->icon = file_icon;
-/// item->checkable = true;
-/// @endcode
-///
-/// 値を変えると、表示しているビューが描き直す。
+/// tokotachi::Item の宣言。
 #ifndef TOKOTACHI_VIEWS_ITEM_HPP
 #define TOKOTACHI_VIEWS_ITEM_HPP
 
@@ -40,6 +31,18 @@ protected:
 };
 }  // namespace detail
 
+/// ListModel・TreeModel の 1 つの項目(docs/adr/0026)。モデルが作り、所有する。
+///
+/// @code
+/// tokotachi::Item* item = list->add_item("報告書.txt");
+/// item->column_texts = std::vector<std::string>{"12 KB", "2026-10-04"};  // 2 列目以降
+/// item->icon = file_icon;
+/// item->checkable = true;
+/// @endcode
+///
+/// 値を変えると、表示しているビューが描き直す。
+///
+/// @ingroup views
 class Item : public Object
 {
 public:

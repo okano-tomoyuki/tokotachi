@@ -1,6 +1,5 @@
 /// @file
-/// 押して使うウィジェット(Button・CheckBox・RadioButton)の共通の部分: 文字、マウス・キーでの押下、ホバー。
-/// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、フォーカスを得て押したことになる(「&」は「&&」)。
+/// tokotachi::ButtonBase の宣言。
 #ifndef TOKOTACHI_WIDGETS_BUTTON_BASE_HPP
 #define TOKOTACHI_WIDGETS_BUTTON_BASE_HPP
 
@@ -12,6 +11,10 @@
 namespace tokotachi
 {
 
+/// 押して使うウィジェット(Button・CheckBox・RadioButton)の共通の部分: 文字、マウス・キーでの押下、ホバー。
+/// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、フォーカスを得て押したことになる(「&」は「&&」)。
+///
+/// @ingroup widgets_base
 class ButtonBase : public Widget
 {
 public:

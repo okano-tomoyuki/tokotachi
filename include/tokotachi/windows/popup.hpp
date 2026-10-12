@@ -1,16 +1,5 @@
 /// @file
-/// ポップアップ: 持ち主のウィジェットのウィンドウに相対的な位置に出る、枠の無いウィンドウ(docs/adr/0011、0022)。
-/// メニュー・ComboBox の一覧・ツールチップの土台。
-///
-/// @code
-/// tokotachi::Popup* popup = new tokotachi::Popup(button_more);              // button_more と一緒に破棄される
-/// new tokotachi::Label(popup, "中身");                            // 中身は Popup を親にして作る(レイアウトも付けられる)
-/// popup->open(button_more->local_rect, tokotachi::Size(200, 120));    // button_more の下に開く
-/// @endcode
-///
-/// Wayland では、ポップアップは親のウィンドウからの相対の位置でしか置けない(docs/adr/0002)。画面からはみ出すときの
-/// 位置の調整は、OS(コンポジタ)・SDL3 が行う。メニューの種類のポップアップは、開くとキーボードのフォーカスを得て、
-/// 外側を押すと閉じる(押したことは、外側のウィンドウには送らない)。
+/// tokotachi::Popup の宣言。
 #ifndef TOKOTACHI_WINDOWS_POPUP_HPP
 #define TOKOTACHI_WINDOWS_POPUP_HPP
 
@@ -32,6 +21,20 @@ enum class PopupPlacement
     AT      ///< anchor の左上に、左上をそろえる(右クリックの位置など)
 };
 
+/// ポップアップ: 持ち主のウィジェットのウィンドウに相対的な位置に出る、枠の無いウィンドウ(docs/adr/0011、0022)。
+/// メニュー・ComboBox の一覧・ツールチップの土台。
+///
+/// @code
+/// tokotachi::Popup* popup = new tokotachi::Popup(button_more);              // button_more と一緒に破棄される
+/// new tokotachi::Label(popup, "中身");                            // 中身は Popup を親にして作る(レイアウトも付けられる)
+/// popup->open(button_more->local_rect, tokotachi::Size(200, 120));    // button_more の下に開く
+/// @endcode
+///
+/// Wayland では、ポップアップは親のウィンドウからの相対の位置でしか置けない(docs/adr/0002)。画面からはみ出すときの
+/// 位置の調整は、OS(コンポジタ)・SDL3 が行う。メニューの種類のポップアップは、開くとキーボードのフォーカスを得て、
+/// 外側を押すと閉じる(押したことは、外側のウィンドウには送らない)。
+///
+/// @ingroup windows
 class Popup : public Window
 {
 public:

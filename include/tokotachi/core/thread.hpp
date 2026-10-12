@@ -34,6 +34,7 @@ bool post(const std::function<void()>& fn);
 
 /// Object への弱い参照: 指す Object が破棄されたかを確かめられる。
 /// 作るのと get はメインスレッドで行う。コピー・破棄はどのスレッドからでもよい(別のスレッドへ渡すために使う)。
+/// @ingroup core_threads
 template <typename T>
 class WeakRef
 {

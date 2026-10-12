@@ -1,13 +1,5 @@
 /// @file
-/// 進み具合を横の棒で見せる(docs/adr/0024)。利用者は操作できない。
-///
-/// @code
-/// tokotachi::ProgressBar* progress_bar_copy = new tokotachi::ProgressBar(panel);
-/// progress_bar_copy->maximum = total;
-/// progress_bar_copy->value = done;
-/// progress_bar_copy->text_visible = true;  // 右に「40%」を出す
-/// progress_bar_copy->indeterminate = true;  // 全体の量が分からない間: 棒の一部が動き続ける
-/// @endcode
+/// tokotachi::ProgressBar の宣言。
 #ifndef TOKOTACHI_WIDGETS_PROGRESS_BAR_HPP
 #define TOKOTACHI_WIDGETS_PROGRESS_BAR_HPP
 
@@ -18,6 +10,19 @@
 namespace tokotachi
 {
 
+/// 進み具合を横の棒で見せる(docs/adr/0024)。利用者は操作できない。
+///
+/// @image html widget_progress_bar.png
+///
+/// @code
+/// tokotachi::ProgressBar* progress_bar_copy = new tokotachi::ProgressBar(panel);
+/// progress_bar_copy->maximum = total;
+/// progress_bar_copy->value = done;
+/// progress_bar_copy->text_visible = true;  // 右に「40%」を出す
+/// progress_bar_copy->indeterminate = true;  // 全体の量が分からない間: 棒の一部が動き続ける
+/// @endcode
+///
+/// @ingroup widgets_display
 class ProgressBar : public Widget
 {
 public:

@@ -1,5 +1,16 @@
 /// @file
+/// tokotachi::ListView の宣言。
+#ifndef TOKOTACHI_VIEWS_LIST_VIEW_HPP
+#define TOKOTACHI_VIEWS_LIST_VIEW_HPP
+
+#include "item_view.hpp"
+
+namespace tokotachi
+{
+
 /// 項目の一覧を表示するビュー(docs/adr/0026)。モデルの一番上の行だけを表示する。
+///
+/// @image html widget_list_view.png
 ///
 /// @code
 /// tokotachi::ListModel* fruits = new tokotachi::ListModel(&window);
@@ -11,14 +22,8 @@
 /// @endcode
 ///
 /// 選び方・列・見出し・キーの操作は ItemView(item_view.hpp)を参照。
-#ifndef TOKOTACHI_VIEWS_LIST_VIEW_HPP
-#define TOKOTACHI_VIEWS_LIST_VIEW_HPP
-
-#include "item_view.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup views
 class ListView : public ItemView
 {
 public:

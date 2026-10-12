@@ -1,15 +1,5 @@
 /// @file
-/// 月ごとの暦から日を選ぶ(docs/adr/0051)。DateEdit のポップアップの中身にもなる。
-///
-/// @code
-/// tokotachi::Calendar* calendar_due = new tokotachi::Calendar(&window);
-/// calendar_due->date = tokotachi::Date::today();
-/// calendar_due->on_change = [=](tokotachi::Object*) { ... calendar_due->date ... };
-/// @endcode
-///
-/// 日を押すと選び(on_change)、on_activate を呼ぶ。上の「<」「>」・ホイール・Page Up/Down で月を、Shift+Page Up/Down で年を変える。
-/// 矢印で日を動かし(上下は 1 週)、Home・End で月の始め・終わりへ、Enter・Space で on_activate を呼ぶ。
-/// minimum〜maximum の外の日は選べない。今日の日は輪で示す。
+/// tokotachi::Calendar の宣言。
 #ifndef TOKOTACHI_WIDGETS_CALENDAR_HPP
 #define TOKOTACHI_WIDGETS_CALENDAR_HPP
 
@@ -19,6 +9,21 @@
 namespace tokotachi
 {
 
+/// 月ごとの暦から日を選ぶ(docs/adr/0051)。DateEdit のポップアップの中身にもなる。
+///
+/// @image html widget_calendar.png
+///
+/// @code
+/// tokotachi::Calendar* calendar_due = new tokotachi::Calendar(&window);
+/// calendar_due->date = tokotachi::Date::today();
+/// calendar_due->on_change = [=](tokotachi::Object*) { ... calendar_due->date ... };
+/// @endcode
+///
+/// 日を押すと選び(on_change)、on_activate を呼ぶ。上の「&lt;」「&gt;」・ホイール・Page Up/Down で月を、Shift+Page Up/Down で年を変える。
+/// 矢印で日を動かし(上下は 1 週)、Home・End で月の始め・終わりへ、Enter・Space で on_activate を呼ぶ。
+/// minimum〜maximum の外の日は選べない。今日の日は輪で示す。
+///
+/// @ingroup widgets_input
 class Calendar : public Widget
 {
 public:

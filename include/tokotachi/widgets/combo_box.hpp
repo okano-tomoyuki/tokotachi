@@ -1,15 +1,5 @@
 /// @file
-/// 項目の一覧から 1 つを選ぶ(docs/adr/0022)。押すと一覧をポップアップで出す。
-///
-/// @code
-/// tokotachi::ComboBox* combo_box_size = new tokotachi::ComboBox(&window);
-/// combo_box_size->items = std::vector<std::string>{"小", "中", "大"};
-/// combo_box_size->current_index = 1;
-/// combo_box_size->on_change = [](tokotachi::Object* sender) { ... };
-/// @endcode
-///
-/// 一覧が閉じているときは ↑↓ で選択を変え、Space・Enter・Alt+↓ で一覧を開く。一覧では ↑↓・Page Up/Down・Home/End で動かし、
-/// Enter で決め、Esc で閉じる。
+/// tokotachi::ComboBox の宣言。
 #ifndef TOKOTACHI_WIDGETS_COMBO_BOX_HPP
 #define TOKOTACHI_WIDGETS_COMBO_BOX_HPP
 
@@ -30,6 +20,21 @@ class PopupList;
 
 class ScrollArea;
 
+/// 項目の一覧から 1 つを選ぶ(docs/adr/0022)。押すと一覧をポップアップで出す。
+///
+/// @image html widget_combo_box.png
+///
+/// @code
+/// tokotachi::ComboBox* combo_box_size = new tokotachi::ComboBox(&window);
+/// combo_box_size->items = std::vector<std::string>{"小", "中", "大"};
+/// combo_box_size->current_index = 1;
+/// combo_box_size->on_change = [](tokotachi::Object* sender) { ... };
+/// @endcode
+///
+/// 一覧が閉じているときは ↑↓ で選択を変え、Space・Enter・Alt+↓ で一覧を開く。一覧では ↑↓・Page Up/Down・Home/End で動かし、
+/// Enter で決め、Esc で閉じる。
+///
+/// @ingroup widgets_input
 class ComboBox : public Widget
 {
 public:

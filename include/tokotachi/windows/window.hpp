@@ -1,6 +1,5 @@
 /// @file
-/// トップレベルのウィンドウ。ウィジェットのツリーの根になる。
-/// 表示は visible に true を代入する(初めは表示されていない)。
+/// tokotachi::Window の宣言。
 #ifndef TOKOTACHI_WINDOWS_WINDOW_HPP
 #define TOKOTACHI_WINDOWS_WINDOW_HPP
 
@@ -22,6 +21,12 @@ namespace detail
 struct WindowImpl;
 }
 
+/// トップレベルのウィンドウ。ウィジェットのツリーの根になる。
+/// 表示は visible に true を代入する(初めは表示されていない)。
+///
+/// @image html window.png
+///
+/// @ingroup windows
 class Window : public Widget
 {
 public:

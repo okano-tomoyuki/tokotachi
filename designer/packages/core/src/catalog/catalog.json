@@ -6457,10 +6457,12 @@
         "g": "int",
         "b": "int",
         "a": "int"
-      }
+      },
+      "doc": "色(sRGB の 8 ビットの成分と、アルファ。アルファは乗算していない)。"
     },
     "Date": {
-      "special": true
+      "special": true,
+      "doc": "日付(年・月・日。グレゴリオ暦。docs/adr/0051)。DateEdit・Calendar の値。"
     },
     "Font": {
       "members": {
@@ -6471,7 +6473,8 @@
       "doc": "文字の大きさと太さ・傾き(docs/adr/0045)。 太字・斜体は、OS にその書体のファイル(Segoe UI Bold・游ゴシック Bold 等)があれば使い、無ければ標準の書体を太らせる・傾ける。"
     },
     "Image": {
-      "special": true
+      "special": true,
+      "doc": "画像(アイコンなど)。PNG・JPEG などを読み込み、Canvas::draw_image で描く。"
     },
     "Margins": {
       "members": {
@@ -6495,16 +6498,19 @@
         "anchor": {
           "enum": "Anchor"
         }
-      }
+      },
+      "doc": "PlaceLayout の項目の位置と大きさ(固定の dp と、入れ物に対する割合)。"
     },
     "Shortcut": {
-      "special": true
+      "special": true,
+      "doc": "キーの組み合わせ(ショートカット。docs/adr/0027)。"
     },
     "Size": {
       "members": {
         "width": "float",
         "height": "float"
-      }
+      },
+      "doc": "大きさ(dp)。"
     },
     "ThemeColor": {
       "special": true,

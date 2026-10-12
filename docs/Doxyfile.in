@@ -5,14 +5,19 @@
 PROJECT_NAME           = "Tokotachi"
 PROJECT_NUMBER         = @PROJECT_VERSION@
 PROJECT_BRIEF          = "SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブラリ"
+# 見出しのロゴとブラウザのタブのアイコン(デザイナーの拡張のアイコンと同じ。docs/adr/0055)
+PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/designer/packages/extension/images/icon.png
+PROJECT_ICON           = @CMAKE_CURRENT_SOURCE_DIR@/designer/packages/extension/images/icon.png
 OUTPUT_DIRECTORY       = @TOKOTACHI_DOCS_OUTPUT@
 OUTPUT_LANGUAGE        = Japanese
 CREATE_SUBDIRS         = NO
 
 # ---- 入力 ----
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/docs/guide @CMAKE_CURRENT_SOURCE_DIR@/include/tokotachi
-FILE_PATTERNS          = *.md *.hpp
+FILE_PATTERNS          = *.md *.hpp *.dox
 RECURSIVE              = YES
+# ページの並び(クラスの説明をメンバの一覧より前に出す)
+LAYOUT_FILE            = @CMAKE_CURRENT_SOURCE_DIR@/docs/DoxygenLayout.xml
 USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/guide/index.md
 STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@/include @CMAKE_CURRENT_SOURCE_DIR@/docs/guide
 STRIP_FROM_INC_PATH    = @CMAKE_CURRENT_SOURCE_DIR@/include

@@ -45,6 +45,7 @@ enum class Key
 };
 
 /// accepted が false のまま返ったイベントは親のウィジェットへ送られる(マウスのボタン・キー)。
+/// @ingroup core_events
 struct MouseEvent
 {
     Point pos;
@@ -61,6 +62,9 @@ struct MouseEvent
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
+/// キーの押下・離し(Widget::key_down・key_up に渡る)。
+///
+/// @ingroup core_events
 struct KeyEvent
 {
     Key key;
@@ -79,6 +83,7 @@ struct KeyEvent
 
 /// マウスのホイール。delta は回した量(目盛りの数。滑らかに回るホイールでは小数)。y が正なら奥へ回した(上へスクロールする)、
 /// x が正なら右へ。OS の「逆向きのスクロール」の設定は反映済み。
+/// @ingroup core_events
 struct WheelEvent
 {
     Point pos;
@@ -95,6 +100,7 @@ struct WheelEvent
 };
 
 /// IME の確定やキーボードからの文字の入力。
+/// @ingroup core_events
 struct TextInputEvent
 {
     std::string text;
@@ -104,6 +110,7 @@ struct TextInputEvent
 };
 
 /// IME の変換中の文字列(docs/adr/0009)。start・length は変換対象の文節(コードポイントの単位。無ければ -1)。
+/// @ingroup core_events
 struct TextEditingEvent
 {
     std::string text;

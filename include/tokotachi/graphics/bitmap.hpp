@@ -1,4 +1,17 @@
 /// @file
+/// tokotachi::Bitmap の宣言。
+#ifndef TOKOTACHI_GRAPHICS_BITMAP_HPP
+#define TOKOTACHI_GRAPHICS_BITMAP_HPP
+
+#include <cstdint>
+
+#include "canvas.hpp"
+#include "../core/geometry.hpp"
+#include "image.hpp"
+
+namespace tokotachi
+{
+
 /// 書き換えられる画像(docs/adr/0033)。Canvas で描け、画素を直接読み書きできる。画面に出すときは Image にする。
 ///
 /// @code
@@ -13,18 +26,8 @@
 /// 重い描画を前もって描いておき、paint では貼るだけにするときに使う(PaintBox の cached はこれを自動で行う)。
 /// 別のスレッドで描いてよい(文字も描ける。docs/adr/0034)。重い描画は Task の中で Bitmap に描き、to_image で返す。
 /// 1 つの Bitmap は、同時に 1 つのスレッドからだけ使う。別のスレッドでは、ウィジェット・テーマの色には触らない(色は渡す)。
-#ifndef TOKOTACHI_GRAPHICS_BITMAP_HPP
-#define TOKOTACHI_GRAPHICS_BITMAP_HPP
-
-#include <cstdint>
-
-#include "canvas.hpp"
-#include "../core/geometry.hpp"
-#include "image.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup graphics
 class Bitmap
 {
 public:

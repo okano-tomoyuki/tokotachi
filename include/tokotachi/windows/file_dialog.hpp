@@ -1,19 +1,5 @@
 /// @file
-/// OS のファイル選択のダイアログ(開く・保存・フォルダー。docs/adr/0028)。SDL3 を通して、Windows では標準のダイアログ、
-/// Linux では xdg-desktop-portal(無ければ zenity など)を使う。
-///
-/// @code
-/// tokotachi::FileDialog* file_dialog_image = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);   // window が所有する
-/// file_dialog_image->filters = std::vector<tokotachi::FileFilter>{tokotachi::FileFilter("画像", "png;jpg"), tokotachi::FileFilter("すべて", "*")};
-/// file_dialog_image->on_finish = [=](tokotachi::Object*)
-/// {
-///     const std::vector<std::string> paths = file_dialog_image->paths;   // 取り消したら空
-///     ...
-/// };
-/// file_dialog_image->open();   // すぐに戻る
-/// @endcode
-///
-/// on_finish はメインスレッドで、イベントの処理の中で呼ぶ。開いている間に FileDialog を破棄したら、結果は捨てる。
+/// tokotachi::FileDialog の宣言。
 #ifndef TOKOTACHI_WINDOWS_FILE_DIALOG_HPP
 #define TOKOTACHI_WINDOWS_FILE_DIALOG_HPP
 
@@ -36,6 +22,7 @@ enum class FileDialogMode
 };
 
 /// ファイルの種類の絞り込み。pattern は拡張子を ; でつなぐ("png;jpg")。"*" はすべて。
+/// @ingroup windows
 struct FileFilter
 {
     std::string name;
@@ -48,6 +35,23 @@ struct FileFilter
     bool operator!=(const FileFilter& o) const { return !(*this == o); }
 };
 
+/// OS のファイル選択のダイアログ(開く・保存・フォルダー。docs/adr/0028)。SDL3 を通して、Windows では標準のダイアログ、
+/// Linux では xdg-desktop-portal(無ければ zenity など)を使う。
+///
+/// @code
+/// tokotachi::FileDialog* file_dialog_image = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);   // window が所有する
+/// file_dialog_image->filters = std::vector<tokotachi::FileFilter>{tokotachi::FileFilter("画像", "png;jpg"), tokotachi::FileFilter("すべて", "*")};
+/// file_dialog_image->on_finish = [=](tokotachi::Object*)
+/// {
+///     const std::vector<std::string> paths = file_dialog_image->paths;   // 取り消したら空
+///     ...
+/// };
+/// file_dialog_image->open();   // すぐに戻る
+/// @endcode
+///
+/// on_finish はメインスレッドで、イベントの処理の中で呼ぶ。開いている間に FileDialog を破棄したら、結果は捨てる。
+///
+/// @ingroup windows
 class FileDialog : public Object
 {
 public:

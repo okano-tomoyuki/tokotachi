@@ -1,13 +1,5 @@
 /// @file
-/// 見出しの付いた枠(docs/adr/0049)。中の部品をまとめて見せる。子はレイアウトで並べる(枠と見出しの内側に並ぶ)。
-///
-/// @code
-/// tokotachi::GroupBox* group_box_output = new tokotachi::GroupBox(&window, "出力(&O)");
-/// tokotachi::BoxLayout* box_output = new tokotachi::BoxLayout(group_box_output);
-/// box_output->add(new tokotachi::CheckBox(group_box_output, "上書きする"));
-/// @endcode
-///
-/// title の「&」の次の文字はニーモニック。Alt と一緒に押すと、中の最初の部品へフォーカスを移す。
+/// tokotachi::GroupBox の宣言。
 #ifndef TOKOTACHI_WIDGETS_GROUP_BOX_HPP
 #define TOKOTACHI_WIDGETS_GROUP_BOX_HPP
 
@@ -19,6 +11,19 @@
 namespace tokotachi
 {
 
+/// 見出しの付いた枠(docs/adr/0049)。中の部品をまとめて見せる。子はレイアウトで並べる(枠と見出しの内側に並ぶ)。
+///
+/// @image html widget_group_box.png
+///
+/// @code
+/// tokotachi::GroupBox* group_box_output = new tokotachi::GroupBox(&window, "出力(&O)");
+/// tokotachi::BoxLayout* box_output = new tokotachi::BoxLayout(group_box_output);
+/// box_output->add(new tokotachi::CheckBox(group_box_output, "上書きする"));
+/// @endcode
+///
+/// title の「&」の次の文字はニーモニック。Alt と一緒に押すと、中の最初の部品へフォーカスを移す。
+///
+/// @ingroup widgets_container
 class GroupBox : public Widget
 {
 public:

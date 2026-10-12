@@ -1,5 +1,5 @@
 /// @file
-/// 押しボタン。icon を与えると、文字の前に画像を出す(text が空なら画像だけのボタン。docs/adr/0048)。
+/// tokotachi::Button の宣言。
 #ifndef TOKOTACHI_WIDGETS_BUTTON_HPP
 #define TOKOTACHI_WIDGETS_BUTTON_HPP
 
@@ -16,6 +16,11 @@ enum class ButtonStyle
     SECONDARY  ///< 地の色に枠(その他の操作。ダイアログのキャンセルなど)
 };
 
+/// 押しボタン。icon を与えると、文字の前に画像を出す(text が空なら画像だけのボタン。docs/adr/0048)。
+///
+/// @image html widget_button.png
+///
+/// @ingroup widgets_input
 class Button : public ButtonBase
 {
 public:

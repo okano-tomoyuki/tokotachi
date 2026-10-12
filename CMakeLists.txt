@@ -347,8 +347,23 @@ if(TOKOTACHI_BUILD_DOCS)
         DEPENDS gallery_pickers
         COMMENT "Taking the screenshot of the color dialog")
     list(APPEND _shots "${_png}")
-    file(GLOB_RECURSE _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.md ${CMAKE_CURRENT_LIST_DIR}/include/tokotachi/*.hpp
-         ${CMAKE_CURRENT_LIST_DIR}/examples/gallery/*.cpp)
+    # 部品のページに載せる、部品ごとの画像(widget_<名前>.png。docs/adr/0056)
+    add_executable(widget_images docs/widget_images.cpp)
+    target_link_libraries(widget_images PRIVATE tokotachi::tokotachi)
+    target_compile_options(widget_images PRIVATE -Wall -Wextra -pedantic)
+    set_target_properties(widget_images PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+    tokotachi_copy_runtime(widget_images)
+    set(_stamp "${TOKOTACHI_DOCS_IMAGES}/widget_images.stamp")
+    add_custom_command(OUTPUT "${_stamp}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${TOKOTACHI_DOCS_IMAGES}"
+        COMMAND ${CMAKE_COMMAND} -E env SDL_VIDEO_DRIVER=offscreen $<TARGET_FILE:widget_images> "${TOKOTACHI_DOCS_IMAGES}"
+        COMMAND ${CMAKE_COMMAND} -E touch "${_stamp}"
+        DEPENDS widget_images
+        COMMENT "Taking the screenshots of the widgets")
+    list(APPEND _shots "${_stamp}")
+    file(GLOB_RECURSE _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.md ${CMAKE_CURRENT_LIST_DIR}/docs/guide/*.dox
+         ${CMAKE_CURRENT_LIST_DIR}/include/tokotachi/*.hpp ${CMAKE_CURRENT_LIST_DIR}/examples/gallery/*.cpp)
+    list(APPEND _doc_inputs ${CMAKE_CURRENT_LIST_DIR}/docs/DoxygenLayout.xml)
     add_custom_target(docs
         COMMAND Doxygen::doxygen "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
         DEPENDS ${_shots} ${_doc_inputs} "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"

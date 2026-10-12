@@ -1,4 +1,13 @@
 /// @file
+/// tokotachi::BoxLayout の宣言。
+#ifndef TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
+#define TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
+
+#include "layout.hpp"
+
+namespace tokotachi
+{
+
 /// 子を横または縦に並べるレイアウト(cpp_tk の pack に当たる。docs/adr/0017)。
 ///
 /// @code
@@ -11,14 +20,8 @@
 /// 余った長さは、伸びる割合(stretch)に応じて項目に分ける。どの項目も伸びなければ、余りは末尾に残る。
 /// 足りないときは、各項目を最小の大きさまで、望む大きさとの差に応じて縮める。
 /// 並べる向きと直交する向きは、項目ごとのそろえ方(既定は FILL)に従う。
-#ifndef TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
-#define TOKOTACHI_LAYOUT_BOX_LAYOUT_HPP
-
-#include "layout.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup layout
 class BoxLayout : public Layout
 {
 public:

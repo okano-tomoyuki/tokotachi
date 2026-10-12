@@ -1,14 +1,5 @@
 /// @file
-/// テキストを表示する。改行文字で行を分け、word_wrap なら幅で折り返す(docs/adr/0019)。
-/// icon を与えると、文字の前(段落の向きの始め)に画像を出す(docs/adr/0048)。
-///
-/// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、buddy(無ければタブの順でラベルの次の部品)へ
-/// フォーカスを移す。「&」そのものを出すには「&&」と書く。
-///
-/// @code
-/// tokotachi::Label* label_name = new tokotachi::Label(panel, "名前(&N)");
-/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(panel);  // Alt+N でここへ
-/// @endcode
+/// tokotachi::Label の宣言。
 #ifndef TOKOTACHI_WIDGETS_LABEL_HPP
 #define TOKOTACHI_WIDGETS_LABEL_HPP
 
@@ -24,6 +15,20 @@
 namespace tokotachi
 {
 
+/// テキストを表示する。改行文字で行を分け、word_wrap なら幅で折り返す(docs/adr/0019)。
+/// icon を与えると、文字の前(段落の向きの始め)に画像を出す(docs/adr/0048)。
+///
+/// @image html widget_label.png
+///
+/// text の「&」の次の文字はニーモニック(docs/adr/0049)。Alt と一緒に押すと、buddy(無ければタブの順でラベルの次の部品)へ
+/// フォーカスを移す。「&」そのものを出すには「&&」と書く。
+///
+/// @code
+/// tokotachi::Label* label_name = new tokotachi::Label(panel, "名前(&N)");
+/// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(panel);  // Alt+N でここへ
+/// @endcode
+///
+/// @ingroup widgets_display
 class Label : public Widget
 {
 public:

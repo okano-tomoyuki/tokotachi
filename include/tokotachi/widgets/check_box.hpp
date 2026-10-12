@@ -1,10 +1,5 @@
 /// @file
-/// チェックボックス。押すと checked が切り替わる。
-///
-/// @code
-/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(&window, "通知を受け取る");
-/// tokotachi::bind(check_box_notify->checked, notify->value);   // BoolVariable と結ぶ
-/// @endcode
+/// tokotachi::CheckBox の宣言。
 #ifndef TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 #define TOKOTACHI_WIDGETS_CHECK_BOX_HPP
 
@@ -13,6 +8,16 @@
 namespace tokotachi
 {
 
+/// チェックボックス。押すと checked が切り替わる。
+///
+/// @image html widget_check_box.png
+///
+/// @code
+/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(&window, "通知を受け取る");
+/// tokotachi::bind(check_box_notify->checked, notify->value);   // BoolVariable と結ぶ
+/// @endcode
+///
+/// @ingroup widgets_input
 class CheckBox : public ButtonBase
 {
 public:

@@ -43,18 +43,31 @@ int main(int argc, char** argv)
 
 | ページ | 内容 |
 |---|---|
-| @ref getting_started | ビルド・インストール・自分のプロジェクトから使う |
-| @ref basics | 親子と所有・プロパティ・ハンドラ・変数と結びつけ・テーマ |
-| @ref layout_guide | BoxLayout・GridLayout・PlaceLayout・スクロール・分割 |
-| @ref windows_guide | メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
-| @ref views_guide | ListView・TreeView・TableView とモデル |
-| @ref drawing_guide | Canvas・PaintBox・Bitmap・変換・透過 |
-| @ref threads_guide | メインスレッドの決まり・post・WeakRef・Task |
-| @ref gallery | 部品ごとのサンプルと画面 |
+| @subpage getting_started | ビルド・インストール・自分のプロジェクトから使う |
+| @subpage basics | 親子と所有・プロパティ・ハンドラ・変数と結びつけ・テーマ |
+| @subpage layout_guide | BoxLayout・GridLayout・PlaceLayout・スクロール・分割 |
+| @subpage windows_guide | メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
+| @subpage views_guide | ListView・TreeView・TableView とモデル |
+| @subpage drawing_guide | Canvas・PaintBox・Bitmap・変換・透過 |
+| @subpage threads_guide | メインスレッドの決まり・post・WeakRef・Task |
+| @subpage gallery | 部品ごとのサンプルと画面 |
 
 ## API リファレンス
 
-上の「クラス」「ファイル」から、すべてのクラスと関数を引けます。ヘッダは役割ごとのディレクトリに分かれています。
+左の「トピック」から、分類ごとにクラスを引けます(部品は入力・表示・入れ物などに分けています)。「クラス」「ファイル」からは、すべてのクラスと関数を引けます。
+部品のページには、その部品の画面の画像を載せています。
+
+| 分類 | 内容 |
+|---|---|
+| @ref core | オブジェクトとプロパティ・イベント・スレッド・基本の値 |
+| @ref graphics | Canvas・Image・Bitmap・文字のレイアウト・テーマ |
+| @ref layout | BoxLayout・GridLayout・PlaceLayout |
+| @ref widgets | 部品(入力・表示・入れ物・描画・基底) |
+| @ref windows | Window・ダイアログ・メニューバー・ツールバー・ステータスバー |
+| @ref actions | Action・Menu・Shortcut |
+| @ref views | 一覧と木と表のビューとモデル |
+
+ヘッダは役割ごとのディレクトリに分かれています。
 
 | インクルード | 内容 |
 |---|---|

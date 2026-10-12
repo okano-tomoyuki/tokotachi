@@ -1,5 +1,18 @@
 /// @file
+/// tokotachi::PaintBox の宣言。
+#ifndef TOKOTACHI_WIDGETS_PAINT_BOX_HPP
+#define TOKOTACHI_WIDGETS_PAINT_BOX_HPP
+
+#include "../graphics/bitmap.hpp"
+#include "../graphics/image.hpp"
+#include "widget.hpp"
+
+namespace tokotachi
+{
+
 /// 自由に描くための部品(VCL の TPaintBox に当たる。docs/adr/0033)。on_paint の中で Canvas に描く。
+///
+/// @image html widget_paint_box.png
 ///
 /// @code
 /// tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
@@ -11,16 +24,8 @@
 ///
 /// cached が true なら、描いた結果を Bitmap に覚えておき、refresh を呼ぶか、大きさ・倍率・テーマが変わるまで on_paint を
 /// 呼ばない(画面の描き直しでは覚えた絵を貼るだけ)。on_paint の Canvas は、そのときは画面ではなく Bitmap に描く。
-#ifndef TOKOTACHI_WIDGETS_PAINT_BOX_HPP
-#define TOKOTACHI_WIDGETS_PAINT_BOX_HPP
-
-#include "../graphics/bitmap.hpp"
-#include "../graphics/image.hpp"
-#include "widget.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup widgets_drawing
 class PaintBox : public Widget
 {
 public:

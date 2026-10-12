@@ -1,29 +1,5 @@
 /// @file
-/// 別のスレッドで行う、終わりのある仕事(docs/adr/0029)。結果・進み具合・取り消し・例外をメインスレッドで受け取る。
-///
-/// @code
-/// tokotachi::Task<std::size_t>* count = new tokotachi::Task<std::size_t>(&window);   // window が破棄されたら取り消し、結果は捨てる
-/// count->on_progress = [=](tokotachi::Object*) { progress_bar_count->value = count->progress; };
-/// count->on_finish = [=](tokotachi::Object*)
-/// {
-///     if (!count->error.get().empty()) { ... }       // 仕事が例外を投げた
-///     else if (count->cancelled) { ... }             // 取り消した
-///     else { label_result->text = std::to_string(count->result.get()); }
-/// };
-/// count->start([](tokotachi::TaskContext& ctx) -> std::size_t
-/// {
-///     std::size_t n = 0;
-///     for (int i = 0; i < 100 && !ctx.cancel_requested(); ++i)   // 別のスレッドで動く。ウィジェットには触らない
-///     {
-///         n += heavy_work(i);
-///         ctx.report_progress(i + 1);
-///     }
-///     return n;
-/// });
-/// count->cancel();   // 取り消しを頼む(仕事が cancel_requested を見て戻るまで待たない)
-/// @endcode
-///
-/// on_progress・on_finish はメインスレッドで、イベントの処理の中で呼ぶ。結果の型 T はコピーと既定の構築ができること。
+/// tokotachi::Task の宣言。
 #ifndef TOKOTACHI_CORE_TASK_HPP
 #define TOKOTACHI_CORE_TASK_HPP
 
@@ -43,6 +19,7 @@ struct TaskShared;
 }
 
 /// 仕事の関数に渡す。どのスレッドから呼んでもよい。
+/// @ingroup core_threads
 class TaskContext
 {
 public:
@@ -58,6 +35,7 @@ private:
 };
 
 /// Task の型によらない部分。
+/// @ingroup core_threads
 class TaskBase : public Object
 {
 public:
@@ -108,6 +86,33 @@ private:
     NotifyHandler on_finish_;
 };
 
+/// 別のスレッドで行う、終わりのある仕事(docs/adr/0029)。結果・進み具合・取り消し・例外をメインスレッドで受け取る。
+///
+/// @code
+/// tokotachi::Task<std::size_t>* count = new tokotachi::Task<std::size_t>(&window);   // window が破棄されたら取り消し、結果は捨てる
+/// count->on_progress = [=](tokotachi::Object*) { progress_bar_count->value = count->progress; };
+/// count->on_finish = [=](tokotachi::Object*)
+/// {
+///     if (!count->error.get().empty()) { ... }       // 仕事が例外を投げた
+///     else if (count->cancelled) { ... }             // 取り消した
+///     else { label_result->text = std::to_string(count->result.get()); }
+/// };
+/// count->start([](tokotachi::TaskContext& ctx) -> std::size_t
+/// {
+///     std::size_t n = 0;
+///     for (int i = 0; i < 100 && !ctx.cancel_requested(); ++i)   // 別のスレッドで動く。ウィジェットには触らない
+///     {
+///         n += heavy_work(i);
+///         ctx.report_progress(i + 1);
+///     }
+///     return n;
+/// });
+/// count->cancel();   // 取り消しを頼む(仕事が cancel_requested を見て戻るまで待たない)
+/// @endcode
+///
+/// on_progress・on_finish はメインスレッドで、イベントの処理の中で呼ぶ。結果の型 T はコピーと既定の構築ができること。
+///
+/// @ingroup core_threads
 template <typename T>
 class Task : public TaskBase
 {
@@ -135,6 +140,9 @@ private:
     T result_;
 };
 
+/// 値を返さない Task(結果は無く、終わったことだけを知らせる)。
+///
+/// @ingroup core_threads
 template <>
 class Task<void> : public TaskBase
 {

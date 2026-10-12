@@ -53,6 +53,7 @@ const int COLOR_ROLE_COUNT = static_cast<int>(ColorRole::ON_TOOLTIP) + 1;
 /// label_note->color = ColorRole::TEXT_SECONDARY;   // テーマに従う
 /// label_note->color = Color::rgb(0xdc2626);        // 固定の色
 /// @endcode
+/// @ingroup graphics
 class ThemeColor
 {
 public:
@@ -87,6 +88,7 @@ private:
 /// t[ColorRole::ACCENT] = Color::rgb(0x059669);
 /// app.light_theme = t;
 /// @endcode
+/// @ingroup graphics
 class Theme
 {
 public:
@@ -121,6 +123,7 @@ private:
 /// danger.set_radius(0);                                                       // 角を丸めない
 /// area_danger->theme_override = danger;
 /// @endcode
+/// @ingroup graphics
 class ThemeOverride
 {
 public:

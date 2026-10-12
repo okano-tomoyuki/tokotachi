@@ -1,17 +1,5 @@
 /// @file
-/// 子を親に対する位置・割合で置くレイアウト(cpp_tk の place に当たる。docs/adr/0017)。
-///
-/// @code
-/// tokotachi::Placement p;
-/// p.relative_x = 0.5f;            // 親の幅の半分の位置
-/// p.relative_y = 0.5f;
-/// p.anchor = tokotachi::Anchor::CENTER; // 子の中央をその位置に合わせる
-/// place->add(button_center, p);
-/// @endcode
-///
-/// 位置は (x + relative_x × 親の幅, y + relative_y × 親の高さ)、大きさは (width + relative_width × 親の幅, ...)。
-/// 大きさの指定が 0(width も relative_width も 0)なら、子の望む大きさを使う。
-/// レイアウトを付けない自由配置(bounds を利用者が決める)とは違い、親の大きさが変わると置き直す。
+/// tokotachi::PlaceLayout の宣言。
 #ifndef TOKOTACHI_LAYOUT_PLACE_LAYOUT_HPP
 #define TOKOTACHI_LAYOUT_PLACE_LAYOUT_HPP
 
@@ -34,6 +22,9 @@ enum class Anchor
     BOTTOM_RIGHT
 };
 
+/// PlaceLayout の項目の位置と大きさ(固定の dp と、入れ物に対する割合)。
+///
+/// @ingroup layout
 struct Placement
 {
     float x, y;  ///< dp
@@ -49,6 +40,21 @@ struct Placement
     }
 };
 
+/// 子を親に対する位置・割合で置くレイアウト(cpp_tk の place に当たる。docs/adr/0017)。
+///
+/// @code
+/// tokotachi::Placement p;
+/// p.relative_x = 0.5f;            // 親の幅の半分の位置
+/// p.relative_y = 0.5f;
+/// p.anchor = tokotachi::Anchor::CENTER; // 子の中央をその位置に合わせる
+/// place->add(button_center, p);
+/// @endcode
+///
+/// 位置は (x + relative_x × 親の幅, y + relative_y × 親の高さ)、大きさは (width + relative_width × 親の幅, ...)。
+/// 大きさの指定が 0(width も relative_width も 0)なら、子の望む大きさを使う。
+/// レイアウトを付けない自由配置(bounds を利用者が決める)とは違い、親の大きさが変わると置き直す。
+///
+/// @ingroup layout
 class PlaceLayout : public Layout
 {
 public:

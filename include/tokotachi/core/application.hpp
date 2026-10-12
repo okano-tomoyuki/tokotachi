@@ -1,5 +1,5 @@
 /// @file
-/// アプリケーション: SDL3 の初期化とイベントループ(docs/adr/0010)。1 つのプロセスに 1 つだけ作る。
+/// tokotachi::Application の宣言。
 #ifndef TOKOTACHI_CORE_APPLICATION_HPP
 #define TOKOTACHI_CORE_APPLICATION_HPP
 
@@ -17,6 +17,9 @@ namespace detail
 struct ApplicationImpl;
 }
 
+/// アプリケーション: SDL3 の初期化とイベントループ(docs/adr/0010)。1 つのプロセスに 1 つだけ作る。
+///
+/// @ingroup core_objects
 class Application : public Object
 {
 public:

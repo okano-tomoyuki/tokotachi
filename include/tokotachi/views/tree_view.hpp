@@ -1,5 +1,16 @@
 /// @file
+/// tokotachi::TreeView の宣言。
+#ifndef TOKOTACHI_VIEWS_TREE_VIEW_HPP
+#define TOKOTACHI_VIEWS_TREE_VIEW_HPP
+
+#include "item_view.hpp"
+
+namespace tokotachi
+{
+
 /// 項目の木を表示するビュー(docs/adr/0026)。子のある項目は、左の印・ダブルクリック・→← で開閉する。
+///
+/// @image html widget_tree_view.png
 ///
 /// @code
 /// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
@@ -12,14 +23,8 @@
 ///
 /// → は閉じた項目を開き、開いた項目では最初の子へ動く。← は開いた項目を閉じ、閉じた項目では親へ動く。
 /// 選び方・列・見出し・キーの操作は ItemView(item_view.hpp)を参照。
-#ifndef TOKOTACHI_VIEWS_TREE_VIEW_HPP
-#define TOKOTACHI_VIEWS_TREE_VIEW_HPP
-
-#include "item_view.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup views
 class TreeView : public ItemView
 {
 public:

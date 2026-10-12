@@ -1,21 +1,5 @@
 /// @file
-/// 利用者が実行できる操作(docs/adr/0027)。メニューの項目・ショートカットのキーが同じ Action を指す。
-///
-/// @code
-/// tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
-/// action_save->shortcut = "Ctrl+S";
-/// action_save->on_trigger = [](tokotachi::Object*) { ... };
-/// menu_file->add_action(action_save);   // メニューバーのメニューに入れると、Ctrl+S もウィンドウ全体で効く
-/// action_save->enabled = false;         // メニューの項目もキーも無効になる
-/// @endcode
-///
-/// ショートカットが効くのは、次のどちらかに入れた Action だけ:
-/// - ウィンドウのメニューバー(menu_bar)のメニュー、または window->add_action: ウィンドウ全体で効く。
-/// - ウィジェットの add_action: フォーカスがそのウィジェットの中にあるときだけ効き、ウィンドウのものより優先する。
-/// フォーカスのあるウィジェットがキーを受け取ったとき(入力欄の Ctrl+C など)は、ショートカットより優先する。
-/// 右クリックのメニューに入れただけの Action のショートカットは、表示だけで、キーでは実行しない。
-///
-/// text の「&」の次の文字はニーモニック(メニューを開いているときに押すと選ぶ。「&&」は「&」そのもの)。
+/// tokotachi::Action の宣言。
 #ifndef TOKOTACHI_ACTIONS_ACTION_HPP
 #define TOKOTACHI_ACTIONS_ACTION_HPP
 
@@ -38,6 +22,25 @@ namespace detail
 struct ActionAccess;
 }
 
+/// 利用者が実行できる操作(docs/adr/0027)。メニューの項目・ショートカットのキーが同じ Action を指す。
+///
+/// @code
+/// tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
+/// action_save->shortcut = "Ctrl+S";
+/// action_save->on_trigger = [](tokotachi::Object*) { ... };
+/// menu_file->add_action(action_save);   // メニューバーのメニューに入れると、Ctrl+S もウィンドウ全体で効く
+/// action_save->enabled = false;         // メニューの項目もキーも無効になる
+/// @endcode
+///
+/// ショートカットが効くのは、次のどちらかに入れた Action だけ:
+/// - ウィンドウのメニューバー(menu_bar)のメニュー、または window->add_action: ウィンドウ全体で効く。
+/// - ウィジェットの add_action: フォーカスがそのウィジェットの中にあるときだけ効き、ウィンドウのものより優先する。
+/// フォーカスのあるウィジェットがキーを受け取ったとき(入力欄の Ctrl+C など)は、ショートカットより優先する。
+/// 右クリックのメニューに入れただけの Action のショートカットは、表示だけで、キーでは実行しない。
+///
+/// text の「&」の次の文字はニーモニック(メニューを開いているときに押すと選ぶ。「&&」は「&」そのもの)。
+///
+/// @ingroup actions
 class Action : public Object
 {
 public:

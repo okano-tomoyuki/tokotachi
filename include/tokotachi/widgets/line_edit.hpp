@@ -1,6 +1,5 @@
 /// @file
-/// 1 行のテキストの入力欄。IME の変換中の文字列は入力欄の中に描く(docs/adr/0009)。
-/// 編集・選択・クリップボード・変更の通知は TextInputBase が受け持つ(docs/adr/0021)。
+/// tokotachi::LineEdit の宣言。
 #ifndef TOKOTACHI_WIDGETS_LINE_EDIT_HPP
 #define TOKOTACHI_WIDGETS_LINE_EDIT_HPP
 
@@ -11,6 +10,12 @@
 namespace tokotachi
 {
 
+/// 1 行のテキストの入力欄。IME の変換中の文字列は入力欄の中に描く(docs/adr/0009)。
+/// 編集・選択・クリップボード・変更の通知は TextInputBase が受け持つ(docs/adr/0021)。
+///
+/// @image html widget_line_edit.png
+///
+/// @ingroup widgets_input
 class LineEdit : public TextInputBase
 {
 public:

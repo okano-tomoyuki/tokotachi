@@ -1,23 +1,5 @@
 /// @file
-/// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
-///
-/// @code
-/// tokotachi::Menu* menu_edit = new tokotachi::Menu(&window);                 // ウィンドウが所有する
-/// menu_edit->add_item("コピー(&C)", [](tokotachi::Object*) { ... })->shortcut = "Ctrl+C";
-/// menu_edit->add_action(action_save);                                   // 既にある Action を入れる
-/// menu_edit->add_separator();
-/// tokotachi::Menu* menu_sort = menu_edit->add_submenu("並べ替え(&S)");
-/// menu_sort->add_item("名前順");
-/// text_edit_memo->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
-/// {
-///     if (e.button == tokotachi::MouseButton::RIGHT) { menu_edit->popup(text_edit_memo, e.pos); }
-/// };
-/// @endcode
-///
-/// ↑↓ で項目を動かし(区切りと無効な項目は飛ばす)、Enter で選び、→ でサブメニューを開き、← で閉じ、Esc で閉じる。
-/// 項目のニーモニック(text の & の次の文字)のキーを押すと、その項目を選ぶ。
-/// 項目を選ぶと、メニューをすべて閉じてから Action を実行する。メニューは、開くウィジェットのウィンドウより先に破棄すること
-/// (ウィンドウに所有させればよい)。
+/// tokotachi::Menu の宣言。
 #ifndef TOKOTACHI_ACTIONS_MENU_HPP
 #define TOKOTACHI_ACTIONS_MENU_HPP
 
@@ -40,6 +22,27 @@ class MenuView;
 struct MenuAccess;
 }
 
+/// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
+///
+/// @code
+/// tokotachi::Menu* menu_edit = new tokotachi::Menu(&window);                 // ウィンドウが所有する
+/// menu_edit->add_item("コピー(&C)", [](tokotachi::Object*) { ... })->shortcut = "Ctrl+C";
+/// menu_edit->add_action(action_save);                                   // 既にある Action を入れる
+/// menu_edit->add_separator();
+/// tokotachi::Menu* menu_sort = menu_edit->add_submenu("並べ替え(&S)");
+/// menu_sort->add_item("名前順");
+/// text_edit_memo->on_mouse_down = [=](tokotachi::Object*, tokotachi::MouseEvent& e)
+/// {
+///     if (e.button == tokotachi::MouseButton::RIGHT) { menu_edit->popup(text_edit_memo, e.pos); }
+/// };
+/// @endcode
+///
+/// ↑↓ で項目を動かし(区切りと無効な項目は飛ばす)、Enter で選び、→ でサブメニューを開き、← で閉じ、Esc で閉じる。
+/// 項目のニーモニック(text の & の次の文字)のキーを押すと、その項目を選ぶ。
+/// 項目を選ぶと、メニューをすべて閉じてから Action を実行する。メニューは、開くウィジェットのウィンドウより先に破棄すること
+/// (ウィンドウに所有させればよい)。
+///
+/// @ingroup actions
 class Menu : public Object
 {
 public:

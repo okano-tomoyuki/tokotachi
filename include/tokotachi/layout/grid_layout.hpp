@@ -1,4 +1,13 @@
 /// @file
+/// tokotachi::GridLayout の宣言。
+#ifndef TOKOTACHI_LAYOUT_GRID_LAYOUT_HPP
+#define TOKOTACHI_LAYOUT_GRID_LAYOUT_HPP
+
+#include "layout.hpp"
+
+namespace tokotachi
+{
+
 /// 子を行と列の格子に置くレイアウト(cpp_tk の grid に当たる。docs/adr/0017)。
 ///
 /// @code
@@ -13,14 +22,8 @@
 /// またがる列に分ける。余った長さは伸びる割合(stretch)に応じて列に分け、どの列も伸びなければ余りは右(下)に残る。
 /// 足りないときは、各列を最小の大きさまで縮める。セルの中では、項目ごとのそろえ方(cpp_tk の sticky に当たる)に従う。
 /// 項目が無く最小の大きさも決めていない行・列は、大きさ 0 で、間隔も入れない。
-#ifndef TOKOTACHI_LAYOUT_GRID_LAYOUT_HPP
-#define TOKOTACHI_LAYOUT_GRID_LAYOUT_HPP
-
-#include "layout.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup layout
 class GridLayout : public Layout
 {
 public:

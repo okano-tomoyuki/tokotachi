@@ -1,5 +1,17 @@
 /// @file
+/// tokotachi::Slider の宣言。
+#ifndef TOKOTACHI_WIDGETS_SLIDER_HPP
+#define TOKOTACHI_WIDGETS_SLIDER_HPP
+
+#include "../layout/alignment.hpp"
+#include "range_base.hpp"
+
+namespace tokotachi
+{
+
 /// スライダー: つまみを動かして、範囲の中の値を選ぶ(docs/adr/0024)。縦のときは下が minimum。
+///
+/// @image html widget_slider.png
 ///
 /// @code
 /// tokotachi::Slider* slider_volume = new tokotachi::Slider(panel);
@@ -10,15 +22,8 @@
 ///
 /// 溝を押すとその位置へ動き、そのままドラッグできる。矢印キー(single_step)・Page Up/Down(page_step)・Home/End で動かし、
 /// フォーカスがあるときはホイールでも動かす(フォームをスクロールしているときに、うっかり値を変えないように)。
-#ifndef TOKOTACHI_WIDGETS_SLIDER_HPP
-#define TOKOTACHI_WIDGETS_SLIDER_HPP
-
-#include "../layout/alignment.hpp"
-#include "range_base.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup widgets_input
 class Slider : public RangeBase
 {
 public:

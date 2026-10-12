@@ -1,5 +1,17 @@
 /// @file
+/// tokotachi::ScrollArea の宣言。
+#ifndef TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
+#define TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
+
+#include "scroll_bar.hpp"
+#include "widget.hpp"
+
+namespace tokotachi
+{
+
 /// 中身のウィジェットを、見えている範囲より大きくてもスクロールして見せる入れ物(docs/adr/0021)。
+///
+/// @image html widget_scroll_area.png
 ///
 /// @code
 /// tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(&window);
@@ -11,15 +23,8 @@
 ///
 /// 中身の大きさは、中身の preferred_size(fit_width なら幅は見えている幅)。見えている範囲に収まらない向きにだけ
 /// スクロールバーを出す。ScrollArea 自身にレイアウトを付けてはいけない(子の配置は ScrollArea が決める)。
-#ifndef TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
-#define TOKOTACHI_WIDGETS_SCROLL_AREA_HPP
-
-#include "scroll_bar.hpp"
-#include "widget.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup widgets_container
 class ScrollArea : public Widget
 {
 public:

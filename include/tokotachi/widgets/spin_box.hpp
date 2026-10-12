@@ -1,17 +1,5 @@
 /// @file
-/// 数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。
-///
-/// @code
-/// tokotachi::SpinBox* spin_box_count = new tokotachi::SpinBox(panel);
-/// spin_box_count->maximum = 10;
-/// spin_box_count->decimals = 1;  // 小数 1 桁で表示・入力
-/// spin_box_count->suffix = " kg";  // 数値の後ろに単位を出す
-/// tokotachi::bind(spin_box_count->value, amount->value);  // DoubleVariable と結ぶ
-/// @endcode
-///
-/// 打ち込んだ数値は、Enter・フォーカスが外れたときに value にする(数値として読めなければ元に戻す)。
-/// ↑↓(single_step)・Page Up/Down(page_step)で増減し、フォーカスがあるときはホイールでも増減する。
-/// ボタンを押し続けると繰り返す。フォーカスは中の入力欄が受ける。
+/// tokotachi::SpinBox の宣言。
 #ifndef TOKOTACHI_WIDGETS_SPIN_BOX_HPP
 #define TOKOTACHI_WIDGETS_SPIN_BOX_HPP
 
@@ -28,6 +16,23 @@ namespace detail
 class SpinEdit;
 }
 
+/// 数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。
+///
+/// @image html widget_spin_box.png
+///
+/// @code
+/// tokotachi::SpinBox* spin_box_count = new tokotachi::SpinBox(panel);
+/// spin_box_count->maximum = 10;
+/// spin_box_count->decimals = 1;  // 小数 1 桁で表示・入力
+/// spin_box_count->suffix = " kg";  // 数値の後ろに単位を出す
+/// tokotachi::bind(spin_box_count->value, amount->value);  // DoubleVariable と結ぶ
+/// @endcode
+///
+/// 打ち込んだ数値は、Enter・フォーカスが外れたときに value にする(数値として読めなければ元に戻す)。
+/// ↑↓(single_step)・Page Up/Down(page_step)で増減し、フォーカスがあるときはホイールでも増減する。
+/// ボタンを押し続けると繰り返す。フォーカスは中の入力欄が受ける。
+///
+/// @ingroup widgets_input
 class SpinBox : public RangeBase
 {
 public:

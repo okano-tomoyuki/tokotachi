@@ -1,5 +1,19 @@
 /// @file
+/// tokotachi::TableView の宣言。
+#ifndef TOKOTACHI_VIEWS_TABLE_VIEW_HPP
+#define TOKOTACHI_VIEWS_TABLE_VIEW_HPP
+
+#include <string>
+#include <vector>
+
+#include "item_view.hpp"
+
+namespace tokotachi
+{
+
 /// 表: 行と列のセルを表示し、セルを選んで編集するビュー(docs/adr/0050)。モデルの一番上の行を、列(Column)ごとに表示する。
+///
+/// @image html widget_table_view.png
 ///
 /// @code
 /// tokotachi::ListModel* scores = new tokotachi::ListModel(&window);
@@ -24,17 +38,8 @@
 /// - 編集できないセルのダブルクリックで on_activate を呼ぶ。
 ///
 /// selection(ItemView)は、選んでいるセルのある行の項目。行の数・並びが変わると、セルの範囲は current のセルだけになる。
-#ifndef TOKOTACHI_VIEWS_TABLE_VIEW_HPP
-#define TOKOTACHI_VIEWS_TABLE_VIEW_HPP
-
-#include <string>
-#include <vector>
-
-#include "item_view.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup views
 class TableView : public ItemView
 {
 public:

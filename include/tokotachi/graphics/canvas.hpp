@@ -1,29 +1,5 @@
 /// @file
-/// 描画の抽象(docs/adr/0006、0032)。
-///
-/// 使い方: ウィジェットの on_paint、または Widget の派生クラスの paint(Canvas&) の中で描く。
-///
-/// @code
-/// paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
-/// {
-///     c.fill_rect(tokotachi::Rect(0, 0, 100, 50), tokotachi::Color::rgb(0xf3f4f6));
-///     c.draw_line(tokotachi::Point(0, 0), tokotachi::Point(100, 50), 2, tokotachi::Color::rgb(0x2563eb));
-///     c.draw_text("こんにちは", tokotachi::Point(8, 8), tokotachi::Color::rgb(0x111827));
-/// };
-/// @endcode
-///
-/// 決まり:
-/// - Canvas は、描画の呼び出し(paint・on_paint)の間だけ有効。参照を持ち続けない。描きたいときは invalidate で描き直しを頼む。
-/// - メインスレッドからだけ使う。
-/// - 座標は dp(ウィジェットの左上が原点)。実装が倍率を掛けてピクセルに直す。描画の結果はウィンドウの裏のバッファーに描き、
-/// @code
-/// まとめて画面に出す(ダブルバッファリング。ちらつかない)。
-/// @endcode
-/// - 描く範囲はクリップされている。clip_bounds() の外は描いても見えないので、重い描画は範囲の外を飛ばす。
-/// - 変換(translate・scale・rotate)とクリップは save・restore で戻す。変換が平行移動だけのときは、矩形の辺と文字を
-/// @code
-/// ピクセルに揃えてにじまないように描く(docs/adr/0008)。拡大・回転があるときは揃えず、文字は輪郭として描く。
-/// @endcode
+/// tokotachi::Canvas の宣言。
 #ifndef TOKOTACHI_GRAPHICS_CANVAS_HPP
 #define TOKOTACHI_GRAPHICS_CANVAS_HPP
 
@@ -39,6 +15,9 @@ class Image;
 class TextLayout;
 struct Font;
 
+/// 図形の輪郭(直線・ベジェ曲線・矩形・楕円・弧を組み合わせる)。Canvas::fill_path・stroke_path で描く。
+///
+/// @ingroup graphics
 class Path
 {
 public:
@@ -78,6 +57,9 @@ private:
     std::vector<Element> elements_;
 };
 
+/// グラデーションの色の位置(offset は 0〜1)。
+///
+/// @ingroup graphics
 struct GradientStop
 {
     float offset;
@@ -88,6 +70,7 @@ struct GradientStop
 };
 
 /// 塗り(単色・線形グラデーション・放射グラデーション)。
+/// @ingroup graphics
 struct Paint
 {
     enum class Type
@@ -126,6 +109,7 @@ enum class LineJoin
 };
 
 /// 線の形。
+/// @ingroup graphics
 struct StrokeStyle
 {
     float width;                ///< 太さ(dp)
@@ -140,6 +124,33 @@ struct StrokeStyle
     }
 };
 
+/// 描画の抽象(docs/adr/0006、0032)。
+///
+/// 使い方: ウィジェットの on_paint、または Widget の派生クラスの paint(Canvas&) の中で描く。
+///
+/// @code
+/// paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
+/// {
+///     c.fill_rect(tokotachi::Rect(0, 0, 100, 50), tokotachi::Color::rgb(0xf3f4f6));
+///     c.draw_line(tokotachi::Point(0, 0), tokotachi::Point(100, 50), 2, tokotachi::Color::rgb(0x2563eb));
+///     c.draw_text("こんにちは", tokotachi::Point(8, 8), tokotachi::Color::rgb(0x111827));
+/// };
+/// @endcode
+///
+/// 決まり:
+/// - Canvas は、描画の呼び出し(paint・on_paint)の間だけ有効。参照を持ち続けない。描きたいときは invalidate で描き直しを頼む。
+/// - メインスレッドからだけ使う。
+/// - 座標は dp(ウィジェットの左上が原点)。実装が倍率を掛けてピクセルに直す。描画の結果はウィンドウの裏のバッファーに描き、
+/// @code
+/// まとめて画面に出す(ダブルバッファリング。ちらつかない)。
+/// @endcode
+/// - 描く範囲はクリップされている。clip_bounds() の外は描いても見えないので、重い描画は範囲の外を飛ばす。
+/// - 変換(translate・scale・rotate)とクリップは save・restore で戻す。変換が平行移動だけのときは、矩形の辺と文字を
+/// @code
+/// ピクセルに揃えてにじまないように描く(docs/adr/0008)。拡大・回転があるときは揃えず、文字は輪郭として描く。
+/// @endcode
+///
+/// @ingroup graphics
 class Canvas
 {
 public:

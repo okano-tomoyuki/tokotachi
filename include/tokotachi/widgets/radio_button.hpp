@@ -1,5 +1,16 @@
 /// @file
+/// tokotachi::RadioButton の宣言。
+#ifndef TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP
+#define TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP
+
+#include "button_base.hpp"
+
+namespace tokotachi
+{
+
 /// ラジオボタン。group_value が自分の value と等しいときに選ばれている(docs/adr/0016)。
+///
+/// @image html widget_radio_button.png
 ///
 /// グループは、各ボタンの group_value を同じ IntVariable に結んで作る(型の変換は要らない):
 /// @code
@@ -10,14 +21,8 @@
 /// tokotachi::bind(radio_button_large->group_value, size->value);   // radio_button_large が選ばれた状態になる
 /// @endcode
 /// 押すと group_value に自分の value を入れ、結んだ変数を通じて他のボタンの選択が外れる。
-#ifndef TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP
-#define TOKOTACHI_WIDGETS_RADIO_BUTTON_HPP
-
-#include "button_base.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup widgets_input
 class RadioButton : public ButtonBase
 {
 public:

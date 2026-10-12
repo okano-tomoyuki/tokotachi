@@ -1,17 +1,5 @@
 /// @file
-/// 色を選ぶダイアログ(docs/adr/0051)。
-///
-/// @code
-/// tokotachi::ColorDialog::show(&window, paint_box_canvas_color, [=](tokotachi::Object* sender)
-/// {
-///     tokotachi::ColorDialog* color_dialog = static_cast<tokotachi::ColorDialog*>(sender);
-///     if (color_dialog->result == tokotachi::DialogButton::OK) { ... color_dialog->color ... }
-/// });
-/// @endcode
-///
-/// 左の四角で彩度(横)と明度(縦)を、下の帯で色相を選び、右で 16 進数(#RRGGBB)・RGB の数値を打ち込むか、見本の色を押す。
-/// alpha_enabled なら、不透明度の帯と数値も出す(16 進数は #RRGGBBAA)。右上に選んでいる色と、開いたときの色を並べて見せる。
-/// show は開いたダイアログを返し、閉じたら on_finish を呼んでから破棄する。
+/// tokotachi::ColorDialog の宣言。
 #ifndef TOKOTACHI_WINDOWS_COLOR_DIALOG_HPP
 #define TOKOTACHI_WINDOWS_COLOR_DIALOG_HPP
 
@@ -34,6 +22,23 @@ class ColorPreview;
 class ColorSwatches;
 }
 
+/// 色を選ぶダイアログ(docs/adr/0051)。
+///
+/// @image html color_dialog.png
+///
+/// @code
+/// tokotachi::ColorDialog::show(&window, paint_box_canvas_color, [=](tokotachi::Object* sender)
+/// {
+///     tokotachi::ColorDialog* color_dialog = static_cast<tokotachi::ColorDialog*>(sender);
+///     if (color_dialog->result == tokotachi::DialogButton::OK) { ... color_dialog->color ... }
+/// });
+/// @endcode
+///
+/// 左の四角で彩度(横)と明度(縦)を、下の帯で色相を選び、右で 16 進数(\#RRGGBB)・RGB の数値を打ち込むか、見本の色を押す。
+/// alpha_enabled なら、不透明度の帯と数値も出す(16 進数は \#RRGGBBAA)。右上に選んでいる色と、開いたときの色を並べて見せる。
+/// show は開いたダイアログを返し、閉じたら on_finish を呼んでから破棄する。
+///
+/// @ingroup windows
 class ColorDialog : public Dialog
 {
 public:

@@ -1,13 +1,5 @@
 /// @file
-/// 画像(アイコンなど)。PNG・JPEG などを読み込み、Canvas::draw_image で描く。
-///
-/// @code
-/// tokotachi::Image icon = tokotachi::Image::load("folder.png");
-/// if (!icon.is_null()) { item->icon = icon; }
-/// action_save->icon = tokotachi::Image::icon(tokotachi::Icon::SAVE);   // よく使うアイコン(線画)
-/// @endcode
-///
-/// 作った後は変更しない値として扱う(コピーは安い。画素は共有する)。
+/// tokotachi::Image の宣言。
 #ifndef TOKOTACHI_GRAPHICS_IMAGE_HPP
 #define TOKOTACHI_GRAPHICS_IMAGE_HPP
 
@@ -27,6 +19,17 @@ namespace detail
 struct ImageData;
 }
 
+/// 画像(アイコンなど)。PNG・JPEG などを読み込み、Canvas::draw_image で描く。
+///
+/// @code
+/// tokotachi::Image icon = tokotachi::Image::load("folder.png");
+/// if (!icon.is_null()) { item->icon = icon; }
+/// action_save->icon = tokotachi::Image::icon(tokotachi::Icon::SAVE);   // よく使うアイコン(線画)
+/// @endcode
+///
+/// 作った後は変更しない値として扱う(コピーは安い。画素は共有する)。
+///
+/// @ingroup graphics
 class Image
 {
 public:

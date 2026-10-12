@@ -1,12 +1,5 @@
 /// @file
-/// 範囲の中の値を持ち、利用者が動かせるウィジェットの共通の基底(Slider・SpinBox。docs/adr/0024)。
-///
-/// @code
-/// slider_volume->minimum = 0;
-/// slider_volume->maximum = 100;
-/// slider_volume->value = 25;
-/// tokotachi::bind(slider_volume->value, volume->value);  // DoubleVariable と結ぶ
-/// @endcode
+/// tokotachi::RangeBase の宣言。
 #ifndef TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 #define TOKOTACHI_WIDGETS_RANGE_BASE_HPP
 
@@ -15,6 +8,16 @@
 namespace tokotachi
 {
 
+/// 範囲の中の値を持ち、利用者が動かせるウィジェットの共通の基底(Slider・SpinBox。docs/adr/0024)。
+///
+/// @code
+/// slider_volume->minimum = 0;
+/// slider_volume->maximum = 100;
+/// slider_volume->value = 25;
+/// tokotachi::bind(slider_volume->value, volume->value);  // DoubleVariable と結ぶ
+/// @endcode
+///
+/// @ingroup widgets_base
 class RangeBase : public Widget
 {
 public:

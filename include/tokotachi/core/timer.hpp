@@ -1,4 +1,14 @@
 /// @file
+/// tokotachi::Timer の宣言。
+#ifndef TOKOTACHI_CORE_TIMER_HPP
+#define TOKOTACHI_CORE_TIMER_HPP
+
+#include "event.hpp"
+#include "property.hpp"
+
+namespace tokotachi
+{
+
 /// タイマー: 一定の間隔で on_timer をメインスレッドで呼ぶ(docs/adr/0014)。
 ///
 /// @code
@@ -10,15 +20,8 @@
 ///
 /// 所有者を渡すと所有者と一緒に破棄される(new tokotachi::Timer(&window)。docs/adr/0015)。所有者が無ければ利用者が寿命を
 /// 管理する(スタック・メンバ変数にも置ける)。破棄すると止まる。Application を作った後に enabled にする。
-#ifndef TOKOTACHI_CORE_TIMER_HPP
-#define TOKOTACHI_CORE_TIMER_HPP
-
-#include "event.hpp"
-#include "property.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup core_objects
 class Timer : public Object
 {
 public:

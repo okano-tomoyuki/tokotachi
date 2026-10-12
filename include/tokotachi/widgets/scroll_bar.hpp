@@ -1,4 +1,14 @@
 /// @file
+/// tokotachi::ScrollBar の宣言。
+#ifndef TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
+#define TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
+
+#include "../layout/alignment.hpp"
+#include "widget.hpp"
+
+namespace tokotachi
+{
+
 /// スクロールバー(docs/adr/0021)。value は 0 から maximum まで。
 ///
 /// @code
@@ -9,15 +19,8 @@
 /// @endcode
 ///
 /// つまみのドラッグ、溝のクリック(1 ページ分)、ホイール(single_step × 目盛り)で動かす。
-#ifndef TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
-#define TOKOTACHI_WIDGETS_SCROLL_BAR_HPP
-
-#include "../layout/alignment.hpp"
-#include "widget.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup widgets_base
 class ScrollBar : public Widget
 {
 public:

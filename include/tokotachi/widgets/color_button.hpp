@@ -1,13 +1,5 @@
 /// @file
-/// 色を見せるボタン(docs/adr/0051)。押すと ColorDialog を開き、OK で選んだ色にする。
-///
-/// @code
-/// tokotachi::ColorButton* color_button_line = new tokotachi::ColorButton(&window);
-/// color_button_line->color = tokotachi::Color::rgb(0x2563EB);
-/// color_button_line->on_change = [=](tokotachi::Object*) { ... color_button_line->color ... };
-/// @endcode
-///
-/// 左に色の見本(透過は市松模様の上に)を、右に text(空なら色の 16 進数)を出す。
+/// tokotachi::ColorButton の宣言。
 #ifndef TOKOTACHI_WIDGETS_COLOR_BUTTON_HPP
 #define TOKOTACHI_WIDGETS_COLOR_BUTTON_HPP
 
@@ -18,6 +10,19 @@
 namespace tokotachi
 {
 
+/// 色を見せるボタン(docs/adr/0051)。押すと ColorDialog を開き、OK で選んだ色にする。
+///
+/// @image html widget_color_button.png
+///
+/// @code
+/// tokotachi::ColorButton* color_button_line = new tokotachi::ColorButton(&window);
+/// color_button_line->color = tokotachi::Color::rgb(0x2563EB);
+/// color_button_line->on_change = [=](tokotachi::Object*) { ... color_button_line->color ... };
+/// @endcode
+///
+/// 左に色の見本(透過は市松模様の上に)を、右に text(空なら色の 16 進数)を出す。
+///
+/// @ingroup widgets_input
 class ColorButton : public ButtonBase
 {
 public:

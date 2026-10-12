@@ -1,12 +1,5 @@
 /// @file
-/// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
-///
-/// @code
-/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
-/// tokotachi::TreeItem* docs = tree->add_item("文書");
-/// docs->add_child("報告書.txt");
-/// tree_view_docs->model = tree;
-/// @endcode
+/// tokotachi::TreeModel の宣言。
 #ifndef TOKOTACHI_VIEWS_TREE_MODEL_HPP
 #define TOKOTACHI_VIEWS_TREE_MODEL_HPP
 
@@ -18,6 +11,9 @@ namespace tokotachi
 
 class TreeModel;
 
+/// TreeModel の 1 つの項目(子を持てる)。
+///
+/// @ingroup views
 class TreeItem : public Item
 {
 public:
@@ -44,6 +40,16 @@ private:
     std::vector<TreeItem*> children_;
 };
 
+/// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
+///
+/// @code
+/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+/// tokotachi::TreeItem* docs = tree->add_item("文書");
+/// docs->add_child("報告書.txt");
+/// tree_view_docs->model = tree;
+/// @endcode
+///
+/// @ingroup views
 class TreeModel : public ItemModel, private detail::ItemHost
 {
 public:

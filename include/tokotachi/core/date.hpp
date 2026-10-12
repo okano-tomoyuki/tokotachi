@@ -1,14 +1,5 @@
 /// @file
-/// 日付(年・月・日。グレゴリオ暦。docs/adr/0051)。DateEdit・Calendar の値。
-///
-/// @code
-/// tokotachi::Date d(2026, 10, 11);
-/// d.add_days(30).format("yyyy/MM/dd");          // "2026/11/10"
-/// tokotachi::Date::parse("2026-1-5", "yyyy/MM/dd");  // 区切りは / - . 空白のどれでも
-/// tokotachi::Date::today();
-/// @endcode
-///
-/// 年・月・日がすべて 0 の値は「空」(is_null)。範囲は 1 年 1 月 1 日から 9999 年 12 月 31 日。
+/// tokotachi::Date の宣言。
 #ifndef TOKOTACHI_CORE_DATE_HPP
 #define TOKOTACHI_CORE_DATE_HPP
 
@@ -29,6 +20,18 @@ enum class DayOfWeek
     SATURDAY
 };
 
+/// 日付(年・月・日。グレゴリオ暦。docs/adr/0051)。DateEdit・Calendar の値。
+///
+/// @code
+/// tokotachi::Date d(2026, 10, 11);
+/// d.add_days(30).format("yyyy/MM/dd");          // "2026/11/10"
+/// tokotachi::Date::parse("2026-1-5", "yyyy/MM/dd");  // 区切りは / - . 空白のどれでも
+/// tokotachi::Date::today();
+/// @endcode
+///
+/// 年・月・日がすべて 0 の値は「空」(is_null)。範囲は 1 年 1 月 1 日から 9999 年 12 月 31 日。
+///
+/// @ingroup core_values
 struct Date
 {
     int year;

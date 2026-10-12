@@ -41,6 +41,9 @@ struct Liveness
 template <typename T>
 class WeakRef;
 
+/// プロパティ(読み書きできる値。代入で設定し、変わると知らせる。@ref basics)。
+///
+/// @ingroup core_objects
 template <typename T>
 class Property
 {
@@ -151,6 +154,9 @@ private:
     Setter setter_;
 };
 
+/// 読むだけのプロパティ(部品の状態など。代入はできない)。
+///
+/// @ingroup core_objects
 template <typename T>
 class ReadOnlyProperty
 {
@@ -179,6 +185,7 @@ private:
 /// 所有: owner を渡すと、owner が破棄されるときに一緒に破棄される(new で作る)。
 /// owner が nullptr なら利用者が寿命を管理する(スタック・メンバ変数にも置ける)。
 /// owner を持つオブジェクトをスタックに置いてはいけない(二重に破棄される)。
+/// @ingroup core_objects
 class Object
 {
 public:

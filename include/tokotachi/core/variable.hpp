@@ -1,4 +1,14 @@
 /// @file
+/// tokotachi::Variable の宣言。
+#ifndef TOKOTACHI_CORE_VARIABLE_HPP
+#define TOKOTACHI_CORE_VARIABLE_HPP
+
+#include "event.hpp"
+#include "property.hpp"
+
+namespace tokotachi
+{
+
 /// 値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。
 ///
 /// @code
@@ -11,15 +21,8 @@
 /// @endcode
 ///
 /// 値の型は == で比べられること。
-#ifndef TOKOTACHI_CORE_VARIABLE_HPP
-#define TOKOTACHI_CORE_VARIABLE_HPP
-
-#include "event.hpp"
-#include "property.hpp"
-
-namespace tokotachi
-{
-
+///
+/// @ingroup core_objects
 template <typename T>
 class Variable : public Object
 {
