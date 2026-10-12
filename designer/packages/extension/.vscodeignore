@@ -3,7 +3,8 @@
 !dist/canvas/**
 !dist/webview/**
 !schema/**
-!images/**
+!images/icon.png
+!images/activitybar.svg
 !l10n/**
 !package.json
 !package.nls.json
