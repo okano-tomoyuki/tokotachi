@@ -16,7 +16,7 @@ class Splitter;
 
 /// 1 つの区画。Splitter が作り、所有する。
 /// @ingroup widgets_container
-class TOKOTACHI_API SplitterPane : public Object
+class TOKOTACHI_API SplitterPane final : public Object
 {
 public:
     /// Splitter の大きさが変わったときの伸び縮みの比率(0 なら大きさを保つ。すべて 0 なら最後の区画が受け持つ)。

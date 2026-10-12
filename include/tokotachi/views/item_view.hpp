@@ -64,7 +64,7 @@ struct TOKOTACHI_API CellRange
 
 /// ビューの 1 つの列。ItemView が作り、所有する。
 /// @ingroup views
-class TOKOTACHI_API Column : public Object
+class TOKOTACHI_API Column final : public Object
 {
 public:
     /// 見出しの文字。

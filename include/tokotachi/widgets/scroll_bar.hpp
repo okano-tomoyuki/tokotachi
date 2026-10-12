@@ -5,12 +5,15 @@
 
 #include "../core/export.hpp"
 #include "../layout/alignment.hpp"
-#include "widget.hpp"
+#include "range_base.hpp"
 
 namespace tokotachi
 {
 
-/// スクロールバー(docs/adr/0021)。value は 0 から maximum まで。
+/// スクロールバー(docs/adr/0021)。値・範囲・刻みは RangeBase のもの(docs/adr/0058)。
+///
+/// value は minimum(既定 0)から maximum まで。maximum は動かせる量(中身の長さ - 見えている長さ。既定 0 で、動かせない)、
+/// page_step は見えている長さ(つまみの大きさと、溝のクリックで動く量)、single_step はホイールの 1 目盛りで動く量(dp、既定 48)。
 ///
 /// @code
 /// tokotachi::ScrollBar* scroll_bar = new tokotachi::ScrollBar(panel, tokotachi::Orientation::VERTICAL);
@@ -22,24 +25,13 @@ namespace tokotachi
 /// つまみのドラッグ、溝のクリック(1 ページ分)、ホイール(single_step × 目盛り)で動かす。
 ///
 /// @ingroup widgets_base
-class TOKOTACHI_API ScrollBar : public Widget
+class TOKOTACHI_API ScrollBar : public RangeBase
 {
 public:
     explicit ScrollBar(Widget* parent = nullptr, Orientation orientation = Orientation::VERTICAL);
     ~ScrollBar() override;
 
     Property<Orientation> orientation;
-    /// 位置(0 から maximum。範囲の外の値は丸める)。
-    Property<float> value;
-    /// 動かせる量(中身の長さ - 見えている長さ。0 なら動かせない)。小さくすると value も丸める。
-    Property<float> maximum;
-    /// 見えている長さ(つまみの大きさと、溝のクリックで動く量)。
-    Property<float> page_step;
-    /// ホイールの 1 目盛りで動く量(dp、既定 48)。
-    Property<float> single_step;
-
-    /// value が変わった(利用者の操作・代入のどちらでも)。
-    Property<NotifyHandler> on_change;
 
     /// スクロールバーの太さ(dp)。
     static const float THICKNESS;

@@ -17,7 +17,7 @@ class TabWidget;
 
 /// 1 つのタブ。TabWidget が作り、所有する。
 /// @ingroup widgets_container
-class TOKOTACHI_API Tab : public Object
+class TOKOTACHI_API Tab final : public Object
 {
 public:
     Property<std::string> title;

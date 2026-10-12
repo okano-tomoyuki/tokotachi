@@ -15,7 +15,7 @@ class TreeModel;
 /// TreeModel の 1 つの項目(子を持てる)。
 ///
 /// @ingroup views
-class TOKOTACHI_API TreeItem : public Item
+class TOKOTACHI_API TreeItem final : public Item
 {
 public:
     /// 親の項目(一番上なら nullptr)・子の項目(並んだ順)。
