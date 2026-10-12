@@ -22,6 +22,8 @@ namespace tokotachi
 class TOKOTACHI_API TextInputBase : public Widget
 {
 public:
+    ~TextInputBase() override;
+
     /// 1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を \n にそろえ、タブは空白にし、その他の制御文字を取り除く。
     Property<std::string> text;
     Property<std::string> placeholder_text;
@@ -43,28 +45,7 @@ public:
     void insert(const std::string& s);
 
 protected:
-    TextInputBase(Widget* parent, const std::string& text, bool multi_line);
-    ~TextInputBase() override;
-
-    /// 文字を描く矩形(自分の座標系。枠の内側)。
-    virtual Rect text_area() const = 0;
-    /// 折り返しの幅(dp。0 なら折り返さない)。
-    virtual float wrap_width() const { return 0; }
-    /// Enter が押された(1 行のときだけ呼ぶ。複数行では改行を入れる)。受け取ったら true を返す。
-    /// false なら Enter は親へ送る(ダイアログの決定のボタンなど)。
-    virtual bool submit() { return false; }
-    /// スクロールの量が変わった(TextEdit がスクロールバーを合わせる)。
-    virtual void scroll_changed() {}
-
-    /// 文字・選択・変換中の文字列・キャレットを、text_area の中に描く(派生クラスの paint が枠を描いた後に呼ぶ)。
-    void paint_text(Canvas& canvas);
-    /// 表示するテキスト(変換中の文字列をキャレットの位置に挟んだもの)のレイアウト。
-    const TextLayout& text_layout() const;
-    /// スクロールの量(dp。文字の左上が、text_area の左上からずれている量)。
-    Point scroll_offset() const;
-    /// スクロールの量を変える(範囲の外の値は丸める)。キャレットを追わない。
-    void set_scroll_offset(const Point& p);
-    bool is_multi_line() const;
+    TextInputBase(Widget* parent, const detail::InternalTag& tag, const std::string& text, bool multi_line);
 
     void resized() override;
     void mouse_down(MouseEvent& e) override;
@@ -78,6 +59,8 @@ protected:
     void scale_changed() override;
 
 private:
+    template <typename>
+    friend struct detail::ImplAccess;
     class Impl;
     Impl* d_;
 };

@@ -157,7 +157,7 @@ public:
 
 protected:
     /// tree が true なら木として(子を開いて)表示する。table が true なら表として(セルを選んで)表示する。
-    ItemView(Widget* parent, bool tree, bool table = false);
+    ItemView(Widget* parent, const detail::InternalTag& tag, bool tree, bool table = false);
 
     void paint(Canvas& canvas) override;
     void mouse_down(MouseEvent& e) override;
@@ -179,36 +179,9 @@ protected:
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
 
-    /// TreeView のための操作。
-    void expand(const ModelIndex& index);
-    void collapse(const ModelIndex& index);
-    bool is_expanded(const ModelIndex& index) const;
-    void expand_all();
-    void collapse_all();
-    float get_indentation() const;
-    void set_indentation(const float& v);
-
-    /// TableView のための操作(docs/adr/0050)。
-    SelectionBehavior get_selection_behavior() const;
-    void set_selection_behavior(const SelectionBehavior& v);
-    int get_current_column() const;
-    void set_current_column(const int& v);
-    std::vector<CellRange> get_selected_ranges() const;
-    bool cell_selected(int row, int column) const;
-    void select_cells(const CellRange& range, bool add);
-    bool get_grid_visible() const;
-    void set_grid_visible(const bool& v);
-    bool get_row_header_visible() const;
-    void set_row_header_visible(const bool& v);
-    /// 選んでいるセルの文字(行は改行、列はタブで区切る)。
-    std::string selected_cells_text() const;
-    void copy_cells();
-    void paste_cells();
-    void clear_cells();
-    /// current_column・選んでいるセルの範囲が変わった(TableView がプロパティの変化を知らせる)。
-    virtual void cells_changed(bool current_column_changed, bool ranges_changed);
-
 private:
+    template <typename>
+    friend struct detail::ImplAccess;
     friend class ItemModel;
     friend class Column;
     class Impl;

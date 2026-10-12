@@ -22,6 +22,8 @@ namespace tokotachi
 class TOKOTACHI_API RangeBase : public Widget
 {
 public:
+    ~RangeBase() override;
+
     /// 範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
     Property<double> minimum;
     Property<double> maximum;
@@ -37,7 +39,6 @@ public:
 
 protected:
     explicit RangeBase(Widget* parent);
-    ~RangeBase() override;
 
     /// 値を amount だけ動かし、single_step に合わせる(利用者の操作)。
     void step_by(double amount);

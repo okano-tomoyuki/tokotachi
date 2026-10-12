@@ -22,11 +22,13 @@ class TreeItem::Impl
     std::vector<TreeItem*> children_;
 };
 
-class TreeModel::Impl
+class TreeModel::Impl : public detail::ItemHost
 {
     TOKOTACHI_IMPL(TreeModel);
 
     explicit Impl(TreeModel* object) : q(object) {}
+
+    void item_changed(Item* item) override;
 
     std::vector<TreeItem*> get_items() const { return roots_; }
     TreeItem* insert(TreeItem* parent, int index, const std::string& text);
@@ -39,7 +41,7 @@ class TreeModel::Impl
 };
 
 TreeItem::TreeItem(TreeModel* model, TreeItem* parent, const std::string& initial_text)
-    : Item(model, initial_text),
+    : Item(model->d_, initial_text),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, TreeItem*, parent_item),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<TreeItem*>, children),
       d_(new Impl(this))
@@ -430,9 +432,9 @@ void TreeModel::sort(int column, SortOrder order)
 
 ModelIndex TreeModel::locate(const ModelIndex& i) const { return index_of(item_at(i)); }
 
-void TreeModel::item_changed(Item* item)
+void TreeModel::Impl::item_changed(Item* item)
 {
-    notify_data_changed(index_of(static_cast<TreeItem*>(item)));
+    q->notify_data_changed(q->index_of(static_cast<TreeItem*>(item)));
 }
 
 }  // namespace tokotachi

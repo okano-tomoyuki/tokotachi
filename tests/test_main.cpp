@@ -4,6 +4,7 @@
 
 #include "../src/core/binding_registry.hpp"
 #include "../src/core/application_impl.hpp"
+#include "../src/widgets/text_input_impl.hpp"
 #include "../src/windows/window_impl.hpp"
 
 #include <algorithm>
@@ -1304,9 +1305,15 @@ struct TestMemo : tokotachi::TextEdit
         return e.accepted;
     }
 
-    tokotachi::Point scroll() const { return scroll_offset(); }
-    std::size_t lines() const { return text_layout().line_count(); }
-    tokotachi::Rect area() const { return text_area(); }
+    tokotachi::Point scroll() const { return input()->scroll_offset(); }
+    std::size_t lines() const { return input()->text_layout().line_count(); }
+    tokotachi::Rect area() const { return input()->input_->text_area(); }
+
+private:
+    const tokotachi::detail::ImplAccess<tokotachi::TextInputBase>::Impl* input() const
+    {
+        return tokotachi::detail::ImplAccess<tokotachi::TextInputBase>::of(this);
+    }
 };
 
 TEST(text_edit_newlines_and_navigation)

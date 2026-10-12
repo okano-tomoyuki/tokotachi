@@ -7,6 +7,7 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/core/clipboard.hpp>
 
+#include "text_input_impl.hpp"
 #include "widget_access.hpp"
 #include "../core/impl.hpp"
 #include "../graphics/utf8.hpp"
@@ -20,76 +21,7 @@ namespace
 const int BLINK_MS = 530;
 }
 
-class TextInputBase::Impl : public detail::WidgetHooks
-{
-    TOKOTACHI_IMPL(TextInputBase);
-
-    Impl(TextInputBase* object, bool multi_line) : q(object), multi_line_(multi_line) {}
-
-    // 内部のフック(docs/adr/0058)
-    Rect input_method_rect() const override;
-
-    /// 操作の前の状態。操作の後に、変わったプロパティを知らせるために使う(docs/adr/0016)。
-    struct State
-    {
-        std::string text;
-        std::size_t cursor;
-        std::size_t anchor;
-    };
-
-    void set_text(const std::string& v);
-    void set_placeholder_text(const std::string& v);
-    void set_font(const Font& v);
-    std::size_t get_cursor_position() const { return cursor_; }
-    void set_cursor_position(const std::size_t& v);
-    bool get_has_selection() const { return anchor_ != cursor_; }
-    std::string get_selected_text() const;
-
-    State state() const;
-    /// before から変わったプロパティを知らせ、テキストが変わっていれば on_change を呼ぶ。
-    void finish(const State& before);
-    std::string sanitize(const std::string& s) const;
-
-    void invalidate_layout();
-    /// テキストが変わった後・キャレットが動いた後の描き直し(キャレットが見えるようにスクロールする)。
-    void text_touched();
-    void caret_touched();
-    /// レイアウトの中での、キャレットの位置(変換中ならその中のキャレット)。
-    Point caret_in_layout() const;
-    /// テキストのレイアウトの左上(自分の座標系。スクロールと、1 行のときの縦の中央寄せ・右から左の右寄せを含む)。
-    Point text_origin() const;
-    /// キャレットが見えるようにスクロールし(follow_caret のとき)、範囲に収める。
-    void update_scroll(bool follow_caret);
-    std::size_t offset_at(const Point& p) const;
-    void move_cursor(std::size_t pos, bool keep_anchor);
-    /// 上下の行へ動かす(lines が負なら上)。キャレットの横の位置(goal_x_)を保つ。
-    void move_vertically(int lines, bool keep_anchor);
-    void erase_selection();
-    void insert_text(const std::string& s);
-    void restart_blink();
-    void stop_blink();
-
-    const bool multi_line_;
-    std::string text_;
-    std::string placeholder_text_;
-    Font font_;
-    NotifyHandler on_change_;
-    std::size_t cursor_;
-    std::size_t anchor_;
-    std::string preedit_;
-    int preedit_start_;
-    int preedit_length_;
-    bool selecting_;  ///< マウスで選択している
-    bool caret_on_;
-    float goal_x_;  ///< 上下に動かすときに保つキャレットの横の位置(負なら未定)
-    Timer blink_;   ///< キャレットの点滅
-    Point scroll_;
-    mutable TextLayout layout_;
-    mutable float layout_wrap_;
-    mutable TextLayout placeholder_layout_;
-};
-
-TextInputBase::TextInputBase(Widget* parent_widget, const std::string& initial_text, bool multi_line)
+TextInputBase::TextInputBase(Widget* parent_widget, const detail::InternalTag&, const std::string& initial_text, bool multi_line)
     : Widget(parent_widget),
       TOKOTACHI_IMPL_PROPERTY_MEMBER_SELF_NOTIFY(Impl, std::string, text),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, placeholder_text),
@@ -123,9 +55,9 @@ TextInputBase::TextInputBase(Widget* parent_widget, const std::string& initial_t
 
 TextInputBase::~TextInputBase() { delete d_; }
 
-Point TextInputBase::scroll_offset() const { return d_->scroll_; }
+Point TextInputBase::Impl::scroll_offset() const { return scroll_; }
 
-bool TextInputBase::is_multi_line() const { return d_->multi_line_; }
+bool TextInputBase::Impl::is_multi_line() const { return multi_line_; }
 
 std::string TextInputBase::Impl::sanitize(const std::string& s) const
 {
@@ -296,7 +228,7 @@ void TextInputBase::Impl::move_cursor(std::size_t pos, bool keep_anchor)
 
 void TextInputBase::Impl::move_vertically(int lines, bool keep_anchor)
 {
-    const TextLayout& l = q->text_layout();
+    const TextLayout& l = text_layout();
     if (goal_x_ < 0)
     {
         goal_x_ = l.caret_position(cursor_).x;
@@ -347,25 +279,25 @@ void TextInputBase::Impl::caret_touched()
     detail::WidgetAccess::update_input_method(q);
 }
 
-const TextLayout& TextInputBase::text_layout() const
+const TextLayout& TextInputBase::Impl::text_layout() const
 {
-    const float scale = display_scale;
-    const float wrap = wrap_width();
-    if (d_->layout_.is_null() || d_->layout_.scale() != scale || d_->layout_wrap_ != wrap)
+    const float scale = q->display_scale;
+    const float wrap = input_->wrap_width();
+    if (layout_.is_null() || layout_.scale() != scale || layout_wrap_ != wrap)
     {
         const std::string shown =
-            d_->preedit_.empty() ? d_->text_ : d_->text_.substr(0, d_->cursor_) + d_->preedit_ + d_->text_.substr(d_->cursor_);
-        d_->layout_ = TextLayout(shown, d_->font_, scale, wrap);
-        d_->layout_wrap_ = wrap;
+            preedit_.empty() ? text_ : text_.substr(0, cursor_) + preedit_ + text_.substr(cursor_);
+        layout_ = TextLayout(shown, font_, scale, wrap);
+        layout_wrap_ = wrap;
     }
-    return d_->layout_;
+    return layout_;
 }
 
 void TextInputBase::Impl::invalidate_layout() { layout_ = TextLayout(); }
 
 Point TextInputBase::Impl::caret_in_layout() const
 {
-    const TextLayout& l = q->text_layout();
+    const TextLayout& l = text_layout();
     if (preedit_.empty())
     {
         return l.caret_position(cursor_);
@@ -376,8 +308,8 @@ Point TextInputBase::Impl::caret_in_layout() const
 
 Point TextInputBase::Impl::text_origin() const
 {
-    const Rect area = q->text_area();
-    const TextLayout& l = q->text_layout();
+    const Rect area = input_->text_area();
+    const TextLayout& l = text_layout();
     if (multi_line_)
     {
         return Point(area.x - scroll_.x, area.y - scroll_.y);
@@ -390,12 +322,12 @@ Point TextInputBase::Impl::text_origin() const
 
 void TextInputBase::Impl::update_scroll(bool follow_caret)
 {
-    const Rect area = q->text_area();
+    const Rect area = input_->text_area();
     if (area.width <= 0 || area.height <= 0)
     {
         return;
     }
-    const TextLayout& l = q->text_layout();
+    const TextLayout& l = text_layout();
     Point s = scroll_;
     if (follow_caret)
     {
@@ -430,17 +362,17 @@ void TextInputBase::Impl::update_scroll(bool follow_caret)
         q->invalidate();
         detail::WidgetAccess::update_input_method(q);
     }
-    q->scroll_changed();
+    input_->scroll_changed();
 }
 
-void TextInputBase::set_scroll_offset(const Point& p)
+void TextInputBase::Impl::set_scroll_offset(const Point& p)
 {
-    d_->scroll_ = p;
-    d_->update_scroll(false);
-    invalidate();
+    scroll_ = p;
+    update_scroll(false);
+    q->invalidate();
 }
 
-std::size_t TextInputBase::Impl::offset_at(const Point& p) const { return q->text_layout().offset_at(p - text_origin()); }
+std::size_t TextInputBase::Impl::offset_at(const Point& p) const { return text_layout().offset_at(p - text_origin()); }
 
 void TextInputBase::Impl::restart_blink()
 {
@@ -456,32 +388,32 @@ void TextInputBase::Impl::stop_blink() { blink_.enabled = false; }
 
 // --- 描画 ---
 
-void TextInputBase::paint_text(Canvas& canvas)
+void TextInputBase::Impl::paint_text(Canvas& canvas)
 {
-    const bool enabled_now = effectively_enabled, has_focus = focused;
+    const bool enabled_now = q->effectively_enabled, has_focus = q->focused;
     const TextLayout& l = text_layout();
-    const Rect area = text_area();
-    const Point o = d_->text_origin();
+    const Rect area = input_->text_area();
+    const Point o = text_origin();
     const Color fg = enabled_now ? theme::text() : theme::text_disabled();
 
     canvas.save();
     canvas.clip_rect(area);
 
-    if (d_->text_.empty() && d_->preedit_.empty() && !d_->placeholder_text_.empty())
+    if (text_.empty() && preedit_.empty() && !placeholder_text_.empty())
     {
-        if (d_->placeholder_layout_.is_null() || d_->placeholder_layout_.scale() != l.scale())
+        if (placeholder_layout_.is_null() || placeholder_layout_.scale() != l.scale())
         {
-            d_->placeholder_layout_ = TextLayout(d_->placeholder_text_, d_->font_, l.scale(), wrap_width());
+            placeholder_layout_ = TextLayout(placeholder_text_, font_, l.scale(), input_->wrap_width());
         }
-        canvas.draw_text(d_->placeholder_layout_, d_->multi_line_ ? Point(area.x, area.y) : Point(area.x, o.y),
+        canvas.draw_text(placeholder_layout_, multi_line_ ? Point(area.x, area.y) : Point(area.x, o.y),
                          theme::placeholder());
     }
 
     // 選択の矩形は、双方向の行・複数行では離れた複数の矩形になる(docs/adr/0020)。
     std::vector<Rect> selection;
-    if (d_->get_has_selection() && d_->preedit_.empty())
+    if (get_has_selection() && preedit_.empty())
     {
-        selection = l.selection_rects(std::min(d_->cursor_, d_->anchor_), std::max(d_->cursor_, d_->anchor_));
+        selection = l.selection_rects(std::min(cursor_, anchor_), std::max(cursor_, anchor_));
         for (std::size_t i = 0; i < selection.size(); ++i)
         {
             selection[i] = selection[i].translated(o.x, o.y);
@@ -502,21 +434,21 @@ void TextInputBase::paint_text(Canvas& canvas)
         }
     }
 
-    if (!d_->preedit_.empty())
+    if (!preedit_.empty())
     {
         // 変換中の文字列に細い下線、変換対象の文節に太い下線(docs/adr/0009)。
         const float under = l.ascent() + 2;
-        const std::vector<Rect> whole = l.selection_rects(d_->cursor_, d_->cursor_ + d_->preedit_.size());
+        const std::vector<Rect> whole = l.selection_rects(cursor_, cursor_ + preedit_.size());
         for (std::size_t i = 0; i < whole.size(); ++i)
         {
             canvas.fill_rect(Rect(o.x + whole[i].x, o.y + whole[i].y + under, whole[i].width, 1),
                              theme::preedit_underline());
         }
-        if (d_->preedit_start_ >= 0 && d_->preedit_length_ > 0)
+        if (preedit_start_ >= 0 && preedit_length_ > 0)
         {
             const std::vector<Rect> target =
-                l.selection_rects(d_->cursor_ + detail::utf8_offset_of(d_->preedit_, d_->preedit_start_),
-                                  d_->cursor_ + detail::utf8_offset_of(d_->preedit_, d_->preedit_start_ + d_->preedit_length_));
+                l.selection_rects(cursor_ + detail::utf8_offset_of(preedit_, preedit_start_),
+                                  cursor_ + detail::utf8_offset_of(preedit_, preedit_start_ + preedit_length_));
             for (std::size_t i = 0; i < target.size(); ++i)
             {
                 canvas.fill_rect(Rect(o.x + target[i].x, o.y + target[i].y + under - 1, target[i].width, 2),
@@ -525,9 +457,9 @@ void TextInputBase::paint_text(Canvas& canvas)
         }
     }
 
-    if (has_focus && d_->caret_on_ && (selection.empty() || !d_->preedit_.empty()))
+    if (has_focus && caret_on_ && (selection.empty() || !preedit_.empty()))
     {
-        const Point c = d_->caret_in_layout();
+        const Point c = caret_in_layout();
         canvas.fill_rect(Rect(o.x + c.x, o.y + c.y, 1, l.ascent() + l.descent()), fg);
     }
 
@@ -567,7 +499,7 @@ void TextInputBase::mouse_down(MouseEvent& e)
         // ダブルクリックで単語を選ぶ。
         const Impl::State before = d_->state();
         std::size_t start = 0, end = 0;
-        text_layout().word_at(d_->offset_at(e.pos), start, end);
+        d_->text_layout().word_at(d_->offset_at(e.pos), start, end);
         d_->anchor_ = start;
         d_->move_cursor(end, true);
         d_->finish(before);
@@ -635,11 +567,11 @@ void TextInputBase::key_down(KeyEvent& e)
     if (e.key == Key::RETURN && !d_->multi_line_)
     {
         // ハンドラの中で破棄されてもよいよう、submit の後は自分に触らない(e は呼び出し側のもの)。
-        e.accepted = submit();
+        e.accepted = d_->input_->submit();
         return;
     }
 
-    const TextLayout& l = text_layout();
+    const TextLayout& l = d_->text_layout();
     const std::size_t lo = std::min(d_->cursor_, d_->anchor_), hi = std::max(d_->cursor_, d_->anchor_);
     const bool selected = d_->get_has_selection();
     const Impl::State before = d_->state();
@@ -665,7 +597,7 @@ void TextInputBase::key_down(KeyEvent& e)
         }
         {
             // Page Up・Down は見えている行の数だけ動かす。
-            const int page = std::max(1, static_cast<int>(text_area().height / std::max(1.0f, l.line_height())) - 1);
+            const int page = std::max(1, static_cast<int>(d_->input_->text_area().height / std::max(1.0f, l.line_height())) - 1);
             const int lines = e.key == Key::UP ? -1 : e.key == Key::DOWN ? 1 : e.key == Key::PAGE_UP ? -page : page;
             d_->move_vertically(lines, shift);
             vertical = true;
@@ -791,7 +723,7 @@ void TextInputBase::scale_changed()
 
 Rect TextInputBase::Impl::input_method_rect() const
 {
-    const TextLayout& l = q->text_layout();
+    const TextLayout& l = text_layout();
     const Point c = caret_in_layout() + text_origin();
     return Rect(c.x, c.y, 1, l.ascent() + l.descent());
 }

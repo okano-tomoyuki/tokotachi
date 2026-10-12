@@ -149,11 +149,13 @@ void Item::Impl::set_editable(const bool& v)
     }
 }
 
-class ListModel::Impl
+class ListModel::Impl : public detail::ItemHost
 {
     TOKOTACHI_IMPL(ListModel);
 
     explicit Impl(ListModel* object) : q(object) {}
+
+    void item_changed(Item* item) override;
 
     std::vector<Item*> get_items() const { return items_; }
     void renumber(std::size_t from);
@@ -187,7 +189,7 @@ Item* ListModel::insert_item(int index_value, const std::string& text_value)
 {
     const int n = static_cast<int>(d_->items_.size());
     const int at = index_value >= 0 && index_value <= n ? index_value : n;
-    Item* item = new Item(this, text_value);
+    Item* item = new Item(d_, text_value);
     d_->items_.insert(d_->items_.begin() + at, item);
     d_->renumber(static_cast<std::size_t>(at));
     notify_changed(items);
@@ -311,7 +313,7 @@ void ListModel::Impl::renumber(std::size_t from)
 
 ModelIndex ListModel::index_of(const Item* item) const
 {
-    if (!item || item->d_->host_ != static_cast<const detail::ItemHost*>(this))
+    if (!item || item->d_->host_ != static_cast<const detail::ItemHost*>(d_))
     {
         return ModelIndex();
     }
@@ -440,6 +442,6 @@ ModelIndex ListModel::locate(const ModelIndex& i) const
     return item ? index_of(item) : ModelIndex();
 }
 
-void ListModel::item_changed(Item* item) { notify_data_changed(make_index(item->d_->row_, item)); }
+void ListModel::Impl::item_changed(Item* item) { q->notify_data_changed(q->make_index(item->d_->row_, item)); }
 
 }  // namespace tokotachi

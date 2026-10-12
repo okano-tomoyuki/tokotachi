@@ -36,11 +36,11 @@ public:
     Property<float> indentation;
 
     /// 子を見せる・隠す。閉じた中に current があれば、閉じた項目へ移す。
-    void expand(const ModelIndex& index) { ItemView::expand(index); }
-    void collapse(const ModelIndex& index) { ItemView::collapse(index); }
-    bool is_expanded(const ModelIndex& index) const { return ItemView::is_expanded(index); }
-    void expand_all() { ItemView::expand_all(); }
-    void collapse_all() { ItemView::collapse_all(); }
+    void expand(const ModelIndex& index);
+    void collapse(const ModelIndex& index);
+    bool is_expanded(const ModelIndex& index) const;
+    void expand_all();
+    void collapse_all();
 
 private:
     class Impl;

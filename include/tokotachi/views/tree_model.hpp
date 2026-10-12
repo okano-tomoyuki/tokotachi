@@ -45,7 +45,7 @@ private:
 /// @endcode
 ///
 /// @ingroup views
-class TOKOTACHI_API TreeModel : public ItemModel, private detail::ItemHost
+class TOKOTACHI_API TreeModel : public ItemModel
 {
 public:
     explicit TreeModel(Object* owner = nullptr);
@@ -88,7 +88,6 @@ public:
 
 private:
     friend class TreeItem;
-    void item_changed(Item* item) override;
     class Impl;
     Impl* d_;
 };

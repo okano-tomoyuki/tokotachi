@@ -58,18 +58,17 @@ public:
     /// 左に行の番号(行の見出し)を出すか(既定 true)。
     Property<bool> row_header_visible;
 
-    bool is_cell_selected(int row, int column) const { return cell_selected(row, column); }
+    bool is_cell_selected(int row, int column) const;
     /// range のセルを選ぶ(add なら今の選択に加える。SINGLE では範囲の最初のセルだけ)。
-    void select_range(const CellRange& range, bool add = false) { select_cells(range, add); }
+    void select_range(const CellRange& range, bool add = false);
     /// 選んでいるセルの文字(行は改行、列はタブで区切る)。写す・貼るは、Ctrl+C・Ctrl+V と同じ。
-    std::string selected_text() const { return selected_cells_text(); }
-    void copy() { copy_cells(); }
-    void paste() { paste_cells(); }
+    std::string selected_text() const;
+    void copy();
+    void paste();
     /// 選んでいるセル(編集できるもの)を空にする。
-    void clear_selected_cells() { clear_cells(); }
+    void clear_selected_cells();
 
 protected:
-    void cells_changed(bool current_column_changed, bool ranges_changed) override;
 
 private:
     class Impl;

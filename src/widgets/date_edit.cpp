@@ -9,6 +9,7 @@
 #include <tokotachi/widgets/line_edit.hpp>
 #include <tokotachi/windows/popup.hpp>
 
+#include "text_input_impl.hpp"
 #include "../core/impl.hpp"
 #include "theme.hpp"
 
@@ -66,7 +67,7 @@ public:
 protected:
     void paint(Canvas& canvas) override
     {
-        paint_text(canvas);
+        detail::ImplAccess<TextInputBase>::of(this)->paint_text(canvas);
         Widget::paint(canvas);
     }
 

@@ -27,8 +27,6 @@ public:
     Property<NotifyHandler> on_submit;
 
 protected:
-    Rect text_area() const override;
-    bool submit() override;
     void paint(Canvas& canvas) override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;

@@ -18,6 +18,34 @@ class ItemView::Impl : public detail::WidgetHooks
 
     Impl(ItemView* object, bool tree, bool table) : q(object), tree_(tree), table_(table) {}
 
+    /// TreeView のための操作。
+    void expand(const ModelIndex& index);
+    void collapse(const ModelIndex& index);
+    bool is_expanded(const ModelIndex& index) const;
+    void expand_all();
+    void collapse_all();
+    float get_indentation() const;
+    void set_indentation(const float& v);
+    /// TableView のための操作(docs/adr/0050)。
+    SelectionBehavior get_selection_behavior() const;
+    void set_selection_behavior(const SelectionBehavior& v);
+    int get_current_column() const;
+    void set_current_column(const int& v);
+    std::vector<CellRange> get_selected_ranges() const;
+    bool cell_selected(int row, int column) const;
+    void select_cells(const CellRange& range, bool add);
+    bool get_grid_visible() const;
+    void set_grid_visible(const bool& v);
+    bool get_row_header_visible() const;
+    void set_row_header_visible(const bool& v);
+    /// 選んでいるセルの文字(行は改行、列はタブで区切る)。
+    std::string selected_cells_text() const;
+    void copy_cells();
+    void paste_cells();
+    void clear_cells();
+    /// current_column・選んでいるセルの範囲が変わった(TableView がプロパティの変化を知らせる)。
+    void cells_changed(bool current_column_changed, bool ranges_changed);
+
     // 内部のフック(docs/adr/0058)
     bool handles_tab_key() const override;
 

@@ -28,7 +28,7 @@ namespace tokotachi
 class TOKOTACHI_API ListView : public ItemView
 {
 public:
-    explicit ListView(Widget* parent = nullptr) : ItemView(parent, false) {}
+    explicit ListView(Widget* parent = nullptr);
 };
 
 }  // namespace tokotachi

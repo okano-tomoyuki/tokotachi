@@ -127,19 +127,19 @@ void Column::Impl::set_alignment(const Align& v)
 
 bool ItemView::Impl::handles_tab_key() const { return table_; }
 
-float ItemView::get_indentation() const { return d_->indentation_; }
+float ItemView::Impl::get_indentation() const { return indentation_; }
 
-SelectionBehavior ItemView::get_selection_behavior() const { return d_->behavior_; }
+SelectionBehavior ItemView::Impl::get_selection_behavior() const { return behavior_; }
 
-int ItemView::get_current_column() const { return d_->current_column_; }
+int ItemView::Impl::get_current_column() const { return current_column_; }
 
-std::vector<CellRange> ItemView::get_selected_ranges() const { return d_->ranges_; }
+std::vector<CellRange> ItemView::Impl::get_selected_ranges() const { return ranges_; }
 
-bool ItemView::get_grid_visible() const { return d_->grid_visible_; }
+bool ItemView::Impl::get_grid_visible() const { return grid_visible_; }
 
-bool ItemView::get_row_header_visible() const { return d_->row_header_visible_; }
+bool ItemView::Impl::get_row_header_visible() const { return row_header_visible_; }
 
-ItemView::ItemView(Widget* parent_widget, bool tree, bool table)
+ItemView::ItemView(Widget* parent_widget, const detail::InternalTag&, bool tree, bool table)
     : Widget(parent_widget),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ItemModel*, model),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<Column*>, columns),
@@ -723,7 +723,7 @@ void ItemView::select(const ModelIndex& index, bool selected)
             d_->move_to_cell(r, d_->current_column_, false, false);
             return;
         }
-        select_cells(whole, true);
+        d_->select_cells(whole, true);
         return;
     }
     std::set<ModelIndex> next = d_->selected_;
@@ -1203,47 +1203,47 @@ void ItemView::scroll_to(const ModelIndex& index)
 
 // ---- 木 ----
 
-void ItemView::expand(const ModelIndex& index)
+void ItemView::Impl::expand(const ModelIndex& index)
 {
-    if (!d_->model_ || !index.is_valid() || !index.id() || d_->expanded_.count(index.id()))
+    if (!model_ || !index.is_valid() || !index.id() || expanded_.count(index.id()))
     {
         return;
     }
-    d_->expanded_.insert(index.id());
-    d_->structure_changed();
+    expanded_.insert(index.id());
+    structure_changed();
 }
 
-void ItemView::collapse(const ModelIndex& index)
+void ItemView::Impl::collapse(const ModelIndex& index)
 {
-    if (!index.is_valid() || !d_->expanded_.erase(index.id()))
+    if (!index.is_valid() || !expanded_.erase(index.id()))
     {
         return;
     }
     // current が閉じた中に隠れたら、閉じた項目へ移す。
-    for (ModelIndex p = d_->model_ ? d_->model_->parent_of(d_->current_) : ModelIndex(); p.is_valid(); p = d_->model_->parent_of(p))
+    for (ModelIndex p = model_ ? model_->parent_of(current_) : ModelIndex(); p.is_valid(); p = model_->parent_of(p))
     {
         if (p == index)
         {
-            if (d_->selection_mode_ == SelectionMode::SINGLE)
+            if (selection_mode_ == SelectionMode::SINGLE)
             {
-                select(index);
+                q->select(index);
             }
             else
             {
-                d_->anchor_ = index;
-                d_->change_current(index);
+                anchor_ = index;
+                change_current(index);
             }
             break;
         }
     }
-    d_->structure_changed();
+    structure_changed();
 }
 
-bool ItemView::is_expanded(const ModelIndex& index) const { return index.id() && d_->expanded_.count(index.id()) != 0; }
+bool ItemView::Impl::is_expanded(const ModelIndex& index) const { return index.id() && expanded_.count(index.id()) != 0; }
 
-void ItemView::expand_all()
+void ItemView::Impl::expand_all()
 {
-    if (!d_->model_)
+    if (!model_)
     {
         return;
     }
@@ -1253,50 +1253,50 @@ void ItemView::expand_all()
     {
         const ModelIndex p = stack.back();
         stack.pop_back();
-        const int n = d_->model_->row_count(p);
+        const int n = model_->row_count(p);
         if (p.is_valid() && n > 0 && p.id())
         {
-            d_->expanded_.insert(p.id());
+            expanded_.insert(p.id());
         }
         for (int r = 0; r < n; ++r)
         {
-            stack.push_back(d_->model_->index(r, p));
+            stack.push_back(model_->index(r, p));
         }
     }
-    d_->structure_changed();
+    structure_changed();
 }
 
-void ItemView::collapse_all()
+void ItemView::Impl::collapse_all()
 {
-    d_->expanded_.clear();
+    expanded_.clear();
     // current が隠れたら、一番上の祖先へ移す。
-    if (d_->model_ && d_->current_.is_valid())
+    if (model_ && current_.is_valid())
     {
-        ModelIndex top = d_->current_;
-        while (d_->model_->parent_of(top).is_valid())
+        ModelIndex top = current_;
+        while (model_->parent_of(top).is_valid())
         {
-            top = d_->model_->parent_of(top);
+            top = model_->parent_of(top);
         }
-        if (top != d_->current_)
+        if (top != current_)
         {
-            if (d_->selection_mode_ == SelectionMode::SINGLE)
+            if (selection_mode_ == SelectionMode::SINGLE)
             {
-                select(top);
+                q->select(top);
             }
             else
             {
-                d_->anchor_ = top;
-                d_->change_current(top);
+                anchor_ = top;
+                change_current(top);
             }
         }
     }
-    d_->structure_changed();
+    structure_changed();
 }
 
-void ItemView::set_indentation(const float& v)
+void ItemView::Impl::set_indentation(const float& v)
 {
-    d_->indentation_ = std::max(8.0f, v);
-    invalidate();
+    indentation_ = std::max(8.0f, v);
+    q->invalidate();
 }
 
 void ItemView::Impl::toggle_expanded(int row)
@@ -1306,13 +1306,13 @@ void ItemView::Impl::toggle_expanded(int row)
     {
         return;
     }
-    if (q->is_expanded(r.index))
+    if (is_expanded(r.index))
     {
-        q->collapse(r.index);
+        collapse(r.index);
     }
     else
     {
-        q->expand(r.index);
+        expand(r.index);
     }
 }
 
@@ -1469,7 +1469,7 @@ void ItemView::Impl::paint_row(Canvas& canvas, int row, const Rect& view)
             continue;
         }
         // 表でセルを選ぶときは、セルごとに塗る
-        const bool selected = cells ? q->cell_selected(row, c) : row_selected;
+        const bool selected = cells ? cell_selected(row, c) : row_selected;
         if (cells && selected)
         {
             canvas.fill_rect(Rect(cx, y, cw, h), has_focus ? theme::selection() : theme::selection_inactive());
@@ -1483,7 +1483,7 @@ void ItemView::Impl::paint_row(Canvas& canvas, int row, const Rect& view)
             if (tree_ && info.has_children)
             {
                 const Rect a = arrow_rect(row);
-                paint_arrow(canvas, Rect(cx + a.x, y + a.y, a.width, a.height), q->is_expanded(index),
+                paint_arrow(canvas, Rect(cx + a.x, y + a.y, a.width, a.height), is_expanded(index),
                             selected && has_focus ? theme::on_selection() : enabled_now ? theme::text() : theme::text_disabled());
             }
             tx = cx + content_start(info.depth);
@@ -1957,7 +1957,7 @@ void ItemView::drop(DragEvent& e)
     if (e.accepted && d_->tree_ && parent.is_valid())
     {
         const ModelIndex now = d_->model_->locate(parent);
-        expand(now.is_valid() ? now : parent);
+        d_->expand(now.is_valid() ? now : parent);
     }
 }
 
@@ -2263,12 +2263,12 @@ void ItemView::key_down(KeyEvent& e)
         e.accepted = true;
         {
             const Impl::Row info = d_->row_at(cur);
-            const bool open = is_expanded(info.index);
+            const bool open = d_->is_expanded(info.index);
             if (e.key == Key::RIGHT)
             {
                 if (info.has_children && !open)
                 {
-                    expand(info.index);
+                    d_->expand(info.index);
                 }
                 else if (info.has_children)
                 {
@@ -2277,7 +2277,7 @@ void ItemView::key_down(KeyEvent& e)
             }
             else if (open)
             {
-                collapse(info.index);
+                d_->collapse(info.index);
             }
             else
             {

@@ -35,9 +35,6 @@ public:
     Property<bool> word_wrap;
 
 protected:
-    Rect text_area() const override;
-    float wrap_width() const override;
-    void scroll_changed() override;
     void arrange_children() override;
     void paint(Canvas& canvas) override;
     void mouse_wheel(WheelEvent& e) override;

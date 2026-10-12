@@ -21,15 +21,8 @@ class TreeModel;
 
 namespace detail
 {
-/// 項目を持つモデル(内部)。項目の値が変わったことを受け取る。
-class TOKOTACHI_API ItemHost
-{
-public:
-    virtual void item_changed(Item* item) = 0;
-
-protected:
-    ~ItemHost() {}
-};
+/// 項目を持つモデルの実装(内部)。
+class ItemHost;
 }  // namespace detail
 
 /// ListModel・TreeModel の 1 つの項目(docs/adr/0026)。モデルが作り、所有する。

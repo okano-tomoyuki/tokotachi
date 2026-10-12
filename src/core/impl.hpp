@@ -56,6 +56,17 @@ namespace tokotachi
 namespace detail
 {
 
+struct InternalTag
+{
+};
+
+// ライブラリの中だけで派生する基底(ItemView・TextInputBase)のコンストラクタに渡す印。
+inline const InternalTag& internal_tag()
+{
+    static const InternalTag tag = InternalTag();
+    return tag;
+}
+
 // 窓口の既定(of だけを持つ)。
 template <typename C>
 struct ImplAccess

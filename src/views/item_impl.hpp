@@ -10,6 +10,19 @@
 namespace tokotachi
 {
 
+namespace detail
+{
+
+/// 項目を持つモデルの実装(ListModel・TreeModel の実装のクラス)。項目の値が変わったことを受け取る。
+class ItemHost
+{
+public:
+    virtual ~ItemHost() {}
+    virtual void item_changed(Item* item) = 0;
+};
+
+}  // namespace detail
+
 class Item::Impl
 {
     TOKOTACHI_IMPL(Item);

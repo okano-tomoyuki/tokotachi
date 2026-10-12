@@ -21,7 +21,7 @@ namespace tokotachi
 /// @endcode
 ///
 /// @ingroup views
-class TOKOTACHI_API ListModel : public ItemModel, private detail::ItemHost
+class TOKOTACHI_API ListModel : public ItemModel
 {
 public:
     explicit ListModel(Object* owner = nullptr);
@@ -65,7 +65,6 @@ public:
     ModelIndex locate(const ModelIndex& index) const override;
 
 private:
-    void item_changed(Item* item) override;
     class Impl;
     Impl* d_;
 };

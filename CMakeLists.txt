@@ -124,6 +124,7 @@ add_library(tokotachi_objects OBJECT
     src/views/item_model.cpp
     src/views/item_view.cpp
     src/views/list_model.cpp
+    src/views/list_view.cpp
     src/views/table_view.cpp
     src/views/tree_model.cpp
     src/views/tree_view.cpp
