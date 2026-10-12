@@ -141,8 +141,8 @@ protected:
 
 private:
     friend class ItemView;
-
-    std::vector<ItemView*> views_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

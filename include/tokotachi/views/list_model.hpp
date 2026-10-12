@@ -65,11 +65,9 @@ public:
     ModelIndex locate(const ModelIndex& index) const override;
 
 private:
-    std::vector<Item*> get_items() const { return items_; }
     void item_changed(Item* item) override;
-    void renumber(std::size_t from);
-
-    std::vector<Item*> items_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

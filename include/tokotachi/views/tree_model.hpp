@@ -29,16 +29,10 @@ public:
 
 private:
     friend class TreeModel;
-
     TreeItem(TreeModel* model, TreeItem* parent, const std::string& text);
     ~TreeItem();
-
-    TreeItem* get_parent_item() const { return parent_; }
-    std::vector<TreeItem*> get_children() const { return children_; }
-
-    TreeModel* model_;
-    TreeItem* parent_;
-    std::vector<TreeItem*> children_;
+    class Impl;
+    Impl* d_;
 };
 
 /// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
@@ -94,16 +88,9 @@ public:
 
 private:
     friend class TreeItem;
-
-    std::vector<TreeItem*> get_items() const { return roots_; }
     void item_changed(Item* item) override;
-    TreeItem* insert(TreeItem* parent, int index, const std::string& text);
-    std::vector<TreeItem*>& siblings(TreeItem* parent) { return parent ? parent->children_ : roots_; }
-    static void renumber(std::vector<TreeItem*>& list, std::size_t from);
-    static void destroy(TreeItem* item);
-    void sort_list(std::vector<TreeItem*>& list, int column, SortOrder order);
-
-    std::vector<TreeItem*> roots_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -45,6 +45,7 @@ class TOKOTACHI_API TableView : public ItemView
 {
 public:
     explicit TableView(Widget* parent = nullptr);
+    ~TableView() override;
 
     /// セルを選ぶか行を選ぶか(既定 CELLS)。
     Property<SelectionBehavior> selection_behavior;
@@ -71,15 +72,8 @@ protected:
     void cells_changed(bool current_column_changed, bool ranges_changed) override;
 
 private:
-    SelectionBehavior get_selection_behavior() const { return ItemView::get_selection_behavior(); }
-    void set_selection_behavior(const SelectionBehavior& v) { ItemView::set_selection_behavior(v); }
-    int get_current_column() const { return ItemView::get_current_column(); }
-    void set_current_column(const int& v) { ItemView::set_current_column(v); }
-    std::vector<CellRange> get_selected_ranges() const { return ItemView::get_selected_ranges(); }
-    bool get_grid_visible() const { return ItemView::get_grid_visible(); }
-    void set_grid_visible(const bool& v) { ItemView::set_grid_visible(v); }
-    bool get_row_header_visible() const { return ItemView::get_row_header_visible(); }
-    void set_row_header_visible(const bool& v) { ItemView::set_row_header_visible(v); }
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

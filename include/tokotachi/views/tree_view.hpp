@@ -30,6 +30,7 @@ class TOKOTACHI_API TreeView : public ItemView
 {
 public:
     explicit TreeView(Widget* parent = nullptr);
+    ~TreeView() override;
 
     /// 1 段の字下げ(dp。既定 20。8 以上)。
     Property<float> indentation;
@@ -42,8 +43,8 @@ public:
     void collapse_all() { ItemView::collapse_all(); }
 
 private:
-    float get_indentation() const { return ItemView::get_indentation(); }
-    void set_indentation(const float& v) { ItemView::set_indentation(v); }
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -9,7 +9,9 @@
 #include <tokotachi/widgets/line_edit.hpp>
 #include <tokotachi/widgets/scroll_bar.hpp>
 
-#include "../core/property_impl.hpp"
+#include "column_impl.hpp"
+#include "item_view_impl.hpp"
+#include "../core/impl.hpp"
 #include "../widgets/theme.hpp"
 
 namespace tokotachi
@@ -94,15 +96,35 @@ CellRange::CellRange(int row_a, int column_a, int row_b, int column_b)
 
 // ---- TableView ----
 
+class TableView::Impl
+{
+    TOKOTACHI_IMPL(TableView);
+
+    explicit Impl(TableView* object) : q(object) {}
+
+    SelectionBehavior get_selection_behavior() const { return q->ItemView::get_selection_behavior(); }
+    void set_selection_behavior(const SelectionBehavior& v) { q->ItemView::set_selection_behavior(v); }
+    int get_current_column() const { return q->ItemView::get_current_column(); }
+    void set_current_column(const int& v) { q->ItemView::set_current_column(v); }
+    std::vector<CellRange> get_selected_ranges() const { return q->ItemView::get_selected_ranges(); }
+    bool get_grid_visible() const { return q->ItemView::get_grid_visible(); }
+    void set_grid_visible(const bool& v) { q->ItemView::set_grid_visible(v); }
+    bool get_row_header_visible() const { return q->ItemView::get_row_header_visible(); }
+    void set_row_header_visible(const bool& v) { q->ItemView::set_row_header_visible(v); }
+};
+
 TableView::TableView(Widget* parent_widget)
     : ItemView(parent_widget, false, true),
-      TOKOTACHI_PROPERTY_GETTER(TableView, SelectionBehavior, selection_behavior),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(TableView, int, current_column),
-      TOKOTACHI_READONLY_PROPERTY(TableView, std::vector<CellRange>, selected_ranges),
-      TOKOTACHI_PROPERTY_GETTER(TableView, bool, grid_visible),
-      TOKOTACHI_PROPERTY_GETTER(TableView, bool, row_header_visible)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, SelectionBehavior, selection_behavior),
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, int, current_column),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<CellRange>, selected_ranges),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, grid_visible),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, row_header_visible),
+      d_(new Impl(this))
 {
 }
+
+TableView::~TableView() { delete d_; }
 
 void TableView::cells_changed(bool current_column_changed, bool ranges_changed)
 {
@@ -122,41 +144,41 @@ void ItemView::cells_changed(bool, bool) {}
 
 void ItemView::set_selection_behavior(const SelectionBehavior& v)
 {
-    if (v == behavior_)
+    if (v == d_->behavior_)
     {
         return;
     }
-    behavior_ = v;
+    d_->behavior_ = v;
     // 選び方が変わったら、current のセル(行)だけを選び直す
-    const bool had_ranges = !ranges_.empty();
-    ranges_.clear();
+    const bool had_ranges = !d_->ranges_.empty();
+    d_->ranges_.clear();
     if (had_ranges)
     {
         cells_changed(false, true);
     }
-    change_selection(std::set<ModelIndex>());
-    const int r = row_of(current_);
+    d_->change_selection(std::set<ModelIndex>());
+    const int r = d_->row_of(d_->current_);
     if (r >= 0)
     {
-        move_to_cell(r, current_column_, false, false);
+        d_->move_to_cell(r, d_->current_column_, false, false);
     }
     invalidate();
 }
 
 void ItemView::set_current_column(const int& v)
 {
-    const int r = row_of(current_);
+    const int r = d_->row_of(d_->current_);
     if (r >= 0)
     {
-        move_to_cell(r, v, false, false);
+        d_->move_to_cell(r, v, false, false);
     }
     else
     {
-        change_current_column(v);
+        d_->change_current_column(v);
     }
 }
 
-void ItemView::change_current_column(int column)
+void ItemView::Impl::change_current_column(int column)
 {
     const int c = std::max(0, std::min(column, column_count() - 1));
     if (c == current_column_)
@@ -164,19 +186,19 @@ void ItemView::change_current_column(int column)
         return;
     }
     current_column_ = c;
-    invalidate();
-    cells_changed(true, false);
+    q->invalidate();
+    q->cells_changed(true, false);
 }
 
 bool ItemView::cell_selected(int row, int column) const
 {
-    if (behavior_ == SelectionBehavior::ROWS)
+    if (d_->behavior_ == SelectionBehavior::ROWS)
     {
-        return row >= 0 && row < row_total() && selected_.count(row_at(row).index) != 0;
+        return row >= 0 && row < d_->row_total() && d_->selected_.count(d_->row_at(row).index) != 0;
     }
-    for (std::size_t k = 0; k < ranges_.size(); ++k)
+    for (std::size_t k = 0; k < d_->ranges_.size(); ++k)
     {
-        if (ranges_[k].contains(row, column))
+        if (d_->ranges_[k].contains(row, column))
         {
             return true;
         }
@@ -184,21 +206,21 @@ bool ItemView::cell_selected(int row, int column) const
     return false;
 }
 
-void ItemView::set_ranges(const std::vector<CellRange>& next)
+void ItemView::Impl::set_ranges(const std::vector<CellRange>& next)
 {
     if (next == ranges_)
     {
         return;
     }
     ranges_ = next;
-    invalidate();
-    notify_changed(selection);
-    cells_changed(false, true);
-    Object* self = this;
+    q->invalidate();
+    q->notify_changed(q->selection);
+    q->cells_changed(false, true);
+    Object* self = q;
     detail::fire(on_selection_change_, self);
 }
 
-void ItemView::reset_ranges()
+void ItemView::Impl::reset_ranges()
 {
     // 行の数・並びが変わった: 行の番号の範囲は意味を失うので、current のセルだけにする(知らせは呼び出し元が出す)
     ranges_.clear();
@@ -211,8 +233,8 @@ void ItemView::reset_ranges()
 
 void ItemView::select_cells(const CellRange& range, bool add)
 {
-    const int n = row_total(), m = column_count();
-    if (!table_ || range.is_empty() || n == 0 || selection_mode_ == SelectionMode::NONE)
+    const int n = d_->row_total(), m = d_->column_count();
+    if (!d_->table_ || range.is_empty() || n == 0 || d_->selection_mode_ == SelectionMode::NONE)
     {
         return;
     }
@@ -222,35 +244,35 @@ void ItemView::select_cells(const CellRange& range, bool add)
     {
         return;
     }
-    if (behavior_ == SelectionBehavior::ROWS || selection_mode_ == SelectionMode::SINGLE)
+    if (d_->behavior_ == SelectionBehavior::ROWS || d_->selection_mode_ == SelectionMode::SINGLE)
     {
-        move_to_cell(r.first_row, r.first_column, false, false);
-        if (behavior_ == SelectionBehavior::ROWS && selection_mode_ == SelectionMode::MULTI && r.last_row > r.first_row)
+        d_->move_to_cell(r.first_row, r.first_column, false, false);
+        if (d_->behavior_ == SelectionBehavior::ROWS && d_->selection_mode_ == SelectionMode::MULTI && r.last_row > r.first_row)
         {
-            move_to_cell(r.last_row, r.first_column, true, false);
+            d_->move_to_cell(r.last_row, r.first_column, true, false);
         }
         return;
     }
-    std::vector<CellRange> next = add ? ranges_ : std::vector<CellRange>();
+    std::vector<CellRange> next = add ? d_->ranges_ : std::vector<CellRange>();
     next.push_back(r);
-    if (!add || !current_.is_valid())
+    if (!add || !d_->current_.is_valid())
     {
-        anchor_ = row_at(r.first_row).index;
-        anchor_column_ = r.first_column;
-        change_current(anchor_);
-        change_current_column(r.first_column);
+        d_->anchor_ = d_->row_at(r.first_row).index;
+        d_->anchor_column_ = r.first_column;
+        d_->change_current(d_->anchor_);
+        d_->change_current_column(r.first_column);
     }
-    set_ranges(next);
+    d_->set_ranges(next);
 }
 
-void ItemView::reveal_column(int column)
+void ItemView::Impl::reveal_column(int column)
 {
     if (columns_.empty() || column < 0 || column >= column_count())
     {
         return;
     }
     const float left = column_x(column);
-    const float right = left + columns_[column]->width_;
+    const float right = left + columns_[column]->d_->width_;
     const float scroll = horizontal_->value;
     const float view_w = viewport().width;
     if (left < scroll)
@@ -263,7 +285,7 @@ void ItemView::reveal_column(int column)
     }
 }
 
-void ItemView::move_to_cell(int row, int column, bool shift, bool add)
+void ItemView::Impl::move_to_cell(int row, int column, bool shift, bool add)
 {
     if (!model_ || row < 0 || row >= row_total())
     {
@@ -337,7 +359,7 @@ void ItemView::move_to_cell(int row, int column, bool shift, bool add)
 
 // ---- 寸法と描画 ----
 
-float ItemView::row_header_width() const
+float ItemView::Impl::row_header_width() const
 {
     if (!table_ || !row_header_visible_)
     {
@@ -349,24 +371,24 @@ float ItemView::row_header_width() const
     {
         ++digits;
     }
-    const float w = TextLayout(std::string(static_cast<std::size_t>(digits), '0'), Font(), display_scale).width();
+    const float w = TextLayout(std::string(static_cast<std::size_t>(digits), '0'), Font(), q->display_scale).width();
     return std::max(MIN_ROW_HEADER, std::ceil(w) + HEADER_PADDING * 2);
 }
 
 void ItemView::set_grid_visible(const bool& v)
 {
-    grid_visible_ = v;
+    d_->grid_visible_ = v;
     invalidate();
 }
 
 void ItemView::set_row_header_visible(const bool& v)
 {
-    row_header_visible_ = v;
+    d_->row_header_visible_ = v;
     request_layout();
-    column_changed();
+    d_->column_changed();
 }
 
-void ItemView::paint_grid(Canvas& canvas, const Rect& view)
+void ItemView::Impl::paint_grid(Canvas& canvas, const Rect& view)
 {
     if (!grid_visible_ || !model_)
     {
@@ -395,7 +417,7 @@ void ItemView::paint_grid(Canvas& canvas, const Rect& view)
     }
 }
 
-void ItemView::paint_row_header(Canvas& canvas, const Rect& view)
+void ItemView::Impl::paint_row_header(Canvas& canvas, const Rect& view)
 {
     const float rh = row_header_width();
     const Rect area(BORDER, view.y, rh, view.height);
@@ -408,7 +430,7 @@ void ItemView::paint_row_header(Canvas& canvas, const Rect& view)
         const float scroll = vertical_->value;
         const int first = std::max(0, static_cast<int>(std::floor(scroll / h)));
         const int last = std::min(row_total() - 1, static_cast<int>(std::floor((scroll + view.height) / h)));
-        const bool enabled_now = effectively_enabled;
+        const bool enabled_now = q->effectively_enabled;
         const int current_row = row_of(current_);
         for (int r = first; r <= last; ++r)
         {
@@ -417,7 +439,7 @@ void ItemView::paint_row_header(Canvas& canvas, const Rect& view)
             bool any = false;
             for (int c = 0; c < column_count() && !any; ++c)
             {
-                any = cell_selected(r, c);
+                any = q->cell_selected(r, c);
             }
             if (any)
             {
@@ -441,7 +463,7 @@ void ItemView::paint_row_header(Canvas& canvas, const Rect& view)
 
 // ---- 入力 ----
 
-bool ItemView::cell_at_point(const Point& p, int& row, int& column) const
+bool ItemView::Impl::cell_at_point(const Point& p, int& row, int& column) const
 {
     const Rect view = viewport();
     if (!model_ || p.y < view.y || p.y >= view.bottom() || p.x < BORDER || p.x >= view.right())
@@ -462,13 +484,13 @@ bool ItemView::cell_at_point(const Point& p, int& row, int& column) const
     return column >= 0;
 }
 
-void ItemView::table_mouse_down(MouseEvent& e)
+void ItemView::Impl::table_mouse_down(MouseEvent& e)
 {
     const Rect view = viewport();
     // 左上の隅: すべてを選ぶ
     if (header_height() > 0 && e.pos.x < view.x && e.pos.y < view.y)
     {
-        select_all();
+        q->select_all();
         return;
     }
     int row = -1, column = -1;
@@ -476,7 +498,7 @@ void ItemView::table_mouse_down(MouseEvent& e)
     {
         if (view.contains(e.pos) && !(e.modifiers & (MODIFIER_CONTROL | MODIFIER_SHIFT)))
         {
-            clear_selection();
+            q->clear_selection();
         }
         return;
     }
@@ -540,8 +562,8 @@ void ItemView::table_mouse_down(MouseEvent& e)
         // ダブルクリック: 編集できるセルなら今の文字の続きから編集し、できなければ on_activate
         if (model_->editable(index, column))
         {
-            edit(index, column);
-            if (is_editing())
+            q->edit(index, column);
+            if (q->is_editing())
             {
                 editor_->cursor_position = editor_->text.get().size();
             }
@@ -556,7 +578,7 @@ void ItemView::table_mouse_down(MouseEvent& e)
     selecting_ = 1;
 }
 
-void ItemView::table_mouse_move(MouseEvent& e)
+void ItemView::Impl::table_mouse_move(MouseEvent& e)
 {
     // 範囲を選んでいる: ポインタの下のセルまで広げる(ビューの外なら端のセル。少しずつスクロールする)
     const Rect view = viewport();
@@ -605,14 +627,14 @@ void ItemView::table_mouse_move(MouseEvent& e)
     move_to_cell(row, selecting_ == 2 ? current_column_ : column, true, false);
 }
 
-void ItemView::start_typing_edit()
+void ItemView::Impl::start_typing_edit()
 {
     if (!model_ || !current_.is_valid() || !model_->editable(current_, current_column_) || !model_->enabled(current_))
     {
         return;
     }
-    edit(current_, current_column_);
-    if (is_editing())
+    q->edit(current_, current_column_);
+    if (q->is_editing())
     {
         editor_->text = "";  // 上書き: 打った文字から始める
     }
@@ -620,43 +642,43 @@ void ItemView::start_typing_edit()
 
 std::string ItemView::selected_cells_text() const
 {
-    if (!model_)
+    if (!d_->model_)
     {
         return std::string();
     }
     std::string out;
-    if (behavior_ == SelectionBehavior::ROWS)
+    if (d_->behavior_ == SelectionBehavior::ROWS)
     {
         // 選んでいる行のすべての列
-        const std::vector<ModelIndex> rows = get_selection();
+        const std::vector<ModelIndex> rows = d_->get_selection();
         for (std::size_t k = 0; k < rows.size(); ++k)
         {
-            for (int c = 0; c < column_count(); ++c)
+            for (int c = 0; c < d_->column_count(); ++c)
             {
-                out += (c == 0 ? "" : "\t") + flatten(model_->text(rows[k], c));
+                out += (c == 0 ? "" : "\t") + flatten(d_->model_->text(rows[k], c));
             }
             out += k + 1 < rows.size() ? "\n" : "";
         }
         return out;
     }
-    if (ranges_.empty())
+    if (d_->ranges_.empty())
     {
         return std::string();
     }
     // 範囲すべてを囲む矩形(選んでいないセルは空)
-    CellRange box = ranges_[0];
-    for (std::size_t k = 1; k < ranges_.size(); ++k)
+    CellRange box = d_->ranges_[0];
+    for (std::size_t k = 1; k < d_->ranges_.size(); ++k)
     {
-        box = CellRange(std::min(box.first_row, ranges_[k].first_row), std::min(box.first_column, ranges_[k].first_column),
-                        std::max(box.last_row, ranges_[k].last_row), std::max(box.last_column, ranges_[k].last_column));
+        box = CellRange(std::min(box.first_row, d_->ranges_[k].first_row), std::min(box.first_column, d_->ranges_[k].first_column),
+                        std::max(box.last_row, d_->ranges_[k].last_row), std::max(box.last_column, d_->ranges_[k].last_column));
     }
-    const int n = row_total();
+    const int n = d_->row_total();
     for (int r = box.first_row; r <= box.last_row && r < n; ++r)
     {
-        const ModelIndex index = row_at(r).index;
+        const ModelIndex index = d_->row_at(r).index;
         for (int c = box.first_column; c <= box.last_column; ++c)
         {
-            out += (c == box.first_column ? "" : "\t") + (cell_selected(r, c) ? flatten(model_->text(index, c)) : std::string());
+            out += (c == box.first_column ? "" : "\t") + (cell_selected(r, c) ? flatten(d_->model_->text(index, c)) : std::string());
         }
         out += r < box.last_row ? "\n" : "";
     }
@@ -666,7 +688,7 @@ std::string ItemView::selected_cells_text() const
 void ItemView::copy_cells()
 {
     const std::string text = selected_cells_text();
-    if (!text.empty() || !ranges_.empty())
+    if (!text.empty() || !d_->ranges_.empty())
     {
         clipboard::set_text(text);
     }
@@ -674,19 +696,19 @@ void ItemView::copy_cells()
 
 void ItemView::clear_cells()
 {
-    if (!model_)
+    if (!d_->model_)
     {
         return;
     }
-    const int n = row_total();
+    const int n = d_->row_total();
     for (int r = 0; r < n; ++r)
     {
-        const ModelIndex index = row_at(r).index;
-        for (int c = 0; c < column_count(); ++c)
+        const ModelIndex index = d_->row_at(r).index;
+        for (int c = 0; c < d_->column_count(); ++c)
         {
-            if (cell_selected(r, c) && model_->enabled(index) && model_->editable(index, c) && !model_->text(index, c).empty())
+            if (cell_selected(r, c) && d_->model_->enabled(index) && d_->model_->editable(index, c) && !d_->model_->text(index, c).empty())
             {
-                model_->set_text(index, c, std::string());
+                d_->model_->set_text(index, c, std::string());
             }
         }
     }
@@ -694,8 +716,8 @@ void ItemView::clear_cells()
 
 void ItemView::paste_cells()
 {
-    const int start_row = row_of(current_);
-    if (!model_ || start_row < 0 || !clipboard::has_text())
+    const int start_row = d_->row_of(d_->current_);
+    if (!d_->model_ || start_row < 0 || !clipboard::has_text())
     {
         return;
     }
@@ -704,13 +726,13 @@ void ItemView::paste_cells()
     {
         return;
     }
-    const int n = row_total(), m = column_count();
+    const int n = d_->row_total(), m = d_->column_count();
     const auto put = [&](int r, int c, const std::string& value)
     {
-        const ModelIndex index = row_at(r).index;
-        if (model_->enabled(index) && model_->editable(index, c) && model_->text(index, c) != value)
+        const ModelIndex index = d_->row_at(r).index;
+        if (d_->model_->enabled(index) && d_->model_->editable(index, c) && d_->model_->text(index, c) != value)
         {
-            model_->set_text(index, c, value);
+            d_->model_->set_text(index, c, value);
         }
     };
     // 1 つの値: 選んでいるすべてのセルへ(何も選んでいなければ current のセル)
@@ -730,16 +752,16 @@ void ItemView::paste_cells()
         }
         if (!any)
         {
-            put(start_row, current_column_, table[0][0]);
+            put(start_row, d_->current_column_, table[0][0]);
         }
         return;
     }
     // 表: current のセル(範囲を選んでいれば、その左上)から貼り、貼った範囲を選ぶ
-    int top = start_row, left = current_column_;
-    if (behavior_ == SelectionBehavior::CELLS && !ranges_.empty())
+    int top = start_row, left = d_->current_column_;
+    if (d_->behavior_ == SelectionBehavior::CELLS && !d_->ranges_.empty())
     {
-        top = ranges_.back().first_row;
-        left = ranges_.back().first_column;
+        top = d_->ranges_.back().first_row;
+        left = d_->ranges_.back().first_column;
     }
     int bottom = top, right = left;
     for (std::size_t i = 0; i < table.size() && top + static_cast<int>(i) < n; ++i)
@@ -753,13 +775,13 @@ void ItemView::paste_cells()
             right = std::max(right, c);
         }
     }
-    if (behavior_ == SelectionBehavior::CELLS && selection_mode_ == SelectionMode::MULTI)
+    if (d_->behavior_ == SelectionBehavior::CELLS && d_->selection_mode_ == SelectionMode::MULTI)
     {
         select_cells(CellRange(top, left, bottom, right), false);
     }
 }
 
-void ItemView::table_key_down(KeyEvent& e)
+void ItemView::Impl::table_key_down(KeyEvent& e)
 {
     const int n = row_total(), m = column_count();
     const int cur = row_of(current_);
@@ -778,20 +800,20 @@ void ItemView::table_key_down(KeyEvent& e)
         {
         case Key::C:
             e.accepted = true;
-            copy_cells();
+            q->copy_cells();
             return;
         case Key::X:
             e.accepted = true;
-            copy_cells();
-            clear_cells();
+            q->copy_cells();
+            q->clear_cells();
             return;
         case Key::V:
             e.accepted = true;
-            paste_cells();
+            q->paste_cells();
             return;
         case Key::A:
             e.accepted = true;
-            select_all();
+            q->select_all();
             return;
         default:
             break;
@@ -804,15 +826,15 @@ void ItemView::table_key_down(KeyEvent& e)
         case Key::F2:
             // 今の文字の続きから編集する
             e.accepted = true;
-            edit(current_, cc);
-            if (is_editing())
+            q->edit(current_, cc);
+            if (q->is_editing())
             {
                 editor_->cursor_position = editor_->text.get().size();
             }
             return;
         case Key::DEL:
             e.accepted = true;
-            clear_cells();
+            q->clear_cells();
             return;
         case Key::BACKSPACE:
             // 空にして編集を始める
