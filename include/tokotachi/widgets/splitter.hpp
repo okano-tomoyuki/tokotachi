@@ -29,22 +29,10 @@ public:
 
 private:
     friend class Splitter;
-
     SplitterPane(Splitter* splitter, Widget* widget, int stretch);
     ~SplitterPane();
-
-    void set_stretch(const int& v);
-    void set_collapsible(const bool& v);
-    bool get_collapsed() const { return collapsed_; }
-    void set_collapsed(const bool& v);
-    Widget* get_widget() const { return widget_; }
-
-    Splitter* splitter_;
-    Widget* widget_;
-    int stretch_;
-    bool collapsible_;
-    float size_;      ///< 並ぶ向きの大きさ(dp。たたんでいる間は使わない)。負ならまだ決めていない
-    bool collapsed_;  ///< たたんでいる(大きさ 0 として扱い、部品を隠す)
+    class Impl;
+    Impl* d_;
 };
 
 /// 分割ウィンドウ: 区画を横(または縦)に並べ、間の境目をドラッグして大きさを変える(docs/adr/0031)。
@@ -104,39 +92,8 @@ protected:
 
 private:
     friend class SplitterPane;
-
-    Orientation get_orientation() const { return orientation_; }
-    void set_orientation(const Orientation& v);
-    std::vector<SplitterPane*> get_panes() const { return panes_; }
-    std::vector<float> get_sizes() const;
-    void set_sizes(const std::vector<float>& v);
-
-    /// 並ぶ向きの長さ・座標。
-    float along(const Size& s) const { return orientation_ == Orientation::HORIZONTAL ? s.width : s.height; }
-    float along(const Point& p) const { return orientation_ == Orientation::HORIZONTAL ? p.x : p.y; }
-    float minimum_of(const SplitterPane* pane) const;
-    /// 部品を隠していない区画(並べる・境目を出すもの)。境目の番号はこの並びの番号。
-    std::vector<SplitterPane*> shown_panes() const;
-    /// 区画の大きさの合計を available に合わせる(初めてなら望む大きさから決める)。
-    void fit(float available);
-    /// 位置 p にある境目(i 番目の区画の後ろ。無ければ -1)。
-    int handle_at(const Point& p) const;
-    float handle_position(int i) const;
-    /// i 番目の境目を position(並ぶ向きの位置)へ動かす。利用者の操作なので on_change を呼ぶ。
-    void drag_to(int i, float position);
-    /// i 番目の境目のダブルクリック(隣のたたんだ区画を戻す・どちらかをたたむ)。
-    void toggle_handle(int i);
-    /// 区画をたたむ・戻す(その分は隣の区画が受け持つ)。変えたら true。
-    bool collapse_pane(SplitterPane* pane, bool collapse);
-
-    Orientation orientation_;
-    std::vector<SplitterPane*> panes_;
-    NotifyHandler on_change_;
-    int hover_handle_;
-    int drag_handle_;
-    float drag_offset_;  ///< 押した位置と境目の始まりの差
-    int key_handle_;     ///< キーで動かす境目(境目を押してフォーカスを得たとき。無ければ -1)
-    bool destroying_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

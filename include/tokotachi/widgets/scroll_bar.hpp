@@ -26,6 +26,7 @@ class TOKOTACHI_API ScrollBar : public Widget
 {
 public:
     explicit ScrollBar(Widget* parent = nullptr, Orientation orientation = Orientation::VERTICAL);
+    ~ScrollBar() override;
 
     Property<Orientation> orientation;
     /// 位置(0 から maximum。範囲の外の値は丸める)。
@@ -55,32 +56,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    Orientation get_orientation() const { return orientation_; }
-    void set_orientation(const Orientation& v);
-    float get_value() const { return value_; }
-    void set_value(const float& v);
-    float get_maximum() const { return maximum_; }
-    void set_maximum(const float& v);
-    float get_page_step() const { return page_step_; }
-    void set_page_step(const float& v);
-    float get_single_step() const { return single_step_; }
-    void set_single_step(const float& v);
-
-    /// 溝の長さ・つまみの位置と長さ(並ぶ向き、dp)。
-    float track_length() const;
-    void thumb(float& pos, float& len) const;
-    /// 並ぶ向きの座標。
-    float along(const Point& p) const;
-
-    Orientation orientation_;
-    float value_;
-    float maximum_;
-    float page_step_;
-    float single_step_;
-    NotifyHandler on_change_;
-    bool hovered_;
-    bool dragging_;
-    float drag_offset_;  ///< つまみの始めから、押した位置まで
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

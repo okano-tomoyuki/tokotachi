@@ -4,16 +4,28 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "theme.hpp"
 
 namespace tokotachi
 {
 
+class LineEdit::Impl
+{
+    TOKOTACHI_IMPL(LineEdit);
+
+    explicit Impl(LineEdit* object) : q(object) {}
+
+    NotifyHandler on_submit_;
+};
+
 LineEdit::LineEdit(Widget* parent_widget, const std::string& initial_text)
-    : TextInputBase(parent_widget, initial_text, false), TOKOTACHI_HANDLER_PROPERTY(LineEdit, NotifyHandler, on_submit)
+    : TextInputBase(parent_widget, initial_text, false), TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_submit),
+      d_(new Impl(this))
 {
 }
+
+LineEdit::~LineEdit() { delete d_; }
 
 Rect LineEdit::text_area() const
 {
@@ -23,12 +35,12 @@ Rect LineEdit::text_area() const
 
 bool LineEdit::submit()
 {
-    if (!on_submit_)
+    if (!d_->on_submit_)
     {
         return false;
     }
     Object* self = this;
-    detail::fire(on_submit_, self);
+    detail::fire(d_->on_submit_, self);
     return true;
 }
 

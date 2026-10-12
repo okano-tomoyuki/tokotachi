@@ -28,19 +28,10 @@ public:
 
 private:
     friend class TabWidget;
-
     Tab(TabWidget* tab_widget, Widget* page, const std::string& title);
     ~Tab();
-
-    void set_title(const std::string& v);
-    void set_enabled(const bool& v);
-    Widget* get_page() const { return page_; }
-
-    TabWidget* tab_widget_;
-    Widget* page_;
-    std::string title_;
-    bool enabled_;
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 /// タブ: 上に並べた見出しで、中身(ページ)を切り替える(docs/adr/0025)。
@@ -102,40 +93,8 @@ protected:
 
 private:
     friend class Tab;
-
-    std::vector<Tab*> get_tabs() const { return tabs_; }
-    int get_current_index() const { return current_; }
-    void set_current_index(const int& v);
-    Tab* get_current_tab() const { return current_ >= 0 ? tabs_[current_] : nullptr; }
-
-    /// 番号 i のタブを除く(ページの親は変えない)。
-    void erase_tab(int i);
-    /// 見出しが変わった・タブの有効が変わった。
-    void tab_changed();
-    /// 選ぶタブを変え、ページの表示を切り替え、知らせる。
-    void select(int i);
-    /// 有効なタブを from から step の向きに探す(見つからなければ -1)。
-    int next_enabled(int from, int step) const;
-
-    /// 見出しの並びの高さ・各見出しの幅(dp)。
-    float bar_height() const;
-    float tab_width(const Tab* tab) const;
-    const TextLayout& title_layout(const Tab* tab) const;
-    float total_width() const;
-    /// 見出しを並べられる幅(はみ出すときは ◀▶ の分を除く)。
-    float visible_width() const;
-    bool overflowing() const;
-    void scroll_to(float x);
-    void ensure_visible(int i);
-    /// 位置 p にある見出しの番号(無ければ -1)。◀▶ の上なら -2・-3。
-    int hit(const Point& p) const;
-
-    std::vector<Tab*> tabs_;
-    int current_;
-    NotifyHandler on_change_;
-    float scroll_;  ///< 見出しの並びの横のスクロール(dp)
-    int hover_;     ///< ポインタが乗っている見出し(-1 なら無し)
-    bool destroying_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

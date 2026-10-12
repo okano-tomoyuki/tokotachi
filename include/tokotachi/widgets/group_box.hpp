@@ -29,6 +29,7 @@ class TOKOTACHI_API GroupBox : public Widget
 {
 public:
     explicit GroupBox(Widget* parent = nullptr, const std::string& title = std::string());
+    ~GroupBox() override;
 
     /// 見出し(空なら見出しの無い枠)。
     Property<std::string> title;
@@ -45,17 +46,8 @@ protected:
     void mnemonic_activated() override;
 
 private:
-    void set_title(const std::string& v);
-    Rect get_content_rect() const;
-    const TextLayout& title_layout() const;
-    /// 枠・見出しと余白の大きさ(内側の部品の大きさに足す)。
-    Size extra() const;
-
-    std::string title_;
-    std::string display_;          ///< title_ から & を除いた、表示する文字
-    std::size_t mnemonic_offset_;  ///< display_ の中のニーモニックの文字の位置(無ければ npos)
-    Key mnemonic_;
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

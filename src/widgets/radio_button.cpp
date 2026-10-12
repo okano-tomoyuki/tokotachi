@@ -2,25 +2,45 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "theme.hpp"
 #include "toggle_painter.hpp"
 
 namespace tokotachi
 {
 
+class RadioButton::Impl
+{
+    TOKOTACHI_IMPL(RadioButton);
+
+    explicit Impl(RadioButton* object) : q(object) {}
+
+    void set_value(const int& v);
+    void set_group_value(const int& v);
+    bool get_checked() const { return value_ == group_value_; }
+    /// value_・group_value_ を変えた後に、変わったプロパティを知らせ、選択が変わっていれば on_change を呼ぶ。
+    void finish(bool was_checked, const void* changed_property);
+
+    int value_;
+    int group_value_;
+    NotifyHandler on_change_;
+};
+
 RadioButton::RadioButton(Widget* parent_widget, const std::string& initial_text, int initial_value)
     : ButtonBase(parent_widget, initial_text),
-      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(RadioButton, int, value),
-      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(RadioButton, int, group_value),
-      TOKOTACHI_READONLY_PROPERTY(RadioButton, bool, checked),
-      TOKOTACHI_HANDLER_PROPERTY(RadioButton, NotifyHandler, on_change),
-      value_(initial_value),
-      group_value_(-1)
+      TOKOTACHI_IMPL_PROPERTY_MEMBER_SELF_NOTIFY(Impl, int, value),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER_SELF_NOTIFY(Impl, int, group_value),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, checked),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      d_(new Impl(this))
 {
+    d_->value_ = initial_value;
+    d_->group_value_ = -1;
 }
 
-void RadioButton::set_value(const int& v)
+RadioButton::~RadioButton() { delete d_; }
+
+void RadioButton::Impl::set_value(const int& v)
 {
     if (v == value_)
     {
@@ -28,10 +48,10 @@ void RadioButton::set_value(const int& v)
     }
     const bool was_checked = get_checked();
     value_ = v;
-    finish(was_checked, &value);
+    finish(was_checked, &q->value);
 }
 
-void RadioButton::set_group_value(const int& v)
+void RadioButton::Impl::set_group_value(const int& v)
 {
     if (v == group_value_)
     {
@@ -39,33 +59,33 @@ void RadioButton::set_group_value(const int& v)
     }
     const bool was_checked = get_checked();
     group_value_ = v;
-    finish(was_checked, &group_value);
+    finish(was_checked, &q->group_value);
 }
 
-void RadioButton::finish(bool was_checked, const void* changed_property)
+void RadioButton::Impl::finish(bool was_checked, const void* changed_property)
 {
     // 結びつけた相手へ伝えてから、ハンドラを呼ぶ。
-    if (changed_property == &value)
+    if (changed_property == &q->value)
     {
-        notify_changed(value);
+        q->notify_changed(q->value);
     }
     else
     {
-        notify_changed(group_value);
+        q->notify_changed(q->group_value);
     }
     if (was_checked == get_checked())
     {
         return;
     }
-    invalidate();
-    notify_changed(checked);
-    Object* self = this;
+    q->invalidate();
+    q->notify_changed(q->checked);
+    Object* self = q;
     detail::fire(on_change_, self);
 }
 
 void RadioButton::click()
 {
-    set_group_value(value_);
+    d_->set_group_value(d_->value_);
     ButtonBase::click();
 }
 
@@ -80,7 +100,7 @@ void RadioButton::paint(Canvas& canvas)
     const float radius = box.width / 2;
     Path outer;
     outer.add_ellipse(c, radius, radius);
-    if (get_checked())
+    if (d_->get_checked())
     {
         canvas.fill_path(outer, enabled_now ? theme::accent() : theme::accent_disabled());
         Path dot;

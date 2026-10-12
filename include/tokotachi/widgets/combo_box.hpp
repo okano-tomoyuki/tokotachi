@@ -40,6 +40,7 @@ class TOKOTACHI_API ComboBox : public Widget
 {
 public:
     explicit ComboBox(Widget* parent = nullptr);
+    ~ComboBox() override;
 
     Property<std::vector<std::string> > items;
     /// 選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。
@@ -69,25 +70,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    std::vector<std::string> get_items() const { return items_; }
-    void set_items(const std::vector<std::string>& v);
-    int get_current_index() const { return current_index_; }
-    void set_current_index(const int& v);
-    std::string get_current_text() const;
-    void set_placeholder_text(const std::string& v);
-    void set_font(const Font& v);
-    const TextLayout& text_layout() const;
-
-    std::vector<std::string> items_;
-    int current_index_;
-    std::string placeholder_text_;
-    Font font_;
-    NotifyHandler on_change_;
-    bool hovered_;
-    Popup* popup_;
-    ScrollArea* scroll_;
-    detail::PopupList* list_;
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

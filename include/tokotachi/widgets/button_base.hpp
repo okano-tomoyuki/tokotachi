@@ -20,6 +20,7 @@ class TOKOTACHI_API ButtonBase : public Widget
 {
 public:
     explicit ButtonBase(Widget* parent = nullptr, const std::string& text = std::string());
+    ~ButtonBase() override;
 
     Property<std::string> text;
     Property<Font> font;
@@ -46,27 +47,16 @@ protected:
     Size compute_minimum_size() const override;
 
     /// 描画のための状態。
-    bool is_hovered() const { return hovered_; }
-    bool is_pressed() const { return pressed_in_; }
+    bool is_hovered() const;
+    bool is_pressed() const;
     /// 表示する文字(text から & を除いたもの)のレイアウト。
     const TextLayout& text_layout() const;
     /// text_layout() を at に描いたときの、ニーモニックの下線(Alt を押している間だけ)。
     void paint_mnemonic(Canvas& canvas, const Point& at, const Color& color) const;
 
 private:
-    void set_text(const std::string& v);
-    void set_font(const Font& v);
-
-    std::string text_;
-    std::string display_;          ///< text_ から & を除いた、表示する文字
-    std::size_t mnemonic_offset_;  ///< display_ の中のニーモニックの文字の位置(無ければ npos)
-    Key mnemonic_;
-    Font font_;
-    NotifyHandler on_click_;
-    bool hovered_;
-    bool pressed_;     ///< 左ボタンを押している(外に出ても続く)
-    bool pressed_in_;  ///< 押していて、ポインタが上にある
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

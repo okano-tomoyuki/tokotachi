@@ -29,6 +29,7 @@ class TOKOTACHI_API Calendar : public Widget
 {
 public:
     explicit Calendar(Widget* parent = nullptr);
+    ~Calendar() override;
 
     /// 選んでいる日(空なら選んでいない)。代入すると、その月を見せる。範囲の外の日は範囲に収める。
     Property<Date> date;
@@ -61,42 +62,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    Date get_date() const { return date_; }
-    void set_date(const Date& v);
-    Date get_minimum() const { return minimum_; }
-    void set_minimum(const Date& v);
-    Date get_maximum() const { return maximum_; }
-    void set_maximum(const Date& v);
-    DayOfWeek get_first_day_of_week() const { return first_day_; }
-    void set_first_day_of_week(const DayOfWeek& v);
-    int get_shown_year() const { return shown_year_; }
-    int get_shown_month() const { return shown_month_; }
-
-    /// 寸法(dp)。
-    float cell_width() const;
-    float cell_height() const;
-    float title_height() const;
-    /// 見せている月の 1 日を含む週の、最初のマスの日。
-    Date first_cell() const;
-    /// マス(0〜41)の矩形・位置 p のマス(無ければ -1)。
-    Rect cell_rect(int cell) const;
-    int cell_at(const Point& p) const;
-    Rect previous_button() const;
-    Rect next_button() const;
-    bool selectable(const Date& d) const;
-    /// 利用者の操作で日を選ぶ(範囲に収め、その月を見せる)。
-    void choose(const Date& d);
-    void activate();
-
-    Date date_;
-    Date minimum_;
-    Date maximum_;
-    DayOfWeek first_day_;
-    int shown_year_;
-    int shown_month_;
-    int hover_cell_;  ///< ポインタの下のマス(-1 なら無し。-2・-3 は前・次の月のボタン)
-    NotifyHandler on_change_;
-    NotifyHandler on_activate_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

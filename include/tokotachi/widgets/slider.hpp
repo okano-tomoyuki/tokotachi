@@ -29,6 +29,7 @@ class TOKOTACHI_API Slider : public RangeBase
 {
 public:
     explicit Slider(Widget* parent = nullptr, Orientation orientation = Orientation::HORIZONTAL);
+    ~Slider() override;
 
     Property<Orientation> orientation;
     /// 目盛りの間隔(既定 0: 目盛りを出さない。docs/adr/0049)。minimum から、この間隔ごとと maximum に、
@@ -50,25 +51,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    Orientation get_orientation() const { return orientation_; }
-    void set_orientation(const Orientation& v);
-    double get_tick_interval() const { return tick_interval_; }
-    void set_tick_interval(const double& v);
-    /// 目盛りの分の幅(目盛りが無ければ 0)。
-    float tick_room() const;
-
-    /// 並ぶ向きの、つまみの中心が動ける長さ(dp)。
-    float travel() const;
-    /// つまみの中心(自分の座標系)。
-    Point thumb_center() const;
-    /// 並ぶ向きの位置 p に当たる値(single_step に合わせる)。
-    double value_at(const Point& p) const;
-
-    Orientation orientation_;
-    double tick_interval_;
-    bool hovered_;
-    bool dragging_;
-    Point drag_offset_;  ///< つまみの中心から、押した位置まで
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

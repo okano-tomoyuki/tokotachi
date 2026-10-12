@@ -28,6 +28,7 @@ class TOKOTACHI_API ColorButton : public ButtonBase
 {
 public:
     explicit ColorButton(Widget* parent = nullptr, const Color& color = Color(0, 0, 0));
+    ~ColorButton() override;
 
     Property<Color> color;
     /// ダイアログで不透明度も選ぶか(既定 false)。false でも、代入した色の不透明度はそのまま。
@@ -46,19 +47,8 @@ protected:
     Size compute_preferred_size() const override;
 
 private:
-    Color get_color() const { return color_; }
-    void set_color(const Color& v);
-    bool get_alpha_enabled() const { return alpha_enabled_; }
-    void set_alpha_enabled(const bool& v);
-    std::string get_dialog_title() const { return dialog_title_; }
-    void set_dialog_title(const std::string& v) { dialog_title_ = v; }
-    /// 出す文字(text が空なら 16 進数)。
-    std::string label() const;
-
-    Color color_;
-    bool alpha_enabled_;
-    std::string dialog_title_;
-    NotifyHandler on_change_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -5,7 +5,7 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/windows/color_dialog.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "color_util.hpp"
 #include "theme.hpp"
 
@@ -19,41 +19,65 @@ const float SWATCH_H = 16;
 const float PADDING = 8;
 }  // namespace
 
+class ColorButton::Impl
+{
+    TOKOTACHI_IMPL(ColorButton);
+
+    explicit Impl(ColorButton* object) : q(object) {}
+
+    Color get_color() const { return color_; }
+    void set_color(const Color& v);
+    bool get_alpha_enabled() const { return alpha_enabled_; }
+    void set_alpha_enabled(const bool& v);
+    std::string get_dialog_title() const { return dialog_title_; }
+    void set_dialog_title(const std::string& v) { dialog_title_ = v; }
+    /// 出す文字(text が空なら 16 進数)。
+    std::string label() const;
+
+    Color color_;
+    bool alpha_enabled_;
+    std::string dialog_title_;
+    NotifyHandler on_change_;
+};
+
 ColorButton::ColorButton(Widget* parent_widget, const Color& initial)
     : ButtonBase(parent_widget),
-      TOKOTACHI_PROPERTY_GETTER_SELF_NOTIFY(ColorButton, Color, color),
-      TOKOTACHI_PROPERTY_GETTER(ColorButton, bool, alpha_enabled),
-      TOKOTACHI_PROPERTY_GETTER(ColorButton, std::string, dialog_title),
-      TOKOTACHI_HANDLER_PROPERTY(ColorButton, NotifyHandler, on_change),
-      color_(initial),
-      alpha_enabled_(false)
+      TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, Color, color),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, alpha_enabled),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, dialog_title),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      d_(new Impl(this))
 {
+    d_->color_ = initial;
+    d_->alpha_enabled_ = false;
 }
 
-void ColorButton::set_color(const Color& v)
+ColorButton::~ColorButton() { delete d_; }
+
+void ColorButton::Impl::set_color(const Color& v)
 {
     if (v == color_)
     {
         return;
     }
     color_ = v;
-    invalidate();
-    request_layout();
-    notify_changed(color);
-    Object* self = this;
+    q->invalidate();
+    q->request_layout();
+    q->notify_changed(q->color);
+    Object* self = q;
     detail::fire(on_change_, self);
 }
 
-void ColorButton::set_alpha_enabled(const bool& v)
+void ColorButton::Impl::set_alpha_enabled(const bool& v)
 {
     alpha_enabled_ = v;
-    invalidate();
-    request_layout();
+    q->invalidate();
+    q->request_layout();
 }
 
-std::string ColorButton::label() const
+std::string ColorButton::Impl::label() const
 {
-    const std::string t = text_layout().text();
+    const std::string t = q->text_layout().text();
     return t.empty() ? detail::color_to_hex(color_, alpha_enabled_ || color_.a != 255) : t;
 }
 
@@ -72,7 +96,7 @@ void ColorButton::open_dialog()
     }
     ColorButton* self = this;
     ColorDialog::show(
-        w, color_,
+        w, d_->color_,
         [self](Object* sender)
         {
             ColorDialog* d = static_cast<ColorDialog*>(sender);
@@ -81,12 +105,12 @@ void ColorButton::open_dialog()
                 self->color = d->color.get();
             }
         },
-        alpha_enabled_, dialog_title_);
+        d_->alpha_enabled_, d_->dialog_title_);
 }
 
 Size ColorButton::compute_preferred_size() const
 {
-    const TextLayout l(label(), font, display_scale);
+    const TextLayout l(d_->label(), font, display_scale);
     return Size(std::ceil(PADDING + SWATCH_W + 8 + l.width() + PADDING + 4), std::ceil(l.height()) + 16);
 }
 
@@ -111,13 +135,13 @@ void ColorButton::paint(Canvas& canvas)
     }
     // 色の見本(透過は市松模様の上に)
     const Rect swatch(PADDING, std::floor((r.height - SWATCH_H) / 2), SWATCH_W, SWATCH_H);
-    if (color_.a < 255)
+    if (d_->color_.a < 255)
     {
         detail::paint_checker(canvas, swatch, 4);
     }
-    canvas.fill_rect(swatch, enabled_now ? color_ : color_.with_alpha(static_cast<std::uint8_t>(color_.a * 0.4f)));
+    canvas.fill_rect(swatch, enabled_now ? d_->color_ : d_->color_.with_alpha(static_cast<std::uint8_t>(d_->color_.a * 0.4f)));
     canvas.stroke_rect(swatch.adjusted(-0.5f, -0.5f, -0.5f, -0.5f), 1, theme::border());
-    const TextLayout l(label(), font, display_scale);
+    const TextLayout l(d_->label(), font, display_scale);
     const Point at(swatch.right() + 8, (r.height - l.height()) / 2);
     const Color fg = enabled_now ? theme::text() : theme::text_disabled();
     canvas.draw_text(l, at, fg);

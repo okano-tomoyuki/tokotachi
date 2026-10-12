@@ -30,6 +30,7 @@ class TOKOTACHI_API TextEdit : public TextInputBase
 {
 public:
     explicit TextEdit(Widget* parent = nullptr, const std::string& text = std::string());
+    ~TextEdit() override;
 
     Property<bool> word_wrap;
 
@@ -44,11 +45,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    bool get_word_wrap() const { return word_wrap_; }
-    void set_word_wrap(const bool& v);
-
-    bool word_wrap_;
-    ScrollBar* bar_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

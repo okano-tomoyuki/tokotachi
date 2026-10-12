@@ -21,12 +21,6 @@ class Layout;
 class Action;
 class Window;
 
-namespace detail
-{
-struct WidgetAccess;
-class ThemeScope;
-}
-
 enum class FocusPolicy
 {
     NONE,
@@ -232,103 +226,10 @@ protected:
     void update_input_method();
 
 private:
-    friend struct detail::WidgetAccess;
-    friend class detail::ThemeScope;
-
-    Widget* get_parent() const { return parent_; }
-    void set_parent(Widget* const& p);
-    /// w と子孫に scale_changed を送り、配置のやり直しの印を付ける(別のウィンドウへ移ったとき)。
-    static void scale_changed_tree(Widget* w);
-    std::vector<Widget*> get_children() const { return children_; }
-    Window* get_window() const;
-    float get_x() const { return bounds_.x; }
-    void set_x(const float& v);
-    float get_y() const { return bounds_.y; }
-    void set_y(const float& v);
-    float get_width() const { return bounds_.width; }
-    void set_width(const float& v);
-    float get_height() const { return bounds_.height; }
-    void set_height(const float& v);
-    Rect get_bounds() const { return bounds_; }
-    void set_bounds(const Rect& r);
-    /// old から変わった位置と大きさのプロパティを知らせる。
-    void notify_bounds(const Rect& old);
-    Rect get_local_rect() const { return Rect(0, 0, bounds_.width, bounds_.height); }
-    Size get_preferred_size() const;
-    Size get_minimum_size() const { return minimum_size_; }
-    void set_minimum_size(const Size& v);
-    Size get_maximum_size() const { return maximum_size_; }
-    void set_maximum_size(const Size& v);
-    Size get_minimum_hint() const;
-    Layout* get_layout() const { return layout_; }
-
-    bool get_visible() const { return visible_; }
-    void set_visible(const bool& v);
-    bool get_showing() const;
-    /// 自分とウィンドウまでの祖先がすべて表示されるか(ウィンドウ自身は問わない)。
-    bool shown_in_window() const;
-    /// visible で、親に隠されていない(描く・配置する・クリックを受ける)。
-    bool displayed() const { return visible_ && !hidden_by_parent_; }
-    /// 親(ToolBar・Splitter・TabWidget)が自分の都合で隠す・戻す(visible は変えない。detail::WidgetAccess から使う)。
-    void set_hidden_by_parent(bool hide);
-    bool get_enabled() const { return enabled_; }
-    void set_enabled(const bool& v);
-    bool get_effectively_enabled() const;
-    FocusPolicy get_focus_policy() const { return focus_policy_; }
-    void set_focus_policy(const FocusPolicy& v) { focus_policy_ = v; }
-    bool get_focused() const;
-    void set_focused(const bool& v);
-    MouseCursor get_cursor() const { return cursor_; }
-    void set_cursor(const MouseCursor& v);
-    bool get_accepts_text_input() const { return accepts_text_input_; }
-    void set_accepts_text_input(const bool& v);
-    bool get_accepts_drops() const { return accepts_drops_; }
-    void set_accepts_drops(const bool& v) { accepts_drops_ = v; }
-    float get_display_scale() const;
-    void set_tooltip(const std::string& v) { tooltip_ = v; }
-    ThemeOverride get_theme_override() const { return theme_override_; }
-    void set_theme_override(const ThemeOverride& v);
-    Theme get_theme() const;
-    /// テーマを継ぐ元(親。ウィンドウは無し。ポップアップは開いた元のウィジェット)。
-    const Widget* theme_parent() const;
-    /// 自分と祖先の theme_override を out(アプリケーションのテーマ)に重ねる。上書きが 1 つも無ければ false(out は変えない)。
-    bool compose_theme(Theme& out) const;
-    std::vector<Action*> get_actions() const { return actions_; }
-
-    Widget* parent_;
-    std::vector<Widget*> children_;
-    Rect bounds_;
-    Size minimum_size_;
-    Size maximum_size_;
-    Layout* layout_;
-    bool layout_dirty_;
-    bool visible_;
-    bool hidden_by_parent_;  ///< 親が自分の都合で隠している(visible_ とは別。displayed を見る)
-    bool enabled_;
-    bool accepts_text_input_;
-    bool accepts_drops_;
-    bool is_window_;
-    FocusPolicy focus_policy_;
-    MouseCursor cursor_;
-    std::string tooltip_;
-    ThemeOverride theme_override_;
-    std::vector<Action*> actions_;
-    PaintHandler on_paint_;
-    NotifyHandler on_resize_;
-    MouseHandler on_mouse_down_;
-    MouseHandler on_mouse_up_;
-    MouseHandler on_mouse_move_;
-    NotifyHandler on_mouse_enter_;
-    NotifyHandler on_mouse_leave_;
-    WheelHandler on_mouse_wheel_;
-    KeyHandler on_key_down_;
-    KeyHandler on_key_up_;
-    NotifyHandler on_focus_in_;
-    NotifyHandler on_focus_out_;
-    DragHandler on_drag_move_;
-    NotifyHandler on_drag_leave_;
-    DragHandler on_drop_;
-    DragFinishHandler on_drag_finish_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

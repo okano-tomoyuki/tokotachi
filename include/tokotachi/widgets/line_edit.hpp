@@ -21,6 +21,7 @@ class TOKOTACHI_API LineEdit : public TextInputBase
 {
 public:
     explicit LineEdit(Widget* parent = nullptr, const std::string& text = std::string());
+    ~LineEdit() override;
 
     /// Enter が押された。ハンドラが無ければ、Enter は親へ送る(ダイアログでは決定のボタンを押す)。
     Property<NotifyHandler> on_submit;
@@ -33,7 +34,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    NotifyHandler on_submit_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

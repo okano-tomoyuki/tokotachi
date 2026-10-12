@@ -4,56 +4,75 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 
 namespace tokotachi
 {
 
-PaintBox::PaintBox(Widget* parent_widget)
-    : Widget(parent_widget), TOKOTACHI_PROPERTY_MEMBER(PaintBox, bool, cached), cached_(false), valid_(false)
+class PaintBox::Impl
 {
+    TOKOTACHI_IMPL(PaintBox);
+
+    explicit Impl(PaintBox* object) : q(object) {}
+
+    bool get_cached() const { return cached_; }
+    void set_cached(const bool& v);
+
+    bool cached_;
+    bool valid_;  ///< cache_ が今の大きさ・倍率で描いたものか
+    Image cache_;
+};
+
+PaintBox::PaintBox(Widget* parent_widget)
+    : Widget(parent_widget), TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, cached),
+      d_(new Impl(this))
+{
+    d_->cached_ = false;
+    d_->valid_ = false;
 }
 
-void PaintBox::set_cached(const bool& v)
+PaintBox::~PaintBox() { delete d_; }
+
+void PaintBox::Impl::set_cached(const bool& v)
 {
     cached_ = v;
-    refresh();
+    q->refresh();
 }
 
 void PaintBox::refresh()
 {
-    valid_ = false;
-    cache_ = Image();
+    d_->valid_ = false;
+    d_->cache_ = Image();
     invalidate();
 }
 
 void PaintBox::resized()
 {
-    valid_ = false;
+    d_->valid_ = false;
     Widget::resized();
 }
 
 void PaintBox::scale_changed()
 {
-    valid_ = false;
+    d_->valid_ = false;
     Widget::scale_changed();
 }
 
 void PaintBox::theme_changed()
 {
-    valid_ = false;  // テーマの色で描いているかもしれない
+    d_->valid_ = false;  // テーマの色で描いているかもしれない
     Widget::theme_changed();
 }
 
 void PaintBox::paint(Canvas& canvas)
 {
-    if (!cached_)
+    if (!d_->cached_)
     {
         Widget::paint(canvas);  // on_paint を呼ぶ
         return;
     }
     const Rect r = local_rect;
-    if (!valid_)
+    if (!d_->valid_)
     {
         // 今の大きさ・倍率の Bitmap に描いて覚える。
         const float scale = canvas.scale();
@@ -64,12 +83,12 @@ void PaintBox::paint(Canvas& canvas)
             Object* self = this;
             handler(self, bitmap.canvas());
         }
-        cache_ = bitmap.to_image();
-        valid_ = true;
+        d_->cache_ = bitmap.to_image();
+        d_->valid_ = true;
     }
-    if (!cache_.is_null())
+    if (!d_->cache_.is_null())
     {
-        canvas.draw_image(cache_, Rect(0, 0, cache_.width() / canvas.scale(), cache_.height() / canvas.scale()));
+        canvas.draw_image(d_->cache_, Rect(0, 0, d_->cache_.width() / canvas.scale(), d_->cache_.height() / canvas.scale()));
     }
 }
 

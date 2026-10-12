@@ -36,6 +36,7 @@ class TOKOTACHI_API ImageBox : public Widget
 {
 public:
     explicit ImageBox(Widget* parent = nullptr, const Image& image = Image());
+    ~ImageBox() override;
 
     Property<Image> image;
     /// 既定は NONE。
@@ -46,11 +47,8 @@ protected:
     Size compute_preferred_size() const override;
 
 private:
-    void set_image(const Image& v);
-    void set_fit(const ImageFit& v);
-
-    Image image_;
-    ImageFit fit_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

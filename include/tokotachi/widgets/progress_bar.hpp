@@ -28,6 +28,7 @@ class TOKOTACHI_API ProgressBar : public Widget
 {
 public:
     explicit ProgressBar(Widget* parent = nullptr);
+    ~ProgressBar() override;
 
     /// 範囲(既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
     Property<double> minimum;
@@ -47,34 +48,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    double get_minimum() const { return minimum_; }
-    void set_minimum(const double& v);
-    double get_maximum() const { return maximum_; }
-    void set_maximum(const double& v);
-    double get_value() const { return value_; }
-    void set_value(const double& v);
-    bool get_text_visible() const { return text_visible_; }
-    void set_text_visible(const bool& v);
-    bool get_indeterminate() const { return indeterminate_; }
-    void set_indeterminate(const bool& v);
-    /// 割合の文字を出すか(text_visible で、進み具合が分かるとき)。
-    bool shows_text() const { return text_visible_ && !indeterminate_; }
-
-    /// 割合(0〜1)。
-    double ratio() const;
-    /// 割合の文字のレイアウトと、その幅として取っておく大きさ(「100%」の幅)。
-    const TextLayout& text_layout() const;
-    float text_width() const;
-
-    double minimum_;
-    double maximum_;
-    double value_;
-    bool text_visible_;
-    bool indeterminate_;
-    float phase_;      ///< 動く部分の位置(0〜1 を繰り返す)
-    Timer animation_;  ///< 動かす(表示されている間だけ)
-    mutable TextLayout layout_;
-    mutable int layout_percent_;  ///< layout_ を作った割合(-1 なら未作成)
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -30,6 +30,7 @@ class TOKOTACHI_API ScrollArea : public Widget
 {
 public:
     explicit ScrollArea(Widget* parent = nullptr);
+    ~ScrollArea() override;
 
     /// 中身。代入すると中身はスクロール領域の中に移る(親が付け替わる)。前の中身は破棄する。
     Property<Widget*> content;
@@ -48,20 +49,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    Widget* get_content() const;
-    void set_content(Widget* const& v);
-    bool get_fit_width() const { return fit_width_; }
-    void set_fit_width(const bool& v);
-    Point get_scroll_position() const;
-    void set_scroll_position(const Point& p);
-    /// スクロールバーの値に合わせて中身を動かす。
-    void place_content();
-
-    Widget* viewport_;
-    ScrollBar* vertical_;
-    ScrollBar* horizontal_;
-    Widget* content_;
-    bool fit_width_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -41,6 +41,7 @@ class TOKOTACHI_API DateEdit : public Widget
 {
 public:
     explicit DateEdit(Widget* parent = nullptr);
+    ~DateEdit() override;
 
     /// 日付(既定は空)。範囲の外の値は範囲に収める。
     Property<Date> date;
@@ -74,39 +75,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    friend class detail::DateText;
-
-    Date get_date() const { return date_; }
-    void set_date(const Date& v);
-    Date get_minimum() const { return minimum_; }
-    void set_minimum(const Date& v);
-    Date get_maximum() const { return maximum_; }
-    void set_maximum(const Date& v);
-    std::string get_format() const { return format_; }
-    void set_format(const std::string& v);
-    DayOfWeek get_first_day_of_week() const { return first_day_; }
-    void set_first_day_of_week(const DayOfWeek& v) { first_day_ = v; }
-    std::string get_placeholder_text() const;
-    void set_placeholder_text(const std::string& v);
-    std::string get_text() const;
-
-    Date clamp(const Date& d) const;
-    /// 右の暦のボタンの領域。
-    Rect calendar_button() const;
-    /// キャレットのある欄(年 'y'・月 'M'・日 'd')を step だけ増減する。
-    void step_field(int step);
-    /// 文字を今の date の表示に戻す。
-    void show_date();
-
-    detail::DateText* edit_;
-    Date date_;
-    Date minimum_;
-    Date maximum_;
-    std::string format_;
-    DayOfWeek first_day_;
-    NotifyHandler on_change_;
-    Popup* popup_;
-    Calendar* calendar_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -31,6 +31,7 @@ class TOKOTACHI_API PaintBox : public Widget
 {
 public:
     explicit PaintBox(Widget* parent = nullptr);
+    ~PaintBox() override;
 
     /// 描いた結果を覚えておくか(既定 false: 描き直すたびに on_paint を呼ぶ)。
     Property<bool> cached;
@@ -45,12 +46,8 @@ protected:
     void theme_changed() override;
 
 private:
-    bool get_cached() const { return cached_; }
-    void set_cached(const bool& v);
-
-    bool cached_;
-    bool valid_;  ///< cache_ が今の大きさ・倍率で描いたものか
-    Image cache_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

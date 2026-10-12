@@ -28,6 +28,7 @@ class TOKOTACHI_API RadioButton : public ButtonBase
 {
 public:
     explicit RadioButton(Widget* parent = nullptr, const std::string& text = std::string(), int value = 0);
+    ~RadioButton() override;
 
     /// このボタンが表す値。
     Property<int> value;
@@ -47,15 +48,8 @@ protected:
     Size compute_preferred_size() const override;
 
 private:
-    void set_value(const int& v);
-    void set_group_value(const int& v);
-    bool get_checked() const { return value_ == group_value_; }
-    /// value_・group_value_ を変えた後に、変わったプロパティを知らせ、選択が変わっていれば on_change を呼ぶ。
-    void finish(bool was_checked, const void* changed_property);
-
-    int value_;
-    int group_value_;
-    NotifyHandler on_change_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

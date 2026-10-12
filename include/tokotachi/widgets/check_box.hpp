@@ -23,6 +23,7 @@ class TOKOTACHI_API CheckBox : public ButtonBase
 {
 public:
     explicit CheckBox(Widget* parent = nullptr, const std::string& text = std::string());
+    ~CheckBox() override;
 
     Property<bool> checked;
 
@@ -37,10 +38,8 @@ protected:
     Size compute_preferred_size() const override;
 
 private:
-    void set_checked(const bool& v);
-
-    bool checked_;
-    NotifyHandler on_change_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

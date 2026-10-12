@@ -37,6 +37,7 @@ public:
 
 protected:
     explicit RangeBase(Widget* parent);
+    ~RangeBase() override;
 
     /// 値を amount だけ動かし、single_step に合わせる(利用者の操作)。
     void step_by(double amount);
@@ -48,26 +49,8 @@ protected:
     virtual void range_changed();
 
 private:
-    double get_minimum() const { return minimum_; }
-    void set_minimum(const double& v);
-    double get_maximum() const { return maximum_; }
-    void set_maximum(const double& v);
-    double get_value() const { return value_; }
-    void set_value(const double& v);
-    double get_single_step() const { return single_step_; }
-    void set_single_step(const double& v);
-    double get_page_step() const { return page_step_; }
-    void set_page_step(const double& v);
-
-    /// 範囲に収めた値を value_ にする。変わったら range_changed を呼び、知らせ、on_change を呼ぶ。
-    void apply_value(double v);
-
-    double minimum_;
-    double maximum_;
-    double value_;
-    double single_step_;
-    double page_step_;
-    NotifyHandler on_change_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

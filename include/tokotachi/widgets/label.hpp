@@ -34,6 +34,7 @@ class TOKOTACHI_API Label : public Widget
 {
 public:
     explicit Label(Widget* parent = nullptr, const std::string& text = std::string());
+    ~Label() override;
 
     Property<std::string> text;
     Property<Font> font;
@@ -63,32 +64,8 @@ protected:
     void mnemonic_activated() override;
 
 private:
-    void set_text(const std::string& v);
-    void set_font(const Font& v);
-    void set_color(const ThemeColor& v);
-    void set_alignment(const Align& v);
-    void set_word_wrap(const bool& v);
-    void set_icon(const Image& v);
-    void set_icon_size(const float& v);
-    Widget* get_buddy() const { return buddy_.get(); }
-    void set_buddy(Widget* const& v);
-    const TextLayout& layout() const;
-    /// 画像と、文字との間の幅(画像が無ければ 0)。
-    float icon_extent() const;
-
-    std::string text_;
-    std::string display_;           ///< text_ から & を除いた、表示する文字
-    std::size_t mnemonic_offset_;   ///< display_ の中のニーモニックの文字の位置(無ければ npos)
-    Key mnemonic_;
-    WeakRef<Widget> buddy_;
-    Font font_;
-    ThemeColor color_;
-    Align alignment_;
-    bool word_wrap_;
-    Image icon_;
-    float icon_size_;
-    mutable TextLayout layout_;
-    mutable float layout_wrap_;  ///< layout_ を作ったときの折り返しの幅(0 なら折り返さない)
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

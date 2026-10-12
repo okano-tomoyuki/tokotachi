@@ -4,38 +4,53 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "theme.hpp"
 #include "toggle_painter.hpp"
 
 namespace tokotachi
 {
 
+class CheckBox::Impl
+{
+    TOKOTACHI_IMPL(CheckBox);
+
+    explicit Impl(CheckBox* object) : q(object) {}
+
+    void set_checked(const bool& v);
+
+    bool checked_;
+    NotifyHandler on_change_;
+};
+
 CheckBox::CheckBox(Widget* parent_widget, const std::string& initial_text)
     : ButtonBase(parent_widget, initial_text),
-      TOKOTACHI_PROPERTY_MEMBER_SELF_NOTIFY(CheckBox, bool, checked),
-      TOKOTACHI_HANDLER_PROPERTY(CheckBox, NotifyHandler, on_change),
-      checked_(false)
+      TOKOTACHI_IMPL_PROPERTY_MEMBER_SELF_NOTIFY(Impl, bool, checked),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      d_(new Impl(this))
 {
+    d_->checked_ = false;
 }
 
-void CheckBox::set_checked(const bool& v)
+CheckBox::~CheckBox() { delete d_; }
+
+void CheckBox::Impl::set_checked(const bool& v)
 {
     if (v == checked_)
     {
         return;
     }
     checked_ = v;
-    invalidate();
+    q->invalidate();
     // 結びつけた相手へ伝えてから、ハンドラを呼ぶ。
-    notify_changed(checked);
-    Object* self = this;
+    q->notify_changed(q->checked);
+    Object* self = q;
     detail::fire(on_change_, self);
 }
 
 void CheckBox::click()
 {
-    set_checked(!checked_);
+    d_->set_checked(!d_->checked_);
     ButtonBase::click();
 }
 
@@ -46,7 +61,7 @@ void CheckBox::paint(Canvas& canvas)
     const Rect r = local_rect;
     const Rect box = detail::toggle_indicator_rect(r);
     const bool enabled_now = effectively_enabled;
-    if (checked_)
+    if (d_->checked_)
     {
         canvas.fill_round_rect(box, 3, enabled_now ? theme::accent() : theme::accent_disabled());
         // チェックの印

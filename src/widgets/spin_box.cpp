@@ -9,7 +9,7 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/widgets/line_edit.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "theme.hpp"
 
 namespace tokotachi
@@ -57,35 +57,68 @@ private:
 
 }  // namespace detail
 
+class SpinBox::Impl
+{
+    TOKOTACHI_IMPL(SpinBox);
+
+    explicit Impl(SpinBox* object) : q(object) {}
+
+    int get_decimals() const { return decimals_; }
+    void set_decimals(const int& v);
+    std::string get_prefix() const { return prefix_; }
+    void set_prefix(const std::string& v);
+    std::string get_suffix() const { return suffix_; }
+    void set_suffix(const std::string& v);
+    std::string get_text() const;
+
+    std::string format(double v) const;
+    /// 上下のボタンの領域(自分の座標系)。
+    Rect up_button() const;
+    Rect down_button() const;
+    /// ボタンを押し始めた・押し続けている(direction は 1 か -1)。
+    void press(int direction);
+    void stop_repeat();
+
+    detail::SpinEdit* edit_;
+    int decimals_;
+    std::string prefix_;
+    std::string suffix_;
+    int pressed_;  ///< 押しているボタン(1 は上、-1 は下、0 は無し)
+    Timer repeat_;
+};
+
 SpinBox::SpinBox(Widget* parent_widget)
     : RangeBase(parent_widget),
-      TOKOTACHI_PROPERTY_GETTER(SpinBox, int, decimals),
-      TOKOTACHI_PROPERTY_GETTER(SpinBox, std::string, prefix),
-      TOKOTACHI_PROPERTY_GETTER(SpinBox, std::string, suffix),
-      TOKOTACHI_READONLY_PROPERTY(SpinBox, std::string, text),
-      edit_(nullptr),
-      decimals_(0),
-      pressed_(0)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, int, decimals),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, prefix),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, suffix),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, text),
+      d_(new Impl(this))
 {
-    edit_ = new detail::SpinEdit(this);
-    edit_->text = format(value);
-    edit_->on_submit = [this](Object*) { commit(); };
-    edit_->on_change = [this](Object*) { notify_changed(text); };
-    repeat_.on_timer = [this](Object*)
+    d_->edit_ = nullptr;
+    d_->decimals_ = 0;
+    d_->pressed_ = 0;
+    d_->edit_ = new detail::SpinEdit(this);
+    d_->edit_->text = d_->format(value);
+    d_->edit_->on_submit = [this](Object*) { commit(); };
+    d_->edit_->on_change = [this](Object*) { notify_changed(text); };
+    d_->repeat_.on_timer = [this](Object*)
     {
-        repeat_.interval = REPEAT_INTERVAL;
-        if (pressed_ != 0)
+        d_->repeat_.interval = REPEAT_INTERVAL;
+        if (d_->pressed_ != 0)
         {
-            step_by(pressed_ * single_step.get());
+            step_by(d_->pressed_ * single_step.get());
         }
     };
 }
 
-void SpinBox::set_decimals(const int& v)
+SpinBox::~SpinBox() { delete d_; }
+
+void SpinBox::Impl::set_decimals(const int& v)
 {
     decimals_ = std::max(0, std::min(v, 10));
-    edit_->text = format(value);
-    request_layout();
+    edit_->text = format(q->value);
+    q->request_layout();
 }
 
 namespace
@@ -101,23 +134,23 @@ std::string trim(const std::string& s)
 
 }  // namespace
 
-void SpinBox::set_prefix(const std::string& v)
+void SpinBox::Impl::set_prefix(const std::string& v)
 {
     prefix_ = v;
-    edit_->text = format(value);
-    request_layout();
+    edit_->text = format(q->value);
+    q->request_layout();
 }
 
-void SpinBox::set_suffix(const std::string& v)
+void SpinBox::Impl::set_suffix(const std::string& v)
 {
     suffix_ = v;
-    edit_->text = format(value);
-    request_layout();
+    edit_->text = format(q->value);
+    q->request_layout();
 }
 
-std::string SpinBox::get_text() const { return edit_->text; }
+std::string SpinBox::Impl::get_text() const { return edit_->text; }
 
-std::string SpinBox::format(double v) const
+std::string SpinBox::Impl::format(double v) const
 {
     char buf[64];
     std::snprintf(buf, sizeof(buf), "%.*f", decimals_, v);
@@ -133,8 +166,8 @@ std::string SpinBox::format(double v) const
 void SpinBox::commit()
 {
     // 前・後ろの文字(付いていれば。周りの空白は問わない)を除いて読む
-    std::string s = trim(edit_->text);
-    const std::string head = trim(prefix_), tail = trim(suffix_);
+    std::string s = trim(d_->edit_->text);
+    const std::string head = trim(d_->prefix_), tail = trim(d_->suffix_);
     if (!head.empty() && s.compare(0, head.size(), head) == 0)
     {
         s = trim(s.substr(head.size()));
@@ -152,47 +185,47 @@ void SpinBox::commit()
     }
     if (end != begin && end && *end == '\0' && std::isfinite(parsed))
     {
-        const double scale = std::pow(10.0, decimals_);
+        const double scale = std::pow(10.0, d_->decimals_);
         value = std::floor(parsed * scale + 0.5) / scale;
     }
     // 読めなかったとき・範囲に丸めたときも、今の値の表示に戻す。
-    edit_->text = format(value);
+    d_->edit_->text = d_->format(value);
 }
 
 void SpinBox::range_changed()
 {
     RangeBase::range_changed();
-    if (edit_)
+    if (d_->edit_)
     {
-        edit_->text = format(value);
+        d_->edit_->text = d_->format(value);
     }
 }
 
-Rect SpinBox::up_button() const
+Rect SpinBox::Impl::up_button() const
 {
-    const Rect r = local_rect;
+    const Rect r = q->local_rect;
     return Rect(r.width - BUTTON_WIDTH, 0, BUTTON_WIDTH, r.height / 2);
 }
 
-Rect SpinBox::down_button() const
+Rect SpinBox::Impl::down_button() const
 {
-    const Rect r = local_rect;
+    const Rect r = q->local_rect;
     return Rect(r.width - BUTTON_WIDTH, r.height / 2, BUTTON_WIDTH, r.height - r.height / 2);
 }
 
 void SpinBox::arrange_children()
 {
     const Rect r = local_rect;
-    edit_->bounds = Rect(0, 0, std::max(0.0f, r.width - BUTTON_WIDTH), r.height);
+    d_->edit_->bounds = Rect(0, 0, std::max(0.0f, r.width - BUTTON_WIDTH), r.height);
 }
 
 Size SpinBox::compute_preferred_size() const
 {
     // 範囲の両端の数値が収まる幅にする。
-    const Font f = edit_->font;
+    const Font f = d_->edit_->font;
     const float scale = display_scale;
-    const float w = std::max(TextLayout(format(minimum), f, scale).width(), TextLayout(format(maximum), f, scale).width());
-    const Size edit = edit_->preferred_size;
+    const float w = std::max(TextLayout(d_->format(minimum), f, scale).width(), TextLayout(d_->format(maximum), f, scale).width());
+    const Size edit = d_->edit_->preferred_size;
     return Size(std::max(72.0f, std::ceil(w) + theme::field_padding() * 2 + 4) + BUTTON_WIDTH, edit.height);
 }
 
@@ -202,15 +235,15 @@ void SpinBox::paint(Canvas& canvas)
 {
     const Rect r = local_rect;
     const bool enabled_now = effectively_enabled;
-    const bool has_focus = edit_->focused;
+    const bool has_focus = d_->edit_->focused;
     canvas.fill_round_rect(r, theme::field_radius(), enabled_now ? theme::field() : theme::field_disabled());
 
     // 上下のボタン: 押しているほうを塗り、区切りの線と山形の印を描く。
-    const Rect up = up_button();
-    const Rect down = down_button();
-    if (pressed_ != 0)
+    const Rect up = d_->up_button();
+    const Rect down = d_->down_button();
+    if (d_->pressed_ != 0)
     {
-        canvas.fill_rect((pressed_ > 0 ? up : down).adjusted(0, 1, 1, 1), theme::selection_inactive());
+        canvas.fill_rect((d_->pressed_ > 0 ? up : down).adjusted(0, 1, 1, 1), theme::selection_inactive());
     }
     canvas.fill_rect(Rect(up.x, 1, 1, r.height - 2), theme::border());
     canvas.fill_rect(Rect(up.x, down.y, up.width - 1, 1), theme::border());
@@ -233,23 +266,23 @@ void SpinBox::paint(Canvas& canvas)
     Widget::paint(canvas);
 }
 
-void SpinBox::press(int direction)
+void SpinBox::Impl::press(int direction)
 {
-    commit();
+    q->commit();
     pressed_ = direction;
-    step_by(direction * single_step.get());
+    q->step_by(direction * q->single_step.get());
     repeat_.interval = REPEAT_DELAY;
     repeat_.enabled = true;
-    invalidate();
+    q->invalidate();
 }
 
-void SpinBox::stop_repeat()
+void SpinBox::Impl::stop_repeat()
 {
     repeat_.enabled = false;
     if (pressed_ != 0)
     {
         pressed_ = 0;
-        invalidate();
+        q->invalidate();
     }
 }
 
@@ -261,14 +294,14 @@ void SpinBox::mouse_down(MouseEvent& e)
         return;
     }
     e.accepted = true;
-    edit_->focused = true;  // 続けてキーで操作できるように
-    if (up_button().contains(e.pos))
+    d_->edit_->focused = true;  // 続けてキーで操作できるように
+    if (d_->up_button().contains(e.pos))
     {
-        press(1);
+        d_->press(1);
     }
-    else if (down_button().contains(e.pos))
+    else if (d_->down_button().contains(e.pos))
     {
-        press(-1);
+        d_->press(-1);
     }
 }
 
@@ -278,14 +311,14 @@ void SpinBox::mouse_up(MouseEvent& e)
     if (e.button == MouseButton::LEFT)
     {
         e.accepted = true;
-        stop_repeat();
+        d_->stop_repeat();
     }
 }
 
 void SpinBox::mouse_wheel(WheelEvent& e)
 {
     Widget::mouse_wheel(e);
-    if (!edit_->focused)
+    if (!d_->edit_->focused)
     {
         return;  // 親(スクロール領域など)へ送る
     }

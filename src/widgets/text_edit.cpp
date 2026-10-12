@@ -5,7 +5,7 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "theme.hpp"
 
 namespace tokotachi
@@ -16,22 +16,38 @@ namespace
 const float PADDING_Y = 6;
 }
 
+class TextEdit::Impl
+{
+    TOKOTACHI_IMPL(TextEdit);
+
+    explicit Impl(TextEdit* object) : q(object) {}
+
+    bool get_word_wrap() const { return word_wrap_; }
+    void set_word_wrap(const bool& v);
+
+    bool word_wrap_;
+    ScrollBar* bar_;
+};
+
 TextEdit::TextEdit(Widget* parent_widget, const std::string& initial_text)
     : TextInputBase(parent_widget, initial_text, true),
-      TOKOTACHI_PROPERTY_GETTER(TextEdit, bool, word_wrap),
-      word_wrap_(true),
-      bar_(new ScrollBar(this, Orientation::VERTICAL))
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, word_wrap),
+      d_(new Impl(this))
 {
-    bar_->visible = false;
-    bar_->cursor = MouseCursor::ARROW;
-    bar_->on_change = [this](Object*) { set_scroll_offset(Point(scroll_offset().x, bar_->value.get())); };
+    d_->word_wrap_ = true;
+    d_->bar_ = new ScrollBar(this, Orientation::VERTICAL);
+    d_->bar_->visible = false;
+    d_->bar_->cursor = MouseCursor::ARROW;
+    d_->bar_->on_change = [this](Object*) { set_scroll_offset(Point(scroll_offset().x, d_->bar_->value.get())); };
 }
 
-void TextEdit::set_word_wrap(const bool& v)
+TextEdit::~TextEdit() { delete d_; }
+
+void TextEdit::Impl::set_word_wrap(const bool& v)
 {
     word_wrap_ = v;
-    set_scroll_offset(Point());
-    invalidate();
+    q->set_scroll_offset(Point());
+    q->invalidate();
 }
 
 Rect TextEdit::text_area() const
@@ -41,7 +57,7 @@ Rect TextEdit::text_area() const
     return r.adjusted(theme::field_padding(), PADDING_Y, theme::field_padding() + ScrollBar::THICKNESS, PADDING_Y);
 }
 
-float TextEdit::wrap_width() const { return word_wrap_ ? std::max(1.0f, text_area().width) : 0; }
+float TextEdit::wrap_width() const { return d_->word_wrap_ ? std::max(1.0f, text_area().width) : 0; }
 
 void TextEdit::scroll_changed()
 {
@@ -49,16 +65,16 @@ void TextEdit::scroll_changed()
     const Rect area = text_area();
     const float content = text_layout().height();
     const float excess = content - area.height;
-    bar_->visible = excess > 0;
-    bar_->page_step = area.height;
-    bar_->maximum = std::max(0.0f, excess);
-    bar_->value = scroll_offset().y;
+    d_->bar_->visible = excess > 0;
+    d_->bar_->page_step = area.height;
+    d_->bar_->maximum = std::max(0.0f, excess);
+    d_->bar_->value = scroll_offset().y;
 }
 
 void TextEdit::arrange_children()
 {
     const Rect r = local_rect;
-    bar_->bounds = Rect(r.width - ScrollBar::THICKNESS - 2, 2, ScrollBar::THICKNESS, r.height - 4);
+    d_->bar_->bounds = Rect(r.width - ScrollBar::THICKNESS - 2, 2, ScrollBar::THICKNESS, r.height - 4);
     scroll_changed();
 }
 
@@ -80,12 +96,12 @@ void TextEdit::mouse_wheel(WheelEvent& e)
     {
         return;  // 利用者のハンドラが受け取った
     }
-    if (bar_->maximum.get() <= 0)
+    if (d_->bar_->maximum.get() <= 0)
     {
         return;  // スクロールできなければ親(ScrollArea など)へ送る
     }
     e.accepted = true;
-    set_scroll_offset(Point(scroll_offset().x, scroll_offset().y - e.delta.y * bar_->single_step.get()));
+    set_scroll_offset(Point(scroll_offset().x, scroll_offset().y - e.delta.y * d_->bar_->single_step.get()));
 }
 
 Size TextEdit::compute_preferred_size() const

@@ -38,6 +38,7 @@ class TOKOTACHI_API SpinBox : public RangeBase
 {
 public:
     explicit SpinBox(Widget* parent = nullptr);
+    ~SpinBox() override;
 
     /// 小数の桁数(既定 0。0〜10)。表示をこの桁に丸め、打ち込んだ数値もこの桁に丸める。
     Property<int> decimals;
@@ -62,30 +63,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    friend class detail::SpinEdit;
-
-    int get_decimals() const { return decimals_; }
-    void set_decimals(const int& v);
-    std::string get_prefix() const { return prefix_; }
-    void set_prefix(const std::string& v);
-    std::string get_suffix() const { return suffix_; }
-    void set_suffix(const std::string& v);
-    std::string get_text() const;
-
-    std::string format(double v) const;
-    /// 上下のボタンの領域(自分の座標系)。
-    Rect up_button() const;
-    Rect down_button() const;
-    /// ボタンを押し始めた・押し続けている(direction は 1 か -1)。
-    void press(int direction);
-    void stop_repeat();
-
-    detail::SpinEdit* edit_;
-    int decimals_;
-    std::string prefix_;
-    std::string suffix_;
-    int pressed_;  ///< 押しているボタン(1 は上、-1 は下、0 は無し)
-    Timer repeat_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi
