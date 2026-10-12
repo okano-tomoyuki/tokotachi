@@ -10,6 +10,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [../include/tokotachi/](../include/tokotachi/) | 公開のヘッダ(API の説明はヘッダのコメント)。役割ごとのディレクトリに分ける([ADR 0035](adr/0035-header-directories.md)) | 随時追加 |
 | [../spike/](../spike/) | 技術検証のコード(ライブラリには引き継がない) | マイルストーン1 |
 | [designer/](designer/) | デザイナー(VS Code の拡張)の設計([ADR 0039](adr/0039-designer.md)) | 草案 |
+| [bindings/](bindings/) | C の API と Python のバインディングの使い方([ADR 0065](adr/0065-c-api-and-python-bindings.md)) | 随時追加 |
 
 `docs/` には、目的と設計判断(ADR)のように、あとから覆りにくい・背景ごと残したい情報を置く。
 
@@ -73,7 +74,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0054](adr/0054-icons.md) | よく使うアイコンを Lucide の線画としてライブラリに組み込み、部品の文字の色で塗る | 承認 |
 | [0055](adr/0055-extension-icon.md) | デザイナーの拡張のアイコンを、画面の部品で組んだ「常」にする | 承認 |
 | [0056](adr/0056-reference-class-docs-and-widget-images.md) | リファレンスのクラスのページに説明と部品の画像を出し、クラスを分類(トピック)で引けるようにする | 承認 |
-| [0057](adr/0057-compatibility-abi-and-c-layer.md) | 1.0 からの互換の約束と pimpl・ABI・公開するシンボル・将来の C の層の方針 | 承認 |
+| [0057](adr/0057-compatibility-abi-and-c-layer.md) | 1.0 からの互換の約束と pimpl・ABI・公開するシンボル・将来の C の層の方針 | 承認(C の層は置換→0065) |
 | [0058](adr/0058-class-hierarchy-and-extension-points.md) | クラスの階層を整理し、利用者が派生してよいクラス(拡張点)と標準の見た目を描く関数を決める | 承認 |
 | [0059](adr/0059-api-review-before-1-0.md) | 1.0 の前に公開の API を見直し、名前・状態の表し方を揃える | 承認 |
 | [0060](adr/0060-canvas-without-virtual-functions.md) | Canvas を仮想関数を持たない具体的なクラスにし、描画先を内部に隠す | 承認 |
@@ -81,6 +82,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0062](adr/0062-window-ownership-and-quit.md) | ウィンドウの所有・所有者のウィンドウ・メインのウィンドウと終わり方、オブジェクトは new で作る書き方に揃える | 承認 |
 | [0063](adr/0063-text-undo.md) | 入力欄で元に戻す・やり直す | 承認 |
 | [0064](adr/0064-designer-format-and-versions.md) | デザイナーの定義ファイルの形式を固定し、移し替えの仕組みとライブラリの版との対応を決める | 承認 |
+| [0065](adr/0065-c-api-and-python-bindings.md) | C の API を仕様から生成して単独の共有ライブラリで配り、Python のバインディングはその上に ctypes で作る | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

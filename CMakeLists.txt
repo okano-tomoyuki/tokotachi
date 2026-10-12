@@ -25,6 +25,14 @@ option(TOKOTACHI_SHARED "Build tokotachi as a shared library (DLL / .so). OFF bu
 option(TOKOTACHI_BUILD_EXAMPLES "Build the examples" ${TOKOTACHI_TOP_LEVEL})
 option(TOKOTACHI_BUILD_TESTS "Build the tests" ${TOKOTACHI_TOP_LEVEL})
 option(TOKOTACHI_INSTALL "Generate the install rules" ${TOKOTACHI_TOP_LEVEL})
+# Windows(MinGW)での C API はまだ確かめていないので、既定では作らない(-DTOKOTACHI_BUILD_C_API=ON で作れる。docs/adr/0065)。
+if(EMSCRIPTEN OR WIN32)
+    set(_tokotachi_default_c_api OFF)
+else()
+    set(_tokotachi_default_c_api ${TOKOTACHI_TOP_LEVEL})
+endif()
+option(TOKOTACHI_BUILD_C_API "Build the C API (tokotachi_c, a shared library for C and language bindings)"
+       ${_tokotachi_default_c_api})
 option(TOKOTACHI_STATIC_RUNTIME "Static library build on MinGW: link the MinGW runtime statically into executables" ON)
 
 include(GNUInstallDirs)
@@ -427,6 +435,11 @@ if(TOKOTACHI_BUILD_TESTS)
     target_compile_options(tokotachi_header_check_self_contained PRIVATE -Wall -Wextra -pedantic)
     set_target_properties(tokotachi_header_check_self_contained PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON
                                                                            CXX_EXTENSIONS OFF)
+endif()
+
+# ---- C API(docs/adr/0065)。テストを登録するので enable_testing の後に置く ----
+if(TOKOTACHI_BUILD_C_API)
+    add_subdirectory(bindings/c)
 endif()
 
 # 技術検証(spike/)。ライブラリには引き継がない。

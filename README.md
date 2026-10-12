@@ -18,6 +18,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [include/tokotachi/](include/tokotachi/) | 公開のヘッダ。役割ごとのディレクトリに分ける(下の表)。`#include <tokotachi/tokotachi.hpp>` ですべて、`<tokotachi/widgets.hpp>` などでグループごとに読み込める |
 | [src/](src/) | 実装。公開のヘッダと同じディレクトリに分け、内部のヘッダもそこに置く |
 | [examples/](examples/) | サンプル(`hello/` は全体、`gallery/` は部品ごと) |
+| [bindings/](bindings/) | C の API([docs/bindings/c-api.md](docs/bindings/c-api.md))と Python のバインディング([docs/bindings/python.md](docs/bindings/python.md)) |
 | [tests/](tests/) | テスト(SDL の offscreen のビデオドライバで、画面なしで動く) |
 | [spike/](spike/) | 技術検証のコード(ライブラリには引き継がない) |
 | [designer/](designer/README.md) | 画面を見ながらウィンドウを組み、C++ のクラスを生成する GUI デザイナー(VS Code の拡張 [Tokotachi Designer](designer/packages/extension/README.ja.md)) |
@@ -55,6 +56,20 @@ int main(int argc, char** argv)
 ```
 
 API の規則(プロパティ・ハンドラ・命名・書式)は [ADR 0013](docs/adr/0013-api-style-properties-and-handlers.md) を参照。
+
+C と Python からも使える([ADR 0065](docs/adr/0065-c-api-and-python-bindings.md))。Python では同じ名前で書ける:
+
+```python
+import tokotachi as tt
+
+app = tt.Application()
+window = tt.Window('hello', 400, 200)
+button_close = tt.Button(window, 'クリック')
+button_close.bounds = (24, 24, 140, 36)
+button_close.on_click = lambda sender: window.close()
+window.visible = True
+app.exec()
+```
 
 ## 依存ライブラリ
 
@@ -105,6 +120,7 @@ CMake のオプション:
 | `TOKOTACHI_INSTALL` | 単独のとき ON | インストールの規則を作る |
 | `TOKOTACHI_DEPS_PREFIX` | `deps/install/<プラットフォーム>` | 依存ライブラリの場所(組み込まれたときはビルドのフォルダの中) |
 | `TOKOTACHI_BUILD_DEPS` | ON | 依存ライブラリが無ければ自動でビルドする |
+| `TOKOTACHI_BUILD_C_API` | 単独のとき ON(Windows では OFF) | C の API(共有ライブラリ `tokotachi_c`。Python などのバインディングの土台。[docs/bindings/c-api.md](docs/bindings/c-api.md)) |
 | `TOKOTACHI_STATIC_RUNTIME` | ON | 静的ライブラリのとき、MinGW のランタイムも静的にリンクする(exe が OS の DLL だけに依存する) |
 
 ## 使う(インストール・組み込み)

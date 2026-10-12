@@ -8,6 +8,8 @@ include(CMakeFindDependencyMacro)
 find_dependency(Threads)
 
 include("${CMAKE_CURRENT_LIST_DIR}/tokotachiTargets.cmake")
+# C API(tokotachi::tokotachi_c。docs/adr/0065)は、作ってインストールしたときだけある。
+include("${CMAKE_CURRENT_LIST_DIR}/tokotachi_cTargets.cmake" OPTIONAL)
 
 # 共有ライブラリか静的ライブラリか(TRUE なら共有)。
 set(tokotachi_SHARED @TOKOTACHI_SHARED@)

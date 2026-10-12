@@ -1,0 +1,10 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: tokotachi_c
+Description: C API of Tokotachi (cross-platform GUI library)
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -ltokotachi_c
+Cflags: -I${includedir}

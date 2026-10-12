@@ -2,3 +2,6 @@
 /build-*/
 /deps/install/
 /deps/download/
+__pycache__/
+/bindings/python/dist/
+*.egg-info/
