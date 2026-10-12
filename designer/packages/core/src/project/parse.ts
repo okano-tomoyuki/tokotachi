@@ -1,6 +1,7 @@
 /**
  * プロジェクトファイルの読み込み・検証・決まった形での書き出し(docs/designer/project-spec.md §3・§4)。
  */
+import { migrateFormat, type FormatMigrations } from '../format.ts';
 import { describeIdentifierProblem, isValidIdentifier } from '../identifier.ts';
 import { l10n } from '../l10n.ts';
 import type { Diagnostic } from '../dsl/diagnostics.ts';
@@ -12,6 +13,11 @@ export interface ProjectParseResult {
   readonly project?: TtprojDocument;
   readonly diagnostics: readonly Diagnostic[];
 }
+
+/**
+ * プロジェクトファイルの、前の版から移す関数(docs/adr/0064)。形式を変えたら PROJECT_FORMAT_VERSION を上げ、ここに足す。
+ */
+export const TTPROJ_MIGRATIONS: FormatMigrations = {};
 
 /** フォルダのパスとして書けるか(相対パス・区切りは /)。 */
 function isValidDirectory(path: string): boolean {
@@ -127,25 +133,9 @@ export function parseProject(text: string): ProjectParseResult {
       ],
     };
   }
-  const version =
-    typeof json === 'object' && json !== null
-      ? (json as Record<string, unknown>)['format_version']
-      : undefined;
-  if (typeof version === 'number' && version !== PROJECT_FORMAT_VERSION) {
-    return {
-      diagnostics: [
-        {
-          severity: 'error',
-          code: 'unsupported-version',
-          message: l10n.t(
-            'format_version {0} is not supported (supported: {1})',
-            String(version),
-            PROJECT_FORMAT_VERSION,
-          ),
-          path: ['format_version'],
-        },
-      ],
-    };
+  const migrated = migrateFormat(json, PROJECT_FORMAT_VERSION, TTPROJ_MIGRATIONS);
+  if (migrated.some((d) => d.severity === 'error')) {
+    return { diagnostics: migrated };
   }
   const result = TtprojDocument.safeParse(json);
   if (!result.success) {
@@ -158,7 +148,7 @@ export function parseProject(text: string): ProjectParseResult {
       })),
     };
   }
-  return { project: result.data, diagnostics: validateProject(result.data) };
+  return { project: result.data, diagnostics: [...migrated, ...validateProject(result.data)] };
 }
 
 /** JSON の値を、深さ depth(2 文字ずつ)の位置に書く形にする。 */

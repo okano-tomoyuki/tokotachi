@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+For Tokotachi 0.2.
+
+- **File formats**: window definitions and project files from older format versions are converted when opened (and
+  written in the current format when saved). Files made by a newer designer are not opened; you are asked to update the
+  designer instead.
+- The project settings page shows the Tokotachi version the generated code is for.
+
 - **Window ownership** (Tokotachi ADR 0062): the generated `main.cpp` creates the main window with `new` and sets it as
   `app.main_window`, so closing it quits the application. Generated window classes take an optional owner window
   (`explicit MainWindow(tokotachi::Window* owner = nullptr)`); pass one to show the window above its owner and destroy it

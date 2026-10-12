@@ -33,7 +33,8 @@ export {
   type Severity,
 } from './dsl/diagnostics.ts';
 export { locate, type TextRange } from './dsl/locate.ts';
-export { parseDocument, type ParseResult } from './dsl/parse.ts';
+export { parseDocument, TTUI_MIGRATIONS, type ParseResult } from './dsl/parse.ts';
+export { migrateFormat, type FormatMigration, type FormatMigrations } from './format.ts';
 export { serializeDocument } from './dsl/serialize.ts';
 export * from './dsl/tree.ts';
 export { validateDocument } from './dsl/validate.ts';

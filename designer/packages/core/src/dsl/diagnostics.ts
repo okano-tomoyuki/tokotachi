@@ -7,6 +7,7 @@ export type DiagnosticCode =
   // 読み込み・構造
   | 'json-syntax'
   | 'unsupported-version'
+  | 'migrated-format'
   | 'schema'
   // 名前
   | 'invalid-identifier'

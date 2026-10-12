@@ -37,7 +37,7 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 | キー | 必須 | 内容 |
 |---|---|---|
 | `$schema` | | JSON Schema の場所(エディタの補完用) |
-| `format_version` | ○ | `1` |
+| `format_version` | ○ | `1`(形式の版。移し替えは README.md の「定義ファイルの形式」。ADR 0064) |
 | `codegen` | | コード生成の設定(§4) |
 | `theme` | | アプリケーションのテーマ(§4.1) |
 | `main_window` | | 起動したときに開くウィンドウ。`windows` のどれか(class が `Window` のもの) |

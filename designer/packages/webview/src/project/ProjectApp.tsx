@@ -4,6 +4,7 @@
  */
 import {
   describeIdentifierProblem,
+  getCatalog,
   isValidIdentifier,
   l10n,
   type CanvasFrame,
@@ -283,8 +284,19 @@ function CodegenSection({ project }: { project: TtprojDocument }) {
       }}
     />
   );
+  // 対象のライブラリの版(カタログを取り出した版の major.minor。docs/adr/0064)
+  const library = getCatalog().tokotachi_version.split('.').slice(0, 2).join('.');
   return (
     <Section title={l10n.t('Code generation')}>
+      <Field
+        label={l10n.t('Tokotachi version')}
+        hint={l10n.t(
+          'The library version the generated code is for. The generated CMakeLists.txt requires it (find_package(tokotachi {0}))',
+          library,
+        )}
+      >
+        <span>Tokotachi {library}</span>
+      </Field>
       <Field
         label={l10n.t('Namespace')}
         hint={l10n.t('The namespace of the generated classes (e.g. app or app::ui)')}

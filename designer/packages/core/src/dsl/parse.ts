@@ -1,4 +1,4 @@
-import { l10n } from '../l10n.ts';
+import { migrateFormat, type FormatMigrations } from '../format.ts';
 import type { Diagnostic } from './diagnostics.ts';
 import { renameOldMembers } from './renamed.ts';
 import { FORMAT_VERSION, TtuiDocument } from './schema.ts';
@@ -10,7 +10,13 @@ export interface ParseResult {
   readonly diagnostics: readonly Diagnostic[];
 }
 
-/** *.ttui.json のテキストを読み、構造と意味を検証する。 */
+/**
+ * 画面の定義ファイルの、前の版から移す関数(docs/adr/0064)。形式を変えたら FORMAT_VERSION を上げ、ここに足す。
+ * 例: `1: (json) => { ... }` は版 1 のファイルを版 2 の形にする。
+ */
+export const TTUI_MIGRATIONS: FormatMigrations = {};
+
+/** *.ttui.json のテキストを読み、古い版なら今の版に移し、構造と意味を検証する。 */
 export function parseDocument(text: string): ParseResult {
   let json: unknown;
   try {
@@ -20,22 +26,9 @@ export function parseDocument(text: string): ParseResult {
     return { diagnostics: [{ severity: 'error', code: 'json-syntax', message, path: [] }] };
   }
 
-  const version = isObject(json) ? json['format_version'] : undefined;
-  if (typeof version === 'number' && version !== FORMAT_VERSION) {
-    return {
-      diagnostics: [
-        {
-          severity: 'error',
-          code: 'unsupported-version',
-          message: l10n.t(
-            'format_version {0} is not supported (supported: {1})',
-            String(version),
-            FORMAT_VERSION,
-          ),
-          path: ['format_version'],
-        },
-      ],
-    };
+  const migrated = migrateFormat(json, FORMAT_VERSION, TTUI_MIGRATIONS);
+  if (migrated.some((d) => d.severity === 'error')) {
+    return { diagnostics: migrated };
   }
 
   // 改名したプロパティ・ハンドラの古い名前は、新しい名前に読み替える
@@ -51,9 +44,5 @@ export function parseDocument(text: string): ParseResult {
       })),
     };
   }
-  return { document: result.data, diagnostics: validateDocument(result.data) };
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return { document: result.data, diagnostics: [...migrated, ...validateDocument(result.data)] };
 }

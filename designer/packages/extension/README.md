@@ -48,6 +48,9 @@ Lay out windows by drag and drop, and generate readable C++ classes that you kee
 
 - The extension needs nothing else to design windows.
 - To build the generated code: a C++11 compiler, CMake 3.16 or later, and the Tokotachi library.
+  Each version of the extension targets a library version (shown in the changelog and on the project settings page), and
+  the generated `CMakeLists.txt` requires it. The major version of the extension matches the library's (extension 1.x
+  is for Tokotachi 1.x).
 
 ## Settings
 

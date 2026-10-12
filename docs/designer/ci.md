@@ -41,7 +41,8 @@
 
 版を出すとき:
 
-1. `designer/packages/extension/package.json` の `version` を上げてコミットする(プレビューのあいだは `preview: true` のまま)。
+1. `designer/packages/extension/package.json` の `version` を上げ、`CHANGELOG.md` と、対象のライブラリの版の表(README.md の「版と互換」)に
+   書いてコミットする。1.0 より前は `"preview": true`、1.0 からは外す(`pnpm release:check` が確かめる。ADR 0064)。
 2. `designer-v<版>`(例: `designer-v0.1.0`)のタグを付けて push する。publish のジョブが Marketplace に出す。
 
 ## 4. 未決の論点
