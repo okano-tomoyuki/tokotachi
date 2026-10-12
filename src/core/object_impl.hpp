@@ -35,6 +35,16 @@ namespace detail
 /// o の所有者を new_owner に移す。
 inline void change_owner(Object* o, Object* new_owner) { ImplAccess<Object>::of(o)->change_owner(new_owner); }
 
+/// Object が破棄されることを受け取る関数(内部。将来の C の層が、ほかの言語の側の参照を無効にするために使う。docs/adr/0057)。
+/// ~Object の最初に、破棄される順に呼ぶ。そのときには派生クラスの部分はもう破棄されているので、object はポインタの同一性
+/// (ハンドルを無効にする)にだけ使い、メンバを呼ばない。メインスレッドで呼ぶ。
+typedef void (*DestroyObserver)(Object* object, void* data);
+
+/// 破棄の通知を受け取る関数を加える・外す(同じ fn と data の組で外す)。メインスレッドで呼ぶ。通知の中で加える・外すこともできる
+/// (その通知には反映しない)。
+TOKOTACHI_API void add_destroy_observer(DestroyObserver fn, void* data);
+TOKOTACHI_API void remove_destroy_observer(DestroyObserver fn, void* data);
+
 }  // namespace detail
 }  // namespace tokotachi
 

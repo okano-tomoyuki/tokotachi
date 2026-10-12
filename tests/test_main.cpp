@@ -3,6 +3,7 @@
 #include <tokotachi/core/clipboard.hpp>
 
 #include "../src/core/binding_registry.hpp"
+#include "../src/core/object_impl.hpp"
 #include "../src/core/application_impl.hpp"
 #include "../src/widgets/text_input_impl.hpp"
 #include "../src/windows/window_impl.hpp"
@@ -3489,6 +3490,53 @@ TEST(post_from_worker_threads)
     CHECK(received == THREADS * PER_THREAD);
     CHECK(in_order && on_main && worker_on_main == 0);
     CHECK(!tokotachi::post(std::function<void()>()));  // 空の関数は頼まない
+}
+
+namespace
+{
+
+// 破棄の通知を受け取った順に覚える。
+void record_destroyed(tokotachi::Object* object, void* data)
+{
+    static_cast<std::vector<tokotachi::Object*>*>(data)->push_back(object);
+}
+
+// 自分を外す(通知の中で外してもよい)。
+void remove_self(tokotachi::Object*, void* data)
+{
+    tokotachi::detail::remove_destroy_observer(&remove_self, data);
+    ++*static_cast<int*>(data);
+}
+
+}  // namespace
+
+TEST(destroy_observer)
+{
+    std::vector<tokotachi::Object*> destroyed;
+    tokotachi::detail::add_destroy_observer(&record_destroyed, &destroyed);
+    {
+        tokotachi::Window window("t", 100, 100);
+        tokotachi::Widget* panel = new tokotachi::Widget(&window);
+        tokotachi::Label* label = new tokotachi::Label(panel, "a");
+        tokotachi::Timer* timer = new tokotachi::Timer(label);
+        delete panel;  // 子孫(label・timer)も破棄される
+        CHECK(destroyed.size() == 3);
+        CHECK(std::find(destroyed.begin(), destroyed.end(), panel) != destroyed.end());
+        CHECK(std::find(destroyed.begin(), destroyed.end(), label) != destroyed.end());
+        CHECK(std::find(destroyed.begin(), destroyed.end(), timer) != destroyed.end());
+        destroyed.clear();
+    }
+    CHECK(destroyed.size() == 1);  // window
+    tokotachi::detail::remove_destroy_observer(&record_destroyed, &destroyed);
+    destroyed.clear();
+    delete new tokotachi::Object();
+    CHECK(destroyed.empty());  // 外した後は呼ばれない
+
+    int calls = 0;
+    tokotachi::detail::add_destroy_observer(&remove_self, &calls);
+    delete new tokotachi::Object();
+    delete new tokotachi::Object();
+    CHECK(calls == 1);  // 1 回目の通知の中で外した
 }
 
 TEST(post_with_weak_ref)

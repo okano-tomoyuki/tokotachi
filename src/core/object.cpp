@@ -1,6 +1,7 @@
 #include <tokotachi/core/property.hpp>
 
 #include <algorithm>
+#include <utility>
 
 #include <tokotachi/core/application.hpp>
 
@@ -10,6 +11,18 @@
 
 namespace tokotachi
 {
+
+namespace
+{
+
+// 破棄の通知を受け取る関数(メインスレッドだけで触る)。
+std::vector<std::pair<detail::DestroyObserver, void*> >& destroy_observers()
+{
+    static std::vector<std::pair<detail::DestroyObserver, void*> > observers;
+    return observers;
+}
+
+}  // namespace
 
 Object::Object(Object* owner_object)
     : TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Object*, owner), d_(new Impl(this, owner_object))
@@ -22,6 +35,15 @@ Object::Object(Object* owner_object)
 
 Object::~Object()
 {
+    if (!destroy_observers().empty())
+    {
+        // 通知の中で加える・外すこともできるよう、写してから呼ぶ。
+        const std::vector<std::pair<detail::DestroyObserver, void*> > observers = destroy_observers();
+        for (std::size_t i = 0; i < observers.size(); ++i)
+        {
+            observers[i].first(this, observers[i].second);
+        }
+    }
     if (d_->liveness_)
     {
         d_->liveness_->alive = false;
@@ -88,6 +110,20 @@ void Object::delete_owned()
 
 namespace detail
 {
+
+void add_destroy_observer(DestroyObserver fn, void* data)
+{
+    if (fn)
+    {
+        destroy_observers().push_back(std::make_pair(fn, data));
+    }
+}
+
+void remove_destroy_observer(DestroyObserver fn, void* data)
+{
+    std::vector<std::pair<DestroyObserver, void*> >& observers = destroy_observers();
+    observers.erase(std::remove(observers.begin(), observers.end(), std::make_pair(fn, data)), observers.end());
+}
 
 std::shared_ptr<Liveness> liveness_of(Object* o)
 {
