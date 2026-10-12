@@ -438,6 +438,7 @@ Menu::Menu(Object* owner, const std::string& initial_title)
     : Object(owner),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, title),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<Action*>, actions),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, opened),
       d_(new Impl(this))
 {
     d_->title_ = initial_title;
@@ -601,6 +602,7 @@ void Menu::Impl::ensure_popup(Widget* anchor)
             view_->open_child = nullptr;
             view_->highlighted = -1;
         }
+        q->notify_changed(q->opened);
         if (parent_menu_ && detail::ImplAccess<Menu>::of(parent_menu_)->view_ && detail::ImplAccess<Menu>::of(parent_menu_)->view_->open_child == q)
         {
             detail::ImplAccess<Menu>::of(parent_menu_)->view_->open_child = nullptr;
@@ -625,6 +627,7 @@ void Menu::popup(Widget* anchor_widget, const Point& at)
     d_->view_->bounds = Rect(Point(), size);
     d_->popup_->open(Rect(at, Size()), size, PopupPlacement::AT);
     d_->view_->focused = true;
+    notify_changed(opened);
 }
 
 void Menu::Impl::open_below(Widget* anchor, const Rect& r, bool keyboard)
@@ -636,6 +639,7 @@ void Menu::Impl::open_below(Widget* anchor, const Rect& r, bool keyboard)
     view_->bounds = Rect(Point(), size);
     popup_->open(r, size, PopupPlacement::BELOW);
     view_->focused = true;
+    q->notify_changed(q->opened);
     if (keyboard)
     {
         view_->step_highlight(1);
@@ -650,6 +654,7 @@ void Menu::Impl::open_beside(detail::MenuView* parent_view, const Rect& row)
     view_->bounds = Rect(Point(), size);
     popup_->open(row, size, PopupPlacement::RIGHT);
     view_->focused = true;
+    q->notify_changed(q->opened);
 }
 
 void Menu::close()
@@ -663,8 +668,6 @@ void Menu::close()
         d_->popup_->close();
     }
 }
-
-bool Menu::is_open() const { return d_->popup_ && d_->popup_->visible; }
 
 void Menu::Impl::activate(Action* action)
 {

@@ -26,6 +26,8 @@ class ComboBox::Impl
 
     explicit Impl(ComboBox* object) : q(object) {}
 
+    bool get_popup_open() const { return popup_ && popup_->visible; }
+
     std::vector<std::string> get_items() const { return items_; }
     void set_items(const std::vector<std::string>& v);
     int get_current_index() const { return current_index_; }
@@ -55,6 +57,7 @@ ComboBox::ComboBox(Widget* parent_widget)
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, placeholder_text),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Font, font),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, popup_open),
       d_(new Impl(this))
 {
     d_->current_index_ = -1;
@@ -127,11 +130,9 @@ const TextLayout& ComboBox::Impl::text_layout() const
     return layout_;
 }
 
-bool ComboBox::is_popup_open() const { return d_->popup_ && d_->popup_->visible; }
-
 void ComboBox::open_popup()
 {
-    if (d_->items_.empty() || is_popup_open())
+    if (d_->items_.empty() || popup_open.get())
     {
         return;
     }
@@ -152,6 +153,12 @@ void ComboBox::open_popup()
         };
         d_->list_->on_cancel = [this]() { close_popup(); };
         d_->list_->on_reveal = [this](const Rect& r) { d_->scroll_->scroll_to_visible(r); };
+        // 外側を押して閉じたときも含め、閉じたら知らせる
+        d_->popup_->on_closed = [this](Object*)
+        {
+            invalidate();
+            notify_changed(popup_open);
+        };
     }
     d_->list_->set_items(d_->items_, d_->font_);
     const float rows = static_cast<float>(std::min(d_->items_.size(), MAX_ROWS));
@@ -161,11 +168,12 @@ void ComboBox::open_popup()
     d_->list_->highlight(d_->current_index_);
     d_->list_->focused = true;
     invalidate();
+    notify_changed(popup_open);
 }
 
 void ComboBox::close_popup()
 {
-    if (is_popup_open())
+    if (popup_open.get())
     {
         d_->popup_->close();
         invalidate();
@@ -189,7 +197,7 @@ void ComboBox::paint(Canvas& canvas)
     const bool enabled_now = effectively_enabled, has_focus = focused;
     const Rect r = local_rect;
     canvas.fill_round_rect(r, theme::field_radius(), enabled_now ? theme::field() : theme::field_disabled());
-    const bool strong = has_focus || is_popup_open();
+    const bool strong = has_focus || popup_open.get();
     canvas.stroke_round_rect(r, theme::field_radius(), strong ? 2.0f : 1.0f,
                              strong || (d_->hovered_ && enabled_now) ? theme::accent() : theme::border());
 
@@ -219,7 +227,7 @@ void ComboBox::mouse_down(MouseEvent& e)
         return;
     }
     e.accepted = true;
-    if (is_popup_open())
+    if (popup_open.get())
     {
         close_popup();
     }

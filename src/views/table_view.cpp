@@ -593,7 +593,7 @@ void ItemView::Impl::table_mouse_down(MouseEvent& e)
         if (model_->editable(index, column))
         {
             q->edit(index, column);
-            if (q->is_editing())
+            if (q->editing.get())
             {
                 editor_->cursor_position = editor_->text.get().size();
             }
@@ -664,7 +664,7 @@ void ItemView::Impl::start_typing_edit()
         return;
     }
     q->edit(current_, current_column_);
-    if (q->is_editing())
+    if (q->editing.get())
     {
         editor_->text = "";  // 上書き: 打った文字から始める
     }
@@ -857,7 +857,7 @@ void ItemView::Impl::table_key_down(KeyEvent& e)
             // 今の文字の続きから編集する
             e.accepted = true;
             q->edit(current_, cc);
-            if (q->is_editing())
+            if (q->editing.get())
             {
                 editor_->cursor_position = editor_->text.get().size();
             }

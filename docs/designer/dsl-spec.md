@@ -85,7 +85,7 @@
     { "name": "action_quit", "properties": { "text": "終了(&X)" }, "events": { "on_trigger": "action_quit_trigger" } }
   ],
   "objects": [
-    { "name": "autosave_timer", "class": "Timer", "properties": { "interval": 60000 }, "events": { "on_timer": "autosave" } }
+    { "name": "autosave_timer", "class": "Timer", "properties": { "interval": 60000 }, "events": { "on_timeout": "autosave" } }
   ]
 }
 ```

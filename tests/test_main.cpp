@@ -564,7 +564,7 @@ TEST(timer_repeats_on_main_thread)
     tokotachi::Timer timer;
     timer.interval = 10;
     int fired = 0;
-    timer.on_timer = [&](tokotachi::Object* sender)
+    timer.on_timeout = [&](tokotachi::Object* sender)
     {
         CHECK(sender == &timer);
         if (++fired == 3)
@@ -588,12 +588,12 @@ TEST(timer_single_shot)
     once.interval = 5;
     once.repeat = false;
     int fired = 0;
-    once.on_timer = [&](tokotachi::Object*) { ++fired; };
+    once.on_timeout = [&](tokotachi::Object*) { ++fired; };
     once.enabled = true;
 
     tokotachi::Timer stopper;  // once が 2 回目を呼ばないことを確かめるため、少し待ってから終える
     stopper.interval = 60;
-    stopper.on_timer = [&](tokotachi::Object*) { app->quit(); };
+    stopper.on_timeout = [&](tokotachi::Object*) { app->quit(); };
     stopper.enabled = true;
     app->exec();
     CHECK(fired == 1);
@@ -609,12 +609,12 @@ TEST(timer_destroyed_while_running)
     {
         tokotachi::Timer t;
         t.interval = 1;
-        t.on_timer = [&](tokotachi::Object*) { ++fired; };
+        t.on_timeout = [&](tokotachi::Object*) { ++fired; };
         t.enabled = true;
     }  // 破棄すると止まる(すでに積まれたイベントが届いても呼ばない)
     tokotachi::Timer stopper;
     stopper.interval = 30;
-    stopper.on_timer = [&](tokotachi::Object*) { app->quit(); };
+    stopper.on_timeout = [&](tokotachi::Object*) { app->quit(); };
     stopper.enabled = true;
     app->exec();
     CHECK(fired == 0);
@@ -639,9 +639,9 @@ TEST(handler_shared_between_widget_and_timer)
         }
     };
     button->on_click = refresh;
-    timer.on_timer = button->on_click;
+    timer.on_timeout = button->on_click;
     button->key(tokotachi::Key::SPACE);
-    timer.on_timer.get()(&timer);
+    timer.on_timeout.get()(&timer);
     CHECK(from_button == 1);
     CHECK(from_timer == 1);
 }
@@ -729,7 +729,7 @@ TEST(binding_one_way_from_readonly)
     CHECK(label->text == "");
     edit->select_all();
     CHECK(label->text == "hello");
-    edit->deselect();
+    edit->clear_selection();
     CHECK(label->text == "");
     label->text = "x";  // 読み取り専用の側へは伝えない
     CHECK(edit->text == "hello");
@@ -1595,6 +1595,50 @@ TEST(popup_opens_relative_to_owner)
     delete button;  // 持ち主と一緒に破棄される(ぶら下がらない)
 }
 
+TEST(open_state_properties_notify)
+{
+    // 開いている・編集しているという状態は読むだけのプロパティで、変わると結びつけた相手へ伝わる(ADR 0013)
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::ComboBox* combo = new tokotachi::ComboBox(&window);
+    combo->items = std::vector<std::string>(1, "a");
+    tokotachi::DateEdit* date_edit = new tokotachi::DateEdit(&window);
+    tokotachi::Menu* menu = new tokotachi::Menu(&window);
+    menu->add_item("x");
+    tokotachi::ListModel* model = new tokotachi::ListModel(&window);
+    model->add_item("項目");
+    model->items.get()[0]->editable = true;
+    tokotachi::ListView* list = new tokotachi::ListView(&window);
+    list->model = model;
+    list->bounds = tokotachi::Rect(0, 40, 200, 100);
+
+    tokotachi::BoolVariable* combo_open = new tokotachi::BoolVariable(&window, false);
+    tokotachi::BoolVariable* calendar_open = new tokotachi::BoolVariable(&window, false);
+    tokotachi::BoolVariable* menu_open = new tokotachi::BoolVariable(&window, false);
+    tokotachi::BoolVariable* editing = new tokotachi::BoolVariable(&window, false);
+    tokotachi::bind(combo_open->value, combo->popup_open);
+    tokotachi::bind(calendar_open->value, date_edit->calendar_open);
+    tokotachi::bind(menu_open->value, menu->opened);
+    tokotachi::bind(editing->value, list->editing);
+
+    combo->open_popup();
+    CHECK(combo_open->value);
+    combo->close_popup();
+    CHECK(!combo_open->value);
+    date_edit->open_calendar();
+    CHECK(calendar_open->value);
+    date_edit->close_calendar();
+    CHECK(!calendar_open->value);
+    menu->popup(combo, tokotachi::Point(0, 0));
+    CHECK(menu_open->value);
+    menu->close();
+    CHECK(!menu_open->value);
+    list->edit(model->index(0));
+    CHECK(editing->value);
+    list->finish_editing(false);
+    CHECK(!editing->value);
+}
+
 TEST(combo_box_selects_with_keys_and_popup)
 {
     tokotachi::Window window("t", 300, 300);
@@ -1616,18 +1660,18 @@ TEST(combo_box_selects_with_keys_and_popup)
     CHECK(combo->current_text == "小");
 
     dispatch_key(window, SDLK_SPACE);  // 一覧を開く
-    CHECK(combo->is_popup_open());
+    CHECK(combo->popup_open.get());
     dispatch_key(window, SDLK_DOWN);  // 開いている間のキーは一覧へ送る
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_RETURN);  // 決める
-    CHECK(!combo->is_popup_open());
+    CHECK(!combo->popup_open.get());
     CHECK(combo->current_index == 2);
     CHECK(changes == 2);
 
     dispatch_key(window, SDLK_SPACE);
     dispatch_key(window, SDLK_UP);
     dispatch_key(window, SDLK_ESCAPE);  // Esc は選ばずに閉じる
-    CHECK(!combo->is_popup_open());
+    CHECK(!combo->popup_open.get());
     CHECK(combo->current_index == 2);
 
     items.pop_back();
@@ -1656,35 +1700,35 @@ TEST(menu_keyboard_and_submenu)
     sort->add_item("日付順", [&](tokotachi::Object*) { chosen = "date"; });
 
     menu->popup(area, tokotachi::Point(50, 40));
-    CHECK(menu->is_open());
+    CHECK(menu->opened.get());
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_RETURN);  // 2 つ目(コピー)を選ぶ
     CHECK(chosen == "コピー");
-    CHECK(!menu->is_open());  // 選ぶとすべて閉じる
+    CHECK(!menu->opened.get());  // 選ぶとすべて閉じる
 
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_key(window, SDLK_UP);    // 何も強調していなければ、↑ は最後の項目(並べ替え)
     dispatch_key(window, SDLK_UP);    // 無効な項目・区切りを飛ばしてコピー
     dispatch_key(window, SDLK_DOWN);  // 区切り・無効な項目を飛ばして並べ替えへ戻る
     dispatch_key(window, SDLK_RIGHT);  // サブメニューを開き、最初の項目を強調する
-    CHECK(sort->is_open());
+    CHECK(sort->opened.get());
     dispatch_key(window, SDLK_DOWN);
     dispatch_key(window, SDLK_RETURN);
     CHECK(chosen == "date");
-    CHECK(!sort->is_open() && !menu->is_open());
+    CHECK(!sort->opened.get() && !menu->opened.get());
 
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_key(window, SDLK_UP);
     dispatch_key(window, SDLK_RIGHT);
     dispatch_key(window, SDLK_LEFT);  // サブメニューだけ閉じる
-    CHECK(!sort->is_open() && menu->is_open());
+    CHECK(!sort->opened.get() && menu->opened.get());
     dispatch_key(window, SDLK_ESCAPE);
-    CHECK(!menu->is_open());
+    CHECK(!menu->opened.get());
 
     menu->popup(area, tokotachi::Point(50, 40));
     dispatch_click(window, tokotachi::Point(350, 250));  // 外側を押すと閉じる
-    CHECK(!menu->is_open());
+    CHECK(!menu->opened.get());
     CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.empty());
 }
 
@@ -1958,7 +2002,7 @@ TEST(theme_switch_notifies_and_repaints)
     CHECK(!tokotachi::detail::window_impl_of(&window)->dirty.empty());  // 描き直しを依頼済み
     tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(tokotachi::detail::window_impl_of(&window)->buffer[0] == packed(tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]));
-    CHECK(label->color.get().resolve() == tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT]);
+    CHECK(label->text_color.get().resolve() == tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT]);
 
     app->color_scheme = tokotachi::ColorScheme::DARK;  // 同じ値: 知らせない
     CHECK(changes == 1);
@@ -2018,9 +2062,9 @@ TEST(theme_override_inherits_to_descendants)
     };
 
     tokotachi::ThemeOverride accent;
-    CHECK(accent.empty() && !accent.has(tokotachi::ColorRole::ACCENT));
+    CHECK(accent.is_empty() && !accent.has(tokotachi::ColorRole::ACCENT));
     accent.set(tokotachi::ColorRole::ACCENT, red, dark_red);
-    CHECK(!accent.empty() && accent.light(tokotachi::ColorRole::ACCENT) == red && accent.dark(tokotachi::ColorRole::ACCENT) == dark_red);
+    CHECK(!accent.is_empty() && accent.light(tokotachi::ColorRole::ACCENT) == red && accent.dark(tokotachi::ColorRole::ACCENT) == dark_red);
     panel->theme_override = accent;
     CHECK(panel->theme_override.get() == accent);
     CHECK(panel->theme.get()[tokotachi::ColorRole::ACCENT] == red);
@@ -2064,7 +2108,7 @@ TEST(theme_override_inherits_to_descendants)
 
     // 上書きをやめると、親のものに戻る。
     accent.unset(tokotachi::ColorRole::ACCENT);
-    CHECK(accent.empty());
+    CHECK(accent.is_empty());
     panel->theme_override = accent;
     CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
     app->color_scheme = tokotachi::ColorScheme::SYSTEM;
@@ -2529,21 +2573,21 @@ TEST(item_view_text_style_search_and_edit)
 
     // F2 で編集し、Enter で確定する(モデルの set_text)。編集できない項目では始めない
     dispatch_key(window, SDLK_F2);
-    CHECK(!view->is_editing());
+    CHECK(!view->editing.get());
     items[1]->editable = true;
     SDL_Delay(1100);
     dispatch_key(window, SDLK_F2);
-    CHECK(view->is_editing());
+    CHECK(view->editing.get());
     dispatch_key(window, SDLK_END);  // 編集の欄が受け取り、current は動かない
     dispatch_text(window, "s");
     CHECK(view->current == list->index_of(items[1]));
     dispatch_key(window, SDLK_RETURN);
-    CHECK(!view->is_editing() && items[1]->text.get() == "Bananas" && view->focused);
+    CHECK(!view->editing.get() && items[1]->text.get() == "Bananas" && view->focused);
     // Esc でやめる
     view->edit(list->index_of(items[1]));
     dispatch_text(window, "x");
     dispatch_key(window, SDLK_ESCAPE);
-    CHECK(!view->is_editing() && items[1]->text.get() == "Bananas");
+    CHECK(!view->editing.get() && items[1]->text.get() == "Bananas");
     // 2 列目以降は column_texts に入る
     view->add_column("名前", 100);
     view->add_column("色", 80);
@@ -2554,7 +2598,7 @@ TEST(item_view_text_style_search_and_edit)
     // モデルの行が変わったらやめる
     view->edit(list->index_of(items[1]));
     list->add_item("date");
-    CHECK(!view->is_editing());
+    CHECK(!view->editing.get());
 }
 
 // ドラッグ: from で押し、少しずつ動かして to で離す。
@@ -2766,10 +2810,10 @@ TEST(date_edit_typing_and_steps)
     CHECK(date_edit->text == "01.01.2026");
     // 暦を開いて、矢印と Enter で選ぶ
     date_edit->open_calendar();
-    CHECK(date_edit->is_calendar_open());
+    CHECK(date_edit->calendar_open.get());
     dispatch_key(window, SDLK_RIGHT);
     dispatch_key(window, SDLK_RETURN);
-    CHECK(!date_edit->is_calendar_open() && date_edit->date == tokotachi::Date(2026, 1, 2));
+    CHECK(!date_edit->calendar_open.get() && date_edit->date == tokotachi::Date(2026, 1, 2));
 }
 
 TEST(calendar_navigation)
@@ -2900,10 +2944,10 @@ TEST(table_view_edit_and_clipboard)
     dispatch_click(f.window, f.cell(0, 1));
     // 文字を打つと上書きで編集を始め、Enter で確定して下へ
     dispatch_text(f.window, "x");
-    CHECK(table->is_editing());
+    CHECK(table->editing.get());
     dispatch_text(f.window, "y");
     dispatch_key(f.window, SDLK_RETURN);
-    CHECK(!table->is_editing() && f.text(0, 1) == "xy" && table->current == f.model->index(1) && table->current_column == 1);
+    CHECK(!table->editing.get() && f.text(0, 1) == "xy" && table->current == f.model->index(1) && table->current_column == 1);
     // F2 は続きから、Tab で確定して右へ
     dispatch_key(f.window, SDLK_F2);
     dispatch_text(f.window, "!");
@@ -2912,7 +2956,7 @@ TEST(table_view_edit_and_clipboard)
     // Esc でやめる
     dispatch_text(f.window, "z");
     dispatch_key(f.window, SDLK_ESCAPE);
-    CHECK(f.text(1, 2) == "1,2" && !table->is_editing());
+    CHECK(f.text(1, 2) == "1,2" && !table->editing.get());
     // Enter は(編集していなくても)下へ
     dispatch_key(f.window, SDLK_RETURN);
     CHECK(table->current == f.model->index(2));
@@ -2942,7 +2986,7 @@ TEST(table_view_edit_and_clipboard)
     int activated = 0;
     table->on_activate = [&](tokotachi::Object*) { ++activated; };
     click_with(f.window, f.cell(3, 2), SDL_KMOD_NONE, 2);
-    CHECK(activated == 1 && !table->is_editing());
+    CHECK(activated == 1 && !table->editing.get());
     // 並べ替えると、範囲は current のセルだけになる
     table->select_range(tokotachi::CellRange(0, 0, 1, 1));
     f.model->sort(0, tokotachi::SortOrder::DESCENDING);
@@ -3254,45 +3298,45 @@ TEST(menu_bar_keyboard)
 
     // Alt+ニーモニックで開き、項目のニーモニックで選ぶ。
     dispatch_key(window, SDLK_F, true, SDL_KMOD_LALT);
-    CHECK(file->is_open());
+    CHECK(file->opened.get());
     dispatch_key(window, SDLK_S);
-    CHECK(done == "save " && !file->is_open());
+    CHECK(done == "save " && !file->opened.get());
 
     // F10 でメニューバーへ移り、→ で次へ、↓ で開く。
     dispatch_key(window, SDLK_F10);
     dispatch_key(window, SDLK_RIGHT);
     dispatch_key(window, SDLK_DOWN);
-    CHECK(edit->is_open());
+    CHECK(edit->opened.get());
     // 開いたメニューの ← は隣のメニューへ。Enter で最初の項目を選ぶ。
     dispatch_key(window, SDLK_LEFT);
-    CHECK(file->is_open() && !edit->is_open());
+    CHECK(file->opened.get() && !edit->opened.get());
     dispatch_key(window, SDLK_RETURN);
     CHECK(done == "save open ");
 
     // Esc はメニューバーへ戻り、もう一度 Esc でやめる。
     dispatch_key(window, SDLK_E, true, SDL_KMOD_LALT);
-    CHECK(edit->is_open());
+    CHECK(edit->opened.get());
     dispatch_key(window, SDLK_ESCAPE);
-    CHECK(!edit->is_open());
+    CHECK(!edit->opened.get());
     dispatch_key(window, SDLK_DOWN);  // まだメニューバーにいる
-    CHECK(edit->is_open());
+    CHECK(edit->opened.get());
     dispatch_key(window, SDLK_ESCAPE);
     dispatch_key(window, SDLK_ESCAPE);
     dispatch_key(window, SDLK_DOWN);  // メニューバーから出た
-    CHECK(!edit->is_open() && !file->is_open());
+    CHECK(!edit->opened.get() && !file->opened.get());
 
     // Alt を押して離すとメニューバーへ移る。
     dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
     dispatch_key(window, SDLK_LALT, false);
     dispatch_key(window, SDLK_RETURN);
-    CHECK(file->is_open());
+    CHECK(file->opened.get());
     file->close();
     // Alt を押したまま他のキーを押したときは移らない。
     dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
     dispatch_key(window, SDLK_X, true, SDL_KMOD_LALT);
     dispatch_key(window, SDLK_LALT, false);
     dispatch_key(window, SDLK_RETURN);
-    CHECK(!file->is_open());
+    CHECK(!file->opened.get());
 }
 
 TEST(delete_later_and_post)
@@ -3480,7 +3524,7 @@ TEST(post_from_worker_threads)
     }
     tokotachi::Timer guard;  // 届かなかったときに終えるため
     guard.interval = 5000;
-    guard.on_timer = [&](tokotachi::Object*) { app->quit(); };
+    guard.on_timeout = [&](tokotachi::Object*) { app->quit(); };
     guard.enabled = true;
     app->exec();
     for (std::size_t i = 0; i < workers.size(); ++i)

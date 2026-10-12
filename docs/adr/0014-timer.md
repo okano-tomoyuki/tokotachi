@@ -32,3 +32,7 @@ SDL3 のタイマー(`SDL_AddTimer`)は別のスレッドで呼ばれるので�
   ウィジェットと同じように所有者に任せたい場合が多ければ、`Object` の所有の仕組み(ウィジェットの親子とは別の、所有者の一覧)を
   別に検討する。
 - `Application` を作る前、または破棄した後に `enabled` を true にしても動かない(`enabled` は false のまま)。
+
+## 後の変更
+
+- ハンドラ `on_timer` は `on_timeout` に改めた([ADR 0059](0059-api-review-before-1-0.md))。

@@ -140,7 +140,8 @@ public:
     /// 利用者は F2・選んでいる項目のクリックでも始められる。Enter・ほかへのフォーカスの移動で確定し(モデルの set_text を呼ぶ)、
     /// Esc でやめる。スクロールすると確定し、モデルの行が変わるとやめる。
     void edit(const ModelIndex& index, int column = 0);
-    bool is_editing() const;
+    /// セルを編集しているか(edit から finish_editing まで)。
+    ReadOnlyProperty<bool> editing;
     /// 編集を終える(commit が false なら、文字を変えずにやめる)。
     void finish_editing(bool commit = true);
 
@@ -148,6 +149,8 @@ public:
     Property<bool> drag_enabled;
     /// 項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、
     /// ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。
+    /// 部品がドロップを受け取るか(Widget::accepts_drops)とは別で、項目の間に落とせるようにする。代入すると、
+    /// accepts_drops も同じ値にする。
     Property<bool> drop_enabled;
 
     /// selection が変わった(利用者の操作・呼び出し・モデルの変更のどれでも)。

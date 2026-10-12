@@ -131,7 +131,7 @@ void MainWindow::tokotachi_setup_ui()
 
     autosave_timer = new tokotachi::Timer(this);
     autosave_timer->interval = 60000;
-    autosave_timer->on_timer = [this](tokotachi::Object* sender) { autosave(sender); };
+    autosave_timer->on_timeout = [this](tokotachi::Object* sender) { autosave(sender); };
 
     title = "メモ";
     width = 640;

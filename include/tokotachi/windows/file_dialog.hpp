@@ -68,7 +68,7 @@ public:
     /// 最初に開く場所(フォルダー。SAVE ではファイルの名前を含めてよい)。
     Property<std::string> location;
     /// 複数を選べるか(OPEN・FOLDER)。
-    Property<bool> allow_many;
+    Property<bool> multi_enabled;
 
     /// 選んだパス(取り消した・失敗したら空)。
     ReadOnlyProperty<std::vector<std::string> > paths;

@@ -46,7 +46,7 @@ TextInputBase::TextInputBase(Widget* parent_widget, const detail::InternalTag&, 
     cursor = MouseCursor::IBEAM;
     accepts_text_input = true;
     d_->blink_.interval = BLINK_MS;
-    d_->blink_.on_timer = [this](Object*)
+    d_->blink_.on_timeout = [this](Object*)
     {
         d_->caret_on_ = !d_->caret_on_;
         invalidate();
@@ -162,7 +162,7 @@ void TextInputBase::select_all()
     d_->finish(before);
 }
 
-void TextInputBase::deselect()
+void TextInputBase::clear_selection()
 {
     const Impl::State before = d_->state();
     d_->move_cursor(d_->cursor_, false);

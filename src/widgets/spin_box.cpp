@@ -103,7 +103,7 @@ SpinBox::SpinBox(Widget* parent_widget)
     d_->edit_->text = d_->format(value);
     d_->edit_->on_submit = [this](Object*) { commit(); };
     d_->edit_->on_change = [this](Object*) { notify_changed(text); };
-    d_->repeat_.on_timer = [this](Object*)
+    d_->repeat_.on_timeout = [this](Object*)
     {
         d_->repeat_.interval = REPEAT_INTERVAL;
         if (d_->pressed_ != 0)

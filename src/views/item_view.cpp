@@ -150,6 +150,7 @@ ItemView::ItemView(Widget* parent_widget, const detail::InternalTag&, bool tree,
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, SelectionMode, selection_mode),
       TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, ModelIndex, current),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<ModelIndex>, selection),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, editing),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, drag_enabled),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, drop_enabled),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_selection_change),
@@ -212,7 +213,7 @@ ItemView::ItemView(Widget* parent_widget, const detail::InternalTag&, bool tree,
     // 選んでいる項目をもう一度押したら、ダブルクリックでないと分かってから編集する
     d_->edit_timer_->interval = EDIT_DELAY_MS;
     d_->edit_timer_->repeat = false;
-    d_->edit_timer_->on_timer = [this](Object*)
+    d_->edit_timer_->on_timeout = [this](Object*)
     {
         if (d_->pending_edit_.is_valid() && d_->pending_edit_ == d_->current_)
         {
@@ -2128,9 +2129,8 @@ void ItemView::edit(const ModelIndex& index, int column)
     d_->editor_->visible = true;
     d_->editor_->focused = true;
     d_->editor_->select_all();
+    notify_changed(editing);
 }
-
-bool ItemView::is_editing() const { return d_->edit_index_.is_valid(); }
 
 void ItemView::finish_editing(bool commit)
 {
@@ -2149,6 +2149,7 @@ void ItemView::finish_editing(bool commit)
     {
         focused = true;
     }
+    notify_changed(editing);
     if (commit && d_->model_ && text != d_->model_->text(index, column))
     {
         d_->model_->set_text(index, column, text);
@@ -2332,10 +2333,10 @@ void ItemView::key_down(KeyEvent& e)
 void ItemView::text_input(TextInputEvent& e)
 {
     // 表: 文字を打つと、current のセルを編集し始める(その文字から)
-    if (d_->table_ && !is_editing() && d_->model_ && d_->current_.is_valid())
+    if (d_->table_ && !editing.get() && d_->model_ && d_->current_.is_valid())
     {
         d_->start_typing_edit();
-        if (is_editing())
+        if (editing.get())
         {
             detail::WidgetAccess::text_input(d_->editor_, e);
             return;
@@ -2347,10 +2348,10 @@ void ItemView::text_input(TextInputEvent& e)
 void ItemView::text_editing(TextEditingEvent& e)
 {
     // 表: IME で変換を始めたら、current のセルを編集し始め、変換中の文字を編集の欄に渡す
-    if (d_->table_ && !is_editing() && d_->model_ && d_->current_.is_valid() && !e.text.empty())
+    if (d_->table_ && !editing.get() && d_->model_ && d_->current_.is_valid() && !e.text.empty())
     {
         d_->start_typing_edit();
-        if (is_editing())
+        if (editing.get())
         {
             detail::WidgetAccess::text_editing(d_->editor_, e);
             return;

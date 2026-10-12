@@ -72,8 +72,8 @@ int main(int argc, char** argv)
     check(window.combo_box_view->items.get().size() == 2 && window.combo_box_view->current_index.get() == 0,
           "array property before index");
     check(window.spin_box_size->maximum.get() == 1000 && window.spin_box_size->value.get() == 10, "range before value");
-    check(window.label_size->color.get().is_role() &&
-              window.label_size->color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
+    check(window.label_size->text_color.get().is_role() &&
+              window.label_size->text_color.get().role() == tokotachi::ColorRole::TEXT_SECONDARY,
           "theme color");
     check(window.button_search->theme_override.get().radius() == 0 &&
               window.button_search->theme.get()[tokotachi::ColorRole::ACCENT] == tokotachi::Color(0x05, 0x96, 0x69) &&
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         window.list_view_files->on_drop.get()(window.list_view_files, drop_event);
         check(called("list_view_files_drop"), "drop handler");
     }
-    window.timer_refresh->on_timer.get()(window.timer_refresh);
+    window.timer_refresh->on_timeout.get()(window.timer_refresh);
     check(called("refresh"), "timer handler");
     bool can_close = true;
     window.on_close.get()(&window, can_close);
@@ -139,8 +139,8 @@ int main(int argc, char** argv)
     check(dialog->title.get() == "設定", "dialog title");
     check(dialog->minimum_size.get().width == 400, "size value");
     check(dialog->label_heading->font.get().size == 18 && dialog->label_heading->font.get().bold, "font value");
-    check(!dialog->label_heading->color.get().is_role() &&
-              dialog->label_heading->color.get().color().r == 0x33 && dialog->label_heading->color.get().color().b == 0xCC,
+    check(!dialog->label_heading->text_color.get().is_role() &&
+              dialog->label_heading->text_color.get().color().r == 0x33 && dialog->label_heading->text_color.get().color().b == 0xCC,
           "color value");
     check(dialog->scroll_area_badges->content.get() == dialog->area_badges && dialog->scroll_area_badges->fit_width.get(),
           "scroll area content");

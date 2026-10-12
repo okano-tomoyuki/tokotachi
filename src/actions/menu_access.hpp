@@ -2,6 +2,7 @@
 #ifndef TOKOTACHI_SRC_ACTIONS_MENU_ACCESS_HPP
 #define TOKOTACHI_SRC_ACTIONS_MENU_ACCESS_HPP
 
+#include <tokotachi/windows/popup.hpp>
 #include <tokotachi/actions/menu.hpp>
 #include <tokotachi/windows/menu_bar.hpp>
 #include "../core/impl.hpp"
@@ -57,6 +58,8 @@ class Menu::Impl
     TOKOTACHI_IMPL(Menu);
 
     explicit Impl(Menu* object) : q(object) {}
+
+    bool get_opened() const { return popup_ && popup_->visible; }
 
     /// 項目: action・submenu のどちらか(両方 nullptr なら区切り)。
     struct Entry

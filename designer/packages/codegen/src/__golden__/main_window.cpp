@@ -44,7 +44,7 @@ void MainWindow::tokotachi_setup_ui()
 
     timer_refresh = new tokotachi::Timer(this);
     timer_refresh->interval = 5000;
-    timer_refresh->on_timer = [this](tokotachi::Object* sender) { refresh(sender); };
+    timer_refresh->on_timeout = [this](tokotachi::Object* sender) { refresh(sender); };
 
     file_name = new tokotachi::Variable<std::string>(this, "メモ.txt");
     file_name->on_change = [this](tokotachi::Object* sender) { file_name_change(sender); };
@@ -141,7 +141,7 @@ void MainWindow::tokotachi_setup_ui()
 
     label_size = new tokotachi::Label(page_detail);
     label_size->text = "大きさ(&S)";
-    label_size->color = tokotachi::ColorRole::TEXT_SECONDARY;
+    label_size->text_color = tokotachi::ColorRole::TEXT_SECONDARY;
     page_detail_layout->add(label_size, 1, 0);
 
     spin_box_size = new tokotachi::SpinBox(page_detail);
@@ -180,7 +180,7 @@ void MainWindow::tokotachi_setup_ui()
     label_name->buddy = line_edit_name;
     label_size->buddy = spin_box_size;
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="ebecddad">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="34fd98fb">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)

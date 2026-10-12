@@ -22,7 +22,7 @@
             "properties": {
               "text": "表示の設定",
               "font": { "size": 18, "bold": true },
-              "color": "#3366CC"
+              "text_color": "#3366CC"
             }
           }
         },

@@ -25,7 +25,7 @@ class Label::Impl : public detail::WidgetHooks
 
     void set_text(const std::string& v);
     void set_font(const Font& v);
-    void set_color(const ThemeColor& v);
+    void set_text_color(const ThemeColor& v);
     void set_alignment(const Align& v);
     void set_word_wrap(const bool& v);
     void set_icon(const Image& v);
@@ -42,7 +42,7 @@ class Label::Impl : public detail::WidgetHooks
     Key mnemonic_;
     WeakRef<Widget> buddy_;
     Font font_;
-    ThemeColor color_;
+    ThemeColor text_color_;
     Align alignment_;
     bool word_wrap_;
     Image icon_;
@@ -55,7 +55,7 @@ Label::Label(Widget* parent_widget, const std::string& initial_text)
     : Widget(parent_widget),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, text),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Font, font),
-      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, ThemeColor, color),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, ThemeColor, text_color),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Align, alignment),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, word_wrap),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Image, icon),
@@ -67,7 +67,7 @@ Label::Label(Widget* parent_widget, const std::string& initial_text)
     d_->text_ = initial_text;
     d_->mnemonic_offset_ = std::string::npos;
     d_->mnemonic_ = Key::UNKNOWN;
-    d_->color_ = ColorRole::TEXT;
+    d_->text_color_ = ColorRole::TEXT;
     d_->alignment_ = Align::START;
     d_->word_wrap_ = false;
     d_->icon_size_ = 16;
@@ -124,9 +124,9 @@ void Label::Impl::set_font(const Font& v)
     q->request_layout();
 }
 
-void Label::Impl::set_color(const ThemeColor& v)
+void Label::Impl::set_text_color(const ThemeColor& v)
 {
-    color_ = v;
+    text_color_ = v;
     q->invalidate();
 }
 
@@ -258,7 +258,7 @@ void Label::paint(Canvas& canvas)
         x = 0;  // 折り返すときは、行のそろえ方を TextLayout が折り返しの幅(= 自分の幅から画像を除いた幅)に対して行う
     }
     const float tx = rtl ? x : x + extent;
-    const Color fg = effectively_enabled ? d_->color_.resolve() : theme::text_disabled();
+    const Color fg = effectively_enabled ? d_->text_color_.resolve() : theme::text_disabled();
     if (!d_->icon_.is_null())
     {
         const float ix = rtl ? x + content_w - d_->icon_size_ : x;

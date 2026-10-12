@@ -63,7 +63,8 @@ public:
     void popup(Widget* anchor_widget, const Point& at);
     /// このメニューと、開いているサブメニューを閉じる。
     void close();
-    bool is_open() const;
+    /// 開いているか(popup・メニューバー・親のメニューから開いてから、閉じるまで)。
+    ReadOnlyProperty<bool> opened;
 
 private:
     friend class MenuBar;

@@ -65,8 +65,8 @@ name->value = "初期値";                             // 入力欄にも出る
 
 ```cpp
 app.color_scheme = tokotachi::ColorScheme::DARK;       // SYSTEM・LIGHT・DARK
-label_name->color = tokotachi::ColorRole::TEXT_SECONDARY;   // 役割で指定すると、テーマを替えたときに追従する
-label_name->color = tokotachi::Color::rgb(0xdc2626);        // 具体的な色も指定できる
+label_name->text_color = tokotachi::ColorRole::TEXT_SECONDARY;   // 役割で指定すると、テーマを替えたときに追従する
+label_name->text_color = tokotachi::Color::rgb(0xdc2626);        // 具体的な色も指定できる
 ```
 
 部品ごとにテーマの一部を上書きできます。その部品と子孫に効き、上書きしていない役割は親から継ぎます。

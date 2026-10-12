@@ -254,7 +254,7 @@ void MenuBar::Impl::open(int i, bool keyboard)
     open_ = i;
     q->invalidate();
     detail::ImplAccess<Menu>::of(menus_[i])->open_below(q, title_rect(i), keyboard);
-    if (!menus_[i]->is_open())
+    if (!menus_[i]->opened.get())
     {
         open_ = -1;  // 開けなかった(ウィンドウが表示されていないなど)
     }

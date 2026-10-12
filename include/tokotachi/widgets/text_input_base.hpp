@@ -37,7 +37,7 @@ public:
     Property<NotifyHandler> on_change;
 
     void select_all();
-    void deselect();
+    void clear_selection();
     void cut();
     void copy() const;
     void paste();

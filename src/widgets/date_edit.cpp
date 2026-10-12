@@ -80,7 +80,7 @@ protected:
     void focus_out() override
     {
         LineEdit::focus_out();
-        if (!edit_->is_calendar_open())
+        if (!edit_->calendar_open.get())
         {
             edit_->commit();
         }
@@ -120,6 +120,8 @@ class DateEdit::Impl
     TOKOTACHI_IMPL(DateEdit);
 
     explicit Impl(DateEdit* object) : q(object) {}
+
+    bool get_calendar_open() const { return popup_ && popup_->visible; }
 
     Date get_date() const { return date_; }
     void set_date(const Date& v);
@@ -164,6 +166,7 @@ DateEdit::DateEdit(Widget* parent_widget)
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, placeholder_text),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, text),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, calendar_open),
       d_(new Impl(this))
 {
     d_->edit_ = nullptr;
@@ -309,11 +312,9 @@ void DateEdit::Impl::step_field(int step)
 
 // ---- 暦 ----
 
-bool DateEdit::is_calendar_open() const { return d_->popup_ && d_->popup_->visible; }
-
 void DateEdit::open_calendar()
 {
-    if (is_calendar_open())
+    if (calendar_open.get())
     {
         return;
     }
@@ -332,7 +333,12 @@ void DateEdit::open_calendar()
             d_->edit_->focused = true;
             date = chosen;  // ハンドラの中で破棄されてもよいよう、最後に代入する
         };
-        d_->popup_->on_closed = [this](Object*) { invalidate(); };
+        // 外側を押して閉じたときも含め、閉じたら知らせる
+        d_->popup_->on_closed = [this](Object*)
+        {
+            invalidate();
+            notify_changed(calendar_open);
+        };
     }
     d_->calendar_->minimum = d_->minimum_;
     d_->calendar_->maximum = d_->maximum_;
@@ -348,11 +354,12 @@ void DateEdit::open_calendar()
     d_->popup_->apply_layout();
     d_->calendar_->focused = true;
     invalidate();
+    notify_changed(calendar_open);
 }
 
 void DateEdit::close_calendar()
 {
-    if (is_calendar_open())
+    if (calendar_open.get())
     {
         d_->popup_->close();
         invalidate();
@@ -387,11 +394,11 @@ void DateEdit::paint(Canvas& canvas)
 {
     const Rect r = local_rect;
     const bool enabled_now = effectively_enabled;
-    const bool has_focus = d_->edit_->focused || is_calendar_open();
+    const bool has_focus = d_->edit_->focused || calendar_open.get();
     canvas.fill_round_rect(r, theme::field_radius(), enabled_now ? theme::field() : theme::field_disabled());
     // 暦のボタン: 区切りの線と、暦の印(枠・上の帯・綴じ具)
     const Rect b = d_->calendar_button();
-    if (is_calendar_open())
+    if (calendar_open.get())
     {
         canvas.fill_rect(b.adjusted(0, 1, 1, 1), theme::selection_inactive());
     }
@@ -418,7 +425,7 @@ void DateEdit::mouse_down(MouseEvent& e)
     e.accepted = true;
     if (d_->calendar_button().contains(e.pos))
     {
-        if (is_calendar_open())
+        if (calendar_open.get())
         {
             close_calendar();
         }

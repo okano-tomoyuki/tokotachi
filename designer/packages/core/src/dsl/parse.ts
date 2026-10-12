@@ -1,5 +1,6 @@
 import { l10n } from '../l10n.ts';
 import type { Diagnostic } from './diagnostics.ts';
+import { renameOldMembers } from './renamed.ts';
 import { FORMAT_VERSION, TtuiDocument } from './schema.ts';
 import { validateDocument } from './validate.ts';
 
@@ -37,6 +38,8 @@ export function parseDocument(text: string): ParseResult {
     };
   }
 
+  // 改名したプロパティ・ハンドラの古い名前は、新しい名前に読み替える
+  renameOldMembers(json);
   const result = TtuiDocument.safeParse(json);
   if (!result.success) {
     return {

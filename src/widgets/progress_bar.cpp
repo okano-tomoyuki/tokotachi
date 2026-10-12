@@ -75,7 +75,7 @@ ProgressBar::ProgressBar(Widget* parent_widget)
     d_->phase_ = START_PHASE;
     d_->layout_percent_ = -1;
     d_->animation_.interval = FRAME;
-    d_->animation_.on_timer = [this](Object*)
+    d_->animation_.on_timeout = [this](Object*)
     {
         if (!d_->indeterminate_ || !showing)
         {

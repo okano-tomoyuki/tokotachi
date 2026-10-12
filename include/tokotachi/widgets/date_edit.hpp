@@ -58,7 +58,8 @@ public:
     void commit();
     void open_calendar();
     void close_calendar();
-    bool is_calendar_open() const;
+    /// 暦のポップアップを開いているか。
+    ReadOnlyProperty<bool> calendar_open;
 
 protected:
     void paint(Canvas& canvas) override;

@@ -88,7 +88,7 @@ class Timer::Impl
     int interval_;
     bool repeat_;
     bool enabled_;
-    NotifyHandler on_timer_;
+    NotifyHandler on_timeout_;
     int id_;  ///< Application の内部のタイマーの番号(止まっていれば 0)
 };
 
@@ -97,7 +97,7 @@ Timer::Timer(Object* owner_object)
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, int, interval),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, repeat),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, enabled),
-      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_timer),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_timeout),
       d_(new Impl(this))
 {
 }
@@ -111,7 +111,7 @@ Timer::~Timer()
 void Timer::timeout()
 {
     Object* self = this;
-    detail::fire(d_->on_timer_, self);
+    detail::fire(d_->on_timeout_, self);
 }
 
 }  // namespace tokotachi

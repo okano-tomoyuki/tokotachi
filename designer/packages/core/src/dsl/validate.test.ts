@@ -145,7 +145,7 @@ describe('validateDocument', () => {
       'handler-signature-conflict',
     ]);
     const member = sampleCopy();
-    member.objects[0].events.on_timer = 'line_edit_search';
+    member.objects[0].events.on_timeout = 'line_edit_search';
     expect(codes(member)).toEqual(['duplicate-name']);
   });
 

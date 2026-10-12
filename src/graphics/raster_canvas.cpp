@@ -504,7 +504,7 @@ void RasterCanvas::stroke_round_rect(const Rect& r, float radius, float width, c
 
 void RasterCanvas::fill_path(const Path& path, const Paint& paint)
 {
-    if (path.empty())
+    if (path.is_empty())
     {
         return;
     }
@@ -515,7 +515,7 @@ void RasterCanvas::fill_path(const Path& path, const Paint& paint)
 
 void RasterCanvas::stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint)
 {
-    if (path.empty())
+    if (path.is_empty())
     {
         return;
     }

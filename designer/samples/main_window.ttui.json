@@ -227,7 +227,7 @@
                                 "class": "Label",
                                 "properties": {
                                   "text": "大きさ(&S)",
-                                  "color": "TEXT_SECONDARY",
+                                  "text_color": "TEXT_SECONDARY",
                                   "buddy": "spin_box_size"
                                 }
                               }
@@ -336,7 +336,7 @@
       "properties": {
         "interval": 5000
       },
-      "events": { "on_timer": "refresh" }
+      "events": { "on_timeout": "refresh" }
     }
   ],
   "variables": [

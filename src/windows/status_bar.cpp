@@ -47,7 +47,7 @@ StatusBar::StatusBar(Widget* parent_widget)
 {
     d_->install(this);
     d_->timer_.repeat = false;
-    d_->timer_.on_timer = [this](Object*) { clear_message(); };
+    d_->timer_.on_timeout = [this](Object*) { clear_message(); };
 }
 
 StatusBar::~StatusBar() { delete d_; }

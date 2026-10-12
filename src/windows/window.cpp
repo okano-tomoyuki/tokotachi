@@ -569,7 +569,7 @@ void WindowImpl::schedule_tooltip()
         tooltip_timer = new Timer();
         tooltip_timer->interval = 600;
         tooltip_timer->repeat = false;
-        tooltip_timer->on_timer = [this](Object*)
+        tooltip_timer->on_timeout = [this](Object*)
         {
             if (!hover || hover->tooltip.get().empty() || !shown)
             {
@@ -580,7 +580,7 @@ void WindowImpl::schedule_tooltip()
                 tooltip = new Popup(q, PopupKind::TOOLTIP);
                 tooltip->background = ColorRole::TOOLTIP;
                 Label* text = new Label(tooltip);
-                text->color = ColorRole::ON_TOOLTIP;
+                text->text_color = ColorRole::ON_TOOLTIP;
                 text->font = Font(12);
                 BoxLayout* box = new BoxLayout(tooltip);
                 box->margins = Margins(6, 4, 6, 4);

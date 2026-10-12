@@ -50,7 +50,8 @@ public:
 
     void open_popup();
     void close_popup();
-    bool is_popup_open() const;
+    /// 一覧のポップアップを開いているか。
+    ReadOnlyProperty<bool> popup_open;
 
 protected:
     void paint(Canvas& canvas) override;

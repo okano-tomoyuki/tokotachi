@@ -28,7 +28,7 @@ void SettingsDialog::tokotachi_setup_ui()
     label_heading = new tokotachi::Label(this);
     label_heading->text = "表示の設定";
     label_heading->font = tokotachi::Font(18, true);
-    label_heading->color = tokotachi::Color(0x33, 0x66, 0xCC);
+    label_heading->text_color = tokotachi::Color(0x33, 0x66, 0xCC);
     window_layout->add(label_heading);
 
     window_layout->add_spacing(4);
@@ -95,7 +95,7 @@ void SettingsDialog::tokotachi_setup_ui()
 
     window_layout->add(group_box_zoom);
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="dd7f483d">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="70ba8f35">
 
 // <tokotachi-designer:handler-stubs>
 void SettingsDialog::settings_finish(tokotachi::Object* sender)

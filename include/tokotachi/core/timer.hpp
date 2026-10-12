@@ -10,12 +10,12 @@
 namespace tokotachi
 {
 
-/// タイマー: 一定の間隔で on_timer をメインスレッドで呼ぶ(docs/adr/0014)。
+/// タイマー: 一定の間隔で on_timeout をメインスレッドで呼ぶ(docs/adr/0014)。
 ///
 /// @code
 /// tokotachi::Timer timer;
 /// timer.interval = 500;                          // ミリ秒
-/// timer.on_timer = [&](tokotachi::Object* sender) { ... };
+/// timer.on_timeout = [&](tokotachi::Object* sender) { ... };
 /// timer.enabled = true;                          // 動かす(false で止める)
 /// @endcode
 ///
@@ -36,10 +36,10 @@ public:
     /// 動いているか(既定 false)。true を代入すると動き始め、false を代入すると止まる。
     Property<bool> enabled;
 
-    Property<NotifyHandler> on_timer;
+    Property<NotifyHandler> on_timeout;
 
 protected:
-    /// 間隔が経った。on_timer を呼ぶ。
+    /// 間隔が経った。on_timeout を呼ぶ。
     virtual void timeout();
 
 private:

@@ -51,7 +51,7 @@ public:
     /// 折れ線(close なら閉じる)。
     void add_polyline(const std::vector<Point>& points, bool close = false);
 
-    bool empty() const { return elements_.empty(); }
+    bool is_empty() const { return elements_.empty(); }
     const std::vector<Element>& elements() const { return elements_; }
 
 private:

@@ -579,7 +579,7 @@ export function defaultEventOf(cls: string): string | undefined {
     'on_submit',
     'on_change',
     'on_activate',
-    'on_timer',
+    'on_timeout',
     'on_finish',
     'on_close',
     'on_paint',

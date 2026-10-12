@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         &window, "このラベルは word_wrap で、ウィンドウの幅に合わせて折り返す。日本語の禁則(行の始めに「、」や「。」を置かない)にも従う。"
                  " English text wraps at spaces.");
     label_description->word_wrap = true;
-    label_description->color = tokotachi::ColorRole::TEXT_SECONDARY;  // テーマの「控えめな文字」(ダークでも読める)
+    label_description->text_color = tokotachi::ColorRole::TEXT_SECONDARY;  // テーマの「控えめな文字」(ダークでも読める)
 
     tokotachi::Widget* click_row = new tokotachi::Widget(&window);
     tokotachi::BoxLayout* click_box = new tokotachi::BoxLayout(click_row, tokotachi::Orientation::HORIZONTAL);
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
     tokotachi::Label* label_caption = new tokotachi::Label(&window, "名前(IME で日本語も入力できる。Tab でフォーカスを移す)");
     label_caption->font = tokotachi::Font(12);
-    label_caption->color = tokotachi::ColorRole::TEXT_SECONDARY;
+    label_caption->text_color = tokotachi::ColorRole::TEXT_SECONDARY;
     tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(&window);
     line_edit_name->placeholder_text = "ここに入力";
 
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
     list_view_files->model = files;
     tokotachi::Label* label_list_status = new tokotachi::Label(list_page, "Ctrl・Shift+クリックで複数選べる。ダブルクリック・Enter で開く");
-    label_list_status->color = tokotachi::ColorRole::TEXT_SECONDARY;
+    label_list_status->text_color = tokotachi::ColorRole::TEXT_SECONDARY;
     list_view_files->on_selection_change = [=](tokotachi::Object*)
     { label_list_status->text = std::to_string(list_view_files->selection.get().size()) + " 個を選んでいる"; };
     list_view_files->on_activate = [=](tokotachi::Object*)
@@ -479,7 +479,7 @@ int main(int argc, char** argv)
         // 「黒」はテーマの文字の色にする(ダークでは明るい色になる)。他は固定の色。
         const int c = combo_box_color->current_index;
         static const std::uint32_t RGB[] = {0, 0x2563eb, 0x059669, 0xdc2626};
-        label_greeting->color = c <= 0 ? tokotachi::ThemeColor(tokotachi::ColorRole::TEXT) : tokotachi::ThemeColor(tokotachi::Color::rgb(RGB[c]));
+        label_greeting->text_color = c <= 0 ? tokotachi::ThemeColor(tokotachi::ColorRole::TEXT) : tokotachi::ThemeColor(tokotachi::Color::rgb(RGB[c]));
     };
     name->on_change = update_greeting;
     honorific->on_change = update_greeting;

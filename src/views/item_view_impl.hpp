@@ -18,6 +18,8 @@ class ItemView::Impl : public detail::WidgetHooks
 
     Impl(ItemView* object, bool tree, bool table) : q(object), tree_(tree), table_(table) {}
 
+    bool get_editing() const { return edit_index_.is_valid(); }
+
     /// TreeView のための操作。
     void expand(const ModelIndex& index);
     void collapse(const ModelIndex& index);

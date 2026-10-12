@@ -389,7 +389,7 @@ struct OutlineSink
 int outline_move(const FT_Vector* to, void* user)
 {
     OutlineSink* s = static_cast<OutlineSink*>(user);
-    if (!s->path->empty())
+    if (!s->path->is_empty())
     {
         s->path->close();
     }
@@ -456,7 +456,7 @@ const Path& FontInstance::outline(std::uint32_t glyph_id)
         funcs.delta = 0;
         OutlineSink sink = {&path, 0, 0};
         FT_Outline_Decompose(&face_->glyph->outline, &funcs, &sink);
-        if (!path.empty())
+        if (!path.is_empty())
         {
             path.close();
         }

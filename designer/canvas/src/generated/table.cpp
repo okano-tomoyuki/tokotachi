@@ -4501,14 +4501,14 @@ bool set_Label(tokotachi::Label* o, const std::string& p, const Json& v)
         o->font = t;
         return true;
     }
-    if (p == "color")
+    if (p == "text_color")
     {
         tokotachi::ThemeColor t;
         if (!from_json(v, t))
         {
             return false;
         }
-        o->color = t;
+        o->text_color = t;
         return true;
     }
     if (p == "alignment")
@@ -4631,9 +4631,9 @@ bool get_Label(tokotachi::Label* o, const std::string& p, Json& out)
         out = to_json(o->font.get());
         return true;
     }
-    if (p == "color")
+    if (p == "text_color")
     {
-        out = to_json(o->color.get());
+        out = to_json(o->text_color.get());
         return true;
     }
     if (p == "alignment")
@@ -9103,7 +9103,7 @@ std::vector<std::string> property_names(const std::string& cls)
     }
     if (cls == "Label")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "text", "font", "color", "alignment", "word_wrap", "icon", "icon_size"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "text", "font", "text_color", "alignment", "word_wrap", "icon", "icon_size"};
     }
     if (cls == "ProgressBar")
     {

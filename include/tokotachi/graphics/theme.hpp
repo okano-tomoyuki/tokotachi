@@ -51,8 +51,8 @@ const int COLOR_ROLE_COUNT = static_cast<int>(ColorRole::ON_TOOLTIP) + 1;
 
 /// 色の指定: テーマの役割か、具体的な色のどちらか。役割で指定した色は、テーマを切り替えると変わる。
 /// @code
-/// label_note->color = ColorRole::TEXT_SECONDARY;   // テーマに従う
-/// label_note->color = Color::rgb(0xdc2626);        // 固定の色
+/// label_note->text_color = ColorRole::TEXT_SECONDARY;   // テーマに従う
+/// label_note->text_color = Color::rgb(0xdc2626);        // 固定の色
 /// @endcode
 /// @ingroup graphics
 class TOKOTACHI_API ThemeColor
@@ -153,7 +153,7 @@ public:
     float field_padding() const { return field_padding_; }
 
     /// 何も上書きしていないか。
-    bool empty() const;
+    bool is_empty() const;
     /// theme に重ねる(theme.dark_colors で、ライト・ダークのどちらの色を使うかを選ぶ)。
     void apply_to(Theme& theme) const;
 

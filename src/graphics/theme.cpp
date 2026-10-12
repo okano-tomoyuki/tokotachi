@@ -161,7 +161,7 @@ ThemeOverride& ThemeOverride::set_field_padding(float v)
     return *this;
 }
 
-bool ThemeOverride::empty() const
+bool ThemeOverride::is_empty() const
 {
     for (int i = 0; i < COLOR_ROLE_COUNT; ++i)
     {

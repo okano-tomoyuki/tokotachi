@@ -27,7 +27,7 @@ class FileDialog::Impl
     void set_title(const std::string& v) { title_ = v; }
     void set_filters(const std::vector<FileFilter>& v) { filters_ = v; }
     void set_location(const std::string& v) { location_ = v; }
-    void set_allow_many(const bool& v) { allow_many_ = v; }
+    void set_multi_enabled(const bool& v) { multi_enabled_ = v; }
     /// 結果が届いた(メインスレッド)。
     void finished(const std::vector<std::string>& result, int filter, const std::string& failure);
 
@@ -37,7 +37,7 @@ class FileDialog::Impl
     std::string title_;
     std::vector<FileFilter> filters_;
     std::string location_;
-    bool allow_many_;
+    bool multi_enabled_;
     std::vector<std::string> paths_;
     int selected_filter_;
     std::string error_;
@@ -112,7 +112,7 @@ FileDialog::FileDialog(Window* parent, FileDialogMode initial_mode)
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, title),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::vector<FileFilter>, filters),
       TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, std::string, location),
-      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, allow_many),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, multi_enabled),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::vector<std::string>, paths),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, error),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, int, selected_filter),
@@ -122,7 +122,7 @@ FileDialog::FileDialog(Window* parent, FileDialogMode initial_mode)
 {
     d_->parent_ = parent;
     d_->mode_ = initial_mode;
-    d_->allow_many_ = false;
+    d_->multi_enabled_ = false;
     d_->selected_filter_ = -1;
     d_->request_ = 0;
 }
@@ -175,7 +175,7 @@ void FileDialog::open()
     {
         SDL_SetStringProperty(props, SDL_PROP_FILE_DIALOG_TITLE_STRING, d_->title_.c_str());
     }
-    SDL_SetBooleanProperty(props, SDL_PROP_FILE_DIALOG_MANY_BOOLEAN, d_->allow_many_ && d_->mode_ != FileDialogMode::SAVE);
+    SDL_SetBooleanProperty(props, SDL_PROP_FILE_DIALOG_MANY_BOOLEAN, d_->multi_enabled_ && d_->mode_ != FileDialogMode::SAVE);
 
     d_->request_ = request->id;
     live_requests()[d_->request_] = this;

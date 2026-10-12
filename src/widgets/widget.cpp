@@ -377,7 +377,7 @@ bool Widget::Impl::compose_theme(Theme& out) const
     std::vector<const ThemeOverride*> chain;  // 自分から根へ
     for (const Widget* w = q; w; w = w->d_->theme_parent())
     {
-        if (!w->d_->theme_override_.empty())
+        if (!w->d_->theme_override_.is_empty())
         {
             chain.push_back(&w->d_->theme_override_);
         }

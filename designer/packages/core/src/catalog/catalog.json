@@ -3101,7 +3101,7 @@
             "italic": false
           }
         },
-        "color": {
+        "text_color": {
           "type": {
             "value": "ThemeColor"
           },
@@ -3796,7 +3796,7 @@
         "drop_enabled": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。",
+          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。 部品がドロップを受け取るか(Widget::accepts_drops)とは別で、項目の間に落とせるようにする。代入すると、 accepts_drops も同じ値にする。",
           "default": false
         }
       },
@@ -4045,7 +4045,7 @@
         "drop_enabled": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。",
+          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。 部品がドロップを受け取るか(Widget::accepts_drops)とは別で、項目の間に落とせるようにする。代入すると、 accepts_drops も同じ値にする。",
           "default": false
         },
         "indentation": {
@@ -4303,7 +4303,7 @@
         "drop_enabled": {
           "type": "bool",
           "declared_in": "ItemView",
-          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。",
+          "doc": "項目の間・項目の上(TreeView では子にする)に落とせるか(既定 false)。同じモデルの項目はモデルの move_rows で移し、 ほかのデータはモデルの can_drop・drop_data に渡し、モデルが受け取らなければ on_drag_move・on_drop に任せる。 部品がドロップを受け取るか(Widget::accepts_drops)とは別で、項目の間に落とせるようにする。代入すると、 accepts_drops も同じ値にする。",
           "default": false
         },
         "selection_behavior": {
@@ -5586,7 +5586,7 @@
       ],
       "kind": "object",
       "category": "non_visual",
-      "doc": "タイマー: 一定の間隔で on_timer をメインスレッドで呼ぶ(docs/adr/0014)。",
+      "doc": "タイマー: 一定の間隔で on_timeout をメインスレッドで呼ぶ(docs/adr/0014)。",
       "properties": {
         "interval": {
           "type": "int",
@@ -5611,7 +5611,7 @@
         }
       },
       "handlers": {
-        "on_timer": {
+        "on_timeout": {
           "type": "NotifyHandler",
           "declared_in": "Timer"
         }
