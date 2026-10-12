@@ -43,13 +43,18 @@
 
 ### pimpl(物理的に非公開にする)
 
-- Object から派生する公開のクラスは、非公開のデータと非公開のメンバ関数を、`src` の中の実装のクラス(`detail::ButtonImpl` など。
-  今の `Application` の `detail::ApplicationImpl` と同じ形)に移す。公開のヘッダには、実装のクラスの前方宣言と、それを指すポインタ 1 つ
-  (`d_`)だけを残す。
-- 実装のクラスは、クラスの階層の段ごとに持つ(Widget と Button がそれぞれ持つ)。段ごとに確保が増えるが、利用者が派生させたクラスに
-  影響せず、段ごとに独立して変えられる。
-- 内部のコード(ほかの部品・テスト)が実装のクラスへ届く口は、`friend struct detail::ImplAccess` の 1 つだけにする。部品ごとの
-  `friend class detail::ColorPlane` などはヘッダから無くす。
+- Object から派生する公開のクラスは、非公開のデータと非公開のメンバ関数を、入れ子の実装のクラス `Impl` に移す。公開のヘッダの
+  非公開の部分には、`class Impl;` と、それを指すポインタ `Impl* d_;` だけを残す(`detail` の前方宣言も friend も要らない)。
+  入れ子のクラスは外側のクラスのメンバと同じ扱いなので、`Button::Impl` は Button の private のメンバに触れ、公開のクラスへのポインタ
+  `q` を通して基底の protected のメンバも呼べる。
+- 実装のクラスは、クラスの階層の段ごとに持つ(`Widget::Impl` と `Button::Impl` は別の型)。段ごとに確保が増えるが、利用者が派生させた
+  クラスに影響せず、段ごとに独立して変えられる。
+- ほかのクラスの実装のコードから届くクラス(Widget・Layout など)だけ、ヘッダで内部の窓口を friend にする
+  (`template <typename> friend struct detail::ImplAccess;`。窓口の前方宣言は property.hpp に 1 つ)。窓口は
+  `detail::ImplAccess<Layout>::of(layout)` で実装のクラスを返す。protected のメンバを呼ぶなどの関数が要るクラスは窓口を特殊化し、
+  今の `detail::LayoutAccess` などは、その特殊化の別名(`typedef ImplAccess<Layout> LayoutAccess;`)にする。部品ごとの
+  `friend class detail::ColorPlane` などはヘッダから無くす。仕組みは `src/core/impl.hpp`(`TOKOTACHI_IMPL`・`TOKOTACHI_IMPL_ACCESS`・
+  `TOKOTACHI_IMPL_PROPERTY_...`)。
 - プロパティの読み書きの関数(`TOKOTACHI_PROPERTY_MEMBER` がつなぐもの)は、ヘッダの非公開のメンバ関数ではなく、ソースの中の関数にする。
 - ヘッダに残すもの: 公開のメンバ(プロパティ・ハンドラ・関数)、利用者が派生して上書きする `protected` の仮想関数(`paint` など)、
   インラインで書くと速さが要るもの(値の型)。値の型(Point・Color・Rect など)とテンプレート(Property・WeakRef など)は pimpl にしない。
@@ -110,8 +115,8 @@
 - あわせて、ライブラリのテストを CI(`.github/workflows/library.yml`。Windows の mingw64、Linux の x86_64・aarch64)で動かすようにした。
   以下の作業は、この CI で確かめながら進める。
 - pimpl の作業: `private:` を持つ公開のヘッダ(59 個)のうち、Object から派生するクラスを、ディレクトリごとに分けて移す。
-  オブジェクトごとに確保が増えるが、GUI の部品の数では問題にならない。テストが非公開のメンバを使っているところは `detail::ImplAccess` を
-  通すように直す。
+  オブジェクトごとに確保が増えるが、GUI の部品の数では問題にならない。内部の窓口(`detail::WidgetAccess` など)と、
+  テストが実装に触れるところは、窓口(`detail::ImplAccess`)を通すように直す。
 - `TOKOTACHI_API` を公開のヘッダ全体に付ける作業と、公開しなくなったシンボルを使っていないことの確かめ(サンプル・生成したプロジェクト・
   インストールしたものを別のプロジェクトから使う確かめ)が要る。
 - 1.0 の後に既存のクラスへプロパティ・ハンドラ・仮想関数を足すときは、その小さい版で SONAME を上げる。ソースの互換を壊す変更は、

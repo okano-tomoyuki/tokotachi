@@ -6,42 +6,37 @@
 
 #include <tokotachi/widgets/widget.hpp>
 
-#include "../core/property_impl.hpp"
 #include "../widgets/widget_access.hpp"
+#include "layout_access.hpp"
 
 namespace tokotachi
 {
 
 Layout::Layout(Widget* target)
     : Object(target),
-      TOKOTACHI_READONLY_PROPERTY(Layout, Widget*, widget),
-      TOKOTACHI_PROPERTY_MEMBER(Layout, Margins, margins),
-      target_(target)
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, widget),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Margins, margins),
+      d_(new Impl(this, target))
 {
-    if (!target_)
+    if (!d_->target_)
     {
         return;
     }
     // 1 つのウィジェットに付くレイアウトは 1 つだけ。古いレイアウトは破棄する(子のウィジェットは破棄しない)。
-    Layout* old = detail::WidgetAccess::layout_of(target_);
-    detail::WidgetAccess::set_layout(target_, this);
+    Layout* old = detail::WidgetAccess::layout_of(d_->target_);
+    detail::WidgetAccess::set_layout(d_->target_, this);
     delete old;
     request_layout();
 }
 
 Layout::~Layout()
 {
-    if (target_ && detail::WidgetAccess::layout_of(target_) == this)
+    if (d_->target_ && detail::WidgetAccess::layout_of(d_->target_) == this)
     {
-        detail::WidgetAccess::set_layout(target_, nullptr);
-        target_->request_layout();
+        detail::WidgetAccess::set_layout(d_->target_, nullptr);
+        d_->target_->request_layout();
     }
-}
-
-void Layout::set_margins(const Margins& v)
-{
-    margins_ = v;
-    request_layout();
+    delete d_;
 }
 
 void Layout::remove(Widget* w)
@@ -52,23 +47,23 @@ void Layout::remove(Widget* w)
 
 void Layout::request_layout()
 {
-    if (target_)
+    if (d_->target_)
     {
-        target_->request_layout();
+        d_->target_->request_layout();
     }
 }
 
 bool Layout::adopt(Widget* w)
 {
-    if (!w || !target_)
+    if (!w || !d_->target_)
     {
         return false;
     }
-    if (detail::WidgetAccess::parent_of(w) != target_)
+    if (detail::WidgetAccess::parent_of(w) != d_->target_)
     {
-        w->parent = target_;  // ウィンドウ・target の祖先は付け替えられない(set_parent が拒否する)
+        w->parent = d_->target_;  // ウィンドウ・target の祖先は付け替えられない(set_parent が拒否する)
     }
-    if (detail::WidgetAccess::parent_of(w) != target_)
+    if (detail::WidgetAccess::parent_of(w) != d_->target_)
     {
         std::fprintf(stderr, "tokotachi: Layout::add: the widget cannot be placed in this layout (ignored)\n");
         return false;
@@ -115,7 +110,7 @@ void Layout::place_in_cell(Widget* w, const Rect& cell, Align horizontal, Align 
     align_in(cell.x, cell.width, pref.width, max.width, horizontal, x, width);
     align_in(cell.y, cell.height, pref.height, max.height, vertical, y, height);
     // 辺をピクセルの整数に揃え、分数の倍率でも境界がにじまないようにする(docs/adr/0008)。
-    const float s = target_ ? target_->display_scale.get() : 1.0f;
+    const float s = d_->target_ ? d_->target_->display_scale.get() : 1.0f;
     const float x0 = std::floor(x * s + 0.5f) / s, y0 = std::floor(y * s + 0.5f) / s;
     const float x1 = std::floor((x + width) * s + 0.5f) / s, y1 = std::floor((y + height) * s + 0.5f) / s;
     w->bounds = Rect(x0, y0, std::max(0.0f, x1 - x0), std::max(0.0f, y1 - y0));

@@ -28,6 +28,9 @@ class Object;
 namespace detail
 {
 struct PropertyAccess;
+/// ライブラリの中で、ほかのクラスの実装(pimpl の Impl)に届くための窓口(内部。docs/adr/0057)。
+template <typename C>
+struct ImplAccess;
 /// owner の property(Property・ReadOnlyProperty のアドレス)の値が変わったことを知らせる。
 /// 結びつけた相手のプロパティへ値を伝える(docs/adr/0016)。
 TOKOTACHI_API void property_changed(Object* owner, const void* property);

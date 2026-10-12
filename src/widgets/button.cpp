@@ -5,77 +5,90 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "theme.hpp"
 
 namespace tokotachi
 {
-
-Button::Button(Widget* parent_widget, const std::string& initial_text)
-    : ButtonBase(parent_widget, initial_text),
-      TOKOTACHI_PROPERTY_MEMBER(Button, ButtonStyle, style),
-      TOKOTACHI_PROPERTY_MEMBER(Button, Image, icon),
-      TOKOTACHI_PROPERTY_MEMBER(Button, float, icon_size),
-      style_(ButtonStyle::PRIMARY),
-      icon_size_(16)
-{
-}
 
 namespace
 {
 const float ICON_TEXT_GAP = 6;  // 画像と文字の間
 }  // namespace
 
-void Button::set_icon(const Image& v)
+class Button::Impl
 {
-    if (v == icon_)
+    TOKOTACHI_IMPL(Button);
+
+    explicit Impl(Button* button) : q(button), style_(ButtonStyle::PRIMARY), icon_size_(16) {}
+
+    void set_style(const ButtonStyle& v)
     {
-        return;
+        style_ = v;
+        q->invalidate();
     }
-    const bool shown = !icon_.is_null();
-    icon_ = v;
-    invalidate();
-    if (shown != !icon_.is_null())
+
+    void set_icon(const Image& v)
     {
-        request_layout();
+        if (v == icon_)
+        {
+            return;
+        }
+        const bool shown = !icon_.is_null();
+        icon_ = v;
+        q->invalidate();
+        if (shown != !icon_.is_null())
+        {
+            q->request_layout();
+        }
     }
+
+    void set_icon_size(const float& v)
+    {
+        if (v == icon_size_)
+        {
+            return;
+        }
+        icon_size_ = std::max(0.0f, v);
+        q->invalidate();
+        q->request_layout();
+    }
+
+    /// 画像と、文字との間の幅(画像が無ければ 0)。
+    float icon_extent() const
+    {
+        if (icon_.is_null())
+        {
+            return 0;
+        }
+        return q->text_layout().text().empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
+    }
+
+    ButtonStyle style_;
+    Image icon_;
+    float icon_size_;
+};
+
+Button::Button(Widget* parent_widget, const std::string& initial_text)
+    : ButtonBase(parent_widget, initial_text),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, ButtonStyle, style),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Image, icon),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, float, icon_size),
+      d_(new Impl(this))
+{
 }
 
-void Button::set_icon_size(const float& v)
-{
-    if (v == icon_size_)
-    {
-        return;
-    }
-    icon_size_ = std::max(0.0f, v);
-    invalidate();
-    request_layout();
-}
-
-float Button::icon_extent() const
-{
-    if (icon_.is_null())
-    {
-        return 0;
-    }
-    return text_layout().text().empty() ? icon_size_ : icon_size_ + ICON_TEXT_GAP;
-}
-
-void Button::set_style(const ButtonStyle& v)
-{
-    style_ = v;
-    invalidate();
-}
+Button::~Button() { delete d_; }
 
 Size Button::compute_preferred_size() const
 {
     const TextLayout& l = text_layout();
-    const float h = std::ceil(std::max(l.height(), icon_.is_null() ? 0.0f : icon_size_)) + 16;
-    if (!icon_.is_null() && l.text().empty())
+    const float h = std::ceil(std::max(l.height(), d_->icon_.is_null() ? 0.0f : d_->icon_size_)) + 16;
+    if (!d_->icon_.is_null() && l.text().empty())
     {
-        return Size(std::max(h, icon_size_ + 16), h);  // 画像だけ: 正方形に近く
+        return Size(std::max(h, d_->icon_size_ + 16), h);  // 画像だけ: 正方形に近く
     }
-    return Size(std::ceil(icon_extent() + l.width()) + 32, h);
+    return Size(std::ceil(d_->icon_extent() + l.width()) + 32, h);
 }
 
 void Button::paint(Canvas& canvas)
@@ -83,7 +96,7 @@ void Button::paint(Canvas& canvas)
     const Rect r = local_rect;
     const bool enabled_now = effectively_enabled;
     Color fg = theme::on_accent();
-    if (style_ == ButtonStyle::PRIMARY)
+    if (d_->style_ == ButtonStyle::PRIMARY)
     {
         Color fill = theme::accent();
         if (!enabled_now)
@@ -122,12 +135,12 @@ void Button::paint(Canvas& canvas)
 
     // 画像と文字をひとまとまりとして中ほどに置く
     const TextLayout& l = text_layout();
-    const float extent = icon_extent();
+    const float extent = d_->icon_extent();
     const float x = (r.width - extent - (l.text().empty() ? 0 : l.width())) / 2;
-    if (!icon_.is_null())
+    if (!d_->icon_.is_null())
     {
-        canvas.draw_image(icon_, Rect(x, (r.height - icon_size_) / 2, icon_size_, icon_size_), fg,
-                          enabled_now || icon_.is_icon() ? 1.0f : 0.4f);
+        canvas.draw_image(d_->icon_, Rect(x, (r.height - d_->icon_size_) / 2, d_->icon_size_, d_->icon_size_), fg,
+                          enabled_now || d_->icon_.is_icon() ? 1.0f : 0.4f);
     }
     const Point at(x + extent, (r.height - l.height()) / 2);
     canvas.draw_text(l, at, fg);

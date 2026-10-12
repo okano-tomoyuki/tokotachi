@@ -26,6 +26,7 @@ class TOKOTACHI_API Button : public ButtonBase
 {
 public:
     explicit Button(Widget* parent = nullptr, const std::string& text = std::string());
+    ~Button() override;
 
     /// 既定は PRIMARY。
     Property<ButtonStyle> style;
@@ -39,15 +40,8 @@ protected:
     Size compute_preferred_size() const override;
 
 private:
-    void set_style(const ButtonStyle& v);
-    void set_icon(const Image& v);
-    void set_icon_size(const float& v);
-    /// 画像と、文字との間の幅(画像が無ければ 0)。
-    float icon_extent() const;
-
-    ButtonStyle style_;
-    Image icon_;
-    float icon_size_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

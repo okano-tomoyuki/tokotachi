@@ -15,11 +15,6 @@ namespace tokotachi
 
 class Widget;
 
-namespace detail
-{
-struct LayoutAccess;
-}
-
 /// レイアウトの内側の余白(dp)。
 /// @ingroup layout
 struct TOKOTACHI_API Margins
@@ -90,13 +85,10 @@ protected:
     void place_in_cell(Widget* w, const Rect& cell, Align horizontal, Align vertical) const;
 
 private:
-    friend struct detail::LayoutAccess;
-
-    Widget* get_widget() const { return target_; }
-    void set_margins(const Margins& v);
-
-    Widget* target_;
-    Margins margins_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi
