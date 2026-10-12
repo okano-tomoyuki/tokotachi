@@ -20,7 +20,7 @@ import {
   type TtuiDocument,
 } from '@tokotachi-designer/core';
 import { canvasSetup } from './components.ts';
-import { systemFonts } from './fonts.ts';
+import { systemFontSources, systemFonts } from './fonts.ts';
 import { withPlaceholders } from './placeholders.ts';
 
 export { systemFonts } from './fonts.ts';
@@ -129,6 +129,16 @@ export class Canvas {
     // ネイティブの Tokotachi が OS から得るもの(フォント・ダイアログのボタンの順)を渡す
     const config = {
       fonts: options.fonts ?? systemFonts(),
+      // Linux: 書体ごとの面(ネイティブと同じく fontconfig で太字・斜体を探した結果)。あれば fonts の代わりに使う
+      font_sources: options.fonts
+        ? []
+        : systemFontSources().map((s) => ({
+            style: s.style,
+            file: s.file,
+            index: s.index,
+            synthetic_bold: s.syntheticBold,
+            synthetic_italic: s.syntheticItalic,
+          })),
       os: process.platform === 'win32' ? 'windows' : process.platform,
       desktop: process.env['XDG_CURRENT_DESKTOP'] ?? '',
       // 利用者の言語(既定は OS の言語。暦の月・曜日、ダイアログのボタンの文字を選ぶ)

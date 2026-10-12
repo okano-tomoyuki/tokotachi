@@ -23,6 +23,10 @@ WebAssembly(デザイナーのキャンバス)は拡張が渡すファイルの�
     游ゴシック → YuGothB、メイリオ → meiryob、Malgun Gothic → malgunbd、Microsoft YaHei → msyhbd)。無ければ合成する。
     太字の斜体のファイルが無ければ、太字のファイルを傾ける。WebAssembly もネイティブと同じファイルを選ぶので、キャンバスは生成したコードと同じに描く。
   - Linux: fontconfig に `weight=bold`・`slant=italic` を付けて問い合わせ、当たった書体が太字・斜体でなければ合成する。
+    WebAssembly(Linux で動くキャンバス)は fontconfig を使えないので、拡張が同じ問い合わせを `fc-match -s` で書体ごとに行い、
+    当たった書体の太さ・傾きを `fc-list` の値(書体そのものの値。`fc-match` が出す値は問い合わせと混ぜた後のもの)で見て、
+    面・番号・合成するかを渡す(`TOKOTACHI_FONT_SOURCES`)。追記(2026-10-12): 当初は Windows と同じくフォルダのファイルを探していたので、
+    Linux のキャンバスだけが太字を合成し、ネイティブと画素が食い違った(CI の画素の比較で見つかった)。
 - 合成: 太字は FreeType の `FT_GlyphSlot_Embolden`(大きさの 1/24 太らせる)と、HarfBuzz の `hb_font_set_synthetic_bold`
   (字の送りも同じだけ広げる)。斜体は `FT_Set_Transform` で 0.2 傾ける(字の送りは変えない)。
 - デザイナー: カタログの値の型 `Font` のメンバに `bold`・`italic` が加わる。インスペクタは大きさの欄と B・I の切り替えで編集し、

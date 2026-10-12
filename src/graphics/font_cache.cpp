@@ -207,8 +207,39 @@ void add_styled(SourceLists& out, const std::string& path)
 // WebAssembly(デザイナーのキャンバス、docs/adr/0039): 探す手段が無いので、呼び出し側(拡張)が OS のフォントのファイルを
 // 環境変数 TOKOTACHI_FONT_FILES に ; 区切りで渡す(Node.js の NODERAWFS で、そのままのパスで読める)。
 // 太字・斜体は、ネイティブと同じく同じフォルダのファイルを探す。
+// Linux では、拡張が fontconfig で書体ごとに探した面を TOKOTACHI_FONT_SOURCES に渡す(1 行に「書体 番号 太らせる 傾ける ファイル」を
+// タブで区切る)。あればそれを使う(ネイティブの Linux と同じ面・同じ合成になる)。
 void find_system_fonts(SourceLists& out)
 {
+    const char* sources = std::getenv("TOKOTACHI_FONT_SOURCES");
+    if (sources && *sources)
+    {
+        std::string rest = sources;
+        while (!rest.empty())
+        {
+            const std::size_t end = rest.find('\n');
+            const std::string line = rest.substr(0, end);
+            rest = end == std::string::npos ? std::string() : rest.substr(end + 1);
+            std::string fields[5];
+            std::size_t start = 0;
+            for (int f = 0; f < 5; ++f)
+            {
+                const std::size_t tab = f < 4 ? line.find('\t', start) : std::string::npos;
+                fields[f] = line.substr(start, tab == std::string::npos ? std::string::npos : tab - start);
+                start = tab == std::string::npos ? line.size() : tab + 1;
+            }
+            const int style = std::atoi(fields[0].c_str());
+            if (style >= 0 && style < FONT_STYLE_COUNT && !fields[4].empty() && out[style].size() < 16 &&
+                file_exists(fields[4]))
+            {
+                add_source(out[style], fields[4], std::atoi(fields[1].c_str()), fields[2] == "1", fields[3] == "1");
+            }
+        }
+        if (!out[0].empty())
+        {
+            return;
+        }
+    }
     const char* list = std::getenv("TOKOTACHI_FONT_FILES");
     std::string rest = list ? list : "";
     while (!rest.empty())

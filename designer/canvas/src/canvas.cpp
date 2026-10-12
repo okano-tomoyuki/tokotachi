@@ -516,6 +516,21 @@ EMSCRIPTEN_KEEPALIVE void ttc_configure(const char* config_text)
         fonts += (i > 0 ? ";" : "") + config["fonts"].items()[i].as_string();
     }
     setenv("TOKOTACHI_FONT_FILES", fonts.c_str(), 1);
+    // Linux: 書体ごとの面(拡張が fontconfig で探したもの)。1 行に「書体 番号 太らせる 傾ける ファイル」をタブで区切る
+    std::string sources;
+    if (config.has("font_sources"))
+    {
+        const std::vector<ttc::Json>& items = config["font_sources"].items();
+        for (std::size_t i = 0; i < items.size(); ++i)
+        {
+            const ttc::Json& s = items[i];
+            sources += std::to_string(static_cast<int>(s["style"].as_number())) + "\t" +
+                       std::to_string(static_cast<int>(s["index"].as_number())) + "\t" +
+                       (s["synthetic_bold"].as_bool() ? "1" : "0") + "\t" + (s["synthetic_italic"].as_bool() ? "1" : "0") +
+                       "\t" + s["file"].as_string() + "\n";
+        }
+    }
+    setenv("TOKOTACHI_FONT_SOURCES", sources.c_str(), 1);
     setenv("TOKOTACHI_HOST_OS", config["os"].as_string().c_str(), 1);
     setenv("XDG_CURRENT_DESKTOP", config["desktop"].as_string().c_str(), 1);
     // 利用者の言語(暦の月・曜日、ダイアログのボタンの文字を選ぶ。ネイティブでは OS の設定)
