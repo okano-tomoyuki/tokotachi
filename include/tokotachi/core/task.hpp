@@ -29,6 +29,7 @@ public:
     /// 進み具合を知らせる(値の範囲は利用者が決める)。頻繁に呼んでよい(メインスレッドへは間引いて届ける)。
     void report_progress(double value);
 
+    /// ライブラリが作って仕事の関数に渡す。
     explicit TaskContext(const std::shared_ptr<detail::TaskShared>& shared) : shared_(shared) {}
 
 private:
@@ -52,6 +53,7 @@ public:
     /// 仕事の関数が投げた例外のメッセージ(投げなければ空)。
     ReadOnlyProperty<std::string> error;
 
+    /// 進み具合が変わった(仕事の関数が report_progress を呼んだ。間引いて届く)。
     Property<NotifyHandler> on_progress;
     /// 終わった(結果が出た・取り消した・例外を投げた)。
     Property<NotifyHandler> on_finish;
@@ -60,6 +62,7 @@ public:
     void cancel();
 
 protected:
+    /// 所有者を渡す(所有者が破棄されると取り消し、結果は捨てる)。
     explicit TaskBase(Object* owner);
 
     /// body を別のスレッドで呼ぶ。body が例外を投げずに戻ったら、メインスレッドで deliver を呼んでから on_finish を呼ぶ。
@@ -104,6 +107,7 @@ template <typename T>
 class Task : public TaskBase
 {
 public:
+    /// 所有者を渡す(所有者が破棄されると取り消し、結果は捨てる)。
     explicit Task(Object* owner = nullptr) : TaskBase(owner), result(this, &Task::read_result), result_() {}
 
     /// 仕事の結果(on_finish で、error が空で cancelled でなければ読む)。
@@ -134,8 +138,10 @@ template <>
 class Task<void> : public TaskBase
 {
 public:
+    /// 所有者を渡す(所有者が破棄されると取り消し、結果は捨てる)。
     explicit Task(Object* owner = nullptr) : TaskBase(owner) {}
 
+    /// work を別のスレッドで始める。動いていれば何もせず false。
     bool start(const std::function<void(TaskContext&)>& work) { return launch(work, std::function<void()>()); }
 };
 

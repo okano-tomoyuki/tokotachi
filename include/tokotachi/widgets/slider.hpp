@@ -28,9 +28,11 @@ namespace tokotachi
 class TOKOTACHI_API Slider : public RangeBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit Slider(Widget* parent = nullptr, Orientation orientation = Orientation::HORIZONTAL);
     ~Slider() override;
 
+    /// 向き。
     Property<Orientation> orientation;
     /// 目盛りの間隔(既定 0: 目盛りを出さない。docs/adr/0049)。minimum から、この間隔ごとと maximum に、
     /// 溝の下(縦なら右)へ目盛りを出す。目盛りが詰まりすぎるときは出さない。

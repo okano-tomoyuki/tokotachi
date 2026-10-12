@@ -28,17 +28,23 @@ namespace tokotachi
 struct TOKOTACHI_API Font
 {
     float size;  ///< dp
+    /// 太字か。
     bool bold;
+    /// 斜体か。
     bool italic;
 
     Font() : size(14), bold(false), italic(false) {}
+    /// 大きさ(dp)と太字・斜体から作る。
     explicit Font(float size_dp, bool bold_ = false, bool italic_ = false)
         : size(size_dp), bold(bold_), italic(italic_)
     {
     }
 
+    /// 大きさ・太字・斜体が等しいか。
+    ///@{
     bool operator==(const Font& o) const { return size == o.size && bold == o.bold && italic == o.italic; }
     bool operator!=(const Font& o) const { return !(*this == o); }
+    ///@}
 };
 
 namespace detail
@@ -59,25 +65,33 @@ public:
     TextLayout(const std::string& text, const Font& font, float scale, float wrap_width = 0,
                Align alignment = Align::START);
 
+    /// 空のレイアウト(既定の構築で作ったもの)か。
     bool is_null() const { return !d_; }
+    /// レイアウトした文字。
     const std::string& text() const;
+    /// フォント。
     const Font& font() const;
+    /// dp からピクセルへの倍率。
     float scale() const;
 
     /// 最も広い行の幅(行末の空白は含めない)と、全体の高さ。
     float width() const;
+    /// 全体の高さ。
     float height() const;
     /// 1 行目のベースラインから上・下の高さ(どちらも正の値)。行の高さはフォールバックしたフォントによらず一定。
     float ascent() const;
+    /// 1 行目のベースラインから下の高さ。
     float descent() const;
     /// 行の送り(ある行の上端から次の行の上端まで)。
     float line_height() const;
 
+    /// 行の数(折り返した行も数える)。
     std::size_t line_count() const;
     /// offset のある行。折り返した行の境目は次の行に、改行文字の直前はその行に属する。
     std::size_t line_of(std::size_t offset) const;
     /// 行の始めと終わり(終わりは改行文字の前)。
     std::size_t line_start(std::size_t line) const;
+    /// 行の終わり(改行文字の前)。
     std::size_t line_end(std::size_t line) const;
     /// 行の矩形(左右は行の文字の範囲、上下は行の送りの範囲)。
     Rect line_rect(std::size_t line) const;
@@ -93,15 +107,20 @@ public:
     std::size_t offset_at(const Point& p) const;
     /// 次・前のキャレットを置ける位置(書記素の境界。論理の順で、行の境目もまたぐ)。
     std::size_t next_offset(std::size_t offset) const;
+    /// 前のキャレットを置ける位置。
     std::size_t previous_offset(std::size_t offset) const;
 
     /// 次の単語の始め・前の単語の始め(UAX #29。空白は飛ばす。Ctrl+矢印に使う)。
     std::size_t next_word_offset(std::size_t offset) const;
+    /// 前の単語の始め。
     std::size_t previous_word_offset(std::size_t offset) const;
     /// offset を含む単語の範囲(ダブルクリックでの選択に使う)。
     void word_at(std::size_t offset, std::size_t& start, std::size_t& end) const;
 
+    /// @cond
+    // ライブラリの中で使う(リファレンスに出さない)。
     const detail::TextLayoutData* data() const { return d_.get(); }
+    /// @endcond
 
 private:
     std::shared_ptr<const detail::TextLayoutData> d_;

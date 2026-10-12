@@ -26,23 +26,31 @@ namespace tokotachi
 /// @ingroup actions
 struct TOKOTACHI_API Shortcut
 {
+    /// キー(UNKNOWN なら空のショートカット)。
     Key key;
+    /// 修飾キー。
     Modifiers modifiers;
 
     Shortcut() : key(Key::UNKNOWN), modifiers(MODIFIER_NONE) {}
+    /// キーと修飾キーから作る。
     Shortcut(Key key_, Modifiers modifiers_ = MODIFIER_NONE) : key(key_), modifiers(modifiers_) {}
     /// 文字から作る("Ctrl+S" など)。
     Shortcut(const char* text);
+    /// 文字から作る("Ctrl+S" など)。
     Shortcut(const std::string& text);
 
+    /// 空のショートカットか。
     bool is_empty() const { return key == Key::UNKNOWN; }
     /// 表示の文字("Ctrl+Shift+S")。空なら空の文字。
     std::string to_string() const;
     /// キーの押下がこの組み合わせか(修飾キーは過不足なく一致すること)。
     bool matches(const KeyEvent& e) const;
 
+    /// キーと修飾キーが等しいか。
+    ///@{
     bool operator==(const Shortcut& o) const { return key == o.key && modifiers == o.modifiers; }
     bool operator!=(const Shortcut& o) const { return !(*this == o); }
+    ///@}
 };
 
 }  // namespace tokotachi

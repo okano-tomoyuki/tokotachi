@@ -26,25 +26,35 @@ public:
 
     /// 1 行なら改行・タブなどの制御文字を取り除く。複数行なら改行を \n にそろえ、タブは空白にし、その他の制御文字を取り除く。
     Property<std::string> text;
+    /// 空のときに薄く出す説明の文字。
     Property<std::string> placeholder_text;
+    /// 文字のフォント。
     Property<Font> font;
     /// キャレットの位置(UTF-8 のバイトの位置)。代入すると選択は外れる。
     Property<std::size_t> cursor_position;
+    /// 文字を選んでいるか。
     ReadOnlyProperty<bool> has_selection;
+    /// 選んでいる文字。
     ReadOnlyProperty<std::string> selected_text;
 
     /// テキストが変わった(利用者の操作・text への代入のどちらでも。同じ値の代入では呼ばない。docs/adr/0016)。
     Property<NotifyHandler> on_change;
 
+    /// すべての文字を選ぶ。
     void select_all();
+    /// 選択を外す(文字は消さない)。
     void clear_selection();
+    /// 選んでいる文字をクリップボードに移す。
     void cut();
+    /// 選んでいる文字をクリップボードに写す。
     void copy() const;
+    /// クリップボードの文字を、選択を消して入れる。
     void paste();
     /// 選択を消して s を入れる。
     void insert(const std::string& s);
 
 protected:
+    /// ライブラリの中だけで派生する(LineEdit・TextEdit)。
     TextInputBase(Widget* parent, const detail::InternalTag& tag, const std::string& text, bool multi_line);
 
     void resized() override;

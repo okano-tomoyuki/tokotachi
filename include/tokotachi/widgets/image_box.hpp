@@ -35,9 +35,11 @@ enum class ImageFit
 class TOKOTACHI_API ImageBox : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ImageBox(Widget* parent = nullptr, const Image& image = Image());
     ~ImageBox() override;
 
+    /// 表示する画像(空なら何も描かない)。
     Property<Image> image;
     /// 既定は NONE。
     Property<ImageFit> fit;

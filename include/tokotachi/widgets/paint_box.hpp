@@ -30,6 +30,7 @@ namespace tokotachi
 class TOKOTACHI_API PaintBox : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit PaintBox(Widget* parent = nullptr);
     ~PaintBox() override;
 

@@ -27,8 +27,11 @@ class TOKOTACHI_API ModelIndex
 public:
     ModelIndex() : row_(-1), id_(nullptr) {}
 
+    /// 項目を指しているか(既定の構築で作ったものは無効)。
     bool is_valid() const { return row_ >= 0; }
+    /// 親の中での行の番号(無効なら -1)。
     int row() const { return row_; }
+    /// モデルが決める識別子。
     void* id() const { return id_; }
 
 private:
@@ -43,12 +46,15 @@ private:
 
 /// 比べる(メンバにしないのは、view->current == index のように Property<ModelIndex> とも比べられるようにするため)。
 inline bool operator==(const ModelIndex& a, const ModelIndex& b) { return a.row() == b.row() && a.id() == b.id(); }
+/// 行の番号か識別子が違うか。
 inline bool operator!=(const ModelIndex& a, const ModelIndex& b) { return !(a == b); }
+/// 並べるための順序(識別子、行の番号の順。std::set などのため)。
 inline bool operator<(const ModelIndex& a, const ModelIndex& b)
 {
     return a.id() != b.id() ? a.id() < b.id() : a.row() < b.row();
 }
 
+/// 並べ替えの向き。
 enum class SortOrder
 {
     ASCENDING,
@@ -93,6 +99,7 @@ public:
     virtual bool enabled(const ModelIndex& index) const;
     /// チェックボックスを付けるか・付いているか(既定は付けない)。
     virtual bool checkable(const ModelIndex& index) const;
+    /// チェックボックスが付いているか(既定は false)。
     virtual bool checked(const ModelIndex& index) const;
     /// 利用者がチェックボックスを押した。値を変えたら notify_data_changed で知らせる。
     virtual void set_checked(const ModelIndex& index, bool checked);
@@ -111,10 +118,12 @@ public:
     /// ドラッグ&ドロップ(docs/adr/0047)。row は parent の子の位置(その前に入れる。-1 なら終わり)。
     /// 同じモデルの項目 indexes(表示の順)を移せるか・移す(既定は移せない)。移したら notify_layout_changed などで知らせる。
     virtual bool can_move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row) const;
+    /// 同じモデルの項目 indexes を、parent の子の row の位置へ移す。移したら true。
     virtual bool move_rows(const std::vector<ModelIndex>& indexes, const ModelIndex& parent, int row);
     /// ほか(別のモデル・ウィジェット・OS)から落としたデータを受け取れるか・受け取る(既定は受け取らない)。
     /// OS からのデータは、落とすまで中身が分からない(DragData::from_outside)。
     virtual bool can_drop(const DragData& data, const ModelIndex& parent, int row) const;
+    /// 落としたデータを parent の子の row の位置へ受け取る。受け取ったら true。
     virtual bool drop_data(const DragData& data, DropAction action, const ModelIndex& parent, int row);
 
     /// column 列目の文字で並べ替える(既定は何もしない)。並べ替えたら notify_layout_changed で知らせる。
@@ -123,8 +132,10 @@ public:
     virtual ModelIndex locate(const ModelIndex& index) const;
 
 protected:
+    /// 派生クラスから作る。
     explicit ItemModel(Object* owner = nullptr);
 
+    /// 行の番号と識別子から ModelIndex を作る(派生クラスの index・parent_of で使う)。
     ModelIndex make_index(int row, void* id) const { return ModelIndex(row, id); }
 
     /// 変更をビューに知らせる。

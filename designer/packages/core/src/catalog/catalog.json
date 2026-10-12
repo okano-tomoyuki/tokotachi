@@ -89,18 +89,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -110,6 +113,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -132,6 +136,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -146,6 +151,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -153,6 +159,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -160,6 +167,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -185,6 +193,7 @@
         "title": {
           "type": "string",
           "declared_in": "Window",
+          "doc": "題名(ウィンドウの枠に出す)。",
           "default": ""
         },
         "background": {
@@ -230,27 +239,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -259,19 +274,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_close": {
           "type": "CloseHandler",
@@ -293,18 +312,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -314,6 +336,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -336,6 +359,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -350,6 +374,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -357,6 +382,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -364,6 +390,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -389,6 +416,7 @@
         "title": {
           "type": "string",
           "declared_in": "Window",
+          "doc": "題名(ウィンドウの枠に出す)。",
           "default": ""
         },
         "background": {
@@ -434,27 +462,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -463,19 +497,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_close": {
           "type": "CloseHandler",
@@ -502,18 +540,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -523,6 +564,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -545,6 +587,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -559,6 +602,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -566,6 +610,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -573,6 +618,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "POINTING_HAND"
         },
         "tooltip": {
@@ -598,6 +644,7 @@
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
+          "doc": "表示する文字(& でニーモニック。&& は & そのもの)。",
           "default": ""
         },
         "font": {
@@ -605,6 +652,7 @@
             "value": "Font"
           },
           "declared_in": "ButtonBase",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -661,27 +709,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -690,19 +744,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_click": {
           "type": "NotifyHandler",
@@ -728,18 +786,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -749,6 +810,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -771,6 +833,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -785,6 +848,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -792,6 +856,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -799,6 +864,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "POINTING_HAND"
         },
         "tooltip": {
@@ -824,6 +890,7 @@
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
+          "doc": "表示する文字(& でニーモニック。&& は & そのもの)。",
           "default": ""
         },
         "font": {
@@ -831,6 +898,7 @@
             "value": "Font"
           },
           "declared_in": "ButtonBase",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -840,6 +908,7 @@
         "checked": {
           "type": "bool",
           "declared_in": "CheckBox",
+          "doc": "チェックしているか(既定 false)。",
           "default": false
         }
       },
@@ -871,27 +940,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -900,19 +975,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_click": {
           "type": "NotifyHandler",
@@ -943,18 +1022,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -964,6 +1046,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -986,6 +1069,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -1000,6 +1084,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -1007,6 +1092,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -1014,6 +1100,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "POINTING_HAND"
         },
         "tooltip": {
@@ -1039,6 +1126,7 @@
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
+          "doc": "表示する文字(& でニーモニック。&& は & そのもの)。",
           "default": ""
         },
         "font": {
@@ -1046,6 +1134,7 @@
             "value": "Font"
           },
           "declared_in": "ButtonBase",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -1093,27 +1182,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -1122,19 +1217,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_click": {
           "type": "NotifyHandler",
@@ -1165,18 +1264,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1186,6 +1288,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1208,6 +1311,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -1222,6 +1326,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -1229,6 +1334,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -1236,6 +1342,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "IBEAM"
         },
         "tooltip": {
@@ -1267,6 +1374,7 @@
         "placeholder_text": {
           "type": "string",
           "declared_in": "TextInputBase",
+          "doc": "空のときに薄く出す説明の文字。",
           "default": ""
         },
         "font": {
@@ -1274,6 +1382,7 @@
             "value": "Font"
           },
           "declared_in": "TextInputBase",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -1309,27 +1418,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -1338,19 +1453,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -1381,18 +1500,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1402,6 +1524,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1424,6 +1547,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -1438,6 +1562,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -1445,6 +1570,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -1452,6 +1578,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "IBEAM"
         },
         "tooltip": {
@@ -1484,6 +1611,7 @@
         "placeholder_text": {
           "type": "string",
           "declared_in": "TextInputBase",
+          "doc": "空のときに薄く出す説明の文字。",
           "default": ""
         },
         "font": {
@@ -1491,6 +1619,7 @@
             "value": "Font"
           },
           "declared_in": "TextInputBase",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -1500,6 +1629,7 @@
         "word_wrap": {
           "type": "bool",
           "declared_in": "TextEdit",
+          "doc": "幅で折り返すか。",
           "default": true
         }
       },
@@ -1531,27 +1661,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -1560,19 +1696,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -1598,18 +1738,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1619,6 +1762,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1641,6 +1785,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -1655,6 +1800,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -1662,6 +1808,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -1669,6 +1816,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -1700,6 +1848,7 @@
         "maximum": {
           "type": "double",
           "declared_in": "RangeBase",
+          "doc": "範囲の終わり。",
           "default": 100
         },
         "value": {
@@ -1753,6 +1902,7 @@
         "suffix": {
           "type": "string",
           "declared_in": "SpinBox",
+          "doc": "値の後に付ける文字(単位など)。",
           "default": ""
         }
       },
@@ -1784,27 +1934,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -1813,19 +1969,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -1851,18 +2011,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1872,6 +2035,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -1894,6 +2058,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -1908,6 +2073,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -1915,6 +2081,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -1922,6 +2089,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -1953,6 +2121,7 @@
         "maximum": {
           "type": "double",
           "declared_in": "RangeBase",
+          "doc": "範囲の終わり。",
           "default": 100
         },
         "value": {
@@ -1992,6 +2161,7 @@
             "enum": "Orientation"
           },
           "declared_in": "Slider",
+          "doc": "向き。",
           "default": "HORIZONTAL"
         },
         "tick_interval": {
@@ -2029,27 +2199,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -2058,19 +2234,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -2095,18 +2275,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2116,6 +2299,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2138,6 +2322,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -2152,6 +2337,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -2159,6 +2345,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -2166,6 +2353,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -2193,6 +2381,7 @@
             "array": "string"
           },
           "declared_in": "ComboBox",
+          "doc": "選ぶ項目の文字。",
           "default": []
         },
         "current_index": {
@@ -2219,6 +2408,7 @@
             "value": "Font"
           },
           "declared_in": "ComboBox",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -2254,27 +2444,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -2283,19 +2479,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -2320,18 +2520,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2341,6 +2544,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2363,6 +2567,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -2377,6 +2582,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -2384,6 +2590,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -2391,6 +2598,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -2434,6 +2642,7 @@
             "value": "Date"
           },
           "declared_in": "DateEdit",
+          "doc": "選べる範囲の終わり。",
           "default": "9999-12-31"
         },
         "format": {
@@ -2485,27 +2694,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -2514,19 +2729,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -2552,18 +2771,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2573,6 +2795,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2595,6 +2818,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -2609,6 +2833,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -2616,6 +2841,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -2623,6 +2849,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "POINTING_HAND"
         },
         "tooltip": {
@@ -2648,6 +2875,7 @@
         "text": {
           "type": "string",
           "declared_in": "ButtonBase",
+          "doc": "表示する文字(& でニーモニック。&& は & そのもの)。",
           "default": ""
         },
         "font": {
@@ -2655,6 +2883,7 @@
             "value": "Font"
           },
           "declared_in": "ButtonBase",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -2666,6 +2895,7 @@
             "value": "Color"
           },
           "declared_in": "ColorButton",
+          "doc": "選んでいる色。",
           "default": "#000000"
         },
         "alpha_enabled": {
@@ -2709,27 +2939,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -2738,19 +2974,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_click": {
           "type": "NotifyHandler",
@@ -2780,18 +3020,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2801,6 +3044,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -2823,6 +3067,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -2837,6 +3082,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -2844,6 +3090,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -2851,6 +3098,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -2894,6 +3142,7 @@
             "value": "Date"
           },
           "declared_in": "Calendar",
+          "doc": "選べる範囲の終わり。",
           "default": "9999-12-31"
         },
         "first_day_of_week": {
@@ -2933,27 +3182,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -2962,19 +3217,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -3004,18 +3263,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3025,6 +3287,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3047,6 +3310,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -3061,6 +3325,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -3068,6 +3333,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -3075,6 +3341,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -3100,6 +3367,7 @@
         "text": {
           "type": "string",
           "declared_in": "Label",
+          "doc": "表示する文字(& でニーモニック。&& は & そのもの)。",
           "editor": "multiline",
           "default": ""
         },
@@ -3108,6 +3376,7 @@
             "value": "Font"
           },
           "declared_in": "Label",
+          "doc": "文字のフォント。",
           "default": {
             "size": 14,
             "bold": false,
@@ -3185,27 +3454,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -3214,19 +3489,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -3246,18 +3525,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3267,6 +3549,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3289,6 +3572,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -3303,6 +3587,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -3310,6 +3595,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -3317,6 +3603,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -3348,6 +3635,7 @@
         "maximum": {
           "type": "double",
           "declared_in": "ProgressBar",
+          "doc": "範囲の終わり。",
           "default": 100
         },
         "value": {
@@ -3405,27 +3693,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -3434,19 +3728,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -3466,18 +3764,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3487,6 +3788,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3509,6 +3811,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -3523,6 +3826,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -3530,6 +3834,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -3537,6 +3842,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -3563,7 +3869,8 @@
           "type": {
             "value": "Image"
           },
-          "declared_in": "ImageBox"
+          "declared_in": "ImageBox",
+          "doc": "表示する画像(空なら何も描かない)。"
         },
         "fit": {
           "type": {
@@ -3602,27 +3909,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -3631,19 +3944,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -3667,18 +3984,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3688,6 +4008,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3710,6 +4031,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -3724,6 +4046,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -3731,6 +4054,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -3738,6 +4062,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -3790,6 +4115,7 @@
             "enum": "SortOrder"
           },
           "declared_in": "ItemView",
+          "doc": "並べ替えの向き(既定 ASCENDING)。",
           "default": "ASCENDING"
         },
         "selection_mode": {
@@ -3841,27 +4167,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -3870,19 +4202,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_selection_change": {
           "type": "NotifyHandler",
@@ -3916,18 +4252,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3937,6 +4276,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -3959,6 +4299,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -3973,6 +4314,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -3980,6 +4322,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -3987,6 +4330,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -4039,6 +4383,7 @@
             "enum": "SortOrder"
           },
           "declared_in": "ItemView",
+          "doc": "並べ替えの向き(既定 ASCENDING)。",
           "default": "ASCENDING"
         },
         "selection_mode": {
@@ -4099,27 +4444,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -4128,19 +4479,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_selection_change": {
           "type": "NotifyHandler",
@@ -4174,18 +4529,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4195,6 +4553,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4217,6 +4576,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -4231,6 +4591,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -4238,6 +4599,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "TAB_AND_CLICK"
         },
         "cursor": {
@@ -4245,6 +4607,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -4297,6 +4660,7 @@
             "enum": "SortOrder"
           },
           "declared_in": "ItemView",
+          "doc": "並べ替えの向き(既定 ASCENDING)。",
           "default": "ASCENDING"
         },
         "selection_mode": {
@@ -4368,27 +4732,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -4397,19 +4767,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_selection_change": {
           "type": "NotifyHandler",
@@ -4439,18 +4813,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4460,6 +4837,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4482,6 +4860,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -4496,6 +4875,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -4503,6 +4883,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -4510,6 +4891,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -4561,27 +4943,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -4590,19 +4978,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -4623,18 +5015,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4644,6 +5039,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4666,6 +5062,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -4680,6 +5077,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -4687,6 +5085,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -4694,6 +5093,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -4751,27 +5151,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -4780,19 +5186,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -4815,18 +5225,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4836,6 +5249,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -4858,6 +5272,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -4872,6 +5287,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -4879,6 +5295,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "CLICK"
         },
         "cursor": {
@@ -4886,6 +5303,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -4951,27 +5369,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -4980,19 +5404,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -5020,18 +5448,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5041,6 +5472,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5063,6 +5495,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -5077,6 +5510,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -5084,6 +5518,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -5091,6 +5526,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -5118,6 +5554,7 @@
             "enum": "Orientation"
           },
           "declared_in": "Splitter",
+          "doc": "区画を並べる向き(HORIZONTAL なら横に並べる)。",
           "default": "HORIZONTAL"
         },
         "sizes": {
@@ -5158,27 +5595,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -5187,19 +5630,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         },
         "on_change": {
           "type": "NotifyHandler",
@@ -5227,18 +5674,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5248,6 +5698,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5270,6 +5721,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -5284,6 +5736,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -5291,6 +5744,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -5298,6 +5752,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -5355,27 +5810,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -5384,19 +5845,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -5416,18 +5881,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5437,6 +5905,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5459,6 +5928,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -5473,6 +5943,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -5480,6 +5951,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -5487,6 +5959,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -5544,27 +6017,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -5573,19 +6052,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       },
       "preferred_size": {
@@ -5626,7 +6109,8 @@
       "handlers": {
         "on_timeout": {
           "type": "NotifyHandler",
-          "declared_in": "Timer"
+          "declared_in": "Timer",
+          "doc": "間隔が経った(メインスレッドで呼ぶ)。"
         }
       }
     },
@@ -5643,6 +6127,7 @@
             "value": "Margins"
           },
           "declared_in": "Layout",
+          "doc": "内側の余白(dp。既定 0)。",
           "default": {
             "left": 0,
             "top": 0,
@@ -5655,6 +6140,7 @@
             "enum": "Orientation"
           },
           "declared_in": "BoxLayout",
+          "doc": "並べる向き(既定 VERTICAL)。",
           "default": "VERTICAL"
         },
         "spacing": {
@@ -5682,6 +6168,7 @@
             "value": "Margins"
           },
           "declared_in": "Layout",
+          "doc": "内側の余白(dp。既定 0)。",
           "default": {
             "left": 0,
             "top": 0,
@@ -5701,6 +6188,7 @@
         "column_spacing": {
           "type": "float",
           "declared_in": "GridLayout",
+          "doc": "列の間隔(dp、既定 8)。",
           "range": {
             "min": 0
           },
@@ -5722,6 +6210,7 @@
             "value": "Margins"
           },
           "declared_in": "Layout",
+          "doc": "内側の余白(dp。既定 0)。",
           "default": {
             "left": 0,
             "top": 0,
@@ -5742,6 +6231,7 @@
         "text": {
           "type": "string",
           "declared_in": "Action",
+          "doc": "メニューの項目・ツールバーのボタンに出す文字(& でニーモニック)。",
           "editor": "mnemonic",
           "default": ""
         },
@@ -5750,6 +6240,7 @@
             "value": "Shortcut"
           },
           "declared_in": "Action",
+          "doc": "ショートカット(Action を加えたウィジェットの中にフォーカスがあるときに効く)。",
           "default": ""
         },
         "icon": {
@@ -5780,6 +6271,7 @@
         "checked": {
           "type": "bool",
           "declared_in": "Action",
+          "doc": "チェックしているか(checkable のとき)。",
           "default": false
         }
       },
@@ -5802,18 +6294,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5823,6 +6318,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -5845,6 +6341,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -5859,6 +6356,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -5866,6 +6364,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -5873,6 +6372,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -5924,27 +6424,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -5953,19 +6459,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       }
     },
@@ -5997,18 +6507,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -6018,6 +6531,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -6040,6 +6554,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -6054,6 +6569,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -6061,6 +6577,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -6068,6 +6585,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -6095,6 +6613,7 @@
             "enum": "ToolButtonStyle"
           },
           "declared_in": "ToolBar",
+          "doc": "ボタンの見せ方(既定 ICON_ONLY)。",
           "default": "ICON_ONLY"
         }
       },
@@ -6126,27 +6645,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -6155,19 +6680,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       }
     },
@@ -6182,18 +6711,21 @@
         "x": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "左端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "y": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "上端の位置(親の左上からの相対、dp)。",
           "geometry": true,
           "default": 0
         },
         "width": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "幅(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -6203,6 +6735,7 @@
         "height": {
           "type": "float",
           "declared_in": "Widget",
+          "doc": "高さ(dp)。",
           "geometry": true,
           "range": {
             "min": 0
@@ -6225,6 +6758,7 @@
             "value": "Size"
           },
           "declared_in": "Widget",
+          "doc": "利用者が決める最大の大きさ(既定は無制限)。",
           "default": {
             "width": 1000000000,
             "height": 1000000000
@@ -6239,6 +6773,7 @@
         "enabled": {
           "type": "bool",
           "declared_in": "Widget",
+          "doc": "操作できるか(既定 true)。false なら薄く描き、入力を受けない(子孫も)。",
           "default": true
         },
         "focus_policy": {
@@ -6246,6 +6781,7 @@
             "enum": "FocusPolicy"
           },
           "declared_in": "Widget",
+          "doc": "フォーカスの得方(Widget の既定は NONE。入力欄・ボタンなどは TAB_AND_CLICK)。",
           "default": "NONE"
         },
         "cursor": {
@@ -6253,6 +6789,7 @@
             "enum": "MouseCursor"
           },
           "declared_in": "Widget",
+          "doc": "ポインタが乗ったときのカーソルの形(既定 ARROW)。",
           "default": "ARROW"
         },
         "tooltip": {
@@ -6310,27 +6847,33 @@
         },
         "on_resize": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "大きさが変わった。"
         },
         "on_mouse_down": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを押した。受け取らなければ(accepted を false にすると)親へ送る。"
         },
         "on_mouse_up": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスのボタンを離した(押したウィジェットに届く)。"
         },
         "on_mouse_move": {
           "type": "MouseHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "マウスが動いた(ボタンを押している間は、押したウィジェットに届く)。"
         },
         "on_mouse_enter": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが乗った。"
         },
         "on_mouse_leave": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "ポインタが離れた。"
         },
         "on_mouse_wheel": {
           "type": "WheelHandler",
@@ -6339,19 +6882,23 @@
         },
         "on_key_down": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを押した(フォーカスのあるウィジェットに届く)。受け取らなければ親へ送る。"
         },
         "on_key_up": {
           "type": "KeyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "キーを離した。"
         },
         "on_focus_in": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを得た。"
         },
         "on_focus_out": {
           "type": "NotifyHandler",
-          "declared_in": "Widget"
+          "declared_in": "Widget",
+          "doc": "フォーカスを失った。"
         }
       }
     },
@@ -6365,6 +6912,7 @@
         "title": {
           "type": "string",
           "declared_in": "Tab",
+          "doc": "タブの見出し(& でニーモニック)。",
           "default": ""
         },
         "enabled": {
@@ -6669,7 +7217,8 @@
         "TAB": "Tab キーでだけフォーカスを得る",
         "CLICK": "クリックでだけフォーカスを得る",
         "TAB_AND_CLICK": "Tab キーとクリックの両方"
-      }
+      },
+      "doc": "フォーカスの得方。"
     },
     "ImageFit": {
       "values": [
@@ -6695,13 +7244,15 @@
         "CROSSHAIR",
         "SIZE_HORIZONTAL",
         "SIZE_VERTICAL"
-      ]
+      ],
+      "doc": "マウスのカーソルの形。"
     },
     "Orientation": {
       "values": [
         "HORIZONTAL",
         "VERTICAL"
-      ]
+      ],
+      "doc": "並べる向き。"
     },
     "SelectionBehavior": {
       "values": [
@@ -6724,13 +7275,15 @@
         "NONE": "選ばない(current だけが動く)",
         "SINGLE": "1 つだけ選ぶ(current と同じ項目)",
         "MULTI": "Ctrl+クリック・Shift+クリック・Shift+矢印・Ctrl+A で複数を選ぶ"
-      }
+      },
+      "doc": "選び方。"
     },
     "SortOrder": {
       "values": [
         "ASCENDING",
         "DESCENDING"
-      ]
+      ],
+      "doc": "並べ替えの向き。"
     },
     "ToolButtonStyle": {
       "values": [
@@ -6742,7 +7295,8 @@
         "ICON_ONLY": "画像だけ(画像が無ければ文字)",
         "TEXT_BESIDE_ICON": "画像の右に文字",
         "TEXT_UNDER_ICON": "画像の下に文字"
-      }
+      },
+      "doc": "ツールバーのボタンの見せ方。"
     }
   },
   "handler_types": {

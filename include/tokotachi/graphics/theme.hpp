@@ -47,6 +47,7 @@ enum class ColorRole
     ON_TOOLTIP            ///< ツールチップの文字
 };
 
+/// 色の役割の数。
 const int COLOR_ROLE_COUNT = static_cast<int>(ColorRole::ON_TOOLTIP) + 1;
 
 /// 色の指定: テーマの役割か、具体的な色のどちらか。役割で指定した色は、テーマを切り替えると変わる。
@@ -60,9 +61,12 @@ class TOKOTACHI_API ThemeColor
 public:
     /// 既定は役割の TEXT。
     ThemeColor() : role_(ColorRole::TEXT), is_role_(true) {}
+    /// 具体的な色(テーマを切り替えても変わらない)。
     ThemeColor(const Color& c) : color_(c), role_(ColorRole::TEXT), is_role_(false) {}
+    /// テーマの役割(テーマを切り替えると変わる)。
     ThemeColor(ColorRole r) : role_(r), is_role_(true) {}
 
+    /// 役割で指定しているか。
     bool is_role() const { return is_role_; }
     /// 役割(is_role() が true のとき)。
     ColorRole role() const { return role_; }
@@ -71,11 +75,14 @@ public:
     /// 今のアプリケーションのテーマで、具体的な色にする。
     Color resolve() const;
 
+    /// 指定が同じか(役割どうし・色どうしで比べる)。
+    ///@{
     bool operator==(const ThemeColor& o) const
     {
         return is_role_ == o.is_role_ && (is_role_ ? role_ == o.role_ : color_ == o.color_);
     }
     bool operator!=(const ThemeColor& o) const { return !(*this == o); }
+    ///@}
 
 private:
     Color color_;
@@ -96,19 +103,27 @@ public:
     /// ライトのテーマで初期化する。
     Theme();
 
+    /// 標準のライトのテーマ。
     static Theme light();
+    /// 標準のダークのテーマ。
     static Theme dark();
 
+    /// 役割の色。
+    ///@{
     Color& operator[](ColorRole role) { return colors_[static_cast<int>(role)]; }
     const Color& operator[](ColorRole role) const { return colors_[static_cast<int>(role)]; }
+    ///@}
 
     bool dark_colors;     ///< 暗い背景の色の組み合わせか(OS のウィンドウの枠を合わせるときなどの目安)
     float radius;         ///< ボタンの角の丸み(dp)
     float field_radius;   ///< 入力欄・一覧の角の丸み(dp)
     float field_padding;  ///< 入力欄の左右の内側の余白(dp)
 
+    /// 色と寸法がすべて等しいか。
+    ///@{
     bool operator==(const Theme& o) const;
     bool operator!=(const Theme& o) const { return !(*this == o); }
+    ///@}
 
 private:
     Color colors_[COLOR_ROLE_COUNT];
@@ -137,6 +152,7 @@ public:
     ThemeOverride& set(ColorRole role, const Color& light, const Color& dark);
     /// 役割の上書きをやめる(継ぐ)。
     ThemeOverride& unset(ColorRole role);
+    /// 役割の色を上書きしているか。
     bool has(ColorRole role) const { return has_[static_cast<int>(role)]; }
     /// ライトのときの色(has(role) が true のとき)。
     Color light(ColorRole role) const { return light_[static_cast<int>(role)]; }
@@ -145,11 +161,15 @@ public:
 
     /// 寸法(Theme の radius・field_radius・field_padding。dp)を上書きする。負の値で上書きをやめる。
     ThemeOverride& set_radius(float v);
+    /// 入力欄・一覧の角の丸みを上書きする(負の値で上書きをやめる)。
     ThemeOverride& set_field_radius(float v);
+    /// 入力欄の左右の内側の余白を上書きする(負の値で上書きをやめる)。
     ThemeOverride& set_field_padding(float v);
     /// 上書きしている寸法(上書きしていなければ負の値)。
     float radius() const { return radius_; }
+    /// 上書きしている入力欄・一覧の角の丸み(上書きしていなければ負の値)。
     float field_radius() const { return field_radius_; }
+    /// 上書きしている入力欄の余白(上書きしていなければ負の値)。
     float field_padding() const { return field_padding_; }
 
     /// 何も上書きしていないか。
@@ -157,8 +177,11 @@ public:
     /// theme に重ねる(theme.dark_colors で、ライト・ダークのどちらの色を使うかを選ぶ)。
     void apply_to(Theme& theme) const;
 
+    /// 上書きの内容が等しいか。
+    ///@{
     bool operator==(const ThemeOverride& o) const;
     bool operator!=(const ThemeOverride& o) const { return !(*this == o); }
+    ///@}
 
 private:
     Color light_[COLOR_ROLE_COUNT];

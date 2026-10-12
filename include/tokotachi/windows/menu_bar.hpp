@@ -33,6 +33,7 @@ namespace tokotachi
 class TOKOTACHI_API MenuBar : public Widget
 {
 public:
+    /// ふつうは nullptr で作り、Window::menu_bar に代入する。
     explicit MenuBar(Widget* parent = nullptr);
     ~MenuBar();
 
@@ -40,6 +41,7 @@ public:
     Menu* add_menu(const std::string& title);
     /// メニューを除いて破棄する。
     void remove_menu(Menu* menu);
+    /// メニュー(並んだ順)。
     ReadOnlyProperty<std::vector<Menu*> > menus;
 
 protected:

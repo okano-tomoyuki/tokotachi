@@ -44,6 +44,7 @@ namespace tokotachi
 class TOKOTACHI_API TableView : public ItemView
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit TableView(Widget* parent = nullptr);
     ~TableView() override;
 
@@ -58,12 +59,15 @@ public:
     /// 左に行の番号(行の見出し)を出すか(既定 true)。
     Property<bool> row_header_visible;
 
+    /// セル (row, column) を選んでいるか。
     bool is_cell_selected(int row, int column) const;
     /// range のセルを選ぶ(add なら今の選択に加える。SINGLE では範囲の最初のセルだけ)。
     void select_range(const CellRange& range, bool add = false);
     /// 選んでいるセルの文字(行は改行、列はタブで区切る)。写す・貼るは、Ctrl+C・Ctrl+V と同じ。
     std::string selected_text() const;
+    /// 選んでいるセルの文字をクリップボードに写す(Ctrl+C)。
     void copy();
+    /// クリップボードの文字(行は改行、列はタブで区切ったもの)を、current のセルから編集できるセルへ貼る(Ctrl+V)。1 つの値なら選んでいるすべてのセルへ入れる。
     void paste();
     /// 選んでいるセル(編集できるもの)を空にする。
     void clear_selected_cells();

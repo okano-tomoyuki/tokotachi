@@ -29,6 +29,7 @@ namespace tokotachi
 class TOKOTACHI_API ScrollArea : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ScrollArea(Widget* parent = nullptr);
     ~ScrollArea() override;
 

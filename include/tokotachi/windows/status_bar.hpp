@@ -30,6 +30,7 @@ namespace tokotachi
 class TOKOTACHI_API StatusBar : public Widget
 {
 public:
+    /// ふつうは nullptr で作り、Window::status_bar に代入する。
     explicit StatusBar(Widget* parent = nullptr);
     ~StatusBar() override;
 
@@ -40,6 +41,7 @@ public:
 
     /// 知らせを出す。timeout_ms が正なら、その時間が経つと text に戻す(0 なら clear_message まで出す)。
     void show_message(const std::string& message, int timeout_ms = 0);
+    /// 知らせを消し、text に戻す。
     void clear_message();
     /// 右に部品を並べる(加えた順に左から。ステータスバーの子になる)。
     void add_widget(Widget* widget);

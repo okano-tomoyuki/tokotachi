@@ -27,6 +27,7 @@ namespace tokotachi
 class TOKOTACHI_API RadioButton : public ButtonBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。value は選んだときに group_value に入れる値。
     explicit RadioButton(Widget* parent = nullptr, const std::string& text = std::string(), int value = 0);
     ~RadioButton() override;
 

@@ -29,9 +29,11 @@ namespace tokotachi
 class TOKOTACHI_API TextEdit : public TextInputBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit TextEdit(Widget* parent = nullptr, const std::string& text = std::string());
     ~TextEdit() override;
 
+    /// 幅で折り返すか。
     Property<bool> word_wrap;
 
 protected:

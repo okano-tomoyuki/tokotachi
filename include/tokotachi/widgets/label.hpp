@@ -33,10 +33,13 @@ namespace tokotachi
 class TOKOTACHI_API Label : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit Label(Widget* parent = nullptr, const std::string& text = std::string());
     ~Label() override;
 
+    /// 表示する文字(& でニーモニック。&& は & そのもの)。
     Property<std::string> text;
+    /// 文字のフォント。
     Property<Font> font;
     /// 文字の色(既定はテーマの TEXT。無効なときは TEXT_DISABLED で描く)。
     Property<ThemeColor> text_color;

@@ -24,6 +24,7 @@ namespace tokotachi
 class TOKOTACHI_API ListModel : public ItemModel
 {
 public:
+    /// 所有者を渡す(所有者と一緒に破棄される)。
     explicit ListModel(Object* owner = nullptr);
     ~ListModel();
 
@@ -43,6 +44,7 @@ public:
 
     /// 項目の位置(このモデルの項目でなければ無効な ModelIndex)・位置の項目。
     ModelIndex index_of(const Item* item) const;
+    /// index の項目(無効なら nullptr)。
     Item* item_at(const ModelIndex& index) const;
 
     int row_count(const ModelIndex& parent = ModelIndex()) const override;

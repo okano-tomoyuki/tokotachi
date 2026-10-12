@@ -56,3 +56,11 @@
 @defgroup views 一覧・木・表(views)
 @brief ListView・TreeView・TableView と、そのモデル。`<tokotachi/views.hpp>`
 */
+
+/**
+@namespace tokotachi
+@brief Tokotachi の公開の型と関数(`detail` の中は内部で、互換の約束に含めない。@ref compatibility)。
+
+@namespace tokotachi::clipboard
+@brief クリップボードの文字の読み書き。
+*/

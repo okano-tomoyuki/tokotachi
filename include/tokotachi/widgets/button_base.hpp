@@ -20,10 +20,13 @@ namespace tokotachi
 class TOKOTACHI_API ButtonBase : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ButtonBase(Widget* parent = nullptr, const std::string& text = std::string());
     ~ButtonBase() override;
 
+    /// 表示する文字(& でニーモニック。&& は & そのもの)。
     Property<std::string> text;
+    /// 文字のフォント。
     Property<Font> font;
 
     /// 上で押して離した・フォーカスがあるときに Space か Enter を押した。
@@ -47,6 +50,7 @@ protected:
 
     /// 描画のための状態。
     bool is_hovered() const;
+    /// 押している途中か。
     bool is_pressed() const;
     /// 描画のための状態をまとめたもの(有効・ホバー・押下・フォーカス。checked は false)。標準の見た目を描く関数
     /// (tokotachi::draw)にそのまま渡せる。

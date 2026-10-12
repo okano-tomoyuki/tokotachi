@@ -41,6 +41,7 @@ class Widget;
 class TOKOTACHI_API Menu : public Object
 {
 public:
+    /// 所有者と名前から作る(メニューバー・親のメニューに加えるときは add_menu・add_submenu を使う)。
     explicit Menu(Object* owner = nullptr, const std::string& title = std::string());
     ~Menu();
 
@@ -53,6 +54,7 @@ public:
     void add_action(Action* action);
     /// Action の項目を除く(このメニューが作った Action なら破棄する)。
     void remove_action(Action* action);
+    /// 区切りの線を最後に加える。
     void add_separator();
     /// サブメニューを開く項目を加え、サブメニューを返す(このメニューが所有する)。
     Menu* add_submenu(const std::string& title);

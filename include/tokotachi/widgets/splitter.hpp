@@ -25,6 +25,7 @@ public:
     Property<bool> collapsible;
     /// たたんでいるか。代入するとたたむ・戻す(collapsible でなければたためない)。その分は隣の区画が受け持つ。
     Property<bool> collapsed;
+    /// 区画の部品。
     ReadOnlyProperty<Widget*> widget;
 
 private:
@@ -57,15 +58,18 @@ private:
 class TOKOTACHI_API Splitter : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit Splitter(Widget* parent = nullptr, Orientation orientation = Orientation::HORIZONTAL);
     ~Splitter();
 
+    /// 区画を並べる向き(HORIZONTAL なら横に並べる)。
     Property<Orientation> orientation;
 
     /// 区画を最後に加える(widget は Splitter の子になる)。
     SplitterPane* add_widget(Widget* widget, int stretch = 1);
     /// index の位置に加える(範囲の外なら最後)。
     SplitterPane* insert_widget(int index, Widget* widget, int stretch = 1);
+    /// 区画(並んだ順)。
     ReadOnlyProperty<std::vector<SplitterPane*> > panes;
 
     /// 各区画の大きさ(dp。並ぶ向き。たたんだ区画は 0、部品を隠した区画は戻したときの大きさ)。代入すると、合計が合わない分は stretch の比率で合わせる。

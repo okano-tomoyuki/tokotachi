@@ -53,6 +53,7 @@ public:
 
     /// 指す Object(破棄されていれば nullptr)。メインスレッドで呼ぶ。
     T* get() const { return liveness_ && liveness_->alive ? object_ : nullptr; }
+    /// 指す Object が破棄されたか(nullptr を指していたときも true)。メインスレッドで呼ぶ。
     bool expired() const { return get() == nullptr; }
 
 private:

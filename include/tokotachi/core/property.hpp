@@ -57,26 +57,33 @@ template <typename T>
 class Property
 {
 public:
+    /// 値の型。
     typedef T ValueType;
+    /// 値を読む関数(所有者を受け取る)。
     typedef T (*Getter)(Object*);
+    /// 値を書く関数(所有者と新しい値を受け取る)。値が変わったら所有者が notify_changed で知らせる。
     typedef void (*Setter)(Object*, const T&);
 
+    /// 所有者(ふつうは this)と、値を読む関数・書く関数から作る(@ref custom_widgets_guide)。
     Property(Object* owner, Getter getter, Setter setter) : owner_(owner), getter_(getter), setter_(setter) {}
 
     /// コピーの構築は所有者を取り違えるので禁止する。プロパティ同士の代入は値のコピーとして扱う(所有者は付け替えない)。
     Property(const Property&) = delete;
+    /// other の値を代入する(所有者は付け替えない)。
     Property& operator=(const Property& other)
     {
         setter_(owner_, other.get());
         return *this;
     }
 
+    /// 値を代入する(書く関数を呼ぶ)。
     Property& operator=(const T& value)
     {
         setter_(owner_, value);
         return *this;
     }
 
+    /// 値を読む(暗黙の変換)。
     operator T() const { return getter_(owner_); }
 
     /// 値を取り出す(auto で受ける・値のメソッドを呼ぶ・テンプレートに渡すなど、暗黙の変換が効かない場面で使う)。
@@ -85,6 +92,7 @@ public:
     /// ポインタ型のプロパティで、メンバへ直接たどれるようにする(widget->parent->x)。
     T operator->() const { return getter_(owner_); }
 
+    /// 今の値に演算した結果を代入する(読んでから書く)。
     template <typename U>
     Property& operator+=(const U& value)
     {
@@ -94,6 +102,7 @@ public:
         return *this;
     }
 
+    /// 今の値に演算した結果を代入する(読んでから書く)。
     template <typename U>
     Property& operator-=(const U& value)
     {
@@ -103,6 +112,7 @@ public:
         return *this;
     }
 
+    /// 今の値に演算した結果を代入する(読んでから書く)。
     template <typename U>
     Property& operator*=(const U& value)
     {
@@ -112,6 +122,7 @@ public:
         return *this;
     }
 
+    /// 今の値に演算した結果を代入する(読んでから書く)。
     template <typename U>
     Property& operator/=(const U& value)
     {
@@ -121,6 +132,7 @@ public:
         return *this;
     }
 
+    /// 1 増やす(前置)。
     Property& operator++()
     {
         T v = get();
@@ -129,6 +141,7 @@ public:
         return *this;
     }
 
+    /// 1 減らす(前置)。
     Property& operator--()
     {
         T v = get();
@@ -137,6 +150,7 @@ public:
         return *this;
     }
 
+    /// 1 増やし、増やす前の値を返す(後置)。
     T operator++(int)
     {
         T old = get();
@@ -146,6 +160,7 @@ public:
         return old;
     }
 
+    /// 1 減らし、減らす前の値を返す(後置)。
     T operator--(int)
     {
         T old = get();
@@ -170,16 +185,22 @@ template <typename T>
 class ReadOnlyProperty
 {
 public:
+    /// 値の型。
     typedef T ValueType;
+    /// 値を読む関数(所有者を受け取る)。
     typedef T (*Getter)(Object*);
 
+    /// 所有者と、値を読む関数から作る。値が変わったら所有者が notify_changed で知らせる。
     ReadOnlyProperty(Object* owner, Getter getter) : owner_(owner), getter_(getter) {}
 
     ReadOnlyProperty(const ReadOnlyProperty&) = delete;
     ReadOnlyProperty& operator=(const ReadOnlyProperty&) = delete;
 
+    /// 値を読む(暗黙の変換)。
     operator T() const { return getter_(owner_); }
+    /// 値を取り出す(暗黙の変換が効かない場面で使う)。
     T get() const { return getter_(owner_); }
+    /// ポインタ型のプロパティで、メンバへ直接たどれるようにする。
     T operator->() const { return getter_(owner_); }
 
 private:
@@ -198,12 +219,14 @@ private:
 class TOKOTACHI_API Object
 {
 public:
+    /// 所有者を渡すと、所有者が破棄されるときに一緒に破棄される(new で作る)。
     explicit Object(Object* owner_object = nullptr);
     virtual ~Object();
 
     Object(const Object&) = delete;
     Object& operator=(const Object&) = delete;
 
+    /// 所有者(無ければ nullptr)。部品では親(parent)と同じ。
     ReadOnlyProperty<Object*> owner;
 
     /// 今のイベントの処理が終わった後に破棄する(自分のハンドラの中から、自分を破棄したいときに使う)。
@@ -223,6 +246,7 @@ protected:
         detail::property_changed(this, &property);
     }
 
+    /// プロパティの値が変わったことを知らせる(読むだけのプロパティ)。
     template <typename T>
     void notify_changed(const ReadOnlyProperty<T>& property)
     {
@@ -236,8 +260,8 @@ private:
     Impl* d_;
 };
 
-/// std::string のプロパティを std::string の演算子と直接組み合わせる
-/// (std::string の演算子はテンプレートなので、プロキシからの暗黙の変換が効かないため)。
+/// std::string のプロパティと文字列をつなぐ・比べる(std::string の演算子はテンプレートなので、プロキシからの暗黙の変換が効かないため)。
+///@{
 inline std::string operator+(const Property<std::string>& a, const std::string& b) { return a.get() + b; }
 inline std::string operator+(const std::string& a, const Property<std::string>& b) { return a + b.get(); }
 inline std::string operator+(const Property<std::string>& a, const char* b) { return a.get() + b; }
@@ -262,6 +286,7 @@ inline bool operator!=(const ReadOnlyProperty<std::string>& a, const std::string
 inline bool operator!=(const std::string& a, const ReadOnlyProperty<std::string>& b) { return a != b.get(); }
 inline bool operator!=(const ReadOnlyProperty<std::string>& a, const char* b) { return a.get() != b; }
 inline bool operator!=(const char* a, const ReadOnlyProperty<std::string>& b) { return a != b.get(); }
+///@}
 
 }  // namespace tokotachi
 

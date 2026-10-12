@@ -40,10 +40,13 @@ class Widget;
 class TOKOTACHI_API Action : public Object
 {
 public:
+    /// 所有者と文字から作る。
     explicit Action(Object* owner = nullptr, const std::string& text = std::string());
     ~Action();
 
+    /// メニューの項目・ツールバーのボタンに出す文字(& でニーモニック)。
     Property<std::string> text;
+    /// ショートカット(Action を加えたウィジェットの中にフォーカスがあるときに効く)。
     Property<Shortcut> shortcut;
     /// ツールバーのボタン・メニューの項目に出す画像(メニューでは文字の前。checkable でチェックしているなら画像を枠で囲む)。
     Property<Image> icon;
@@ -53,6 +56,7 @@ public:
     Property<bool> enabled;
     /// checkable なら、実行するたびに checked を反転する(メニューではチェックの印を出す)。
     Property<bool> checkable;
+    /// チェックしているか(checkable のとき)。
     Property<bool> checked;
 
     /// 実行された(メニューで選んだ・ショートカットを押した・trigger を呼んだ)。checked は反転した後。

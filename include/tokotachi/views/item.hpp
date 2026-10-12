@@ -50,9 +50,11 @@ public:
     Property<bool> enabled;
     /// チェックボックスを付けるか・付いているか(利用者が押すと checked が変わる)。
     Property<bool> checkable;
+    /// チェックしているか(checkable のとき)。
     Property<bool> checked;
     /// 文字の色とフォント(すべての列。既定はビューの標準。docs/adr/0046)。
     Property<ThemeColor> text_color;
+    /// 文字のフォント(すべての列)。
     Property<Font> font;
     /// ビューで文字を編集できるか(すべての列。F2・選んでいる項目のクリックで編集する。docs/adr/0046)。
     Property<bool> editable;
@@ -63,6 +65,7 @@ public:
     void set_column_text(int column, const std::string& value);
 
 protected:
+    /// ライブラリが作る(ListModel::add_item・TreeModel::add_item などを使う)。
     Item(detail::ItemHost* host, const std::string& text);
     ~Item();
 

@@ -34,21 +34,27 @@ class ScrollArea;
 class TOKOTACHI_API ComboBox : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ComboBox(Widget* parent = nullptr);
     ~ComboBox() override;
 
+    /// 選ぶ項目の文字。
     Property<std::vector<std::string> > items;
     /// 選んでいる項目(-1 なら選んでいない)。範囲の外の値は -1 にする。items を変えて範囲の外になったときも -1 になる。
     Property<int> current_index;
+    /// 選んでいる項目の文字(選んでいなければ空)。
     ReadOnlyProperty<std::string> current_text;
     /// 選んでいないときに出す文字。
     Property<std::string> placeholder_text;
+    /// 文字のフォント。
     Property<Font> font;
 
     /// current_index が変わった(利用者の操作・代入のどちらでも)。
     Property<NotifyHandler> on_change;
 
+    /// 一覧のポップアップを開く。
     void open_popup();
+    /// 一覧のポップアップを閉じる。
     void close_popup();
     /// 一覧のポップアップを開いているか。
     ReadOnlyProperty<bool> popup_open;

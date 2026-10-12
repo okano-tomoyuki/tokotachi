@@ -10,9 +10,13 @@
 
 #include "export.hpp"
 
+/// 大きい版(コンパイルに使ったヘッダの版)。
 #define TOKOTACHI_VERSION_MAJOR 0
+/// 小さい版。
 #define TOKOTACHI_VERSION_MINOR 2
+/// 修正の版。
 #define TOKOTACHI_VERSION_PATCH 0
+/// 版の文字("major.minor.patch")。
 #define TOKOTACHI_VERSION_STRING "0.2.0"
 
 /// コンパイルに使ったヘッダの版が major.minor.patch 以上か。

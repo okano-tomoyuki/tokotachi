@@ -26,9 +26,11 @@ namespace tokotachi
 class TOKOTACHI_API BoxLayout : public Layout
 {
 public:
+    /// target のレイアウトになる(target が所有する)。
     explicit BoxLayout(Widget* target, Orientation orientation = Orientation::VERTICAL);
     ~BoxLayout() override;
 
+    /// 並べる向き(既定 VERTICAL)。
     Property<Orientation> orientation;
     /// 項目の間隔(dp、既定 8)。
     Property<float> spacing;
@@ -40,7 +42,9 @@ public:
     /// 伸びる空きを末尾に加える。
     void add_stretch(int stretch = 1);
 
+    /// w の伸びる割合を変える(余った大きさを、割合に応じて分ける)。
     void set_stretch(Widget* w, int stretch);
+    /// w の、並べる向きと直交する向きのそろえ方を変える。
     void set_alignment(Widget* w, Align cross_alignment);
 
 protected:

@@ -28,6 +28,7 @@ namespace tokotachi
 class TOKOTACHI_API ListView : public ItemView
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ListView(Widget* parent = nullptr);
 };
 

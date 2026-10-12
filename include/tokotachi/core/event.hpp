@@ -16,6 +16,7 @@ namespace tokotachi
 class Canvas;
 class Object;
 
+/// マウスのボタン。
 enum class MouseButton
 {
     NONE,
@@ -26,9 +27,13 @@ enum class MouseButton
 
 /// 修飾キー(ビットの組み合わせ)。
 typedef unsigned Modifiers;
+/// 修飾キーを押していない。
 const Modifiers MODIFIER_NONE = 0;
+/// Shift キー。
 const Modifiers MODIFIER_SHIFT = 1u << 0;
+/// Ctrl キー。
 const Modifiers MODIFIER_CONTROL = 1u << 1;
+/// Alt キー。
 const Modifiers MODIFIER_ALT = 1u << 2;
 const Modifiers MODIFIER_META = 1u << 3;  ///< Windows キー / Super
 
@@ -49,17 +54,22 @@ enum class Key
 /// @ingroup core_events
 struct TOKOTACHI_API MouseEvent
 {
+    /// 位置(受け取るウィジェットの左上を原点とする dp)。
     Point pos;
     MouseButton button;  ///< 押された・離されたボタン。移動のイベントでは NONE
+    /// 押していた修飾キー。
     Modifiers modifiers;
     int clicks;  ///< 連続して押した回数(ダブルクリックなら 2)
+    /// 処理したか(既定 true)。false にすると親のウィジェットへ送る。
     bool accepted;
 
+    /// ライブラリが作る。
     MouseEvent(const Point& pos_, MouseButton button_, Modifiers modifiers_, int clicks_)
         : pos(pos_), button(button_), modifiers(modifiers_), clicks(clicks_), accepted(true)
     {
     }
 
+    /// 修飾キー m(組み合わせなら全部)を押していたか。
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
@@ -68,17 +78,23 @@ struct TOKOTACHI_API MouseEvent
 /// @ingroup core_events
 struct TOKOTACHI_API KeyEvent
 {
+    /// 押した・離したキー(Key に無いキーは UNKNOWN。native_key で区別する)。
     Key key;
+    /// 押していた修飾キー。
     Modifiers modifiers;
+    /// 押し続けたことによる繰り返しか。
     bool repeat;
     std::uint32_t native_key;  ///< SDL のキーコード(Key に無いキーを扱うため)
+    /// 処理したか(既定 true)。false にすると親のウィジェットへ送る。
     bool accepted;
 
+    /// ライブラリが作る。
     KeyEvent(Key key_, Modifiers modifiers_, bool repeat_, std::uint32_t native_key_)
         : key(key_), modifiers(modifiers_), repeat(repeat_), native_key(native_key_), accepted(true)
     {
     }
 
+    /// 修飾キー m(組み合わせなら全部)を押していたか。
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
@@ -87,16 +103,22 @@ struct TOKOTACHI_API KeyEvent
 /// @ingroup core_events
 struct TOKOTACHI_API WheelEvent
 {
+    /// マウスの位置(受け取るウィジェットの左上を原点とする dp)。
     Point pos;
+    /// 回した量(上の説明)。
     Point delta;
+    /// 押していた修飾キー。
     Modifiers modifiers;
+    /// 処理したか(既定 true)。false にすると親のウィジェットへ送る。
     bool accepted;
 
+    /// ライブラリが作る。
     WheelEvent(const Point& pos_, const Point& delta_, Modifiers modifiers_)
         : pos(pos_), delta(delta_), modifiers(modifiers_), accepted(true)
     {
     }
 
+    /// 修飾キー m(組み合わせなら全部)を押していたか。
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
@@ -104,9 +126,12 @@ struct TOKOTACHI_API WheelEvent
 /// @ingroup core_events
 struct TOKOTACHI_API TextInputEvent
 {
+    /// 入力した文字(UTF-8)。
     std::string text;
+    /// 処理したか(既定 true)。
     bool accepted;
 
+    /// ライブラリが作る。
     explicit TextInputEvent(const std::string& text_) : text(text_), accepted(true) {}
 };
 
@@ -114,11 +139,16 @@ struct TOKOTACHI_API TextInputEvent
 /// @ingroup core_events
 struct TOKOTACHI_API TextEditingEvent
 {
+    /// 変換中の文字(UTF-8。空なら変換を終えた)。
     std::string text;
+    /// 変換対象の文節の始まり(コードポイントの位置。無ければ -1)。
     int start;
+    /// 変換対象の文節の長さ(コードポイントの数。無ければ -1)。
     int length;
+    /// 処理したか(既定 true)。
     bool accepted;
 
+    /// ライブラリが作る。
     TextEditingEvent(const std::string& text_, int start_, int length_)
         : text(text_), start(start_), length(length_), accepted(true)
     {
@@ -128,9 +158,13 @@ struct TOKOTACHI_API TextEditingEvent
 /// ハンドラの型。第 1 引数は常にイベントの発生元(Widget・Timer 等。docs/adr/0013)。
 /// 発生元の機能を使うときは dynamic_cast で型を確かめる。
 typedef std::function<void(Object* sender)> NotifyHandler;
+/// マウスのボタン・移動のハンドラ。
 typedef std::function<void(Object* sender, MouseEvent& e)> MouseHandler;
+/// キーのハンドラ。
 typedef std::function<void(Object* sender, KeyEvent& e)> KeyHandler;
+/// ホイールのハンドラ。
 typedef std::function<void(Object* sender, WheelEvent& e)> WheelHandler;
+/// 描くハンドラ(PaintBox::on_paint など。canvas は呼ばれている間だけ有効)。
 typedef std::function<void(Object* sender, Canvas& canvas)> PaintHandler;
 /// can_close を false にすると閉じない。
 typedef std::function<void(Object* sender, bool& can_close)> CloseHandler;

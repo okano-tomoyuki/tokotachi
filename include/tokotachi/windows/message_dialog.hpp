@@ -45,11 +45,14 @@ enum class MessageType
 class TOKOTACHI_API MessageDialog : public Dialog
 {
 public:
+    /// parent の上に出すメッセージのダイアログ(parent が所有する)。
     MessageDialog(Window* parent, const std::string& title, const std::string& text,
                   MessageType type = MessageType::INFORMATION);
     ~MessageDialog() override;
 
+    /// 知らせる文(幅で折り返す)。
     Property<std::string> text;
+    /// 種類(左の印の形と色)。
     Property<MessageType> type;
 
     /// 作って buttons を加えて開き、閉じたら on_finish を呼んで破棄する。buttons が空なら OK だけ。

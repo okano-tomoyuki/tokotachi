@@ -160,6 +160,7 @@ void unbind(Property<T>& property)
     detail::remove_bindings(detail::PropertyAccess::owner(property), &property);
 }
 
+/// 読むだけのプロパティの結びつきをすべて外す。
 template <typename T>
 void unbind(ReadOnlyProperty<T>& property)
 {

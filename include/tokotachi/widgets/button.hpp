@@ -25,6 +25,7 @@ enum class ButtonStyle
 class TOKOTACHI_API Button : public ButtonBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。text は表示する文字(& でニーモニック)。
     explicit Button(Widget* parent = nullptr, const std::string& text = std::string());
     ~Button() override;
 

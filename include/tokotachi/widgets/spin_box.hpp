@@ -32,6 +32,7 @@ namespace tokotachi
 class TOKOTACHI_API SpinBox : public RangeBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit SpinBox(Widget* parent = nullptr);
     ~SpinBox() override;
 
@@ -39,6 +40,7 @@ public:
     Property<int> decimals;
     /// 数値の前・後ろに出す文字(既定は空。「¥」「 kg」「%」など。docs/adr/0049)。打ち込むときは、付けても付けなくてもよい。
     Property<std::string> prefix;
+    /// 値の後に付ける文字(単位など)。
     Property<std::string> suffix;
     /// 入力欄に出している文字列(打ち込み中は、まだ value になっていないことがある)。
     ReadOnlyProperty<std::string> text;

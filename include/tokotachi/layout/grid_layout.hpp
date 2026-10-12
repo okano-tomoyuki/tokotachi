@@ -28,21 +28,26 @@ namespace tokotachi
 class TOKOTACHI_API GridLayout : public Layout
 {
 public:
+    /// target のレイアウトになる(target が所有する)。
     explicit GridLayout(Widget* target);
     ~GridLayout() override;
 
     /// 行の間隔・列の間隔(dp、既定 8)。
     Property<float> row_spacing;
+    /// 列の間隔(dp、既定 8)。
     Property<float> column_spacing;
 
     /// w(target の子)を置く。すでに置いていれば位置と設定を変える。
     void add(Widget* w, int row, int column, int row_span = 1, int column_span = 1,
              Align horizontal = Align::FILL, Align vertical = Align::CENTER);
 
+    /// 行の伸びる割合(既定 0。余った高さを、割合に応じて分ける)。
     void set_row_stretch(int row, int stretch);
+    /// 列の伸びる割合(既定 0。余った幅を、割合に応じて分ける)。
     void set_column_stretch(int column, int stretch);
     /// 行・列の最小の大きさ(dp)。
     void set_row_minimum(int row, float size);
+    /// 列の最小の幅(dp)。
     void set_column_minimum(int column, float size);
 
 protected:

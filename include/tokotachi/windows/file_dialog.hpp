@@ -15,6 +15,7 @@ namespace tokotachi
 
 class Window;
 
+/// ファイルの選択のダイアログの種類。
 enum class FileDialogMode
 {
     OPEN,   ///< 既にあるファイルを選ぶ
@@ -26,14 +27,20 @@ enum class FileDialogMode
 /// @ingroup windows
 struct TOKOTACHI_API FileFilter
 {
+    /// 表示の名前("画像" など)。
     std::string name;
+    /// 拡張子を ; でつないだもの("png;jpg"。"*" はすべて)。
     std::string pattern;
 
     FileFilter() {}
+    /// 名前と拡張子から作る。
     FileFilter(const std::string& name_, const std::string& pattern_) : name(name_), pattern(pattern_) {}
 
+    /// 名前と拡張子が等しいか。
+    ///@{
     bool operator==(const FileFilter& o) const { return name == o.name && pattern == o.pattern; }
     bool operator!=(const FileFilter& o) const { return !(*this == o); }
+    ///@}
 };
 
 /// OS のファイル選択のダイアログ(開く・保存・フォルダー。docs/adr/0028)。SDL3 を通して、Windows では標準のダイアログ、
@@ -60,6 +67,7 @@ public:
     explicit FileDialog(Window* parent = nullptr, FileDialogMode mode = FileDialogMode::OPEN);
     ~FileDialog();
 
+    /// 種類(開く・保存・フォルダー)。
     Property<FileDialogMode> mode;
     /// ダイアログの題名(空なら OS の既定)。
     Property<std::string> title;

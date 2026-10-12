@@ -20,6 +20,7 @@ class TOKOTACHI_API TreeItem final : public Item
 public:
     /// 親の項目(一番上なら nullptr)・子の項目(並んだ順)。
     ReadOnlyProperty<TreeItem*> parent_item;
+    /// 子の項目(並んだ順)。
     ReadOnlyProperty<std::vector<TreeItem*> > children;
 
     /// 最後の子として加える。
@@ -48,22 +49,27 @@ private:
 class TOKOTACHI_API TreeModel : public ItemModel
 {
 public:
+    /// 所有者を渡す(所有者と一緒に破棄される)。
     explicit TreeModel(Object* owner = nullptr);
     ~TreeModel();
 
     /// 一番上に加える。
     TreeItem* add_item(const std::string& text);
+    /// 一番上の index の位置に加える(範囲の外なら最後)。
     TreeItem* insert_item(int index, const std::string& text);
     /// 項目を(子孫ごと)除いて破棄する。どの深さの項目でもよい。
     void remove_item(TreeItem* item);
     /// 項目を parent(nullptr なら一番上)の子の index の位置へ移す(範囲の外なら最後)。自分・子孫の下へは移せない(何もしない)。
     void move_item(TreeItem* item, TreeItem* parent, int index);
+    /// すべての項目を除いて破棄する。
     void clear();
 
     /// 一番上の項目(並んだ順)。
     ReadOnlyProperty<std::vector<TreeItem*> > items;
 
+    /// 項目の位置(このモデルの項目でなければ無効な ModelIndex)。
     ModelIndex index_of(const TreeItem* item) const;
+    /// 位置の項目(無効なら nullptr)。
     TreeItem* item_at(const ModelIndex& index) const;
 
     int row_count(const ModelIndex& parent = ModelIndex()) const override;

@@ -9,12 +9,14 @@
 namespace tokotachi
 {
 
+/// ポップアップの種類。
 enum class PopupKind
 {
     MENU,    ///< メニュー・一覧(キーボードのフォーカスを得る。外側を押すと閉じる)
     TOOLTIP  ///< ツールチップ(入力を受けない)
 };
 
+/// ポップアップを開く位置の決め方。
 enum class PopupPlacement
 {
     BELOW,  ///< anchor の左下に、左上をそろえる
@@ -45,7 +47,9 @@ public:
     explicit Popup(Widget* owner_widget, PopupKind kind = PopupKind::MENU, Object* owner_object = nullptr);
     ~Popup();
 
+    /// 開く位置の基準になるウィジェット。
     ReadOnlyProperty<Widget*> owner_widget;
+    /// 種類。
     ReadOnlyProperty<PopupKind> kind;
 
     /// owner_widget の座標系の矩形 anchor を基準に、size(dp)の大きさで開く。開いていれば位置と大きさを変える。

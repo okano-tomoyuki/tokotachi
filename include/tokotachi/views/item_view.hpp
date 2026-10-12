@@ -22,6 +22,7 @@ class LineEdit;
 class ScrollBar;
 class Timer;
 
+/// 選び方。
 enum class SelectionMode
 {
     NONE,    ///< 選ばない(current だけが動く)
@@ -40,26 +41,35 @@ enum class SelectionBehavior
 /// @ingroup views
 struct TOKOTACHI_API CellRange
 {
+    /// 最初の行。
     int first_row;
+    /// 最初の列。
     int first_column;
+    /// 最後の行(含む)。
     int last_row;
+    /// 最後の列(含む)。
     int last_column;
 
     CellRange() : first_row(0), first_column(0), last_row(-1), last_column(-1) {}
     /// 2 つの隅から作る(どちらの隅が先でもよい)。
     CellRange(int row_a, int column_a, int row_b, int column_b);
 
+    /// セルを含まないか。
     bool is_empty() const { return last_row < first_row || last_column < first_column; }
+    /// セル (row, column) を含むか。
     bool contains(int row, int column) const
     {
         return row >= first_row && row <= last_row && column >= first_column && column <= last_column;
     }
+    /// 範囲が等しいか。
+    ///@{
     bool operator==(const CellRange& o) const
     {
         return first_row == o.first_row && first_column == o.first_column && last_row == o.last_row &&
                last_column == o.last_column;
     }
     bool operator!=(const CellRange& o) const { return !(*this == o); }
+    ///@}
 };
 
 /// ビューの 1 つの列。ItemView が作り、所有する。
@@ -107,7 +117,9 @@ public:
 
     /// 列を最後に加える・除く。
     Column* add_column(const std::string& title, float width = 120);
+    /// 列を除いて破棄する。
     void remove_column(Column* column);
+    /// 列(並んだ順)。
     ReadOnlyProperty<std::vector<Column*> > columns;
     /// 列があるときに見出しを出すか(既定 true)。
     Property<bool> header_visible;
@@ -116,6 +128,7 @@ public:
     Property<bool> sorting_enabled;
     /// 並べ替えている列(-1 なら無し)と向き。代入するとモデルの sort を呼ぶ。
     Property<int> sort_column;
+    /// 並べ替えの向き(既定 ASCENDING)。
     Property<SortOrder> sort_order;
 
     /// 選び方(既定 SINGLE)。
@@ -125,11 +138,13 @@ public:
     /// 選んでいる項目(表示の順。TreeView で閉じた親の中にあるものは最後)。
     ReadOnlyProperty<std::vector<ModelIndex> > selection;
 
+    /// index を選んでいるか。
     bool is_selected(const ModelIndex& index) const;
     /// index を選ぶ・選ぶのをやめる(SINGLE では他の選択を外し、current も移す。NONE では何もしない)。
     void select(const ModelIndex& index, bool selected = true);
     /// 見えているすべての項目を選ぶ(MULTI のときだけ)。
     void select_all();
+    /// すべての選択を外す。
     void clear_selection();
     /// index の行が見えるようにスクロールする(TreeView では祖先を開く)。
     void scroll_to(const ModelIndex& index);

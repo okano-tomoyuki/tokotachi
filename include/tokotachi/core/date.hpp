@@ -36,12 +36,14 @@ enum class DayOfWeek
 /// @ingroup core_values
 struct TOKOTACHI_API Date
 {
+    /// 年(1〜9999。空なら 0)。
     int year;
     int month;  ///< 1〜12
     int day;    ///< 1〜31
 
     /// 空の日付。
     Date() : year(0), month(0), day(0) {}
+    /// 年・月・日から作る(正しい日付かは is_valid で確かめる)。
     Date(int year_, int month_, int day_) : year(year_), month(month_), day(day_) {}
 
     /// 今日(この計算機の時刻帯で)。
@@ -51,16 +53,21 @@ struct TOKOTACHI_API Date
     static Date parse(const std::string& text, const std::string& pattern = "yyyy/MM/dd");
     /// year 年 month 月の日数(月が範囲の外なら 0)。
     static int days_in_month(int year, int month);
+    /// year がうるう年か。
     static bool is_leap_year(int year);
 
+    /// 空の日付(年・月・日がすべて 0)か。
     bool is_null() const { return year == 0 && month == 0 && day == 0; }
     /// 正しい日付か(空なら false)。
     bool is_valid() const;
+    /// 曜日(正しい日付で呼ぶ)。
     DayOfWeek day_of_week() const;
     /// 日・月・年を足した日付。月・年を足して日が無くなったら、その月の最後の日にする(1 月 31 日 + 1 か月 = 2 月 28 日)。
     /// 範囲の外になったら端に止める。空・正しくない日付ならそのまま返す。
     Date add_days(int days) const;
+    /// 月を足した日付(上の add_days の説明)。
     Date add_months(int months) const;
+    /// 年を足した日付(上の add_days の説明)。
     Date add_years(int years) const;
     /// other までの日数(other が後なら正)。
     int days_to(const Date& other) const;
@@ -69,6 +76,8 @@ struct TOKOTACHI_API Date
 };
 
 // 比べる(Property<Date> とも比べられるよう、メンバではない関数にする)。
+/// 日付を比べる(早い日付が小さい)。
+///@{
 inline bool operator==(const Date& a, const Date& b) { return a.year == b.year && a.month == b.month && a.day == b.day; }
 inline bool operator!=(const Date& a, const Date& b) { return !(a == b); }
 inline bool operator<(const Date& a, const Date& b)
@@ -78,6 +87,7 @@ inline bool operator<(const Date& a, const Date& b)
 inline bool operator>(const Date& a, const Date& b) { return b < a; }
 inline bool operator<=(const Date& a, const Date& b) { return !(b < a); }
 inline bool operator>=(const Date& a, const Date& b) { return !(a < b); }
+///@}
 
 }  // namespace tokotachi
 

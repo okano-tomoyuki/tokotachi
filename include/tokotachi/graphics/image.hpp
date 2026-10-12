@@ -39,6 +39,7 @@ public:
 
     /// ファイル・メモリ上のデータから読み込む(PNG・JPEG・BMP・GIF の 1 枚目など)。読めなければ空の画像。
     static Image load(const std::string& path);
+    /// メモリ上のファイルのデータから読み込む(埋め込んだ画像など)。読めなければ空の画像。
     static Image load_from_data(const void* data, std::size_t size);
     /// 画素(左上から行ごと。アルファは乗算していない色)から作る。数が width × height でなければ空の画像。
     static Image from_pixels(int width, int height, const std::vector<Color>& pixels);
@@ -48,19 +49,27 @@ public:
     /// 色を決めたアイコン(部品の文字の色によらず、いつもこの色で塗る)。
     static Image icon(Icon icon, const Color& color);
 
+    /// 空の画像か。
     bool is_null() const { return !d_; }
     /// アイコン(Image::icon で作ったもの)か。
     bool is_icon() const;
     /// 大きさ(ピクセル)。
     int width() const;
+    /// 高さ(ピクセル)。
     int height() const;
     /// 位置 (x, y) の画素(範囲の外・空の画像なら透明)。
     Color pixel(int x, int y) const;
 
+    /// 同じ画像(同じデータを共有している)か。画素は比べない。
+    ///@{
     bool operator==(const Image& other) const { return d_ == other.d_; }
     bool operator!=(const Image& other) const { return d_ != other.d_; }
+    ///@}
 
+    /// @cond
+    // ライブラリの中で使う(リファレンスに出さない)。
     const detail::ImageData* data() const { return d_.get(); }
+    /// @endcond
 
 private:
     friend class Bitmap;

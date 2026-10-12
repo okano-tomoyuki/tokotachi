@@ -19,17 +19,25 @@ class Widget;
 /// @ingroup layout
 struct TOKOTACHI_API Margins
 {
+    /// 左・上・右・下の余白(dp)。
+    ///@{
     float left, top, right, bottom;
+    ///@}
 
     Margins() : left(0), top(0), right(0), bottom(0) {}
+    /// 4 辺を同じ余白にする。
     explicit Margins(float all) : left(all), top(all), right(all), bottom(all) {}
+    /// 左・上・右・下の余白から作る。
     Margins(float l, float t, float r, float b) : left(l), top(t), right(r), bottom(b) {}
 
+    /// 4 辺が等しいか。
+    ///@{
     bool operator==(const Margins& o) const
     {
         return left == o.left && top == o.top && right == o.right && bottom == o.bottom;
     }
     bool operator!=(const Margins& o) const { return !(*this == o); }
+    ///@}
 };
 
 /// レイアウトの基底(docs/adr/0017)。
@@ -56,6 +64,7 @@ public:
 
     /// このレイアウトが付いているウィジェット(外れていれば nullptr)。
     ReadOnlyProperty<Widget*> widget;
+    /// 内側の余白(dp。既定 0)。
     Property<Margins> margins;
 
     /// w をこのレイアウトから外す(w は破棄しない。bounds はそのまま残る)。
@@ -64,6 +73,7 @@ public:
 protected:
     /// 子の望む大きさから、余白を含めた自分の望む大きさ・最小の大きさを決める。
     virtual Size compute_preferred_size() const = 0;
+    /// 子の最小の大きさから、余白を含めた自分の最小の大きさを決める。
     virtual Size compute_minimum_size() const = 0;
     /// area(余白を除いた、ウィジェットの座標系の矩形)の中に子を配置する。
     virtual void arrange(const Rect& area) = 0;
@@ -78,8 +88,11 @@ protected:
 
     /// 配置に使う子の大きさ(隠れている子は 0)。
     static Size preferred_of(const Widget* w);
+    /// 配置に使う子の最小の大きさ(隠れている子は 0)。
     static Size minimum_of(const Widget* w);
+    /// 配置に使う子の最大の大きさ。
     static Size maximum_of(const Widget* w);
+    /// w を配置に含めるか(表示されているか)。
     static bool is_managed_visible(const Widget* w);
     /// cell の中に、そろえ方に従って w を置く。辺はピクセルの整数に揃える(docs/adr/0008)。
     void place_in_cell(Widget* w, const Rect& cell, Align horizontal, Align vertical) const;

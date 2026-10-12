@@ -20,6 +20,7 @@ namespace tokotachi
 class TOKOTACHI_API LineEdit : public TextInputBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit LineEdit(Widget* parent = nullptr, const std::string& text = std::string());
     ~LineEdit() override;
 

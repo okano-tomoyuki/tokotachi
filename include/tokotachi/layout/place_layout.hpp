@@ -28,10 +28,23 @@ enum class Anchor
 /// @ingroup layout
 struct TOKOTACHI_API Placement
 {
-    float x, y;  ///< dp
-    float relative_x, relative_y;  ///< 親の大きさに対する割合
-    float width, height;  ///< dp
+    /// 位置(dp)。
+    ///@{
+    float x, y;
+    ///@}
+    /// 親の大きさに対する位置の割合。
+    ///@{
+    float relative_x, relative_y;
+    ///@}
+    /// 大きさ(dp)。
+    ///@{
+    float width, height;
+    ///@}
+    /// 親の大きさに対する大きさの割合。
+    ///@{
     float relative_width, relative_height;
+    ///@}
+    /// 子のどの点を位置に合わせるか(既定 TOP_LEFT)。
     Anchor anchor;
 
     Placement()
@@ -59,6 +72,7 @@ struct TOKOTACHI_API Placement
 class TOKOTACHI_API PlaceLayout : public Layout
 {
 public:
+    /// target のレイアウトになる(target が所有する)。
     explicit PlaceLayout(Widget* target);
     ~PlaceLayout() override;
 

@@ -27,6 +27,7 @@ template <typename T>
 class Variable : public Object
 {
 public:
+    /// 所有者と初めの値から作る。
     explicit Variable(Object* owner_object = nullptr, const T& initial = T())
         : Object(owner_object),
           value(this, &Variable::get_value, &Variable::set_value),
@@ -36,6 +37,7 @@ public:
     {
     }
 
+    /// 値。結びつけたプロパティと値をそろえる(どちらを変えても伝わる)。
     Property<T> value;
     /// value が設定された(同じ値の代入でも呼ぶ。docs/adr/0016)。
     Property<NotifyHandler> on_set;
@@ -78,9 +80,13 @@ private:
     NotifyHandler on_change_;
 };
 
+/// 文字の変数。
 typedef Variable<std::string> StringVariable;
+/// 整数の変数(ラジオボタンのグループなど)。
 typedef Variable<int> IntVariable;
+/// 真偽の変数。
 typedef Variable<bool> BoolVariable;
+/// 数の変数(SpinBox・Slider など)。
 typedef Variable<double> DoubleVariable;
 
 }  // namespace tokotachi

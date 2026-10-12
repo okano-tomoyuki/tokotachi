@@ -28,6 +28,7 @@ namespace tokotachi
 class TOKOTACHI_API GroupBox : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。title は見出し(& でニーモニック)。
     explicit GroupBox(Widget* parent = nullptr, const std::string& title = std::string());
     ~GroupBox() override;
 

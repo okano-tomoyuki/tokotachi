@@ -27,9 +27,11 @@ namespace tokotachi
 class TOKOTACHI_API ColorButton : public ButtonBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ColorButton(Widget* parent = nullptr, const Color& color = Color(0, 0, 0));
     ~ColorButton() override;
 
+    /// 選んでいる色。
     Property<Color> color;
     /// ダイアログで不透明度も選ぶか(既定 false)。false でも、代入した色の不透明度はそのまま。
     Property<bool> alpha_enabled;

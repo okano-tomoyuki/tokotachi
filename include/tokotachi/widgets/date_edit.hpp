@@ -35,6 +35,7 @@ class Popup;
 class TOKOTACHI_API DateEdit : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit DateEdit(Widget* parent = nullptr);
     ~DateEdit() override;
 
@@ -42,6 +43,7 @@ public:
     Property<Date> date;
     /// 選べる範囲(既定は 1 年 1 月 1 日〜9999 年 12 月 31 日)。
     Property<Date> minimum;
+    /// 選べる範囲の終わり。
     Property<Date> maximum;
     /// 表示の書式(yyyy・yy・MM・M・dd・d を年・月・日に置き換える。既定 "yyyy/MM/dd")。打ち込んだ文字も、この順に読む。
     Property<std::string> format;
@@ -56,7 +58,9 @@ public:
 
     /// 打ち込み中の文字を date にする(Enter・フォーカスが外れたときに自動で呼ぶ)。
     void commit();
+    /// 暦のポップアップを開く。
     void open_calendar();
+    /// 暦のポップアップを閉じる。
     void close_calendar();
     /// 暦のポップアップを開いているか。
     ReadOnlyProperty<bool> calendar_open;

@@ -28,6 +28,7 @@ namespace tokotachi
 class TOKOTACHI_API Calendar : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit Calendar(Widget* parent = nullptr);
     ~Calendar() override;
 
@@ -35,11 +36,13 @@ public:
     Property<Date> date;
     /// 選べる範囲(既定は 1 年 1 月 1 日〜9999 年 12 月 31 日)。
     Property<Date> minimum;
+    /// 選べる範囲の終わり。
     Property<Date> maximum;
     /// 週の始まりの曜日(既定は日曜日)。
     Property<DayOfWeek> first_day_of_week;
     /// 見せている月。
     ReadOnlyProperty<int> shown_year;
+    /// 見せている月(1〜12)。
     ReadOnlyProperty<int> shown_month;
     /// year 年 month 月を見せる(選んでいる日は変えない)。
     void show_month(int year, int month);

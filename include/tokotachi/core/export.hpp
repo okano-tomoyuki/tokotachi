@@ -15,6 +15,7 @@
 #define TOKOTACHI_API
 #endif
 #else
+/// 公開するシンボルの印(Linux など)。
 #define TOKOTACHI_API __attribute__((visibility("default")))
 #endif
 

@@ -15,6 +15,7 @@ namespace tokotachi
 
 class Menu;
 
+/// ツールバーのボタンの見せ方。
 enum class ToolButtonStyle
 {
     ICON_ONLY,         ///< 画像だけ(画像が無ければ文字)
@@ -44,15 +45,18 @@ enum class ToolButtonStyle
 class TOKOTACHI_API ToolBar : public Widget
 {
 public:
+    /// ふつうは nullptr で作り、Window::tool_bar に代入する。
     explicit ToolBar(Widget* parent = nullptr);
     ~ToolBar();
 
     /// text の Action を作ってボタンとして加え、返す(このツールバーが所有する)。
     Action* add_item(const std::string& text, const NotifyHandler& on_trigger = NotifyHandler());
+    /// 区切りを最後に加える。
     void add_separator();
     /// 任意の部品を加える(ツールバーの子になる)。
     void add_widget(Widget* widget);
 
+    /// ボタンの見せ方(既定 ICON_ONLY)。
     Property<ToolButtonStyle> button_style;
 
 protected:

@@ -20,6 +20,7 @@ class TabWidget;
 class TOKOTACHI_API Tab final : public Object
 {
 public:
+    /// タブの見出し(& でニーモニック)。
     Property<std::string> title;
     /// false のタブは、押しても・キーでも選べない(current_index への代入では選べる)。
     Property<bool> enabled;
@@ -56,6 +57,7 @@ private:
 class TOKOTACHI_API TabWidget : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit TabWidget(Widget* parent = nullptr);
     ~TabWidget();
 

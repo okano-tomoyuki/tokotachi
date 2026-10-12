@@ -29,6 +29,7 @@ namespace tokotachi
 class TOKOTACHI_API TreeView : public ItemView
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit TreeView(Widget* parent = nullptr);
     ~TreeView() override;
 
@@ -37,9 +38,13 @@ public:
 
     /// 子を見せる・隠す。閉じた中に current があれば、閉じた項目へ移す。
     void expand(const ModelIndex& index);
+    /// 子を隠す。
     void collapse(const ModelIndex& index);
+    /// 子を見せているか。
     bool is_expanded(const ModelIndex& index) const;
+    /// すべての項目の子を見せる。
     void expand_all();
+    /// すべての項目の子を隠す。
     void collapse_all();
 
 private:

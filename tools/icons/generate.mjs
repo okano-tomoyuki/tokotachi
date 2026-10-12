@@ -382,6 +382,7 @@ ${note}
 namespace tokotachi
 {
 
+/// よく使うアイコンの名前(Image::icon に渡す。一覧はサンプルの一覧の「アイコン」)。
 enum class Icon
 {
 ${enumLines.join('\n')}

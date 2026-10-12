@@ -27,11 +27,13 @@ namespace tokotachi
 class TOKOTACHI_API ProgressBar : public Widget
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ProgressBar(Widget* parent = nullptr);
     ~ProgressBar() override;
 
     /// 範囲(既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
     Property<double> minimum;
+    /// 範囲の終わり。
     Property<double> maximum;
     /// 値(既定 0)。範囲の外は丸める。
     Property<double> value;

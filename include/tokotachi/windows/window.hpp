@@ -41,6 +41,7 @@ public:
     Window(Window* owner, const std::string& title, float width = 640, float height = 480);
     ~Window();
 
+    /// 題名(ウィンドウの枠に出す)。
     Property<std::string> title;
     /// 背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。
     Property<ThemeColor> background;
@@ -50,6 +51,7 @@ public:
     Property<MenuBar*> menu_bar;
     /// メニューバーの下のツールバー・下端のステータスバー(docs/adr/0030)。menu_bar と同じく、代入すると子になり、前のものは破棄する。
     Property<ToolBar*> tool_bar;
+    /// 下端のステータスバー(代入すると子になり、前のものは破棄する)。
     Property<StatusBar*> status_bar;
 
     /// 閉じる操作がされた(ウィンドウの閉じるボタンなど)。can_close を false にすると閉じない。

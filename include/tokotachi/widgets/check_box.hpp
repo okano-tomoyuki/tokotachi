@@ -22,9 +22,11 @@ namespace tokotachi
 class TOKOTACHI_API CheckBox : public ButtonBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit CheckBox(Widget* parent = nullptr, const std::string& text = std::string());
     ~CheckBox() override;
 
+    /// チェックしているか(既定 false)。
     Property<bool> checked;
 
     /// checked が変わった(利用者の操作・代入のどちらでも。docs/adr/0016)。押したときは on_change の後に on_click を呼ぶ。

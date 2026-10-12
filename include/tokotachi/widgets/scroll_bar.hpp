@@ -28,9 +28,11 @@ namespace tokotachi
 class TOKOTACHI_API ScrollBar : public RangeBase
 {
 public:
+    /// parent の子として作る(parent が所有する)。
     explicit ScrollBar(Widget* parent = nullptr, Orientation orientation = Orientation::VERTICAL);
     ~ScrollBar() override;
 
+    /// 向き。
     Property<Orientation> orientation;
 
     /// スクロールバーの太さ(dp)。

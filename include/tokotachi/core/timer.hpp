@@ -26,6 +26,7 @@ namespace tokotachi
 class TOKOTACHI_API Timer : public Object
 {
 public:
+    /// 所有者を渡す(所有者と一緒に破棄される)。止まった状態で作る。
     explicit Timer(Object* owner_object = nullptr);
     ~Timer();
 
@@ -36,6 +37,7 @@ public:
     /// 動いているか(既定 false)。true を代入すると動き始め、false を代入すると止まる。
     Property<bool> enabled;
 
+    /// 間隔が経った(メインスレッドで呼ぶ)。
     Property<NotifyHandler> on_timeout;
 
 protected:

@@ -69,22 +69,28 @@ private:
 /// @ingroup core_events
 struct TOKOTACHI_API DragEvent
 {
+    /// 位置(受け取るウィジェットの左上を原点とする dp)。
     Point pos;
+    /// ドラッグしているデータ。
     const DragData& data;
+    /// 押している修飾キー。
     Modifiers modifiers;
     /// 提案された操作(ウィンドウの中は MOVE、Ctrl を押していれば COPY。OS からは COPY)。受け取る側が変えられる。
     DropAction action;
     /// drag_move: 受け取るなら true のままにする(false にすると親へ送る)。drop: 受け取ったなら true のまま。
     bool accepted;
 
+    /// ライブラリが作る。
     DragEvent(const Point& pos_, const DragData& data_, Modifiers modifiers_, DropAction action_)
         : pos(pos_), data(data_), modifiers(modifiers_), action(action_), accepted(true)
     {
     }
 
+    /// 修飾キー m(組み合わせなら全部)を押しているか。
     bool has_modifier(Modifiers m) const { return (modifiers & m) == m; }
 };
 
+/// ドラッグの位置での知らせ(on_drag_move・on_drop)のハンドラ。
 typedef std::function<void(Object* sender, DragEvent& e)> DragHandler;
 /// ドラッグが終わった(action は受け取った側が決めた操作。受け取られなければ NONE)。
 typedef std::function<void(Object* sender, DropAction action)> DragFinishHandler;

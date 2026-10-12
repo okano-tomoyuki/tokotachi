@@ -26,6 +26,7 @@ public:
 
     /// 範囲(minimum ≦ value ≦ maximum。既定 0〜100)。minimum を maximum より大きくすると maximum も同じ値にする(逆も同様)。
     Property<double> minimum;
+    /// 範囲の終わり。
     Property<double> maximum;
     /// 値(既定 0)。範囲の外は丸める。代入した値は single_step に合わせない(合わせるのは利用者の操作だけ)。
     Property<double> value;
@@ -38,6 +39,7 @@ public:
     Property<NotifyHandler> on_change;
 
 protected:
+    /// parent の子として作る(parent が所有する)。
     explicit RangeBase(Widget* parent);
 
     /// 値を amount だけ動かし、single_step に合わせる(利用者の操作)。

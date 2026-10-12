@@ -35,15 +35,18 @@ class Window;
 class TOKOTACHI_API Application : public Object
 {
 public:
+    /// SDL3 を初期化する。main の引数を渡す(今は使わない)。
     Application(int argc, char** argv);
     ~Application();
 
+    /// 作った Application(無ければ nullptr)。
     static Application* instance();
 
     /// ライト・ダークの選び方(既定は SYSTEM。docs/adr/0023)。
     Property<ColorScheme> color_scheme;
     /// ライト・ダークのときに使うテーマ(既定は Theme::light()・Theme::dark())。
     Property<Theme> light_theme;
+    /// ダークのときに使うテーマ(既定は Theme::dark())。
     Property<Theme> dark_theme;
     /// 今ダークのテーマを使っているか。
     ReadOnlyProperty<bool> dark;
@@ -67,6 +70,7 @@ public:
 
     /// イベントループを回し、quit() で抜ける。戻り値は quit() に渡した値。
     int exec();
+    /// イベントループを抜ける(今のイベントの処理を終えてから)。exec() は code を返す。
     void quit(int code = 0);
 
 private:
