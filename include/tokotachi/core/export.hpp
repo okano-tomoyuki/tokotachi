@@ -18,4 +18,12 @@
 #define TOKOTACHI_API __attribute__((visibility("default")))
 #endif
 
+/// 非推奨の印(docs/adr/0057)。使うとコンパイルの警告に message(代わりに使うもの)を出す。次の大きい版で消す。
+/// C++11 には [[deprecated]] が無いので、GCC・Clang の属性を使う。
+#if defined(__GNUC__) || defined(__clang__)
+#define TOKOTACHI_DEPRECATED(message) __attribute__((deprecated(message)))
+#else
+#define TOKOTACHI_DEPRECATED(message)
+#endif
+
 #endif

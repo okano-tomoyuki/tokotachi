@@ -45,13 +45,16 @@ int main(int argc, char** argv)
 | ページ | 内容 |
 |---|---|
 | @subpage getting_started | ビルド・インストール・自分のプロジェクトから使う |
-| @subpage basics | 親子と所有・プロパティ・ハンドラ・変数と結びつけ・テーマ |
+| @subpage basics | 親子と所有・new で作る・プロパティ・ハンドラ・変数と結びつけ・テーマ・ドラッグ&ドロップ |
+| @subpage widgets_guide | ボタン・文字の入力・選ぶ・数の値・日付と色・表示、フォーカス・ニーモニック |
 | @subpage layout_guide | BoxLayout・GridLayout・PlaceLayout・スクロール・分割 |
-| @subpage windows_guide | メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
+| @subpage windows_guide | 複数のウィンドウ・メニューバー・ツールバー・ステータスバー・Action とショートカット・ダイアログ |
 | @subpage views_guide | ListView・TreeView・TableView とモデル |
-| @subpage drawing_guide | Canvas・PaintBox・Bitmap・変換・透過 |
+| @subpage drawing_guide | Canvas・PaintBox・Bitmap・変換・透過・画像とアイコン |
 | @subpage custom_widgets_guide | 自作の部品: どのクラスから作るか・上書きする口・プロパティ・標準の見た目を描く関数 |
 | @subpage threads_guide | メインスレッドの決まり・post・WeakRef・Task |
+| @subpage designer_guide | デザイナーで画面を作る: 流れ・生成するコード・ハンドラ・プロジェクト |
+| @subpage compatibility | 版と互換の約束: 版の付け方・ソースと ABI の互換・派生してよいクラス |
 | @subpage gallery | 部品ごとのサンプルと画面 |
 
 ## API リファレンス
