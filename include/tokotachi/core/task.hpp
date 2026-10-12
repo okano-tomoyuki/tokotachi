@@ -76,7 +76,7 @@ private:
 /// 別のスレッドで行う、終わりのある仕事(docs/adr/0029)。結果・進み具合・取り消し・例外をメインスレッドで受け取る。
 ///
 /// @code
-/// tokotachi::Task<std::size_t>* count = new tokotachi::Task<std::size_t>(&window);   // window が破棄されたら取り消し、結果は捨てる
+/// tokotachi::Task<std::size_t>* count = new tokotachi::Task<std::size_t>(window_main);   // window_main が破棄されたら取り消し、結果は捨てる
 /// count->on_progress = [=](tokotachi::Object*) { progress_bar_count->value = count->progress; };
 /// count->on_finish = [=](tokotachi::Object*)
 /// {

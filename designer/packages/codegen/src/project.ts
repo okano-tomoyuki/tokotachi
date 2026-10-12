@@ -277,8 +277,10 @@ export function generateProject(
         content: [
           '    tokotachi::Application app(argc, argv);',
           ...themeStatements(project),
-          `    ${qualified} window;`,
-          '    window.visible = true;',
+          // ウィンドウは new で作り、Application が所有する。閉じたら終える(docs/adr/0062)
+          `    ${qualified}* window_main = new ${qualified}();`,
+          '    app.main_window = window_main;',
+          '    window_main->visible = true;',
           '    return app.exec();',
         ].join('\n'),
       },

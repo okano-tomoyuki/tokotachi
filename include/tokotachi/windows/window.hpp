@@ -20,14 +20,25 @@ class ToolBar;
 /// トップレベルのウィンドウ。ウィジェットのツリーの根になる。
 /// 表示は visible に true を代入する(初めは表示されていない)。
 ///
+/// new で作る(docs/adr/0062)。所有者を渡さなければ Application が所有し、所有者のウィンドウを渡せば、そのウィンドウが所有して
+/// その上に出す(ツールのウィンドウ・検索の窓など。モーダルにするには Dialog)。
+///
+/// @code
+/// tokotachi::Window* window_main = new tokotachi::Window("メイン", 640, 480);           // Application が所有する
+/// tokotachi::Window* window_find = new tokotachi::Window(window_main, "検索", 360, 120);  // window_main が所有し、その上に出す
+/// window_find->visible = true;
+/// @endcode
+///
 /// @image html window.png
 ///
 /// @ingroup windows
 class TOKOTACHI_API Window : public Widget
 {
 public:
-    /// 大きさは dp。Application を作った後に作る。
+    /// 大きさは dp。Application を作った後に作る。Application が所有する。
     explicit Window(const std::string& title, float width = 640, float height = 480);
+    /// owner が所有し、表示すると owner の上に出る(モーダルにはしない)ウィンドウ。owner を閉じる(隠す)と、このウィンドウも隠れる。
+    Window(Window* owner, const std::string& title, float width = 640, float height = 480);
     ~Window();
 
     Property<std::string> title;
@@ -43,8 +54,12 @@ public:
 
     /// 閉じる操作がされた(ウィンドウの閉じるボタンなど)。can_close を false にすると閉じない。
     Property<CloseHandler> on_close;
+    /// 閉じたら(close。閉じるボタンも)破棄するか(既定 false)。必要なときに作る補助のウィンドウに使う。new で作ったウィンドウにだけ使う。
+    /// Dialog では on_finish を呼んだ後に破棄する。
+    Property<bool> destroy_on_close;
 
-    /// 閉じる(隠す)。on_close は呼ばない。表示されているウィンドウ(ポップアップを除く)が無くなるとアプリケーションを終える。
+    /// 閉じる(隠す)。on_close は呼ばない。Application の決まり(main_window・auto_quit_enabled)で exec() を抜ける。
+    /// destroy_on_close なら、この後に破棄する。
     virtual void close();
     /// 全体を描いて PNG に保存する(目視の確認・ヘッドレスのテスト用)。
     bool save_png(const std::string& path);

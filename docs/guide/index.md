@@ -20,11 +20,11 @@ Tokotachi は、SDL3 を土台にした C++11 のクロスプラットフォー�
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("hello", 320, 160);
+    tokotachi::Window* window_main = new tokotachi::Window("hello", 320, 160);
 
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);   // 並べ方はレイアウトに任せる
-    tokotachi::Label* label_count = new tokotachi::Label(&window, "こんにちは");
-    tokotachi::Button* button_push = new tokotachi::Button(&window, "押す");  // 親(window)が所有する
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);   // 並べ方はレイアウトに任せる
+    tokotachi::Label* label_count = new tokotachi::Label(window_main, "こんにちは");
+    tokotachi::Button* button_push = new tokotachi::Button(window_main, "押す");  // 親(window_main)が所有する
     box->add(label_count);
     box->add(button_push);
 
@@ -34,7 +34,8 @@ int main(int argc, char** argv)
         label_count->text = "押した回数: " + std::to_string(++count);           // 状態はプロパティで読み書きする
     };
 
-    window.visible = true;
+    app.main_window = window_main;      // 閉じたら終える
+    window_main->visible = true;
     return app.exec();
 }
 ```

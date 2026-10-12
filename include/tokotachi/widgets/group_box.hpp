@@ -17,7 +17,7 @@ namespace tokotachi
 /// @image html widget_group_box.png
 ///
 /// @code
-/// tokotachi::GroupBox* group_box_output = new tokotachi::GroupBox(&window, "出力(&O)");
+/// tokotachi::GroupBox* group_box_output = new tokotachi::GroupBox(window_main, "出力(&O)");
 /// tokotachi::BoxLayout* box_output = new tokotachi::BoxLayout(group_box_output);
 /// box_output->add(new tokotachi::CheckBox(group_box_output, "上書きする"));
 /// @endcode

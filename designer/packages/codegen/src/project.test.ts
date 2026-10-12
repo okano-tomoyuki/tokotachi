@@ -77,7 +77,8 @@ describe('project', () => {
     const r = generateProject(PROJECT, 'my_app.ttproj.json', WINDOWS, () => undefined);
     const main = text(r, 'main.cpp');
     expect(main).toContain('#include "include/main_window.hpp"');
-    expect(main).toContain('    app::MainWindow window;');
+    expect(main).toContain('    app::MainWindow* window_main = new app::MainWindow();');
+    expect(main).toContain('    app.main_window = window_main;');
     const cmake = text(r, 'CMakeLists.txt');
     expect(cmake).toContain('project(my_app LANGUAGES CXX)');
     expect(cmake).toContain(

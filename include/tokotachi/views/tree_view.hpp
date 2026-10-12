@@ -14,10 +14,10 @@ namespace tokotachi
 /// @image html widget_tree_view.png
 ///
 /// @code
-/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(window_main);
 /// tokotachi::TreeItem* docs = tree->add_item("文書");
 /// docs->add_child("報告書.txt");
-/// tokotachi::TreeView* tree_view_docs = new tokotachi::TreeView(&window);
+/// tokotachi::TreeView* tree_view_docs = new tokotachi::TreeView(window_main);
 /// tree_view_docs->model = tree;
 /// tree_view_docs->expand(tree->index_of(docs));
 /// @endcode

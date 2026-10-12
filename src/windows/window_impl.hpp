@@ -149,7 +149,11 @@ class Window::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(Window);
 
-    explicit Impl(Window* object) : q(object) {}
+    explicit Impl(Window* object) : q(object), owner_window_(nullptr), destroy_on_close_(false) {}
+
+    // トップレベルのウィンドウを作る(owner が無ければ Application が所有する。docs/adr/0062)。
+    void init_toplevel(Window* owner, const std::string& title_text, float width_dp, float height_dp);
+    void set_destroy_on_close(const bool& v) { destroy_on_close_ = v; }
 
     // 内部のフック(docs/adr/0058)
     void child_removed(Widget* child) override;
@@ -172,6 +176,9 @@ class Window::Impl : public detail::WidgetHooks
     MenuBar* menu_bar_;
     ToolBar* tool_bar_;
     StatusBar* status_bar_;
+    // 所有者のウィンドウ(Window(owner, ...) で作ったとき。表示するとその上に出し、その所有者を隠すと一緒に隠す)。
+    Window* owner_window_;
+    bool destroy_on_close_;
 };
 
 namespace detail

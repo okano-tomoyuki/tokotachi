@@ -20,7 +20,7 @@ class Widget;
 /// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
 ///
 /// @code
-/// tokotachi::Menu* menu_edit = new tokotachi::Menu(&window);                 // ウィンドウが所有する
+/// tokotachi::Menu* menu_edit = new tokotachi::Menu(window_main);                 // ウィンドウが所有する
 /// menu_edit->add_item("コピー(&C)", [](tokotachi::Object*) { ... })->shortcut = "Ctrl+C";
 /// menu_edit->add_action(action_save);                                   // 既にある Action を入れる
 /// menu_edit->add_separator();

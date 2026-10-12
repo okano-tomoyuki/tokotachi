@@ -40,7 +40,7 @@ struct TOKOTACHI_API FileFilter
 /// Linux では xdg-desktop-portal(無ければ zenity など)を使う。
 ///
 /// @code
-/// tokotachi::FileDialog* file_dialog_image = new tokotachi::FileDialog(&window, tokotachi::FileDialogMode::OPEN);   // window が所有する
+/// tokotachi::FileDialog* file_dialog_image = new tokotachi::FileDialog(window_main, tokotachi::FileDialogMode::OPEN);   // window_main が所有する
 /// file_dialog_image->filters = std::vector<tokotachi::FileFilter>{tokotachi::FileFilter("画像", "png;jpg"), tokotachi::FileFilter("すべて", "*")};
 /// file_dialog_image->on_finish = [=](tokotachi::Object*)
 /// {

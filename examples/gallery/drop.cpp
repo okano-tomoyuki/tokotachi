@@ -7,13 +7,13 @@
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("ドラッグ&ドロップ", 560, 260);
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::Window* window_main = new tokotachi::Window("ドラッグ&ドロップ", 560, 260);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);
     box->margins = tokotachi::Margins(12);
     box->orientation = tokotachi::Orientation::HORIZONTAL;
 
     // 落とす枠: ドラッグが来たら枠の色を変え、落としたものを表示する。
-    tokotachi::PaintBox* paint_box_drop = new tokotachi::PaintBox(&window);
+    tokotachi::PaintBox* paint_box_drop = new tokotachi::PaintBox(window_main);
     paint_box_drop->accepts_drops = true;
     paint_box_drop->minimum_size = tokotachi::Size(220, 0);
     bool hovering = false;
@@ -65,10 +65,10 @@ int main(int argc, char** argv)
     };
 
     // 一覧: 落としたファイルを加える。中はドラッグで並べ替えられる。
-    tokotachi::ListModel* files = new tokotachi::ListModel(&window);
+    tokotachi::ListModel* files = new tokotachi::ListModel(window_main);
     tokotachi::Item* placeholder = files->add_item("(ファイルを落とすと加わります)");
     placeholder->enabled = false;
-    tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
+    tokotachi::ListView* list_view_files = new tokotachi::ListView(window_main);
     list_view_files->model = files;
     list_view_files->selection_mode = tokotachi::SelectionMode::MULTI;
     list_view_files->drag_enabled = true;
@@ -93,5 +93,5 @@ int main(int argc, char** argv)
 
     box->add(paint_box_drop, 1);
     box->add(list_view_files, 1);
-    return run_gallery(app, window, argc, argv);
+    return run_gallery(app, window_main, argc, argv);
 }

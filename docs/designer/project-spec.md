@@ -112,7 +112,8 @@ Bethany の project-spec.md を土台にし、Tokotachi に要るものに絞っ
 プロジェクトファイルと同じフォルダに生成する。実装は [designer/packages/codegen/src/project.ts](../../designer/packages/codegen/src/project.ts)。
 
 - **main.cpp**: Tokotachi と、メインのウィンドウのヘッダを include し(区間 `tokotachi_includes`)、`main` の中で Application を作って
-  メインのウィンドウを表示する(区間 `tokotachi_main`)。
+  メインのウィンドウを `new` で作り(Application が所有する)、`app.main_window` に代入して表示する(区間 `tokotachi_main`。
+  メインのウィンドウを閉じると終える。docs/adr/0062)。
 - **CMakeLists.txt**: 最初に雛形を作る(`find_package(tokotachi)`・`add_executable`・`target_link_libraries`)。その後は**ソースの一覧の区間
   (`tokotachi_sources`。`TOKOTACHI_DESIGNER_SOURCES` と `TOKOTACHI_DESIGNER_INCLUDE_DIRS`)だけを置き換え**、利用者が書いた部分は変えない。
   ターゲットの名前はプロジェクトの名前(ファイルの名前。`my_app.ttproj.json` → `my_app`)。

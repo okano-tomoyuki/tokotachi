@@ -36,13 +36,13 @@ public:
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("表", 460, 300);
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::Window* window_main = new tokotachi::Window("表", 460, 300);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);
     box->margins = tokotachi::Margins(12);
     box->spacing = 8;
 
     // 1 行が 1 人。1 列目は名前、2 列目以降(column_texts)は点と合計
-    ScoreModel* scores = new ScoreModel(&window);
+    ScoreModel* scores = new ScoreModel(window_main);
     const char* const NAMES[] = {"佐藤", "鈴木", "高橋", "田中", "伊藤", "渡辺"};
     const int POINTS[][3] = {{82, 75, 90}, {64, 88, 71}, {95, 92, 87}, {70, 66, 79}, {58, 81, 74}, {88, 79, 93}};
     for (int i = 0; i < 6; ++i)
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         item->editable = true;
     }
 
-    tokotachi::TableView* table_view_scores = new tokotachi::TableView(&window);
+    tokotachi::TableView* table_view_scores = new tokotachi::TableView(window_main);
     table_view_scores->add_column("名前", 90);
     const char* const SUBJECTS[] = {"国語", "数学", "英語", "合計"};
     for (int k = 0; k < 4; ++k)
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     table_view_scores->model = scores;
     table_view_scores->selection_mode = tokotachi::SelectionMode::MULTI;
 
-    tokotachi::Label* label_status = new tokotachi::Label(&window, "セルを選んで編集できます");
+    tokotachi::Label* label_status = new tokotachi::Label(window_main, "セルを選んで編集できます");
     table_view_scores->on_selection_change = [=](tokotachi::Object*)
     {
         const std::vector<tokotachi::CellRange> ranges = table_view_scores->selected_ranges;
@@ -85,5 +85,5 @@ int main(int argc, char** argv)
 
     box->add(table_view_scores, 1);
     box->add(label_status);
-    return run_gallery(app, window, argc, argv);
+    return run_gallery(app, window_main, argc, argv);
 }

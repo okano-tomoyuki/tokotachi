@@ -36,26 +36,27 @@ int main(int argc, char** argv)
     }
 
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("install", 240, 120);
-    BadgeButton* button_badge = new BadgeButton(&window);
+    tokotachi::Window* window_main = new tokotachi::Window("install", 240, 120);  // Application が所有する
+    BadgeButton* button_badge = new BadgeButton(window_main);
     button_badge->bounds = tokotachi::Rect(16, 16, 120, 32);
 
     // テンプレート(ヘッダの中の実装)の結びつけも、ライブラリの外で使えるか。
-    tokotachi::Variable<std::string> message(nullptr, "ok");
-    tokotachi::Label* label_message = new tokotachi::Label(&window);
+    tokotachi::Variable<std::string>* message = new tokotachi::Variable<std::string>(window_main, "ok");
+    tokotachi::Label* label_message = new tokotachi::Label(window_main);
     label_message->bounds = tokotachi::Rect(16, 60, 120, 24);
-    tokotachi::bind(label_message->text, message.value);
+    tokotachi::bind(label_message->text, message->value);
 
-    tokotachi::Timer timer_quit;
-    timer_quit.interval = 200;
-    timer_quit.repeat = false;
-    timer_quit.on_timeout = [&](tokotachi::Object*)
+    tokotachi::Timer* timer_quit = new tokotachi::Timer(window_main);
+    timer_quit->interval = 200;
+    timer_quit->repeat = false;
+    timer_quit->on_timeout = [&](tokotachi::Object*)
     {
         app.quit(button_badge->painted && label_message->text.get() == "ok" ? 0 : 2);
     };
 
-    window.visible = true;
-    timer_quit.enabled = true;
+    app.main_window = window_main;
+    window_main->visible = true;
+    timer_quit->enabled = true;
     int code = app.exec();
     std::printf("tokotachi %s: %s\n", tokotachi::version(), code == 0 ? "ok" : "失敗");
     return code;

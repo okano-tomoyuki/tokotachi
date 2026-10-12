@@ -15,9 +15,9 @@ namespace tokotachi
 ///
 /// グループは、各ボタンの group_value を同じ IntVariable に結んで作る(型の変換は要らない):
 /// @code
-/// tokotachi::IntVariable* size = new tokotachi::IntVariable(&window, 2);
-/// tokotachi::RadioButton* radio_button_small = new tokotachi::RadioButton(&window, "小", 1);
-/// tokotachi::RadioButton* radio_button_large = new tokotachi::RadioButton(&window, "大", 2);
+/// tokotachi::IntVariable* size = new tokotachi::IntVariable(window_main, 2);
+/// tokotachi::RadioButton* radio_button_small = new tokotachi::RadioButton(window_main, "小", 1);
+/// tokotachi::RadioButton* radio_button_large = new tokotachi::RadioButton(window_main, "大", 2);
 /// tokotachi::bind(radio_button_small->group_value, size->value);
 /// tokotachi::bind(radio_button_large->group_value, size->value);   // radio_button_large が選ばれた状態になる
 /// @endcode

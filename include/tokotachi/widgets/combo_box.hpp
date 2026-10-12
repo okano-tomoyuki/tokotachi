@@ -21,7 +21,7 @@ class ScrollArea;
 /// @image html widget_combo_box.png
 ///
 /// @code
-/// tokotachi::ComboBox* combo_box_size = new tokotachi::ComboBox(&window);
+/// tokotachi::ComboBox* combo_box_size = new tokotachi::ComboBox(window_main);
 /// combo_box_size->items = std::vector<std::string>{"小", "中", "大"};
 /// combo_box_size->current_index = 1;
 /// combo_box_size->on_change = [](tokotachi::Object* sender) { ... };

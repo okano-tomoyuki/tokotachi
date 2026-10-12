@@ -20,7 +20,7 @@ class Popup;
 /// @image html widget_date_edit.png
 ///
 /// @code
-/// tokotachi::DateEdit* date_edit_due = new tokotachi::DateEdit(&window);
+/// tokotachi::DateEdit* date_edit_due = new tokotachi::DateEdit(window_main);
 /// date_edit_due->date = tokotachi::Date::today();
 /// date_edit_due->format = "yyyy-MM-dd";                         // 既定は "yyyy/MM/dd"
 /// date_edit_due->on_change = [=](tokotachi::Object*) { ... date_edit_due->date ... };

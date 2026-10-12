@@ -5,34 +5,34 @@
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("入力", 420, 380);
-    tokotachi::GridLayout* grid = new tokotachi::GridLayout(&window);
+    tokotachi::Window* window_main = new tokotachi::Window("入力", 420, 380);
+    tokotachi::GridLayout* grid = new tokotachi::GridLayout(window_main);
     grid->margins = tokotachi::Margins(16);
     grid->row_spacing = 10;
     grid->column_spacing = 12;
 
-    tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(&window);
+    tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(window_main);
     line_edit_name->placeholder_text = "名前を入力";
-    tokotachi::ComboBox* combo_box_city = new tokotachi::ComboBox(&window);
+    tokotachi::ComboBox* combo_box_city = new tokotachi::ComboBox(window_main);
     combo_box_city->items = std::vector<std::string>{"東京", "大阪", "名古屋"};
     combo_box_city->current_index = 0;
-    tokotachi::SpinBox* spin_box_age = new tokotachi::SpinBox(&window);
+    tokotachi::SpinBox* spin_box_age = new tokotachi::SpinBox(window_main);
     spin_box_age->maximum = 150;
     spin_box_age->value = 30;
     spin_box_age->suffix = " 歳";  // 数値の後ろに単位
-    tokotachi::TextEdit* text_edit_note = new tokotachi::TextEdit(&window, "複数行の入力欄。\n折り返しとスクロールに対応する。");
+    tokotachi::TextEdit* text_edit_note = new tokotachi::TextEdit(window_main, "複数行の入力欄。\n折り返しとスクロールに対応する。");
 
     // Slider と ProgressBar を同じ変数に結ぶと、片方を動かせばもう片方も揃う。
-    tokotachi::Slider* slider_volume = new tokotachi::Slider(&window);
+    tokotachi::Slider* slider_volume = new tokotachi::Slider(window_main);
     slider_volume->tick_interval = 10;  // 10 ごとに目盛り
-    tokotachi::ProgressBar* progress_bar_level = new tokotachi::ProgressBar(&window);
+    tokotachi::ProgressBar* progress_bar_level = new tokotachi::ProgressBar(window_main);
     progress_bar_level->text_visible = true;
-    tokotachi::DoubleVariable* amount = new tokotachi::DoubleVariable(&window, 65);
+    tokotachi::DoubleVariable* amount = new tokotachi::DoubleVariable(window_main, 65);
     tokotachi::bind(slider_volume->value, amount->value);
     amount->on_change = [=](tokotachi::Object*) { progress_bar_level->value = amount->value.get(); };
     progress_bar_level->value = amount->value.get();
     // 全体の量が分からない処理: 棒の一部が動き続ける
-    tokotachi::ProgressBar* progress_bar_busy = new tokotachi::ProgressBar(&window);
+    tokotachi::ProgressBar* progress_bar_busy = new tokotachi::ProgressBar(window_main);
     progress_bar_busy->indeterminate = true;
 
     const char* const LABELS[] = {"名前(&N)", "都市(&C)", "年齢(&G)", "メモ(&M)", "音量(&V)", "進み具合", "処理中"};
@@ -41,12 +41,12 @@ int main(int argc, char** argv)
     for (int i = 0; i < 7; ++i)
     {
         // 入力欄を先に作ったので、ニーモニックで移る先(buddy)を指定する(指定しなければ、タブの順でラベルの次の部品へ移る)
-        tokotachi::Label* label = new tokotachi::Label(&window, LABELS[i]);
+        tokotachi::Label* label = new tokotachi::Label(window_main, LABELS[i]);
         label->buddy = FIELDS[i];
         grid->add(label, i, 0);
         grid->add(FIELDS[i], i, 1);
     }
     grid->set_column_stretch(1, 1);
     grid->set_row_stretch(3, 1);
-    return run_gallery(app, window, argc, argv);
+    return run_gallery(app, window_main, argc, argv);
 }

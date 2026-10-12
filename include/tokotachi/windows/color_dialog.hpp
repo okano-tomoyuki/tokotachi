@@ -16,7 +16,7 @@ namespace tokotachi
 /// @image html color_dialog.png
 ///
 /// @code
-/// tokotachi::ColorDialog::show(&window, paint_box_canvas_color, [=](tokotachi::Object* sender)
+/// tokotachi::ColorDialog::show(window_main, paint_box_canvas_color, [=](tokotachi::Object* sender)
 /// {
 ///     tokotachi::ColorDialog* color_dialog = static_cast<tokotachi::ColorDialog*>(sender);
 ///     if (color_dialog->result == tokotachi::DialogButton::OK) { ... color_dialog->color ... }

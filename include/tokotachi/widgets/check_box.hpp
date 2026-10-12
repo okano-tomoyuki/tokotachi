@@ -14,7 +14,7 @@ namespace tokotachi
 /// @image html widget_check_box.png
 ///
 /// @code
-/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(&window, "通知を受け取る");
+/// tokotachi::CheckBox* check_box_notify = new tokotachi::CheckBox(window_main, "通知を受け取る");
 /// tokotachi::bind(check_box_notify->checked, notify->value);   // BoolVariable と結ぶ
 /// @endcode
 ///

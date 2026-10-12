@@ -86,8 +86,20 @@ WindowImpl* Application::Impl::find_window(SDL_Window* w) const
     return nullptr;
 }
 
-void Application::Impl::quit_if_no_window()
+void Application::Impl::quit_if_done()
 {
+    if (!auto_quit_enabled_)
+    {
+        return;
+    }
+    if (main_window_)
+    {
+        if (!detail::window_impl_of(main_window_)->shown)
+        {
+            running = false;
+        }
+        return;
+    }
     for (std::size_t i = 0; i < windows.size(); ++i)
     {
         if (windows[i]->shown && !windows[i]->popup)
@@ -96,6 +108,20 @@ void Application::Impl::quit_if_no_window()
         }
     }
     running = false;
+}
+
+void Application::Impl::window_destroyed(Window* w)
+{
+    if (w != main_window_)
+    {
+        return;
+    }
+    main_window_ = nullptr;
+    detail::property_changed(q, &q->main_window);
+    if (auto_quit_enabled_)
+    {
+        running = false;
+    }
 }
 
 void Application::Impl::update_theme()
@@ -392,6 +418,8 @@ Application::Application(int, char**)
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, dark),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Theme, theme),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, language),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, Window*, main_window),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, auto_quit_enabled),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_theme_change),
       d_(new Impl(this))
 {
@@ -427,6 +455,9 @@ Application::Application(int, char**)
 
 Application::~Application()
 {
+    // 所有するもの(所有者を渡さずに作ったウィンドウ・Application を所有者にしたタイマーなど)を、SDL を終える前に破棄する
+    // (docs/adr/0062)。破棄の中で Application::instance() を使えるように、g_instance はまだ残す。
+    delete_owned();
     for (std::map<int, Impl::Timer>::iterator it = d_->timers.begin(); it != d_->timers.end();
          ++it)
     {
@@ -491,7 +522,7 @@ int Application::exec()
 {
     // 待機型のループ: イベントが来るまで眠り、溜まったイベントを処理してから、無効になった領域を描く(docs/adr/0010)。
     d_->running = true;
-    d_->quit_if_no_window();
+    d_->quit_if_done();
     while (d_->running)
     {
         SDL_Event e;

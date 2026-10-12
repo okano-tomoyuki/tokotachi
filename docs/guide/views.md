@@ -11,12 +11,12 @@
 項目をオブジェクト(`Item`・`TreeItem`)で持つモデルです。項目のプロパティを変えると、表示しているビューが描き直します。
 
 ```cpp
-tokotachi::ListModel* files = new tokotachi::ListModel(&window);
+tokotachi::ListModel* files = new tokotachi::ListModel(window_main);
 tokotachi::Item* item = files->add_item("報告書.txt");
 item->column_texts = std::vector<std::string>{"12 KB", "2026-10-01"};   // 2 列目以降
 item->checkable = true;
 
-tokotachi::ListView* list_view_files = new tokotachi::ListView(&window);
+tokotachi::ListView* list_view_files = new tokotachi::ListView(window_main);
 list_view_files->add_column("名前", 200);
 list_view_files->add_column("大きさ", 80)->alignment = tokotachi::Align::END;
 list_view_files->model = files;
@@ -26,10 +26,10 @@ list_view_files->on_activate = [=](tokotachi::Object*) { ... files->item_at(list
 ```
 
 ```cpp
-tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+tokotachi::TreeModel* tree = new tokotachi::TreeModel(window_main);
 tokotachi::TreeItem* docs = tree->add_item("文書");
 docs->add_child("報告書.txt");
-tokotachi::TreeView* tree_view_docs = new tokotachi::TreeView(&window);
+tokotachi::TreeView* tree_view_docs = new tokotachi::TreeView(window_main);
 tree_view_docs->model = tree;
 tree_view_docs->expand(tree->index_of(docs));
 ```
@@ -74,7 +74,7 @@ tree_view_folders->drop_enabled = true;
 (`ListModel` なら `text` が 1 列目、`column_texts` が 2 列目以降)。
 
 ```cpp
-tokotachi::TableView* table_view_scores = new tokotachi::TableView(&window);
+tokotachi::TableView* table_view_scores = new tokotachi::TableView(window_main);
 table_view_scores->add_column("名前", 100);
 table_view_scores->add_column("点", 70)->alignment = tokotachi::Align::END;
 table_view_scores->model = scores;

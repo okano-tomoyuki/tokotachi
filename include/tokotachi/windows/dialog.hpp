@@ -30,7 +30,7 @@ enum class DialogButton
 /// モーダルのダイアログ(docs/adr/0028)。親のウィンドウの上に別のウィンドウとして開き、閉じるまで親への入力を止める。
 ///
 /// @code
-/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(&window, "名前の変更");    // 親のウィンドウが所有する
+/// tokotachi::Dialog* dialog_rename = new tokotachi::Dialog(window_main, "名前の変更");    // 親のウィンドウが所有する
 /// tokotachi::BoxLayout* box = new tokotachi::BoxLayout(dialog_rename);                 // 中身はレイアウトで並べる
 /// tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(dialog_rename);
 /// box->add(line_edit_name);

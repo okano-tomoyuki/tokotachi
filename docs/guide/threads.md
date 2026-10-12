@@ -12,7 +12,7 @@
 重い処理を別のスレッドで行い、進み具合と結果をメインスレッドで受け取ります。
 
 ```cpp
-tokotachi::Task<int>* count = new tokotachi::Task<int>(&window);   // window が破棄されたら取り消し、結果は捨てる
+tokotachi::Task<int>* count = new tokotachi::Task<int>(window_main);   // window_main が破棄されたら取り消し、結果は捨てる
 count->on_progress = [=](tokotachi::Object*) { progress_bar_count->value = count->progress; };
 count->on_finish = [=](tokotachi::Object*)
 {

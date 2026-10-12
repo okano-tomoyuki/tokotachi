@@ -442,6 +442,13 @@ void WindowImpl::set_shown(bool show)
     WidgetAccess::notify_visible(q);
     if (show)
     {
+        // 所有者のウィンドウの上に出す(docs/adr/0062)。所有者が隠れていれば親子にしない(隠れた親の子は出ない環境がある)。
+        Window* owner = ImplAccess<Window>::of(q)->owner_window_;
+        WindowImpl* owner_impl = owner ? window_impl_of(owner) : nullptr;
+        if (owner_impl && owner_impl->window && owner_impl->shown)
+        {
+            SDL_SetWindowParent(window, owner_impl->window);
+        }
         SDL_ShowWindow(window);
         invalidate_all();
         // 表示の前にフォーカスを移したウィジェットは、表示されていなかったので文字入力を有効にしていない。ここで判断し直す。
@@ -449,6 +456,18 @@ void WindowImpl::set_shown(bool show)
     }
     else
     {
+        // 所有するウィンドウも隠す(docs/adr/0062)。隠すと一覧が変わることはないが、念のため写してから回す。
+        if (Application* app = Application::instance())
+        {
+            const std::vector<WindowImpl*> ws = impl_of(app)->windows;
+            for (std::size_t i = 0; i < ws.size(); ++i)
+            {
+                if (ws[i] != this && ws[i]->shown && ImplAccess<Window>::of(ws[i]->q)->owner_window_ == q)
+                {
+                    ws[i]->q->visible = false;
+                }
+            }
+        }
         widget_hidden(q);
         if (popup && is_wayland())
         {
@@ -1386,6 +1405,42 @@ void WindowImpl::handle(const SDL_Event& e)
 
 }  // namespace detail
 
+void Window::Impl::init_toplevel(Window* owner, const std::string& title_text, float width_dp, float height_dp)
+{
+    native_ = nullptr;
+    background_ = ColorRole::WINDOW;
+    menu_bar_ = nullptr;
+    tool_bar_ = nullptr;
+    status_bar_ = nullptr;
+    Application* app = Application::instance();
+    if (!app)
+    {
+        std::fprintf(stderr, "tokotachi::Window: create tokotachi::Application first\n");
+        return;
+    }
+    // 所有者のウィンドウが無ければ Application が所有する(docs/adr/0062)。
+    owner_window_ = owner;
+    detail::change_owner(q, owner ? static_cast<Object*>(owner) : static_cast<Object*>(app));
+    detail::WidgetAccess::set_is_window(q, true);
+    detail::WidgetAccess::set_visible_flag(q, false);
+    native_ = new detail::WindowImpl(q);
+    native_->window = SDL_CreateWindow(title_text.c_str(), static_cast<int>(width_dp), static_cast<int>(height_dp),
+                                       SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
+    if (!native_->window)
+    {
+        std::fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
+        return;
+    }
+    native_->renderer = SDL_CreateRenderer(native_->window, nullptr);
+    if (!native_->renderer)
+    {
+        std::fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
+    }
+    native_->update_scale();
+    native_->request_size(Size(width_dp, height_dp));
+    detail::impl_of(app)->windows.push_back(native_);
+}
+
 Window::Window(const std::string& title_text, float width_dp, float height_dp)
     : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
@@ -1394,46 +1449,36 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, destroy_on_close),
       d_(new Impl(this))
 {
     d_->install(this);
-    d_->native_ = nullptr;
-    d_->background_ = ColorRole::WINDOW;
-    d_->menu_bar_ = nullptr;
-    d_->tool_bar_ = nullptr;
-    d_->status_bar_ = nullptr;
-    Application* app = Application::instance();
-    if (!app)
-    {
-        std::fprintf(stderr, "tokotachi::Window: create tokotachi::Application first\n");
-        return;
-    }
-    detail::WidgetAccess::set_is_window(this, true);
-    detail::WidgetAccess::set_visible_flag(this, false);
-    d_->native_ = new detail::WindowImpl(this);
-    d_->native_->window = SDL_CreateWindow(title_text.c_str(), static_cast<int>(width_dp), static_cast<int>(height_dp),
-                                  SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
-    if (!d_->native_->window)
-    {
-        std::fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
-        return;
-    }
-    d_->native_->renderer = SDL_CreateRenderer(d_->native_->window, nullptr);
-    if (!d_->native_->renderer)
-    {
-        std::fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
-    }
-    d_->native_->update_scale();
-    d_->native_->request_size(Size(width_dp, height_dp));
-    detail::impl_of(app)->windows.push_back(d_->native_);
+    d_->init_toplevel(nullptr, title_text, width_dp, height_dp);
+}
+
+Window::Window(Window* owner, const std::string& title_text, float width_dp, float height_dp)
+    : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, focused_widget),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MenuBar*, menu_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, destroy_on_close),
+      d_(new Impl(this))
+{
+    d_->install(this);
+    d_->init_toplevel(owner, title_text, width_dp, height_dp);
 }
 
 Window::~Window()
 {
     // 子のデストラクタは window を通じてこのウィンドウに触るので、Window のうちに破棄する(タイマー・変数なども含む)。
+    // 所有するウィンドウ(docs/adr/0062)も、SDL のウィンドウの親子が残らないよう先に破棄する。
     delete_owned();
     if (Application* app = Application::instance())
     {
+        detail::impl_of(app)->window_destroyed(this);
         std::vector<detail::WindowImpl*>& ws = detail::impl_of(app)->windows;
         ws.erase(std::remove(ws.begin(), ws.end(), d_->native_), ws.end());
     }
@@ -1466,6 +1511,7 @@ Window::Window(Object* owner_object)
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      TOKOTACHI_IMPL_PROPERTY_MEMBER(Impl, bool, destroy_on_close),
       d_(new Impl(this))
 {
     d_->install(this);
@@ -1490,7 +1536,12 @@ void Window::close()
     visible = false;
     if (Application* app = Application::instance())
     {
-        detail::impl_of(app)->quit_if_no_window();
+        detail::impl_of(app)->quit_if_done();
+    }
+    if (d_->destroy_on_close_)
+    {
+        // ハンドラ(Dialog の on_finish など)を呼び終えてから破棄する。
+        delete_later();
     }
 }
 

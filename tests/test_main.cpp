@@ -4456,6 +4456,109 @@ TEST(task_renders_image_in_background)
 
 }  // namespace
 
+TEST(windows_are_owned_by_application_or_owner_window)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    tokotachi::Window* window_main = new tokotachi::Window("main", 300, 200);
+    CHECK(window_main->owner == static_cast<tokotachi::Object*>(app));  // 所有者を渡さなければ Application(docs/adr/0062)
+    tokotachi::Window* window_tool = new tokotachi::Window(window_main, "tool", 200, 100);
+    CHECK(window_tool->owner == static_cast<tokotachi::Object*>(window_main));
+    CHECK(window_tool->parent == nullptr);  // 部品の親ではない(トップレベルのまま)
+
+    // 所有者を隠すと、所有するウィンドウも隠れる。所有者をもう一度表示しても、自動では表示しない。
+    window_main->visible = true;
+    window_tool->visible = true;
+    window_main->visible = false;
+    CHECK(!window_tool->visible);
+    window_main->visible = true;
+    CHECK(!window_tool->visible);
+
+    // 所有者と一緒に破棄される。
+    tokotachi::WeakRef<tokotachi::Window> tool(window_tool);
+    delete window_main;
+    CHECK(tool.expired());
+}
+
+TEST(application_quits_by_main_window_or_last_window)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    tokotachi::detail::ApplicationImpl* impl = tokotachi::detail::impl_of(app);
+    tokotachi::Window* window_a = new tokotachi::Window("a", 200, 100);
+    tokotachi::Window* window_b = new tokotachi::Window("b", 200, 100);
+
+    // メインのウィンドウを決めていなければ、最後のウィンドウを閉じたときに終える。
+    window_a->visible = true;
+    window_b->visible = true;
+    impl->running = true;
+    window_b->close();
+    CHECK(impl->running);
+    window_a->close();
+    CHECK(!impl->running);
+
+    // メインのウィンドウを閉じたら、ほかのウィンドウが開いていても終える。
+    app->main_window = window_a;
+    window_a->visible = true;
+    window_b->visible = true;
+    impl->running = true;
+    window_b->close();
+    CHECK(impl->running);
+    window_b->visible = true;
+    window_a->close();
+    CHECK(!impl->running);
+
+    // auto_quit_enabled が false なら、quit() まで終えない。
+    app->auto_quit_enabled = false;
+    window_a->visible = true;
+    impl->running = true;
+    window_a->close();
+    window_b->close();
+    CHECK(impl->running);
+    app->auto_quit_enabled = true;
+
+    // メインのウィンドウが破棄されると nullptr になり(知らせる)、終える。
+    tokotachi::Variable<tokotachi::Window*> main(nullptr, nullptr);
+    tokotachi::bind(main.value, app->main_window);
+    CHECK(main.value == window_a);
+    impl->running = true;
+    delete window_a;
+    CHECK(app->main_window == nullptr);
+    CHECK(main.value == nullptr);
+    CHECK(!impl->running);
+    tokotachi::unbind(main.value);
+    delete window_b;
+}
+
+TEST(window_destroy_on_close)
+{
+    tokotachi::Application* app = tokotachi::Application::instance();
+    tokotachi::detail::ApplicationImpl* impl = tokotachi::detail::impl_of(app);
+    tokotachi::Window* window_help = new tokotachi::Window("help", 200, 100);
+    window_help->destroy_on_close = true;
+    window_help->visible = true;
+    tokotachi::WeakRef<tokotachi::Window> help(window_help);
+    window_help->close();
+    CHECK(!help.expired());  // 今のイベントの処理が終わってから破棄する
+    impl->flush_doomed();
+    CHECK(help.expired());
+
+    // ダイアログは on_finish を呼んだ後に破棄する。
+    tokotachi::Window window("t", 300, 200);
+    window.visible = true;
+    tokotachi::Dialog* dialog = new tokotachi::Dialog(&window, "d");
+    dialog->destroy_on_close = true;
+    dialog->add_button(tokotachi::DialogButton::OK);
+    bool finished = false;
+    dialog->on_finish = [&](tokotachi::Object*) { finished = true; };
+    tokotachi::WeakRef<tokotachi::Dialog> weak(dialog);
+    dialog->open();
+    dialog->close();
+    CHECK(finished);
+    CHECK(!weak.expired());
+    impl->flush_doomed();
+    CHECK(weak.expired());
+    impl->running = false;
+}
+
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);

@@ -51,20 +51,20 @@ tokotachi::Image make_picture()
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("画像", 560, 330);
+    tokotachi::Window* window_main = new tokotachi::Window("画像", 560, 330);
     const tokotachi::Image icon_open = make_icon(tokotachi::Color::rgb(0xf59e0b), true);
     const tokotachi::Image icon_save = make_icon(tokotachi::Color::rgb(0x2563eb), true);
     const tokotachi::Image icon_grid = make_icon(tokotachi::Color::rgb(0x16a34a), false);
     const tokotachi::Image icon_info = make_icon(tokotachi::Color::rgb(0x0891b2), false);
 
     // メニューとツールバーに、同じ Action の画像を出す(チェックしている項目は、メニューで画像を枠で囲む)
-    tokotachi::Action* action_open = new tokotachi::Action(&window, "開く(&O)...");
+    tokotachi::Action* action_open = new tokotachi::Action(window_main, "開く(&O)...");
     action_open->icon = icon_open;
     action_open->shortcut = "Ctrl+O";
-    tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
+    tokotachi::Action* action_save = new tokotachi::Action(window_main, "保存(&S)");
     action_save->icon = icon_save;
     action_save->shortcut = "Ctrl+S";
-    tokotachi::Action* action_grid = new tokotachi::Action(&window, "方眼(&G)");
+    tokotachi::Action* action_grid = new tokotachi::Action(window_main, "方眼(&G)");
     action_grid->icon = icon_grid;
     action_grid->checkable = true;
     action_grid->checked = true;
@@ -73,21 +73,21 @@ int main(int argc, char** argv)
     menu_file->add_action(action_open);
     menu_file->add_action(action_save);
     menu_file->add_separator();
-    menu_file->add_item("終了(&X)", [&](tokotachi::Object*) { window.close(); });
+    menu_file->add_item("終了(&X)", [&](tokotachi::Object*) { window_main->close(); });
     menu_bar->add_menu("表示(&V)")->add_action(action_grid);
-    window.menu_bar = menu_bar;
+    window_main->menu_bar = menu_bar;
     tokotachi::ToolBar* tool_bar = new tokotachi::ToolBar();
     tool_bar->add_action(action_open);
     tool_bar->add_action(action_save);
     tool_bar->add_separator();
     tool_bar->add_action(action_grid);
-    window.tool_bar = tool_bar;
+    window_main->tool_bar = tool_bar;
 
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);
     box->margins = tokotachi::Margins(12);
 
     // ImageBox: 同じ絵を、合わせ方を変えて並べる
-    tokotachi::Widget* widget_pictures = new tokotachi::Widget(&window);
+    tokotachi::Widget* widget_pictures = new tokotachi::Widget(window_main);
     tokotachi::GridLayout* grid = new tokotachi::GridLayout(widget_pictures);
     grid->margins = tokotachi::Margins(0);
     const tokotachi::Image picture = make_picture();
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     box->add(widget_pictures, 1);
 
     // ラベル・ボタンの画像(文字が無ければ画像だけのボタン)
-    tokotachi::Widget* widget_buttons = new tokotachi::Widget(&window);
+    tokotachi::Widget* widget_buttons = new tokotachi::Widget(window_main);
     tokotachi::BoxLayout* row = new tokotachi::BoxLayout(widget_buttons, tokotachi::Orientation::HORIZONTAL);
     row->margins = tokotachi::Margins(0);
     tokotachi::Label* label_info = new tokotachi::Label(widget_buttons, "画像つきのラベル");
@@ -125,5 +125,5 @@ int main(int argc, char** argv)
     button_grid->tooltip = "方眼";
     row->add(button_grid);
     box->add(widget_buttons);
-    return run_gallery(app, window, argc, argv);
+    return run_gallery(app, window_main, argc, argv);
 }

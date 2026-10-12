@@ -35,7 +35,8 @@ class Application::Impl
     };
 
     explicit Impl(Application* app)
-        : q(app), running(false), exit_code(0), next_timer_id(0), color_scheme(ColorScheme::SYSTEM),
+        : q(app), running(false), exit_code(0), next_timer_id(0), main_window_(nullptr), auto_quit_enabled_(true),
+          color_scheme(ColorScheme::SYSTEM),
           light_theme(Theme::light()), dark_theme(Theme::dark()), system_dark(false), dark(false)
     {
     }
@@ -48,8 +49,11 @@ class Application::Impl
     int start_timer(int interval_ms, const std::function<void()>& fn, bool repeat);
     void stop_timer(int id);
     detail::WindowImpl* find_window(SDL_Window* w) const;
-    // 表示されているウィンドウ(ポップアップを除く)が無ければ終える。
-    void quit_if_no_window();
+    // 終える決まり(docs/adr/0062)を満たしていれば、exec() を抜ける。auto_quit_enabled が false なら何もしない。
+    // main_window があればそれが表示されていないとき、無ければ表示されているウィンドウ(ポップアップを除く)が無いとき。
+    void quit_if_done();
+    // ウィンドウ w が破棄される。main_window なら nullptr にして知らせ、終える決まりを確かめる。
+    void window_destroyed(Window* w);
     // 開いているメニューの種類のポップアップをすべて閉じる。
     void close_menus();
     // 他のスレッドからも呼べる: fn を、メインスレッドのイベントの処理の中で呼ぶ。
@@ -73,6 +77,8 @@ class Application::Impl
     Theme get_theme() const { return current_theme; }
     std::string get_language() const { return language; }
     void set_language(const std::string& v) { language = v; }
+    void set_main_window(Window* const& v) { main_window_ = v; }
+    void set_auto_quit_enabled(const bool& v) { auto_quit_enabled_ = v; }
 
     std::vector<detail::WindowImpl*> windows;
     // 開いているメニューの種類のポップアップ(開いた順。docs/adr/0022)。
@@ -85,6 +91,8 @@ class Application::Impl
     bool running;
     int exit_code;
     int next_timer_id;
+    Window* main_window_;
+    bool auto_quit_enabled_;
 
     ColorScheme color_scheme;
     Theme light_theme;

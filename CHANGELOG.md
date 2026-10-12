@@ -6,6 +6,17 @@
 版の付け方と互換の約束は [ADR 0057](docs/adr/0057-compatibility-abi-and-c-layer.md)、出し方は
 [ADR 0061](docs/adr/0061-library-release.md) を参照。0.x の間は、小さい版が上がると利用者のコードの修正が要ることがある。
 
+## 次の版(未公開)
+
+加えたもの([ADR 0062](docs/adr/0062-window-ownership-and-quit.md)):
+
+- 所有者を渡さずに作ったトップレベルのウィンドウは `Application` が所有し、`Application` の破棄で破棄する。
+- 所有者のウィンドウを渡して作るウィンドウ `Window(owner, title, width, height)`(所有者の上に出る。所有者と一緒に隠れ、破棄される)。
+- `Application::main_window`(閉じたら終える)・`Application::auto_quit_enabled`(false なら `quit()` まで終えない)。
+- `Window::destroy_on_close`(閉じたら破棄する)。
+- サンプル・手引きを、Object から派生したものは `new` で作り、スタックに置くのは `Application` だけにする書き方に揃えた。
+  デザイナーが生成する `main.cpp` も、メインのウィンドウを `new` で作り `app.main_window` に代入する。
+
 ## 0.2.0
 
 最初に公開する版(プレビュー)。1.0 に向けて、公開の API と ABI の形を整えた。

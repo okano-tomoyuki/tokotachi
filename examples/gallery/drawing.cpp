@@ -4,10 +4,10 @@
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("描画", 420, 220);
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::Window* window_main = new tokotachi::Window("描画", 420, 220);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);
     box->margins = tokotachi::Margins(0);
-    tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+    tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(window_main);
     box->add(paint_box_chart, 1);
 
     paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
@@ -52,5 +52,5 @@ int main(int argc, char** argv)
         c.fill_ellipse(tokotachi::Rect(365, 120, 50, 50), tokotachi::Color::rgb(0xdc2626));
         c.end_layer();
     };
-    return run_gallery(app, window, argc, argv);
+    return run_gallery(app, window_main, argc, argv);
 }

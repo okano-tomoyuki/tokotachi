@@ -15,7 +15,7 @@ namespace tokotachi
 /// @image html widget_calendar.png
 ///
 /// @code
-/// tokotachi::Calendar* calendar_due = new tokotachi::Calendar(&window);
+/// tokotachi::Calendar* calendar_due = new tokotachi::Calendar(window_main);
 /// calendar_due->date = tokotachi::Date::today();
 /// calendar_due->on_change = [=](tokotachi::Object*) { ... calendar_due->date ... };
 /// @endcode

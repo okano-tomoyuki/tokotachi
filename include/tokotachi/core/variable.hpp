@@ -12,7 +12,7 @@ namespace tokotachi
 /// 値を 1 つ持つオブジェクト(docs/adr/0016)。プロパティに結びつけて、複数のウィジェットで値を共有する。
 ///
 /// @code
-/// tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(&window);
+/// tokotachi::Variable<std::string>* name = new tokotachi::Variable<std::string>(window_main);
 /// tokotachi::bind(line_edit_name->text, name->value);
 /// tokotachi::bind(label_name->text, name->value);
 /// name->value = "初期値";                             // line_edit_name と label_name の両方に伝わる

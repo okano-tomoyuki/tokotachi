@@ -38,7 +38,7 @@ private:
 /// 項目をオブジェクト(TreeItem)で持つ木のモデル(docs/adr/0026)。
 ///
 /// @code
-/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(&window);
+/// tokotachi::TreeModel* tree = new tokotachi::TreeModel(window_main);
 /// tokotachi::TreeItem* docs = tree->add_item("文書");
 /// docs->add_child("報告書.txt");
 /// tree_view_docs->model = tree;

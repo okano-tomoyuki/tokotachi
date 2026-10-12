@@ -209,8 +209,9 @@ void MainWindow::button_search_click(tokotachi::Object* sender)
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    MainWindow window;
-    window.visible = true;
+    MainWindow* window_main = new MainWindow();   // Application が所有する(docs/adr/0062)
+    app.main_window = window_main;
+    window_main->visible = true;
     return app.exec();
 }
 ```

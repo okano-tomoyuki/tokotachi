@@ -981,6 +981,16 @@ bool set_Window(tokotachi::Window* o, const std::string& p, const Json& v)
         o->background = t;
         return true;
     }
+    if (p == "destroy_on_close")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->destroy_on_close = t;
+        return true;
+    }
     return false;
 }
 
@@ -1059,6 +1069,11 @@ bool get_Window(tokotachi::Window* o, const std::string& p, Json& out)
     if (p == "background")
     {
         out = to_json(o->background.get());
+        return true;
+    }
+    if (p == "destroy_on_close")
+    {
+        out = to_json(o->destroy_on_close.get());
         return true;
     }
     return false;
@@ -1216,6 +1231,16 @@ bool set_Dialog(tokotachi::Dialog* o, const std::string& p, const Json& v)
         o->background = t;
         return true;
     }
+    if (p == "destroy_on_close")
+    {
+        bool t;
+        if (!from_json(v, t))
+        {
+            return false;
+        }
+        o->destroy_on_close = t;
+        return true;
+    }
     return false;
 }
 
@@ -1294,6 +1319,11 @@ bool get_Dialog(tokotachi::Dialog* o, const std::string& p, Json& out)
     if (p == "background")
     {
         out = to_json(o->background.get());
+        return true;
+    }
+    if (p == "destroy_on_close")
+    {
+        out = to_json(o->destroy_on_close.get());
         return true;
     }
     return false;
@@ -9051,11 +9081,11 @@ std::vector<std::string> property_names(const std::string& cls)
 {
     if (cls == "Window")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "title", "background"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "title", "background", "destroy_on_close"};
     }
     if (cls == "Dialog")
     {
-        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "title", "background"};
+        return std::vector<std::string>{"x", "y", "width", "height", "minimum_size", "maximum_size", "visible", "enabled", "focus_policy", "cursor", "tooltip", "theme_override", "accepts_drops", "title", "background", "destroy_on_close"};
     }
     if (cls == "Button")
     {

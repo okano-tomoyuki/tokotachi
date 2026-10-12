@@ -299,7 +299,7 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     tokotachi_copy_runtime(hello)
 
     # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
-    set(TOKOTACHI_GALLERY buttons inputs pickers views table window dialog drawing drop images icons)
+    set(TOKOTACHI_GALLERY buttons inputs pickers views table window windows dialog drawing drop images icons)
     foreach(_name ${TOKOTACHI_GALLERY})
         add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
         target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)

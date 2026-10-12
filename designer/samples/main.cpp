@@ -9,8 +9,9 @@ int main(int argc, char** argv)
 {
     // <tokotachi-designer:begin id="tokotachi_main">
     tokotachi::Application app(argc, argv);
-    MainWindow window;
-    window.visible = true;
+    MainWindow* window_main = new MainWindow();
+    app.main_window = window_main;
+    window_main->visible = true;
     return app.exec();
-    // <tokotachi-designer:end id="tokotachi_main" hash="339b4d77">
+    // <tokotachi-designer:end id="tokotachi_main" hash="c741acc4">
 }

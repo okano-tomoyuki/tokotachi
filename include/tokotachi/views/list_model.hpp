@@ -13,7 +13,7 @@ namespace tokotachi
 /// 項目をオブジェクト(Item)で持つ一覧のモデル(docs/adr/0026)。
 ///
 /// @code
-/// tokotachi::ListModel* list = new tokotachi::ListModel(&window);
+/// tokotachi::ListModel* list = new tokotachi::ListModel(window_main);
 /// list->add_item("りんご");
 /// tokotachi::Item* item = list->add_item("みかん");
 /// item->checkable = true;

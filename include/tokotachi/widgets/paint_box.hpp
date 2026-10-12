@@ -16,7 +16,7 @@ namespace tokotachi
 /// @image html widget_paint_box.png
 ///
 /// @code
-/// tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+/// tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(window_main);
 /// paint_box_chart->minimum_size = tokotachi::Size(300, 200);
 /// paint_box_chart->cached = true;                     // 重い描画: 描いた結果を覚えておく
 /// paint_box_chart->on_paint = [=](tokotachi::Object*, tokotachi::Canvas& c) { ... 重い描画 ... };

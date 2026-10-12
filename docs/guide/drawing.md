@@ -9,7 +9,7 @@
 自由に描くには `PaintBox`(または任意の部品の `on_paint`)の中で、渡される `Canvas` に描きます。
 
 ```cpp
-tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(&window);
+tokotachi::PaintBox* paint_box_chart = new tokotachi::PaintBox(window_main);
 paint_box_chart->on_paint = [](tokotachi::Object*, tokotachi::Canvas& c)
 {
     c.fill_rect(tokotachi::Rect(0, 0, 100, 50), tokotachi::Color::rgb(0xf3f4f6));
@@ -46,7 +46,7 @@ Canvas の決まり:
 ```cpp
 const tokotachi::Image image_logo = tokotachi::Image::load("logo.png");
 // 画像を表示する部品
-tokotachi::ImageBox* image_box_logo = new tokotachi::ImageBox(&window, image_logo);
+tokotachi::ImageBox* image_box_logo = new tokotachi::ImageBox(window_main, image_logo);
 image_box_logo->fit = tokotachi::ImageFit::CONTAIN;  // NONE(元の大きさ)・CONTAIN・COVER・STRETCH
 // ラベル・ボタンの文字の前(icon_size で大きさ。既定 16)。ボタンは文字が空なら画像だけ
 label_status->icon = tokotachi::Image::load("info.png");
@@ -72,7 +72,7 @@ canvas.draw_image(tokotachi::Image::icon(tokotachi::Icon::INFO), tokotachi::Rect
 - Bitmap には**別のスレッドでも描けます**(文字も)。`Task` の中で描いて Image を返し、画面に貼ります(@ref threads_guide)。
 
 ```cpp
-tokotachi::Task<tokotachi::Image>* render = new tokotachi::Task<tokotachi::Image>(&window);
+tokotachi::Task<tokotachi::Image>* render = new tokotachi::Task<tokotachi::Image>(window_main);
 render->on_finish = [=](tokotachi::Object*) { image = render->result; paint_box_chart->refresh(); };
 render->start([](tokotachi::TaskContext&) -> tokotachi::Image
 {

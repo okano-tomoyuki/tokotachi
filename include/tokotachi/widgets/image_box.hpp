@@ -24,7 +24,7 @@ enum class ImageFit
 /// @image html widget_image_box.png
 ///
 /// @code
-/// tokotachi::ImageBox* image_box_logo = new tokotachi::ImageBox(&window);
+/// tokotachi::ImageBox* image_box_logo = new tokotachi::ImageBox(window_main);
 /// image_box_logo->image = tokotachi::Image::load("logo.png");
 /// image_box_logo->fit = tokotachi::ImageFit::CONTAIN;  // 大きさに合わせて縦横の比を保って拡大・縮小する
 /// @endcode

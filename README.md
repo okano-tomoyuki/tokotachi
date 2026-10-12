@@ -39,16 +39,17 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("hello", 400, 200);
+    tokotachi::Window* window_main = new tokotachi::Window("hello", 400, 200);
 
-    tokotachi::Button* button_close = new tokotachi::Button(&window, "クリック");  // 親(window)が所有する
+    tokotachi::Button* button_close = new tokotachi::Button(window_main, "クリック");  // 親(window_main)が所有する
     button_close->bounds = tokotachi::Rect(24, 24, 140, 36);                  // 状態はプロパティで読み書きする
     button_close->on_click = [&](tokotachi::Object* sender)                   // イベントは単一のハンドラ
     {
-        window.close();
+        window_main->close();
     };
 
-    window.visible = true;
+    app.main_window = window_main;                                          // 閉じたら終える
+    window_main->visible = true;
     return app.exec();
 }
 ```

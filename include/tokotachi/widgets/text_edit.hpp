@@ -17,7 +17,7 @@ namespace tokotachi
 /// @image html widget_text_edit.png
 ///
 /// @code
-/// tokotachi::TextEdit* text_edit_memo = new tokotachi::TextEdit(&window);
+/// tokotachi::TextEdit* text_edit_memo = new tokotachi::TextEdit(window_main);
 /// text_edit_memo->text = "1 行目\n2 行目";
 /// @endcode
 ///

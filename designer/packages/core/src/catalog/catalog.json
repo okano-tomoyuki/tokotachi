@@ -16,6 +16,7 @@
     "close",
     "cursor",
     "delete_later",
+    "destroy_on_close",
     "display_scale",
     "effectively_enabled",
     "enabled",
@@ -193,6 +194,12 @@
           "declared_in": "Window",
           "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。",
           "default": "WINDOW"
+        },
+        "destroy_on_close": {
+          "type": "bool",
+          "declared_in": "Window",
+          "doc": "閉じたら(close。閉じるボタンも)破棄するか(既定 false)。必要なときに作る補助のウィンドウに使う。new で作ったウィンドウにだけ使う。 Dialog では on_finish を呼んだ後に破棄する。",
+          "default": false
         }
       },
       "handlers": {
@@ -391,6 +398,12 @@
           "declared_in": "Window",
           "doc": "背景の色(既定はテーマの WINDOW。ポップアップは POPUP)。",
           "default": "WINDOW"
+        },
+        "destroy_on_close": {
+          "type": "bool",
+          "declared_in": "Window",
+          "doc": "閉じたら(close。閉じるボタンも)破棄するか(既定 false)。必要なときに作る補助のウィンドウに使う。new で作ったウィンドウにだけ使う。 Dialog では on_finish を呼んだ後に破棄する。",
+          "default": false
         }
       },
       "handlers": {

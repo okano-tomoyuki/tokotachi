@@ -9,21 +9,21 @@
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("アイコン", 720, 560);
+    tokotachi::Window* window_main = new tokotachi::Window("アイコン", 720, 560);
 
     // メニューとツールバー(Action の icon)
-    tokotachi::Action* action_new = new tokotachi::Action(&window, "新規(&N)");
+    tokotachi::Action* action_new = new tokotachi::Action(window_main, "新規(&N)");
     action_new->icon = tokotachi::Image::icon(tokotachi::Icon::FILE_PLUS);
-    tokotachi::Action* action_open = new tokotachi::Action(&window, "開く(&O)...");
+    tokotachi::Action* action_open = new tokotachi::Action(window_main, "開く(&O)...");
     action_open->icon = tokotachi::Image::icon(tokotachi::Icon::FOLDER_OPEN);
-    tokotachi::Action* action_save = new tokotachi::Action(&window, "保存(&S)");
+    tokotachi::Action* action_save = new tokotachi::Action(window_main, "保存(&S)");
     action_save->icon = tokotachi::Image::icon(tokotachi::Icon::SAVE);
     action_save->enabled = false;  // 無効なら、無効の文字の色で塗る
-    tokotachi::Action* action_undo = new tokotachi::Action(&window, "元に戻す(&U)");
+    tokotachi::Action* action_undo = new tokotachi::Action(window_main, "元に戻す(&U)");
     action_undo->icon = tokotachi::Image::icon(tokotachi::Icon::UNDO_2);
-    tokotachi::Action* action_redo = new tokotachi::Action(&window, "やり直す(&R)");
+    tokotachi::Action* action_redo = new tokotachi::Action(window_main, "やり直す(&R)");
     action_redo->icon = tokotachi::Image::icon(tokotachi::Icon::REDO_2);
-    tokotachi::Action* action_search = new tokotachi::Action(&window, "検索(&F)");
+    tokotachi::Action* action_search = new tokotachi::Action(window_main, "検索(&F)");
     action_search->icon = tokotachi::Image::icon(tokotachi::Icon::SEARCH);
     tokotachi::MenuBar* menu_bar = new tokotachi::MenuBar();
     tokotachi::Menu* menu_file = menu_bar->add_menu("ファイル(&F)");
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     tokotachi::Menu* menu_edit = menu_bar->add_menu("編集(&E)");
     menu_edit->add_action(action_undo);
     menu_edit->add_action(action_redo);
-    window.menu_bar = menu_bar;
+    window_main->menu_bar = menu_bar;
     tokotachi::ToolBar* tool_bar = new tokotachi::ToolBar();
     tool_bar->add_action(action_new);
     tool_bar->add_action(action_open);
@@ -43,14 +43,14 @@ int main(int argc, char** argv)
     tool_bar->add_action(action_redo);
     tool_bar->add_separator();
     tool_bar->add_action(action_search);
-    window.tool_bar = tool_bar;
+    window_main->tool_bar = tool_bar;
 
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);
     box->margins = tokotachi::Margins(12);
     box->spacing = 12;
 
     // ボタン(強調したボタンは、その文字の色で塗る。色を決めたアイコンは、いつもその色)
-    tokotachi::Widget* widget_buttons = new tokotachi::Widget(&window);
+    tokotachi::Widget* widget_buttons = new tokotachi::Widget(window_main);
     tokotachi::BoxLayout* row = new tokotachi::BoxLayout(widget_buttons, tokotachi::Orientation::HORIZONTAL);
     row->margins = tokotachi::Margins(0);
     tokotachi::Button* button_save = new tokotachi::Button(widget_buttons, "保存");
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     box->add(widget_buttons);
 
     // すべてのアイコン(名前は Lucide の名前。列挙の名前は大文字にして - を _ にしたもの)
-    tokotachi::ScrollArea* scroll_area_icons = new tokotachi::ScrollArea(&window);
+    tokotachi::ScrollArea* scroll_area_icons = new tokotachi::ScrollArea(window_main);
     tokotachi::Widget* widget_icons = new tokotachi::Widget(scroll_area_icons);
     tokotachi::GridLayout* grid = new tokotachi::GridLayout(widget_icons);
     grid->margins = tokotachi::Margins(4);
@@ -104,5 +104,5 @@ int main(int argc, char** argv)
     {
         app.color_scheme = tokotachi::ColorScheme::DARK;
     }
-    return run_gallery(app, window, argc, argv, nullptr, dark);
+    return run_gallery(app, window_main, argc, argv, nullptr, dark);
 }

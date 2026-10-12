@@ -28,7 +28,7 @@ enum class MessageType
 /// @image html widget_message_dialog.png
 ///
 /// @code
-/// tokotachi::MessageDialog::show(&window, "確認", "変更を保存しますか？",
+/// tokotachi::MessageDialog::show(window_main, "確認", "変更を保存しますか？",
 ///                          {tokotachi::DialogButton::SAVE, tokotachi::DialogButton::DISCARD, tokotachi::DialogButton::CANCEL},
 ///                          [](tokotachi::Object* sender)
 ///                          {

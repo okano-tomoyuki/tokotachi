@@ -39,7 +39,7 @@ private:
 /// @image html widget_tab_widget.png
 ///
 /// @code
-/// tokotachi::TabWidget* tab_widget_settings = new tokotachi::TabWidget(&window);
+/// tokotachi::TabWidget* tab_widget_settings = new tokotachi::TabWidget(window_main);
 /// tokotachi::Tab* tab_general = tab_widget_settings->add_tab(page_general, "一般");
 /// tokotachi::Tab* tab_detail = tab_widget_settings->add_tab(page_detail, "詳細");
 /// tab_detail->enabled = false;

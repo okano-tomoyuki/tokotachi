@@ -16,7 +16,7 @@ namespace tokotachi
 /// @image html widget_color_button.png
 ///
 /// @code
-/// tokotachi::ColorButton* color_button_line = new tokotachi::ColorButton(&window);
+/// tokotachi::ColorButton* color_button_line = new tokotachi::ColorButton(window_main);
 /// color_button_line->color = tokotachi::Color::rgb(0x2563EB);
 /// color_button_line->on_change = [=](tokotachi::Object*) { ... color_button_line->color ... };
 /// @endcode

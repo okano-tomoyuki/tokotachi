@@ -17,11 +17,11 @@ namespace tokotachi
 /// @image html widget_table_view.png
 ///
 /// @code
-/// tokotachi::ListModel* scores = new tokotachi::ListModel(&window);
+/// tokotachi::ListModel* scores = new tokotachi::ListModel(window_main);
 /// tokotachi::Item* row = scores->add_item("佐藤");
 /// row->column_texts = std::vector<std::string>{"82", "75"};  // 2 列目以降
 /// row->editable = true;
-/// tokotachi::TableView* table_view_scores = new tokotachi::TableView(&window);
+/// tokotachi::TableView* table_view_scores = new tokotachi::TableView(window_main);
 /// table_view_scores->add_column("名前", 120);
 /// table_view_scores->add_column("国語", 80)->alignment = tokotachi::Align::END;
 /// table_view_scores->add_column("数学", 80)->alignment = tokotachi::Align::END;

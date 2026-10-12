@@ -71,16 +71,19 @@ exe 1 つで配りたいときは `-DTOKOTACHI_SHARED=OFF` で静的ライブラ
 
 int main(int argc, char** argv)
 {
-    tokotachi::Application app(argc, argv);          // 最初に 1 つ作る
-    tokotachi::Window window("最初のウィンドウ", 400, 200);
-    new tokotachi::Label(&window, "こんにちは");     // window が所有する(delete しない)
-    window.visible = true;
-    return app.exec();                               // 最後のウィンドウを閉じると戻る
+    tokotachi::Application app(argc, argv);          // 最初に 1 つ作る(これだけスタックに置く)
+    tokotachi::Window* window_main = new tokotachi::Window("最初のウィンドウ", 400, 200);   // app が所有する
+    new tokotachi::Label(window_main, "こんにちは");     // window_main が所有する(delete しない)
+    app.main_window = window_main;                   // このウィンドウを閉じると exec() から戻る
+    window_main->visible = true;
+    return app.exec();
 }
 ```
 
-- `Application` を最初に作り、`exec()` でイベントループを回します。
-- 部品は親を渡して `new` で作ります。親が破棄されると子も破棄されるので、`delete` は書きません。
+- `Application` を最初に作り、`exec()` でイベントループを回します。`Application` は main の中でスタックに置きます。
+- ウィンドウ・部品は `new` で作ります。ウィンドウは `Application` が、部品は親が所有し、所有者が破棄されると一緒に破棄されるので、
+  `delete` は書きません(@ref basics)。
+- `main_window` を決めると、そのウィンドウを閉じたときに `exec()` から戻ります。決めなければ、最後のウィンドウを閉じたときに戻ります。
 - 大きさと位置の単位は dp(倍率 1 のときのピクセル)です。高 DPI の画面では自動で拡大されます。
 
 ## 版を調べる

@@ -12,7 +12,7 @@ namespace tokotachi
 /// 子を行と列の格子に置くレイアウト(cpp_tk の grid に当たる。docs/adr/0017)。
 ///
 /// @code
-/// tokotachi::GridLayout* form = new tokotachi::GridLayout(&window);
+/// tokotachi::GridLayout* form = new tokotachi::GridLayout(window_main);
 /// form->add(label_name, 0, 0);
 /// form->add(line_edit_name, 0, 1);
 /// form->add(row_buttons, 1, 0, 1, 2);      // 2 列にまたがる

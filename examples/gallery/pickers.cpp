@@ -7,13 +7,13 @@
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("日付と色", 520, 330);
-    tokotachi::BoxLayout* row = new tokotachi::BoxLayout(&window, tokotachi::Orientation::HORIZONTAL);
+    tokotachi::Window* window_main = new tokotachi::Window("日付と色", 520, 330);
+    tokotachi::BoxLayout* row = new tokotachi::BoxLayout(window_main, tokotachi::Orientation::HORIZONTAL);
     row->margins = tokotachi::Margins(16);
     row->spacing = 20;
 
     // 左: 入力欄と色のボタン
-    tokotachi::Widget* widget_form = new tokotachi::Widget(&window);
+    tokotachi::Widget* widget_form = new tokotachi::Widget(window_main);
     tokotachi::GridLayout* grid = new tokotachi::GridLayout(widget_form);
     grid->row_spacing = 10;
     grid->column_spacing = 12;
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     update_days(nullptr);
 
     // 右: 暦。選んだ日を期限にする
-    tokotachi::Calendar* calendar_due = new tokotachi::Calendar(&window);
+    tokotachi::Calendar* calendar_due = new tokotachi::Calendar(window_main);
     calendar_due->on_change = [=](tokotachi::Object*) { date_edit_due->date = calendar_due->date.get(); };
     calendar_due->date = tokotachi::Date(2026, 10, 25);
 
@@ -61,13 +61,13 @@ int main(int argc, char** argv)
     {
         if (std::strcmp(argv[i], "--color-dialog") == 0)
         {
-            tokotachi::ColorDialog* color_dialog = new tokotachi::ColorDialog(&window);
+            tokotachi::ColorDialog* color_dialog = new tokotachi::ColorDialog(window_main);
             color_dialog->alpha_enabled = true;
             color_dialog->color = tokotachi::Color::rgb(0x2563EB, 200);
-            window.visible = true;
+            window_main->visible = true;
             color_dialog->open();
             target = color_dialog;
         }
     }
-    return run_gallery(app, window, argc, argv, target);
+    return run_gallery(app, window_main, argc, argv, target);
 }

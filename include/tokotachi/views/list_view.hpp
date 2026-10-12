@@ -14,10 +14,10 @@ namespace tokotachi
 /// @image html widget_list_view.png
 ///
 /// @code
-/// tokotachi::ListModel* fruits = new tokotachi::ListModel(&window);
+/// tokotachi::ListModel* fruits = new tokotachi::ListModel(window_main);
 /// fruits->add_item("りんご");
 /// fruits->add_item("みかん");
-/// tokotachi::ListView* list_view_fruits = new tokotachi::ListView(&window);
+/// tokotachi::ListView* list_view_fruits = new tokotachi::ListView(window_main);
 /// list_view_fruits->model = fruits;
 /// list_view_fruits->on_selection_change = [=](tokotachi::Object*) { ... list_view_fruits->current ... };
 /// @endcode

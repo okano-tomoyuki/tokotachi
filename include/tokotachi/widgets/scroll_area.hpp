@@ -15,7 +15,7 @@ namespace tokotachi
 /// @image html widget_scroll_area.png
 ///
 /// @code
-/// tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(&window);
+/// tokotachi::ScrollArea* scroll_area_form = new tokotachi::ScrollArea(window_main);
 /// tokotachi::Widget* form = new tokotachi::Widget();         // 中身(親は content への代入で決まる)
 /// tokotachi::GridLayout* grid = new tokotachi::GridLayout(form);
 /// ...

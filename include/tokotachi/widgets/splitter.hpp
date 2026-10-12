@@ -40,7 +40,7 @@ private:
 /// @image html widget_splitter.png
 ///
 /// @code
-/// tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);              // 既定は横に並べる
+/// tokotachi::Splitter* splitter_main = new tokotachi::Splitter(window_main);              // 既定は横に並べる
 /// splitter_main->add_widget(tree_view_folders, 0);                                // 0: ウィンドウの大きさが変わっても幅を保つ
 /// splitter_main->add_widget(list_view_files, 1);                                // 1: 増えた・減った幅を受け持つ
 /// splitter_main->sizes = std::vector<float>{200, 400};                    // 区画の大きさ(保存・復元に使う)

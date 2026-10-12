@@ -6,12 +6,12 @@
 int main(int argc, char** argv)
 {
     tokotachi::Application app(argc, argv);
-    tokotachi::Window window("一覧と木", 560, 280);
-    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(&window);
+    tokotachi::Window* window_main = new tokotachi::Window("一覧と木", 560, 280);
+    tokotachi::BoxLayout* box = new tokotachi::BoxLayout(window_main);
     box->margins = tokotachi::Margins(12);
 
     // 木: 項目をオブジェクトで持つ TreeModel。
-    tokotachi::TreeModel* folders = new tokotachi::TreeModel(&window);
+    tokotachi::TreeModel* folders = new tokotachi::TreeModel(window_main);
     tokotachi::TreeItem* documents = folders->add_item("文書");
     documents->add_child("仕事")->add_child("報告書");
     documents->add_child("家計簿")->text_color = tokotachi::ThemeColor(tokotachi::Color(0xDC, 0x26, 0x26));
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     tree_view_folders->expand_all();
 
     // 一覧: 列と見出し。見出しを押すと並べ替える。
-    tokotachi::ListModel* files = new tokotachi::ListModel(&window);
+    tokotachi::ListModel* files = new tokotachi::ListModel(window_main);
     const char* const ROWS[][3] = {{"報告書.txt", "12 KB", "2026-10-01"},
                                    {"見積もり.xlsx", "48 KB", "2026-09-30"},
                                    {"議事録.docx", "31 KB", "2026-10-03"},
@@ -51,10 +51,10 @@ int main(int argc, char** argv)
     list_view_files->drop_enabled = true;
     list_view_files->select(files->index(2));
 
-    tokotachi::Splitter* splitter_main = new tokotachi::Splitter(&window);
+    tokotachi::Splitter* splitter_main = new tokotachi::Splitter(window_main);
     splitter_main->add_widget(tree_view_folders, 0);
     splitter_main->add_widget(list_view_files, 1);
     splitter_main->sizes = std::vector<float>{160, 360};
     box->add(splitter_main, 1);
-    return run_gallery(app, window, argc, argv);
+    return run_gallery(app, window_main, argc, argv);
 }
