@@ -10,6 +10,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { type ComponentResolver, type Op } from '@tokotachi-designer/codegen';
 import {
+  ICON_PREFIX,
+  iconOf,
+  isIconValue,
   isImageType,
   normalizePath,
   resolveThemePresets,
@@ -168,12 +171,18 @@ export class Canvas {
       value: index,
     }));
     const setup = canvasSetup(target, options.components, options.themePresets);
-    // 画像のプロパティの値は、正規化したパスにして、その中身と一緒に渡す
-    const ops = setup.ops.map((op): Op =>
-      op.op === 'set' && isImageType(op.type) && typeof op.value === 'string'
-        ? { ...op, value: normalizePath(op.value) }
-        : op,
-    );
+    // 画像のプロパティの値は、正規化したパスにして、その中身と一緒に渡す。アイコンは列挙の値(`icon:3`)にする
+    const ops = setup.ops.map((op): Op => {
+      if (op.op !== 'set' || !isImageType(op.type) || typeof op.value !== 'string') {
+        return op;
+      }
+      const icon = iconOf(op.value);
+      return icon !== undefined
+        ? { ...op, value: `${ICON_PREFIX}${String(icon.index)}` }
+        : isIconValue(op.value)
+          ? { ...op, value: '' }
+          : { ...op, value: normalizePath(op.value) };
+    });
     const images: Record<string, string> = {};
     for (const [path, data] of options.images ?? []) {
       images[path] = Buffer.from(data).toString('base64');

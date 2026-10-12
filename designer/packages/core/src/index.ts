@@ -63,6 +63,15 @@ export {
 } from './dsl/range.ts';
 export { bindingOf, isBindable, variableTypeOf } from './dsl/bindings.ts';
 export {
+  ICON_PREFIX,
+  ICONS,
+  iconEnumName,
+  iconOf,
+  isIconValue,
+  LUCIDE_VERSION,
+  type IconInfo,
+} from './dsl/icons.ts';
+export {
   IMAGE_EXTENSIONS,
   LARGE_IMAGE_BYTES,
   imageReferences,

@@ -323,7 +323,8 @@
       "name": "action_quit",
       "properties": {
         "text": "終了(&X)",
-        "shortcut": "Ctrl+Q"
+        "shortcut": "Ctrl+Q",
+        "icon": "icon:log_out"
       },
       "events": { "on_trigger": "action_quit_trigger" }
     }

@@ -1,6 +1,7 @@
 #include "values.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 
 namespace ttc
 {
@@ -579,8 +580,15 @@ bool from_json(const Json& j, tokotachi::Image& out)
     {
         return false;
     }
+    // よく使うアイコン(拡張が列挙の値にして渡す。"icon:3")
+    const std::string text = j.as_string();
+    if (text.compare(0, 5, "icon:") == 0)
+    {
+        out = tokotachi::Image::icon(static_cast<tokotachi::Icon>(std::atoi(text.c_str() + 5)));
+        return true;
+    }
     const std::map<std::string, tokotachi::Image>& images = image_store();
-    std::map<std::string, tokotachi::Image>::const_iterator it = images.find(j.as_string());
+    std::map<std::string, tokotachi::Image>::const_iterator it = images.find(text);
     out = it == images.end() ? tokotachi::Image() : it->second;
     return true;
 }

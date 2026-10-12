@@ -6,6 +6,7 @@
 import {
   bindingOf,
   findClass,
+  isIconValue,
   isImageType,
   layoutVariable,
   MENU_BAR_VARIABLE,
@@ -202,7 +203,10 @@ export function inlineOps(
         const value =
           isRef && typeof op.value === 'string'
             ? name(op.value)
-            : isImageType(op.type) && typeof op.value === 'string' && dir !== ''
+            : isImageType(op.type) &&
+                typeof op.value === 'string' &&
+                !isIconValue(op.value) &&
+                dir !== ''
               ? normalizePath(`${dir}/${op.value}`)
               : op.value;
         return [{ ...op, target: target(op.target), value }];

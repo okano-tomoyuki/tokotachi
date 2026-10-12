@@ -5,6 +5,7 @@
 import { getCatalog } from '../catalog/catalog.ts';
 import type { PrimitiveType, PropertyType } from '../catalog/types.ts';
 import { l10n } from '../l10n.ts';
+import { iconOf, isIconValue } from './icons.ts';
 import { IMAGE_EXTENSIONS, isImagePath } from './images.ts';
 import type { PropertyValue } from './schema.ts';
 import { checkThemeOverride } from './themeOverride.ts';
@@ -162,6 +163,12 @@ export function checkValue(type: PropertyType, value: PropertyValue): string | n
   if (name === 'Image') {
     if (typeof value === 'string' && isImagePath(value)) {
       return null;
+    }
+    // よく使うアイコン(`"icon:save"`。docs/adr/0054)
+    if (typeof value === 'string' && isIconValue(value)) {
+      return iconOf(value)
+        ? null
+        : l10n.t('"{0}" is not an icon name (see the icon list in the inspector)', value);
     }
     return l10n.t(
       'Expected a relative path from this file to an image file ({0}), separated by "/"',

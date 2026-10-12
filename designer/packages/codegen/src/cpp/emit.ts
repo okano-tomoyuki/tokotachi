@@ -10,6 +10,8 @@
 import {
   findClass,
   getCatalog,
+  iconEnumName,
+  iconOf,
   isImageType,
   namedNodes,
   normalizePath,
@@ -100,10 +102,13 @@ function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): stri
             : `${assignee(op.variable, op.class, op.declare)} = new ${cppClass(op.class)}(${op.parent ?? ''});`,
         ];
       case 'set': {
+        const icon = isImageType(op.type) ? iconOf(op.value) : undefined;
         const image =
-          isImageType(op.type) && typeof op.value === 'string'
-            ? images.get(normalizePath(op.value))
-            : undefined;
+          icon !== undefined
+            ? `tokotachi::Image::icon(tokotachi::Icon::${iconEnumName(icon)})`
+            : isImageType(op.type) && typeof op.value === 'string'
+              ? images.get(normalizePath(op.value))
+              : undefined;
         const value = image ?? cppValue(op.type, op.value);
         return [`${access(op.target, op.property)} = ${value};`];
       }

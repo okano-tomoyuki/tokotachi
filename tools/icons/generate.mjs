@@ -6,6 +6,8 @@
 // 書くもの(手で直さない):
 //   include/tokotachi/graphics/icon.hpp  列挙型 Icon(名前は Lucide の名前を大文字にしたもの)
 //   src/graphics/icon_data.cpp           24 × 24 の格子の線画(移動・直線・3 次ベジェ・閉じる)
+//   examples/gallery/icon_names.hpp      ギャラリーのサンプルが出す名前
+//   designer/packages/core/src/dsl/icons.json  デザイナーが使う一覧(定義ファイルの名前・列挙の名前・分類・SVG のパス)
 //
 // アイコンを足すときは、下の ICONS に Lucide の名前を足して実行し直す(列挙の値は並びの順なので、足すのは分類の終わり)。
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -66,6 +68,17 @@ const ICONS = [
     ],
   ],
 ];
+
+/** 分類の英語の名前(デザイナーの画面で訳して出す)。 */
+const CATEGORY_EN = {
+  ファイル: 'File',
+  編集: 'Edit',
+  移動: 'Navigation',
+  表示: 'View',
+  状態: 'Status',
+  再生: 'Media',
+  その他: 'Other',
+};
 
 const MOVE = 0;
 const LINE = 1;
@@ -324,6 +337,7 @@ function main() {
   const note = `// tools/icons/generate.mjs が lucide-static ${VERSION}(ISC。一部は Feather の MIT。THIRD_PARTY_LICENSES.txt)から生成した。手で直さない。`;
 
   const enumLines = [];
+  const designerIcons = [];
   const dataLines = [];
   const tableLines = [];
   for (const [category, names] of ICONS) {
@@ -339,6 +353,16 @@ function main() {
       enumLines.push(`    ${enumName(name)},  ///< ${name}`);
       dataLines.push(`const float ${id}[] = {${flat.join(', ')}};`);
       tableLines.push(`    {${id}, sizeof(${id}) / sizeof(${id}[0])},`);
+      // デザイナーの見本に出す SVG のパス(同じ線画)
+      const d = ops
+        .map(([op, ...pts]) => `${['M', 'L', 'C', 'Z'][op]}${pts.map(number).join(' ')}`)
+        .join('');
+      designerIcons.push({
+        name: enumName(name).toLowerCase(),
+        lucide: name,
+        category: CATEGORY_EN[category],
+        path: d,
+      });
     }
   }
 
@@ -405,6 +429,12 @@ ${names.map((n) => `    "${n}",`).join('\n')}
 #endif
 `;
   writeFileSync(join(root, 'examples', 'gallery', 'icon_names.hpp'), galleryNames);
+  // デザイナー(定義ファイルの "icon:<name>"。並びは列挙の順)
+  const json = { lucide: VERSION, icons: designerIcons };
+  writeFileSync(
+    join(root, 'designer', 'packages', 'core', 'src', 'dsl', 'icons.json'),
+    `${JSON.stringify(json, null, 2)}\n`,
+  );
   writeFileSync(join(root, 'include', 'tokotachi', 'graphics', 'icon.hpp'), header);
   writeFileSync(join(root, 'src', 'graphics', 'icon_data.cpp'), source);
   console.log(`アイコン ${String(tableLines.length)} 個を書いた`);

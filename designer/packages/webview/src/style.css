@@ -262,9 +262,38 @@ textarea.invalid {
   background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
 }
 
+/* 右のペイン(InspectorPane.tsx)。左の端で幅を変える */
 .inspector-pane {
-  width: 300px;
+  position: relative;
+  display: flex;
+  flex: none;
+  overflow: hidden;
   border-left: 1px solid var(--vscode-panel-border);
+}
+
+.inspector-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.inspector-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.inspector-resize:hover {
+  background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+/* ツールバーの右の端に寄せる */
+.toolbar .toolbar-end {
+  margin-left: auto;
 }
 
 /* ---- 構造の木 ---- */
@@ -616,6 +645,82 @@ textarea.invalid {
 .image-field input {
   flex: 1;
   min-width: 0;
+}
+
+/* よく使うアイコンを選ぶ(IconPicker) */
+.icon-picker {
+  position: relative;
+  display: flex;
+}
+
+.icon-picker-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+}
+
+.icon-glyph {
+  display: block;
+}
+
+.icon-picker-panel {
+  position: fixed;
+  z-index: 100;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(
+    --vscode-menu-background,
+    var(--vscode-editorWidget-background, var(--vscode-editor-background))
+  );
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.icon-picker-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.icon-picker-category {
+  margin: 4px 0 2px;
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+
+.icon-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.icon-cell:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.icon-cell.selected {
+  border-color: var(--vscode-focusBorder);
+}
+
+.icon-picker-empty {
+  padding: 8px;
+  opacity: 0.7;
 }
 
 /* ---- パレットとドラッグ ---- */

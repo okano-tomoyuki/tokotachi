@@ -278,6 +278,14 @@ describe('generateCpp', () => {
     expect(text(second, 'main_window_images.cpp')).toBe(images);
   }, 60_000);
 
+  it('よく使うアイコン("icon:<名前>")は埋め込まず、Image::icon で作る', () => {
+    const r = gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined);
+    expect(text(r, 'main_window.cpp')).toContain(
+      '    action_quit->icon = tokotachi::Image::icon(tokotachi::Icon::LOG_OUT);',
+    );
+    expect(text(r, 'main_window_images.cpp')).not.toContain('log_out');
+  });
+
   it('画像を参照しなくなったら、画像のソースは書かず、使われていないことを知らせる', () => {
     const doc = mainWindowCopy();
     delete doc.actions[0].properties.icon;

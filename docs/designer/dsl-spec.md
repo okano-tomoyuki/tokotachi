@@ -295,6 +295,9 @@ ListView・TreeView の列(`ItemView::add_column`)。配列の順が列の順。
   埋め込む配列は、ウィンドウのソースとは別のソース(`main_window_images.cpp`)に書く([ADR 0053](../adr/0053-designer-image-source-file.md))。
 - 埋め込むとソースが画像の 6 倍ほどになるので、256 KB を超える画像のファイルは、拡張が問題パネルに警告を出す(`large-image`)。
 - ファイルが無いと、コードを生成できない(拡張は問題パネルにエラーを出す)。キャンバスは、拡張が読んだ中身で描く(無ければ画像なしで描く)。
+- **よく使うアイコン**は、パスの代わりに `"icon:<名前>"` と書く(`"icon:folder_open"`。名前はライブラリの列挙型 `tokotachi::Icon` を
+  小文字にしたもの。[ADR 0054](../adr/0054-icons.md))。ファイルは要らず、埋め込まない。生成するコードは
+  `tokotachi::Image::icon(tokotachi::Icon::FOLDER_OPEN)`。知らない名前は検証のエラー。
 
 ### 5.2 Variable との結びつけ
 

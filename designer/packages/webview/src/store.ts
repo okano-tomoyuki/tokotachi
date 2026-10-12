@@ -45,7 +45,7 @@ export interface MenuItem {
   readonly run: () => void;
 }
 
-/** 左のペイン(パレットと構造の木)の配置。Webview の状態に保存し、開き直したときに戻す。 */
+/** 左のペイン(パレットと構造の木)と右のペイン(インスペクタ)の配置。Webview の状態に保存し、開き直したときに戻す。 */
 export interface SidebarLayout {
   /** 幅(px)。 */
   readonly width: number;
@@ -59,6 +59,10 @@ export interface SidebarLayout {
   readonly paletteTab: 'visual' | 'non_visual';
   /** 畳んでいるパレットの分類。 */
   readonly closedCategories: readonly string[];
+  /** 右のペイン(インスペクタ)の幅(px)。 */
+  readonly inspectorWidth: number;
+  /** 右のペインを隠しているか。 */
+  readonly inspectorHidden: boolean;
 }
 
 export const DEFAULT_SIDEBAR: SidebarLayout = {
@@ -68,6 +72,8 @@ export const DEFAULT_SIDEBAR: SidebarLayout = {
   hidden: false,
   paletteTab: 'visual',
   closedCategories: [],
+  inspectorWidth: 300,
+  inspectorHidden: false,
 };
 
 export interface DesignerState {

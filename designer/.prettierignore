@@ -3,6 +3,8 @@ coverage/
 pnpm-lock.yaml
 # tools/catalog/extract.mts が決まった形で書き出す
 packages/core/src/catalog/catalog.json
+# tools/icons/generate.mjs(リポジトリの根)が書く
+packages/core/src/dsl/icons.json
 # 期待するコード(tools/codegen/golden.mts が作る)
 packages/codegen/src/__golden__/
 # *.ttui.json は core の serializeDocument が決まった形で書き出す

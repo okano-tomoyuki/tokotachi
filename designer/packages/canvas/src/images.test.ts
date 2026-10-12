@@ -80,4 +80,34 @@ describe.skipIf(!isBuilt())('画像', () => {
     expect(frame.errors).toEqual([]);
     expect(frame.rects['image_box_photo']?.showing).toBe(true);
   });
+
+  it('よく使うアイコン("icon:<名前>")を、画像のファイルなしで描く', async () => {
+    const doc = TtuiDocument.parse({
+      format_version: 1,
+      window: {
+        name: 'IconWindow',
+        class: 'Window',
+        properties: { width: 120, height: 120 },
+        children: [
+          {
+            name: 'image_box_square',
+            class: 'ImageBox',
+            properties: { x: 0, y: 0, width: 96, height: 96, image: 'icon:square', fit: 'CONTAIN' },
+          },
+        ],
+      },
+    });
+    const canvas = await Canvas.load({ language: 'en' });
+    const frame = canvas.render(doc, { colorScheme: 'LIGHT' });
+    expect(frame.errors).toEqual([]);
+    // square は (3, 3)〜(21, 21) の四角。96 では x = 12 の縦の線(太さ 8)を文字の色で塗る
+    const at = (x: number, y: number): number[] => {
+      const i = (Math.round(y * frame.scale) * frame.width + Math.round(x * frame.scale)) * 4;
+      return [...frame.pixels.slice(i, i + 3)];
+    };
+    const line = at(12, 48);
+    const inside = at(48, 48);
+    expect(Math.max(...line)).toBeLessThan(100); // 濃い(ライトのテーマの文字の色)
+    expect(Math.min(...inside)).toBeGreaterThan(200); // 中は塗らない(背景)
+  });
 });

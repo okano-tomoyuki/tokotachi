@@ -5,7 +5,7 @@ import { AlignBar } from './components/AlignBar.tsx';
 import { CanvasView } from './components/CanvasView.tsx';
 import { ContextMenu } from './components/ContextMenu.tsx';
 import { GhostView } from './components/GhostView.tsx';
-import { Inspector } from './components/Inspector.tsx';
+import { InspectorPane } from './components/InspectorPane.tsx';
 import { Problems } from './components/Problems.tsx';
 import { Sidebar } from './components/Sidebar.tsx';
 import { ZoomControl } from './components/ZoomControl.tsx';
@@ -49,6 +49,7 @@ export function App() {
   const editError = useDesigner((s) => s.editError);
   const version = useDesigner((s) => s.version);
   const sidebarHidden = useDesigner((s) => s.sidebar.hidden);
+  const inspectorHidden = useDesigner((s) => s.sidebar.inspectorHidden);
   const setSidebar = useDesigner((s) => s.setSidebar);
 
   if (version < 0) {
@@ -116,6 +117,15 @@ export function App() {
         <AlignBar />
         <ZoomControl />
         {editError !== undefined && <span className="edit-error">{editError}</span>}
+        <button
+          className={`toggle toolbar-end${inspectorHidden ? '' : ' on'}`}
+          title={inspectorHidden ? l10n.t('Show the inspector') : l10n.t('Hide the inspector')}
+          onClick={() => {
+            setSidebar({ inspectorHidden: !inspectorHidden });
+          }}
+        >
+          ◨
+        </button>
       </div>
       <GhostView />
       <ContextMenu />
@@ -125,9 +135,7 @@ export function App() {
           <CanvasView />
           <Problems />
         </div>
-        <div className="pane inspector-pane">
-          <Inspector />
-        </div>
+        <InspectorPane />
       </div>
     </div>
   );

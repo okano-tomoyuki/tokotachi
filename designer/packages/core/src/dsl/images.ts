@@ -9,6 +9,7 @@ import type { PropertyType } from '../catalog/types.ts';
 import { normalizePath } from '../project/paths.ts';
 import type { JsonPath } from './diagnostics.ts';
 import type { Properties, TtuiDocument } from './schema.ts';
+import { isIconValue } from './icons.ts';
 import { layouts, widgets } from './tree.ts';
 
 /** 読める画像の拡張子(Tokotachi の Image::load が読めるもの)。 */
@@ -60,7 +61,8 @@ export function imageReferences(doc: TtuiDocument): ImageReference[] {
     }
     for (const [name, prop] of Object.entries(info.properties)) {
       const value = props[name];
-      if (isImageType(prop.type) && typeof value === 'string') {
+      // アイコン(`"icon:save"`)はファイルではない
+      if (isImageType(prop.type) && typeof value === 'string' && !isIconValue(value)) {
         out.push({ path: value, at: [...path, 'properties', name] });
       }
     }

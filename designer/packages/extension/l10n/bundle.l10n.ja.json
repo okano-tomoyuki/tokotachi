@@ -307,5 +307,18 @@
   "Italic": "斜体",
   "{0} was created. Add it to the sources of your build.": "{0} を作りました。ビルドのソースに加えてください。",
   "{0} is no longer used because the window refers to no images. You can delete it (and remove it from your build).": "ウィンドウが画像を参照しなくなったので、{0} は使われていません。削除できます(ビルドのソースからも外してください)。",
-  "The image file \"{0}\" is {1} KB. It is embedded in the generated code, which makes the source large and slow to compile (keep images under {2} KB)": "画像のファイル「{0}」は {1} KB です。生成するコードに埋め込むので、ソースが大きくなり、コンパイルが遅くなります({2} KB 以下を勧めます)"
+  "The image file \"{0}\" is {1} KB. It is embedded in the generated code, which makes the source large and slow to compile (keep images under {2} KB)": "画像のファイル「{0}」は {1} KB です。生成するコードに埋め込むので、ソースが大きくなり、コンパイルが遅くなります({2} KB 以下を勧めます)",
+  "Choose an icon": "アイコンを選ぶ",
+  "Filter icons": "アイコンを絞り込む",
+  "No icons": "アイコンがありません",
+  "File": "ファイル",
+  "Edit": "編集",
+  "Navigation": "移動",
+  "View": "表示",
+  "Status": "状態",
+  "Media": "再生",
+  "Other": "その他",
+  "\"{0}\" is not an icon name (see the icon list in the inspector)": "\"{0}\" はアイコンの名前ではありません(インスペクタのアイコンの一覧を見てください)",
+  "Show the inspector": "インスペクタを表示",
+  "Hide the inspector": "インスペクタを隠す"
 }

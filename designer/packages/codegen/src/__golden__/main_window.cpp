@@ -39,6 +39,7 @@ void MainWindow::tokotachi_setup_ui()
     action_quit = new tokotachi::Action(this);
     action_quit->text = "終了(&X)";
     action_quit->shortcut = tokotachi::Shortcut("Ctrl+Q");
+    action_quit->icon = tokotachi::Image::icon(tokotachi::Icon::LOG_OUT);
     action_quit->on_trigger = [this](tokotachi::Object* sender) { action_quit_trigger(sender); };
 
     timer_refresh = new tokotachi::Timer(this);
@@ -179,7 +180,7 @@ void MainWindow::tokotachi_setup_ui()
     label_name->buddy = line_edit_name;
     label_size->buddy = spin_box_size;
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="96795c96">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="ebecddad">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)
