@@ -52,6 +52,7 @@ describe('project', () => {
     expect(cppOutputPaths('settings_dialog.ttui.json', options)).toEqual({
       header: '../../include/settings_dialog.hpp',
       source: '../../src/settings_dialog.cpp',
+      images: '../../src/settings_dialog_images.cpp',
     });
     expect(projectOutputPaths(PROJECT)).toEqual(['main.cpp', 'CMakeLists.txt']);
     const themed = { ...PROJECT, theme: { presets: { danger: { radius: 0 } } } };
@@ -75,7 +76,7 @@ describe('project', () => {
     const cmake = text(r, 'CMakeLists.txt');
     expect(cmake).toContain('project(my_app LANGUAGES CXX)');
     expect(cmake).toContain(
-      '    main.cpp\n    src/main_window.cpp\n    src/settings_dialog.cpp\n)',
+      '    main.cpp\n    src/main_window.cpp\n    src/main_window_images.cpp\n    src/settings_dialog.cpp\n)',
     );
     expect(cmake).toContain('set(TOKOTACHI_DESIGNER_INCLUDE_DIRS\n    include\n)');
     expect(cmake).toContain('add_executable(my_app ${TOKOTACHI_DESIGNER_SOURCES})');

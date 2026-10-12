@@ -62,6 +62,32 @@ export type ColorScheme = 'LIGHT' | 'DARK';
 interface Module {
   ccall(name: string, returnType: 'string' | null, argTypes: string[], args: unknown[]): unknown;
   HEAPU8: Uint8Array;
+  _malloc(size: number): number;
+  _free(pointer: number): void;
+}
+
+/**
+ * 文字列を引数にして呼ぶ。ccall の 'string' の引数は wasm のスタック(64 KB)に置かれ、大きい要求(画像を含む描画の要求)で
+ * あふれるので、ヒープに置いて渡す。
+ */
+function callWithText(
+  module: Module,
+  name: string,
+  returnType: 'string' | null,
+  text: string,
+): unknown {
+  const bytes = new TextEncoder().encode(text);
+  const pointer = module._malloc(bytes.length + 1);
+  if (pointer === 0) {
+    throw new Error(`${name}: out of memory`);
+  }
+  try {
+    module.HEAPU8.set(bytes, pointer);
+    module.HEAPU8[pointer + bytes.length] = 0;
+    return module.ccall(name, returnType, ['number'], [pointer]);
+  } finally {
+    module._free(pointer);
+  }
 }
 
 /** wasm/ の場所(既定はこのパッケージの wasm/)。拡張にまとめるときは、読み込むときに場所を渡す。 */
@@ -105,7 +131,7 @@ export class Canvas {
       // 利用者の言語(既定は OS の言語。暦の月・曜日、ダイアログのボタンの文字を選ぶ)
       language: options.language ?? Intl.DateTimeFormat().resolvedOptions().locale,
     };
-    module.ccall('ttc_configure', null, ['string'], [JSON.stringify(config)]);
+    callWithText(module, 'ttc_configure', null, JSON.stringify(config));
     return new Canvas(module);
   }
 
@@ -159,7 +185,7 @@ export class Canvas {
       images,
       ops: [...ops, ...show],
     };
-    const text = this.module.ccall('ttc_render', 'string', ['string'], [JSON.stringify(request)]);
+    const text = callWithText(this.module, 'ttc_render', 'string', JSON.stringify(request));
     const r = JSON.parse(String(text)) as {
       error?: string;
       width: number;

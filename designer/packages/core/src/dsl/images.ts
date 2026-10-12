@@ -14,6 +14,12 @@ import { layouts, widgets } from './tree.ts';
 /** 読める画像の拡張子(Tokotachi の Image::load が読めるもの)。 */
 export const IMAGE_EXTENSIONS: readonly string[] = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
 
+/**
+ * これより大きい画像のファイルは警告する(バイト。docs/adr/0053)。生成するコードには 1 バイトを 6 文字ほどで埋め込むので、
+ * ソースが大きくなり、コンパイルが遅くなる。アイコン(数 KB)は十分に小さい。
+ */
+export const LARGE_IMAGE_BYTES = 256 * 1024;
+
 export function isImageType(type: PropertyType): boolean {
   return typeof type === 'object' && 'value' in type && type.value === 'Image';
 }

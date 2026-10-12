@@ -22,5 +22,5 @@ target_compile_options(tokotachi_canvas PRIVATE -Wall -Wextra -pedantic)
 # 拡張(Node.js)から ES モジュールとして読む。NODERAWFS で OS のフォントをそのままのパスで読む
 target_link_options(tokotachi_canvas PRIVATE
     -sENVIRONMENT=node -sNODERAWFS=1 -sMODULARIZE=1 -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1
-    -sEXPORTED_FUNCTIONS=_ttc_configure,_ttc_render,_ttc_defaults
+    -sEXPORTED_FUNCTIONS=_ttc_configure,_ttc_render,_ttc_defaults,_malloc,_free
     -sEXPORTED_RUNTIME_METHODS=ccall,HEAPU8)

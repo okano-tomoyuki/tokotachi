@@ -45,6 +45,8 @@ export interface CppTarget {
   /** 定義ファイルのあるフォルダからの相対パス。 */
   readonly header: string;
   readonly source: string;
+  /** 埋め込む画像のソース(画像を参照するときだけ書く。docs/adr/0053)。 */
+  readonly images: string;
   /** ソースからヘッダを include するパス。 */
   readonly headerInclude: string;
   readonly namespace: readonly string[];
@@ -93,11 +95,12 @@ function relative(fromDir: string | undefined, to: string): string {
 export function cppOutputPaths(
   dslFileName: string,
   options: CppOptions,
-): { readonly header: string; readonly source: string } {
+): { readonly header: string; readonly source: string; readonly images: string } {
   const base = baseName(dslFileName);
   return {
     header: join(options.headerDir, `${base}${options.headerExtension}`),
     source: join(options.sourceDir, `${base}${options.sourceExtension}`),
+    images: join(options.sourceDir, `${base}_images${options.sourceExtension}`),
   };
 }
 
@@ -107,11 +110,12 @@ export function resolveCppTarget(
   options: CppOptions,
 ): CppTarget {
   const headerFile = `${baseName(dslFileName)}${options.headerExtension}`;
-  const { header, source } = cppOutputPaths(dslFileName, options);
+  const { header, source, images } = cppOutputPaths(dslFileName, options);
   return {
     className: doc.window.name,
     header,
     source,
+    images,
     headerInclude: relative(options.sourceDir, header),
     namespace: options.namespace,
     includeGuard: `${options.includeGuardPrefix}${headerFile}`

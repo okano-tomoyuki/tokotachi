@@ -64,6 +64,7 @@ export {
 export { bindingOf, isBindable, variableTypeOf } from './dsl/bindings.ts';
 export {
   IMAGE_EXTENSIONS,
+  LARGE_IMAGE_BYTES,
   imageReferences,
   isImagePath,
   isImageType,

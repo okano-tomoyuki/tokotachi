@@ -113,7 +113,7 @@ export async function generateWindowCode(
   const target = resolveCppTarget(doc, fileName, settings);
   // 出力先の既存の内容を先に読んでおく(生成は同期的に行う)
   const existing = new Map<string, string | undefined>();
-  for (const path of [target.header, target.source]) {
+  for (const path of [target.header, target.source, target.images]) {
     existing.set(path, await readText(vscode.Uri.joinPath(directory, path)));
   }
   // 画像も先に読む(生成したコードに埋め込む)

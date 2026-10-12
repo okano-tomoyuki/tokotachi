@@ -268,7 +268,7 @@ int main(int argc, char** argv)
 | N5 | 既定値 | 定義ファイルに書いたプロパティだけを書き出す |
 | N6 | レイアウトの `add` の引数 | 既定値と同じ後ろの引数は省く(`add(w)`、`add(w, 1)`)。途中の引数を書くときは、その前の引数も書く |
 | N7 | 予約の名前 | 生成したコードが使うメンバ関数・区間には接頭辞 `tokotachi_` を付ける(`tokotachi_setup_ui`)。ノードの `name`・ハンドラの名前に `tokotachi_` で始まる名前は使えない |
-| N8 | 画像 | 定義ファイルが参照する画像のファイル(dsl-spec.md §5.1)の中身を、区間 `tokotachi_setup_ui` の先頭の無名の名前空間に `const unsigned char tokotachi_image_<パス>[]` として書き(同じファイルは 1 つ。1 行に 16 バイト)、`tokotachi::Image::load_from_data(配列, sizeof(配列))` で読む。区間の中なので、既存のファイルの形は変わらない。読めない画像があれば、何も書かずにエラーにする。実装は [cpp/images.ts](../../designer/packages/codegen/src/cpp/images.ts) |
+| N8 | 画像 | 定義ファイルが参照する画像のファイル(dsl-spec.md §5.1)の中身を、別のソース `<定義ファイルの名前>_images.cpp`(ソースと同じフォルダ。ファイル全体を区間 `tokotachi_images` にして、生成し直すと上書きする)に、ウィンドウと同じ名前空間の中の `tokotachi_images_<クラス名>` の名前空間の `const unsigned char tokotachi_image_<パス>[]` と大きさ `tokotachi_image_<パス>_size` として書く(同じファイルは 1 つ。1 行に 16 バイト。別の翻訳単位から使うので、先に `extern` で宣言する)。ウィンドウのソースは区間 `tokotachi_setup_ui` の先頭で同じものを `extern` で宣言し、`tokotachi::Image::load_from_data(配列, 大きさ)` で読む。画像を参照しないウィンドウは画像のソースを書かない(前に書いたものが残っていれば、使われていないと知らせる)。プロジェクトに属すれば CMakeLists.txt のソースの一覧に入れ、属さなければ作ったときに、ビルドに加えるよう知らせる。読めない画像があれば、何も書かずにエラーにする。実装は [cpp/images.ts](../../designer/packages/codegen/src/cpp/images.ts)([ADR 0053](../adr/0053-designer-image-source-file.md)) |
 | N9 | Variable | メンバは `tokotachi::Variable<std::string>* file_name;`(`StringVariable` 等の typedef は float に無いので使わず、型の引数で書く)。ハンドラ(`on_set`・`on_change`)はほかのオブジェクトと同じくつなぐ |
 
 ## 6. Bethany から引き継ぐ決まり

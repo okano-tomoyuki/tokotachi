@@ -12,22 +12,12 @@ MainWindow::MainWindow()
 }
 
 // <tokotachi-designer:begin id="tokotachi_setup_ui">
-// Contents of the image files referenced by the window definition (generated).
-namespace
+// Images embedded in main_window_images.cpp (generated).
+namespace tokotachi_images_MainWindow
 {
-
-// icons/open.png
-const unsigned char tokotachi_image_icons_open_png[] = {
-    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-    0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0xF3, 0xFF,
-    0x61, 0x00, 0x00, 0x00, 0x33, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x60, 0x18, 0x14, 0x60,
-    0x43, 0x95, 0xC0, 0x7F, 0x6C, 0x78, 0xE0, 0x0D, 0x20, 0x84, 0x51, 0x0C, 0xF8, 0xB4, 0xC3, 0x8A,
-    0x24, 0x4C, 0x7D, 0x03, 0x28, 0xF2, 0x06, 0x88, 0xF1, 0xFF, 0x52, 0x16, 0xC9, 0x78, 0xD4, 0x00,
-    0x34, 0x03, 0x28, 0x4E, 0x4C, 0x03, 0x06, 0x00, 0xF2, 0x2A, 0xB2, 0xA8, 0x11, 0xD9, 0x8F, 0x4F,
-    0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
-};
-
-}  // namespace
+extern const unsigned char tokotachi_image_icons_open_png[];
+extern const std::size_t tokotachi_image_icons_open_png_size;
+}
 
 // Creates the widgets, sets their properties, adds them to the layouts and connects the handlers (generated).
 void MainWindow::tokotachi_setup_ui()
@@ -35,7 +25,7 @@ void MainWindow::tokotachi_setup_ui()
     action_open = new tokotachi::Action(this);
     action_open->text = "開く(&O)...";
     action_open->shortcut = tokotachi::Shortcut("Ctrl+O");
-    action_open->icon = tokotachi::Image::load_from_data(tokotachi_image_icons_open_png, sizeof(tokotachi_image_icons_open_png));
+    action_open->icon = tokotachi::Image::load_from_data(tokotachi_images_MainWindow::tokotachi_image_icons_open_png, tokotachi_images_MainWindow::tokotachi_image_icons_open_png_size);
     action_open->on_trigger = [this](tokotachi::Object* sender) { action_open_trigger(sender); };
 
     action_clear_recent = new tokotachi::Action(this);
@@ -189,7 +179,7 @@ void MainWindow::tokotachi_setup_ui()
     label_name->buddy = line_edit_name;
     label_size->buddy = spin_box_size;
 }
-// <tokotachi-designer:end id="tokotachi_setup_ui" hash="2bb9c300">
+// <tokotachi-designer:end id="tokotachi_setup_ui" hash="96795c96">
 
 // <tokotachi-designer:handler-stubs>
 void MainWindow::action_open_trigger(tokotachi::Object* sender)

@@ -304,5 +304,8 @@
   "The header \"{0}\" is not found": "ヘッダ \"{0}\" が見つかりません",
   "Custom widgets": "自作部品",
   "Bold": "太字",
-  "Italic": "斜体"
+  "Italic": "斜体",
+  "{0} was created. Add it to the sources of your build.": "{0} を作りました。ビルドのソースに加えてください。",
+  "{0} is no longer used because the window refers to no images. You can delete it (and remove it from your build).": "ウィンドウが画像を参照しなくなったので、{0} は使われていません。削除できます(ビルドのソースからも外してください)。",
+  "The image file \"{0}\" is {1} KB. It is embedded in the generated code, which makes the source large and slow to compile (keep images under {2} KB)": "画像のファイル「{0}」は {1} KB です。生成するコードに埋め込むので、ソースが大きくなり、コンパイルが遅くなります({2} KB 以下を勧めます)"
 }

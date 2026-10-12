@@ -1,11 +1,12 @@
 /**
  * 定義ファイルの検証の結果を問題パネルに出す(Bethany と同じ)。JSON 上の位置は core の locate でファイル上の範囲にする。
  */
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import {
   componentReferences,
   DOCUMENT_EXTENSION,
   imageReferences,
+  LARGE_IMAGE_BYTES,
   locate,
   parseDocument,
   parseProject,
@@ -65,11 +66,26 @@ export function registerDiagnostics(): vscode.Disposable {
     if (parsed?.document && document.uri.scheme === 'file') {
       const directory = vscode.Uri.joinPath(document.uri, '..');
       for (const ref of imageReferences(parsed.document)) {
-        if (!existsSync(vscode.Uri.joinPath(directory, ref.path).fsPath)) {
+        const file = vscode.Uri.joinPath(directory, ref.path).fsPath;
+        if (!existsSync(file)) {
           diagnostics.push({
             severity: 'error',
             code: 'missing-image',
             message: vscode.l10n.t('The image file "{0}" is not found', ref.path),
+            path: ref.at,
+          });
+        } else if (statSync(file).size > LARGE_IMAGE_BYTES) {
+          const size = statSync(file).size;
+          // 生成するコードに埋め込むので、大きい画像はソースが大きくなり、コンパイルが遅くなる
+          diagnostics.push({
+            severity: 'warning',
+            code: 'large-image',
+            message: vscode.l10n.t(
+              'The image file "{0}" is {1} KB. It is embedded in the generated code, which makes the source large and slow to compile (keep images under {2} KB)',
+              ref.path,
+              Math.ceil(size / 1024),
+              LARGE_IMAGE_BYTES / 1024,
+            ),
             path: ref.at,
           });
         }

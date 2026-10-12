@@ -6,6 +6,7 @@
  */
 import {
   dirname,
+  imageReferences,
   normalizePath,
   relativePath,
   resolvePath,
@@ -139,12 +140,17 @@ export interface ProjectWindow {
 function windowFiles(
   project: TtprojDocument,
   w: ProjectWindow,
-): { header: string; source: string } {
+): { header: string; source: string; images: string | undefined } {
   const target = resolveCppTarget(w.doc, fileNameOf(w.path), windowCppOptions(project, w.path));
   const dir = dirname(resolvePath(ROOT, w.path));
   return {
     header: relativePath(ROOT, resolvePath(dir, target.header)),
     source: relativePath(ROOT, resolvePath(dir, target.source)),
+    // 画像を参照するウィンドウは、画像のソースも生成する(docs/adr/0053)
+    images:
+      imageReferences(w.doc).length > 0
+        ? relativePath(ROOT, resolvePath(dir, target.images))
+        : undefined,
   };
 }
 
@@ -294,7 +300,10 @@ export function generateProject(
           comments.sources,
           'set(TOKOTACHI_DESIGNER_SOURCES',
           '    main.cpp',
-          ...files.map((f) => `    ${f.source}`),
+          ...files.flatMap((f) => [
+            `    ${f.source}`,
+            ...(f.images === undefined ? [] : [`    ${f.images}`]),
+          ]),
           ')',
           'set(TOKOTACHI_DESIGNER_INCLUDE_DIRS',
           ...includeDirs.map((d) => `    ${d}`),

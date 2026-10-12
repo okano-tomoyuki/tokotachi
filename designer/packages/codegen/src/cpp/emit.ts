@@ -19,9 +19,14 @@ import {
 } from '@tokotachi-designer/core';
 import { generatedComments } from '../comments.ts';
 import { buildSetup, type Arg, type Op } from '../model.ts';
-import type { CppTarget, CommentLocale } from '../names.ts';
+import { fileNameOf, type CppTarget, type CommentLocale } from '../names.ts';
 import type { GeneratedCode, HandlerStub, Region } from '../region.ts';
-import { imageDefinitions, imageExpression, type EmbeddedImage } from './images.ts';
+import {
+  imageDeclarations,
+  imageDefinitions,
+  imageExpression,
+  type EmbeddedImage,
+} from './images.ts';
 import { cppString, cppValue, enumValue, placementStatements } from './values.ts';
 
 const INDENT = '    ';
@@ -36,6 +41,8 @@ export interface EmittedComponent {
 export interface CppFiles {
   readonly header: GeneratedCode;
   readonly source: GeneratedCode;
+  /** 埋め込む画像のソース(画像を参照するときだけ)。 */
+  readonly images?: GeneratedCode;
 }
 
 /** ハンドラの型の引数の並び(`tokotachi::Object* sender, bool& can_close`)。 */
@@ -81,7 +88,7 @@ function assignee(variable: string, cls: string, declare: boolean): string {
 
 /**
  * 操作の並びを tokotachi_setup_ui の中身の行にする(空行は '')。
- * @param images 画像のパス(正規化したもの)→ 埋め込んだ配列の名前
+ * @param images 画像のパス(正規化したもの)→ 埋め込んだ画像を読む式
  */
 function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): string[] {
   return ops.flatMap((op): string[] => {
@@ -97,7 +104,7 @@ function printOps(ops: readonly Op[], images: ReadonlyMap<string, string>): stri
           isImageType(op.type) && typeof op.value === 'string'
             ? images.get(normalizePath(op.value))
             : undefined;
-        const value = image === undefined ? cppValue(op.type, op.value) : imageExpression(image);
+        const value = image ?? cppValue(op.type, op.value);
         return [`${access(op.target, op.property)} = ${value};`];
       }
       case 'variable': {
@@ -192,7 +199,10 @@ export function emitCpp(
       return c ? { document: c.document } : undefined;
     },
   });
-  const body = printOps(setup.ops, new Map(images.map((i) => [i.path, i.variable])));
+  const body = printOps(
+    setup.ops,
+    new Map(images.map((i) => [i.path, imageExpression(className, i.variable)])),
+  );
   const members = namedNodes(doc);
   // 部品ファイルを置いた部品のメンバの型は、部品ファイルのクラス
   const componentClasses = new Map(
@@ -276,7 +286,11 @@ export function emitCpp(
     id: 'tokotachi_setup_ui',
     indent: 0,
     content: [
-      ...imageDefinitions(images, comments.images),
+      ...imageDeclarations(
+        images,
+        className,
+        comments.imagesDeclaration(fileNameOf(target.images)),
+      ),
       `// ${comments.setupUi}`,
       `void ${className}::tokotachi_setup_ui()`,
       '{',
@@ -323,5 +337,29 @@ export function emitCpp(
         '',
       ].join('\n'),
   };
-  return { header, source };
+  // 画像は別のファイルに書く(全体を 1 つの区間にして、生成し直すと上書きする)
+  const imagesFile: GeneratedCode | undefined =
+    images.length === 0
+      ? undefined
+      : {
+          regions: [
+            {
+              id: 'tokotachi_images',
+              indent: 0,
+              content: [
+                `// ${comments.imagesFile(sourceName)}`,
+                '',
+                ...imageDefinitions(
+                  images,
+                  className,
+                  namespaceBegin(namespace),
+                  namespaceEnd(namespace),
+                ),
+              ].join('\n'),
+            },
+          ],
+          stubs: [],
+          scaffold: (rendered) => `${rendered('tokotachi_images')}\n`,
+        };
+  return { header, source, ...(imagesFile ? { images: imagesFile } : {}) };
 }

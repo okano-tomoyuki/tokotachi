@@ -201,10 +201,29 @@ export function generateCpp(
     { path: target.header, result: header },
     { path: target.source, result: source },
   ];
+  // 画像は別のソースに書く(docs/adr/0053)。プロジェクトなら CMakeLists.txt のソースの一覧に入るが、そうでなければ利用者がビルドに加える
+  const existingImages = readExisting(target.images);
+  const notices: string[] = [];
+  if (code.images) {
+    files.push({ path: target.images, result: generate(code.images, existingImages) });
+    if (existingImages === undefined && options.projectDir === undefined) {
+      notices.push(l10n.t('{0} was created. Add it to the sources of your build.', target.images));
+    }
+  } else if (existingImages !== undefined) {
+    notices.push(
+      l10n.t(
+        '{0} is no longer used because the window refers to no images. You can delete it (and remove it from your build).',
+        target.images,
+      ),
+    );
+  }
 
-  const warnings = files.flatMap((f) =>
-    f.result.ok ? (f.result.warnings ?? []).map((w) => `${f.path}: ${w}`) : [],
-  );
+  const warnings = [
+    ...files.flatMap((f) =>
+      f.result.ok ? (f.result.warnings ?? []).map((w) => `${f.path}: ${w}`) : [],
+    ),
+    ...notices,
+  ];
   if (existingHeader !== undefined && header.ok && source.ok) {
     // 生成したメンバはヘッダの宣言の区間から取り出し、使われているかはヘッダとソースの両方で調べる
     const stale = staleNamesWarning(

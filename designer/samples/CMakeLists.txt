@@ -10,6 +10,7 @@ find_package(tokotachi 0.1 REQUIRED)
 set(TOKOTACHI_DESIGNER_SOURCES
     main.cpp
     main_window.cpp
+    main_window_images.cpp
     settings_dialog.cpp
     parts/labeled_edit.cpp
 )
@@ -17,7 +18,7 @@ set(TOKOTACHI_DESIGNER_INCLUDE_DIRS
     .
     parts
 )
-# <tokotachi-designer:end id="tokotachi_sources" hash="7a0baa2d">
+# <tokotachi-designer:end id="tokotachi_sources" hash="cc7632a7">
 
 add_executable(samples ${TOKOTACHI_DESIGNER_SOURCES})
 target_include_directories(samples PRIVATE ${TOKOTACHI_DESIGNER_INCLUDE_DIRS})

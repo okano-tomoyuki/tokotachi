@@ -4,6 +4,7 @@ import goldenDialogCpp from './__golden__/settings_dialog.cpp?raw';
 import goldenDialogHpp from './__golden__/settings_dialog.hpp?raw';
 import goldenCpp from './__golden__/main_window.cpp?raw';
 import goldenHpp from './__golden__/main_window.hpp?raw';
+import goldenImagesCpp from './__golden__/main_window_images.cpp?raw';
 import goldenComponentCpp from './__golden__/labeled_edit.cpp?raw';
 import goldenComponentHpp from './__golden__/labeled_edit.hpp?raw';
 import { cppString } from './cpp/values.ts';
@@ -51,6 +52,7 @@ describe('generateCpp', () => {
     const r = gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined);
     expect(text(r, 'main_window.hpp')).toBe(lf(goldenHpp));
     expect(text(r, 'main_window.cpp')).toBe(lf(goldenCpp));
+    expect(text(r, 'main_window_images.cpp')).toBe(lf(goldenImagesCpp));
     const d = gen(SETTINGS_DIALOG, 'settings_dialog.ttui.json', () => undefined);
     expect(text(d, 'settings_dialog.hpp')).toBe(lf(goldenDialogHpp));
     expect(text(d, 'settings_dialog.cpp')).toBe(lf(goldenDialogCpp));
@@ -202,37 +204,89 @@ describe('generateCpp', () => {
       sourceDir: 'src',
       commentLocale: 'ja',
     });
-    expect(r.files.map((f) => f.path)).toEqual(['include/main_window.hpp', 'src/main_window.cpp']);
+    expect(r.files.map((f) => f.path)).toEqual([
+      'include/main_window.hpp',
+      'src/main_window.cpp',
+      'src/main_window_images.cpp',
+    ]);
     const hpp = text(r, 'include/main_window.hpp');
     expect(hpp).toContain('#ifndef MYAPP_MAIN_WINDOW_HPP\n');
     expect(hpp).toContain('namespace app\n{\nnamespace ui\n{\n');
     expect(hpp).toContain('}  // namespace ui\n}  // namespace app\n');
     expect(hpp).toContain('/// デザイナーで作ったウィンドウ(main_window.ttui.json)。');
     expect(text(r, 'src/main_window.cpp')).toContain('#include "../include/main_window.hpp"\n');
+    // 画像のソースも同じ名前空間に書く
+    expect(text(r, 'src/main_window_images.cpp')).toContain(
+      'namespace app\n{\nnamespace ui\n{\n\nnamespace tokotachi_images_MainWindow\n',
+    );
   });
 
-  it('画像の中身を配列として埋め込み、load_from_data で読む', () => {
-    const cpp = text(
-      gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined),
+  it('画像の中身を別のソースに配列として埋め込み、ウィンドウのソースは宣言して load_from_data で読む', () => {
+    const r = gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined);
+    expect(r.files.map((f) => f.path)).toEqual([
+      'main_window.hpp',
       'main_window.cpp',
+      'main_window_images.cpp',
+    ]);
+    // プロジェクトなら CMakeLists.txt のソースの一覧に入る。プロジェクトでなければ、ビルドに加えるよう知らせる
+    expect(r.warnings).toEqual([]);
+    const standalone = gen(MAIN_WINDOW, 'main_window.ttui.json', () => undefined, {
+      ...SAMPLE_OPTIONS,
+      projectDir: undefined,
+    });
+    expect(standalone.warnings).toEqual([
+      'main_window_images.cpp was created. Add it to the sources of your build.',
+    ]);
+    const images = text(r, 'main_window_images.cpp');
+    expect(images).toContain(
+      '// icons/open.png\nextern const unsigned char tokotachi_image_icons_open_png[];\n' +
+        'extern const std::size_t tokotachi_image_icons_open_png_size;\n' +
+        'const unsigned char tokotachi_image_icons_open_png[] = {\n    0x89, 0x50, 0x4E, 0x47,',
+    );
+    expect(images).toContain(
+      'const std::size_t tokotachi_image_icons_open_png_size = sizeof(tokotachi_image_icons_open_png);',
+    );
+    const cpp = text(r, 'main_window.cpp');
+    expect(cpp).not.toContain('0x89');
+    expect(cpp).toContain(
+      'namespace tokotachi_images_MainWindow\n{\nextern const unsigned char tokotachi_image_icons_open_png[];\n',
     );
     expect(cpp).toContain(
-      '// icons/open.png\nconst unsigned char tokotachi_image_icons_open_png[] = {\n    0x89, 0x50, 0x4E, 0x47,',
-    );
-    expect(cpp).toContain(
-      '    action_open->icon = tokotachi::Image::load_from_data(tokotachi_image_icons_open_png, sizeof(tokotachi_image_icons_open_png));',
+      '    action_open->icon = tokotachi::Image::load_from_data(tokotachi_images_MainWindow::tokotachi_image_icons_open_png, tokotachi_images_MainWindow::tokotachi_image_icons_open_png_size);',
     );
     // 同じ画像は 1 つだけ埋め込む
     const doc = mainWindowCopy();
     doc.actions[3].properties.icon = './icons/../icons/open.png';
-    const twice = text(
-      gen(TtuiDocument.parse(doc), 'main_window.ttui.json', () => undefined),
-      'main_window.cpp',
+    const twice = gen(TtuiDocument.parse(doc), 'main_window.ttui.json', () => undefined);
+    expect(
+      text(twice, 'main_window_images.cpp').match(/const unsigned char \w+\[\] = /g),
+    ).toHaveLength(1);
+    expect(text(twice, 'main_window.cpp')).toContain(
+      '    action_quit->icon = tokotachi::Image::load_from_data(tokotachi_images_MainWindow::tokotachi_image_icons_open_png,',
     );
-    expect(twice.match(/const unsigned char/g)).toHaveLength(1);
-    expect(twice).toContain(
-      '    action_quit->icon = tokotachi::Image::load_from_data(tokotachi_image_icons_open_png,',
+  });
+
+  it('大きい画像(数十万行の区間)も、生成し直して既存のファイルの区間を置き換えられる', () => {
+    const big = new Uint8Array(4 * 1024 * 1024).map((_, i) => i & 0xff);
+    const generate = (existing: (path: string) => string | undefined) =>
+      generateCpp(MAIN_WINDOW, 'main_window.ttui.json', existing, SAMPLE_OPTIONS, () => big);
+    const first = generate(() => undefined);
+    const images = text(first, 'main_window_images.cpp');
+    expect(images.split('\n').length).toBeGreaterThan(250_000);
+    // 2 回目は既存のファイルの区間を置き換える(引数に展開すると、スタックがあふれていた)
+    const second = generate((path) => (path === 'main_window_images.cpp' ? images : undefined));
+    expect(text(second, 'main_window_images.cpp')).toBe(images);
+  }, 60_000);
+
+  it('画像を参照しなくなったら、画像のソースは書かず、使われていないことを知らせる', () => {
+    const doc = mainWindowCopy();
+    delete doc.actions[0].properties.icon;
+    const r = gen(TtuiDocument.parse(doc), 'main_window.ttui.json', (path) =>
+      path === 'main_window_images.cpp' ? '// old\n' : undefined,
     );
+    expect(r.files.map((f) => f.path)).toEqual(['main_window.hpp', 'main_window.cpp']);
+    expect(text(r, 'main_window.cpp')).not.toContain('tokotachi_images_');
+    expect(r.warnings.join('\n')).toContain('main_window_images.cpp is no longer used');
   });
 
   it('読めない画像があれば何も生成しない', () => {

@@ -41,6 +41,7 @@ export type DiagnosticCode =
   | 'invalid-component'
   // ファイル(core では調べず、拡張が調べて出す)
   | 'missing-image'
+  | 'large-image'
   | 'missing-component'
   | 'unknown-theme';
 

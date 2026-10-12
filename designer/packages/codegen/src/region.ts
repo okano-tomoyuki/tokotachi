@@ -153,12 +153,25 @@ export function splitRegions(
   const parsed = parseRegions(lines);
   if (typeof parsed === 'string') return undefined;
   const outside = [...lines];
-  const inside: string[] = [];
+  let inside: string[] = [];
   for (const p of parsed) {
-    inside.push(...lines.slice(p.begin + 1, p.end));
+    inside = inside.concat(lines.slice(p.begin + 1, p.end));
     outside.fill('', p.begin, p.end + 1);
   }
   return { inside: inside.join('\n'), outside };
+}
+
+/**
+ * lines の start から count 行を items に置き換えた配列(splice と同じ)。区間は大きいことがある(埋め込んだ画像は 100 万行を超える)ので、
+ * 引数に展開しない(`splice(start, count, ...items)` は引数の数でスタックがあふれる)。
+ */
+function replaced(
+  lines: readonly string[],
+  start: number,
+  count: number,
+  items: readonly string[],
+): string[] {
+  return lines.slice(0, start).concat(items, lines.slice(start + count));
 }
 
 /** 既存のファイルのマーカー区間を置き換え、足りないハンドラの雛形を追記する */
@@ -205,11 +218,16 @@ export function mergeFile(
     .map((p) => p.id);
 
   // 後ろの区間から置き換えると、前の区間の行番号がずれない
-  const output = [...lines];
+  let output = [...lines];
   for (const p of [...parsed].sort((a, b) => b.begin - a.begin)) {
     const region = generated.regions.find((r) => r.id === p.id);
     if (!region) continue; // 未知の区間(新しいバージョンの生成物など)はそのまま残す
-    output.splice(p.begin, p.end - p.begin + 1, ...renderRegion(region, syntax).split('\n'));
+    output = replaced(
+      output,
+      p.begin,
+      p.end - p.begin + 1,
+      renderRegion(region, syntax).split('\n'),
+    );
   }
 
   // まだ定義されていないハンドラの雛形を追記する(削除はしない)
@@ -219,7 +237,7 @@ export function mergeFile(
     const markerLine = output.findIndex((l) => l.includes(STUBS_MARKER));
     const insertAt = markerLine >= 0 ? markerLine + 1 : syntax.fallbackStubLine(output);
     const stubLines = newStubs.flatMap((s) => ['', ...s.code.split('\n')]);
-    output.splice(insertAt, 0, ...stubLines);
+    output = replaced(output, insertAt, 0, stubLines);
   }
 
   return {
@@ -256,23 +274,27 @@ function addMissingRegions(
       !(p.region.group !== undefined && skippedGroups.includes(p.region.group)),
   );
 
-  const lines = [...original];
+  let lines = [...original];
   const ranged = usable.flatMap((p) =>
     p.range !== undefined && p.range !== 'append' ? [{ region: p.region, range: p.range }] : [],
   );
   for (const { region, range } of ranged.sort((a, b) => b.range.start - a.range.start)) {
     const rendered = renderRegion(region, syntax).split('\n');
-    lines.splice(
+    lines = replaced(
+      lines,
       range.start,
       range.end - range.start,
-      ...(range.start === range.end ? [...rendered, ''] : rendered),
+      range.start === range.end ? rendered.concat(['']) : rendered,
     );
   }
   const appended = usable.filter((p) => p.range === 'append').map((p) => p.region);
   if (appended.length > 0) {
     while (lines.length > 0 && lines[lines.length - 1]?.trim() === '') lines.pop();
     const gap = Array<string>(syntax.blankLinesBeforeAppended).fill('');
-    lines.push(...appended.flatMap((r) => [...gap, ...renderRegion(r, syntax).split('\n')]), '');
+    lines = lines.concat(
+      appended.flatMap((r) => gap.concat(renderRegion(r, syntax).split('\n'))),
+      [''],
+    );
   }
   return { lines, skippedGroups };
 }
