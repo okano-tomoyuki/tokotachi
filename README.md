@@ -1,4 +1,4 @@
-<img src="designer/packages/extension/images/icon.png" alt="Tokotachi" width="96" align="right">
+<img src="designer/packages/extension/images/icon.png" alt="Tokotachi" width="40" align="right">
 
 # Tokotachi
 

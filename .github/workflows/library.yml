@@ -1,0 +1,99 @@
+# ライブラリ(Tokotachi 本体)の CI。ライブラリ・サンプル・テストをビルドし、テストを画面なしで動かす。
+#   linux:   Ubuntu 24.04 の x86_64 と aarch64(GitHub の Arm のランナー)
+#   windows: MSYS2 の mingw64(docs/adr/0004)
+# テストは CMake が SDL の offscreen のビデオドライバを設定するので、画面は要らない。
+name: ライブラリ
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    paths:
+      - 'include/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'examples/**'
+      - 'deps/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/library.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: library-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux-x86_64
+          - runner: ubuntu-24.04-arm
+            platform: linux-aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 開発用のパッケージ・日本語のフォント
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libwayland-dev libxkbcommon-dev libdecor-0-dev libegl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libdrm-dev libgbm-dev libfontconfig-dev \
+            fonts-noto-cjk
+
+      # 依存ライブラリのビルドは数分かかるので、deps/ が変わらない限り使い回す。
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/${{ matrix.platform }}
+            deps/download
+          key: deps-${{ matrix.platform }}-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - name: ビルド
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: テスト
+        run: ctest --test-dir build --output-on-failure
+
+  windows:
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+
+      - uses: actions/cache@v6
+        with:
+          path: |
+            deps/install/windows-x86_64
+            deps/download
+          key: deps-windows-x86_64-${{ hashFiles('deps/**/CMakeLists.txt', 'cmake/TokotachiPlatform.cmake') }}
+
+      - name: ビルド
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: テスト
+        run: ctest --test-dir build --output-on-failure
