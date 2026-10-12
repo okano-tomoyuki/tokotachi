@@ -29,6 +29,8 @@ TextInputBase::TextInputBase(Widget* parent_widget, const detail::InternalTag&, 
       TOKOTACHI_IMPL_PROPERTY_GETTER_SELF_NOTIFY(Impl, std::size_t, cursor_position),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, has_selection),
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, selected_text),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, can_undo),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, bool, can_redo),
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
       d_(new Impl(this, multi_line))
 {
@@ -42,6 +44,7 @@ TextInputBase::TextInputBase(Widget* parent_widget, const detail::InternalTag&, 
     d_->caret_on_ = true;
     d_->goal_x_ = -1;
     d_->layout_wrap_ = 0;
+    d_->merge_open_ = false;
     focus_policy = FocusPolicy::TAB_AND_CLICK;
     cursor = MouseCursor::IBEAM;
     accepts_text_input = true;
@@ -72,15 +75,33 @@ TextInputBase::Impl::State TextInputBase::Impl::state() const
     s.text = text_;
     s.cursor = cursor_;
     s.anchor = anchor_;
+    s.can_undo = get_can_undo();
+    s.can_redo = get_can_redo();
     return s;
 }
 
-void TextInputBase::Impl::finish(const State& before)
+void TextInputBase::Impl::finish(const State& before, Edit edit)
 {
     const bool text_changed = before.text != text_;
+    if (text_changed && edit != Edit::NONE)
+    {
+        record(before, edit);
+    }
+    else if (!text_changed && before.cursor != cursor_)
+    {
+        merge_open_ = false;  // キャレットを動かしたら、続けて打った文字のまとまりを切る
+    }
     if (text_changed)
     {
         q->notify_changed(q->text);
+    }
+    if (before.can_undo != get_can_undo())
+    {
+        q->notify_changed(q->can_undo);
+    }
+    if (before.can_redo != get_can_redo())
+    {
+        q->notify_changed(q->can_redo);
     }
     if (before.cursor != cursor_)
     {
@@ -104,11 +125,140 @@ void TextInputBase::Impl::finish(const State& before)
     }
 }
 
+// --- 元に戻す(docs/adr/0063) ---
+
+namespace
+{
+// 履歴の数の上限(超えたら古いものから捨てる)。
+const std::size_t UNDO_LIMIT = 1000;
+}  // namespace
+
+void TextInputBase::Impl::record(const State& before, Edit edit)
+{
+    // 前後のテキストの、共通の始めと終わりを除いた部分が変わった部分。
+    const std::string& a = before.text;
+    const std::string& b = text_;
+    std::size_t prefix = 0;
+    const std::size_t shorter = std::min(a.size(), b.size());
+    while (prefix < shorter && a[prefix] == b[prefix])
+    {
+        ++prefix;
+    }
+    std::size_t suffix = 0;
+    while (suffix < shorter - prefix && a[a.size() - 1 - suffix] == b[b.size() - 1 - suffix])
+    {
+        ++suffix;
+    }
+    UndoStep step;
+    step.kind = edit;
+    step.start = prefix;
+    step.removed = a.substr(prefix, a.size() - prefix - suffix);
+    step.inserted = b.substr(prefix, b.size() - prefix - suffix);
+    step.cursor_before = before.cursor;
+    step.anchor_before = before.anchor;
+    step.cursor_after = cursor_;
+    step.anchor_after = anchor_;
+    redo_.clear();
+
+    // 続けて打った文字・続けて消した文字は、最後の履歴に足す。
+    if (merge_open_ && !undo_.empty() && undo_.back().kind == edit)
+    {
+        UndoStep& last = undo_.back();
+        bool merged = false;
+        if (edit == Edit::TYPING && step.removed.empty() && step.start == last.start + last.inserted.size())
+        {
+            last.inserted += step.inserted;
+            merged = true;
+        }
+        else if (edit == Edit::DELETE_BACK && step.inserted.empty() && last.inserted.empty() &&
+                 step.start + step.removed.size() == last.start)
+        {
+            last.removed = step.removed + last.removed;
+            last.start = step.start;
+            merged = true;
+        }
+        else if (edit == Edit::DELETE_FORWARD && step.inserted.empty() && last.inserted.empty() &&
+                 step.start == last.start)
+        {
+            last.removed += step.removed;
+            merged = true;
+        }
+        if (merged)
+        {
+            last.cursor_after = step.cursor_after;
+            last.anchor_after = step.anchor_after;
+            return;
+        }
+    }
+    undo_.push_back(step);
+    if (undo_.size() > UNDO_LIMIT)
+    {
+        undo_.erase(undo_.begin());
+    }
+    merge_open_ = edit == Edit::TYPING || edit == Edit::DELETE_BACK || edit == Edit::DELETE_FORWARD;
+}
+
+void TextInputBase::Impl::apply_step(const UndoStep& step, bool undo)
+{
+    const std::string& from = undo ? step.inserted : step.removed;
+    const std::string& to = undo ? step.removed : step.inserted;
+    text_.replace(step.start, from.size(), to);
+    cursor_ = undo ? step.cursor_before : step.cursor_after;
+    anchor_ = undo ? step.anchor_before : step.anchor_after;
+    preedit_.clear();
+    goal_x_ = -1;
+    merge_open_ = false;
+    text_touched();
+}
+
+void TextInputBase::Impl::clear_history()
+{
+    undo_.clear();
+    redo_.clear();
+    merge_open_ = false;
+}
+
+void TextInputBase::undo()
+{
+    if (d_->undo_.empty() || !d_->preedit_.empty())
+    {
+        return;
+    }
+    const Impl::State before = d_->state();
+    const Impl::UndoStep step = d_->undo_.back();
+    d_->undo_.pop_back();
+    d_->apply_step(step, true);
+    d_->redo_.push_back(step);
+    d_->finish(before);
+}
+
+void TextInputBase::redo()
+{
+    if (d_->redo_.empty() || !d_->preedit_.empty())
+    {
+        return;
+    }
+    const Impl::State before = d_->state();
+    const Impl::UndoStep step = d_->redo_.back();
+    d_->redo_.pop_back();
+    d_->apply_step(step, false);
+    d_->undo_.push_back(step);
+    d_->finish(before);
+}
+
+void TextInputBase::clear_undo_history()
+{
+    const Impl::State before = d_->state();
+    d_->clear_history();
+    d_->finish(before);
+}
+
 // --- プロパティ ---
 
 void TextInputBase::Impl::set_text(const std::string& v)
 {
     const State before = state();
+    clear_history();  // 代入したテキスト(読み込んだ文書など)より前へは戻せないようにする
     text_ = sanitize(v);
     cursor_ = anchor_ = text_.size();
     preedit_.clear();
@@ -179,7 +329,7 @@ void TextInputBase::cut()
     copy();
     d_->erase_selection();
     d_->text_touched();
-    d_->finish(before);
+    d_->finish(before, Impl::Edit::OTHER);
 }
 
 void TextInputBase::copy() const
@@ -196,7 +346,7 @@ void TextInputBase::insert(const std::string& s)
 {
     const Impl::State before = d_->state();
     d_->insert_text(s);
-    d_->finish(before);
+    d_->finish(before, Impl::Edit::OTHER);
 }
 
 // --- 内部の処理(通知はしない。呼び出し側が finish で知らせる) ---
@@ -542,6 +692,20 @@ void TextInputBase::key_down(KeyEvent& e)
         return;
     }
     const bool shift = e.has_modifier(MODIFIER_SHIFT), ctrl = e.has_modifier(MODIFIER_CONTROL);
+    if (ctrl && (e.key == Key::Z || e.key == Key::Y))
+    {
+        // Ctrl+Z で元に戻し、Ctrl+Y・Ctrl+Shift+Z でやり直す。
+        e.accepted = true;
+        if (e.key == Key::Z && !shift)
+        {
+            undo();
+        }
+        else
+        {
+            redo();
+        }
+        return;
+    }
     if (ctrl && (e.key == Key::A || e.key == Key::C || e.key == Key::X || e.key == Key::V))
     {
         // それぞれの操作が自分で知らせる。
@@ -577,6 +741,7 @@ void TextInputBase::key_down(KeyEvent& e)
     const Impl::State before = d_->state();
     bool handled = true;
     bool vertical = false;  // 上下の移動(キャレットの横の位置を保つ)
+    Impl::Edit edit = Impl::Edit::NONE;  // 元に戻す履歴での編集の種類
     switch (e.key)
     {
     case Key::LEFT:
@@ -612,8 +777,10 @@ void TextInputBase::key_down(KeyEvent& e)
         break;
     case Key::RETURN:
         d_->insert_text("\n");  // 複数行では改行を入れる
+        edit = Impl::Edit::OTHER;
         break;
     case Key::BACKSPACE:
+        edit = selected || ctrl ? Impl::Edit::OTHER : Impl::Edit::DELETE_BACK;
         if (selected)
         {
             d_->erase_selection();
@@ -629,6 +796,7 @@ void TextInputBase::key_down(KeyEvent& e)
         }
         break;
     case Key::DEL:
+        edit = selected || ctrl ? Impl::Edit::OTHER : Impl::Edit::DELETE_FORWARD;
         if (selected)
         {
             d_->erase_selection();
@@ -653,7 +821,7 @@ void TextInputBase::key_down(KeyEvent& e)
             d_->goal_x_ = -1;
         }
         e.accepted = true;
-        d_->finish(before);
+        d_->finish(before, edit);
     }
 }
 
@@ -666,7 +834,7 @@ void TextInputBase::text_input(TextInputEvent& e)
         d_->invalidate_layout();
     }
     d_->insert_text(e.text);
-    d_->finish(before);
+    d_->finish(before, Impl::Edit::TYPING);
 }
 
 void TextInputBase::text_editing(TextEditingEvent& e)
@@ -692,7 +860,8 @@ void TextInputBase::text_editing(TextEditingEvent& e)
     d_->preedit_start_ = e.start;
     d_->preedit_length_ = e.length;
     d_->text_touched();
-    d_->finish(before);
+    // 選択を変換中の文字列で置き換えたなら、確定した文字と同じまとまりで戻す。
+    d_->finish(before, Impl::Edit::TYPING);
 }
 
 void TextInputBase::focus_in()

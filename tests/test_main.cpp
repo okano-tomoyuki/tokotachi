@@ -4456,6 +4456,84 @@ TEST(task_renders_image_in_background)
 
 }  // namespace
 
+TEST(text_input_undo_redo)
+{
+    tokotachi::Window window("t", 300, 100);
+    TestEdit* edit = new TestEdit(&window);
+    edit->bounds = tokotachi::Rect(0, 0, 200, 30);
+    edit->focused = true;
+    tokotachi::BoolVariable can_undo(nullptr, true);
+    tokotachi::bind(can_undo.value, edit->can_undo);
+    CHECK(!can_undo.value);
+
+    // 続けて打った文字は 1 回で戻す。キャレットを動かすとまとまりが切れる。
+    edit->type("a");
+    edit->type("b");
+    edit->type("c");
+    CHECK(can_undo.value);
+    edit->key(tokotachi::Key::LEFT);
+    edit->type("X");
+    CHECK(edit->text == "abXc");
+    edit->key(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL);
+    CHECK(edit->text == "abc");
+    CHECK(edit->cursor_position == 2u);  // 戻す前のキャレットの位置
+    CHECK(edit->can_redo);
+    edit->undo();
+    CHECK(edit->text.get().empty());
+    CHECK(!can_undo.value);
+    edit->undo();  // 戻せなければ何もしない
+    CHECK(edit->text.get().empty());
+
+    // やり直す(Ctrl+Y・Ctrl+Shift+Z)。
+    edit->key(tokotachi::Key::Y, tokotachi::MODIFIER_CONTROL);
+    CHECK(edit->text == "abc");
+    edit->key(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL | tokotachi::MODIFIER_SHIFT);
+    CHECK(edit->text == "abXc");
+    CHECK(!edit->can_redo);
+
+    // 続けて消した文字は 1 回で戻す。新しい編集でやり直す履歴は消える。
+    edit->key(tokotachi::Key::END);
+    edit->key(tokotachi::Key::BACKSPACE);
+    edit->key(tokotachi::Key::BACKSPACE);
+    CHECK(edit->text == "ab");
+    edit->undo();
+    CHECK(edit->text == "abXc");
+    CHECK(edit->cursor_position == 4u);
+    edit->type("!");
+    CHECK(!edit->can_redo);
+
+    // 選んで置き換えた文字・貼り付けは、それぞれ 1 回で戻す。
+    edit->select_all();
+    edit->type("z");
+    CHECK(edit->text == "z");
+    edit->insert("123");
+    CHECK(edit->text == "z123");
+    edit->undo();
+    CHECK(edit->text == "z");
+    edit->undo();
+    CHECK(edit->text == "abXc!");
+    CHECK(edit->selected_text == "abXc!");  // 選択も戻る
+
+    // text への代入は履歴を消す。
+    edit->text = "loaded";
+    CHECK(!can_undo.value);
+    CHECK(!edit->can_redo);
+    edit->undo();
+    CHECK(edit->text == "loaded");
+
+    // IME で選択を置き換えて確定した文字は、選択の削除と合わせて 1 回で戻す。変換中は戻さない。
+    edit->select_all();
+    edit->compose("にほん");
+    edit->key(tokotachi::Key::Z, tokotachi::MODIFIER_CONTROL);
+    edit->compose("日本");
+    edit->compose("");
+    edit->type("日本");
+    CHECK(edit->text == "日本");
+    edit->undo();
+    CHECK(edit->text == "loaded");
+    tokotachi::unbind(can_undo.value);
+}
+
 TEST(windows_are_owned_by_application_or_owner_window)
 {
     tokotachi::Application* app = tokotachi::Application::instance();

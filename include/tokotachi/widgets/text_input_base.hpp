@@ -15,7 +15,11 @@ namespace tokotachi
 {
 
 /// 文字を入力するウィジェット(LineEdit・TextEdit)の共通の部分(docs/adr/0009、0021)。
-/// 編集・選択・クリップボード・IME の変換中の文字列・キャレットの点滅・スクロール・変更の通知を受け持つ。
+/// 編集・選択・クリップボード・元に戻す・IME の変換中の文字列・キャレットの点滅・スクロール・変更の通知を受け持つ。
+///
+/// 元に戻す(docs/adr/0063): 利用者の編集と insert・cut・paste を履歴に積み、undo(Ctrl+Z)・redo(Ctrl+Y・Ctrl+Shift+Z)で
+/// 戻す・やり直す。続けて打った文字・続けて消した文字は 1 回で戻す。text への代入は履歴を消す(読み込んだ文書を
+/// 戻せないように)。
 /// 派生クラスは、文字を描く矩形(text_area)・折り返しの幅(wrap_width)と、枠の描画を決める。
 ///
 /// @ingroup widgets_base
@@ -36,6 +40,10 @@ public:
     ReadOnlyProperty<bool> has_selection;
     /// 選んでいる文字。
     ReadOnlyProperty<std::string> selected_text;
+    /// 元に戻せるか(メニューの項目の有効・無効に結びつけるときに使う)。
+    ReadOnlyProperty<bool> can_undo;
+    /// やり直せるか。
+    ReadOnlyProperty<bool> can_redo;
 
     /// テキストが変わった(利用者の操作・text への代入のどちらでも。同じ値の代入では呼ばない。docs/adr/0016)。
     Property<NotifyHandler> on_change;
@@ -50,8 +58,14 @@ public:
     void copy() const;
     /// クリップボードの文字を、選択を消して入れる。
     void paste();
-    /// 選択を消して s を入れる。
+    /// 選択を消して s を入れる(元に戻せる)。
     void insert(const std::string& s);
+    /// 最後の編集を元に戻す(戻せなければ何もしない)。
+    void undo();
+    /// 元に戻した編集をやり直す(やり直せなければ何もしない)。
+    void redo();
+    /// 元に戻す履歴を消す。
+    void clear_undo_history();
 
 protected:
     /// ライブラリの中だけで派生する(LineEdit・TextEdit)。

@@ -44,7 +44,7 @@ tokotachi::bind(radio_button_large->group_value, size->value);   // size が 2 �
 
 ## 文字の入力
 
-`LineEdit`(1 行)と `TextEdit`(複数行)は、IME・双方向のテキスト・切り取り・コピー・貼り付けに対応します。
+`LineEdit`(1 行)と `TextEdit`(複数行)は、IME・双方向のテキスト・切り取り・コピー・貼り付け・元に戻す(Ctrl+Z。やり直しは Ctrl+Y)に対応します。
 
 ```cpp
 tokotachi::LineEdit* line_edit_name = new tokotachi::LineEdit(window_main);
@@ -57,7 +57,8 @@ text_edit_memo->word_wrap = true;
 ```
 
 - 文字は `text`、選んでいる文字は `selected_text`、カーソルの位置は `cursor_position`(バイトの位置)で読みます。
-- `select_all()`・`clear_selection()`・`cut()`・`copy()`・`paste()`・`insert(文字)` で操作します。
+- `select_all()`・`clear_selection()`・`cut()`・`copy()`・`paste()`・`insert(文字)`・`undo()`・`redo()` で操作します。
+  `can_undo`・`can_redo` は、メニューの項目の有効・無効を決めるのに使えます。`text` に代入すると、元に戻す履歴は消えます。
 - 値を複数の部品で共有するときは、`text` を `StringVariable` に結びます。
 
 ## 選ぶ: ComboBox

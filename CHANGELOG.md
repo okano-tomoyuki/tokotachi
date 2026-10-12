@@ -14,6 +14,7 @@
 - 所有者のウィンドウを渡して作るウィンドウ `Window(owner, title, width, height)`(所有者の上に出る。所有者と一緒に隠れ、破棄される)。
 - `Application::main_window`(閉じたら終える)・`Application::auto_quit_enabled`(false なら `quit()` まで終えない)。
 - `Window::destroy_on_close`(閉じたら破棄する)。
+- 入力欄(LineEdit・TextEdit)で元に戻す・やり直す(Ctrl+Z・Ctrl+Y。`undo`・`redo`・`can_undo`・`can_redo`。[ADR 0063](docs/adr/0063-text-undo.md))。
 - サンプル・手引きを、Object から派生したものは `new` で作り、スタックに置くのは `Application` だけにする書き方に揃えた。
   デザイナーが生成する `main.cpp` も、メインのウィンドウを `new` で作り `app.main_window` に代入する。
 

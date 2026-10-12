@@ -59,6 +59,8 @@ class TextInputBase::Impl : public detail::WidgetHooks
         std::string text;
         std::size_t cursor;
         std::size_t anchor;
+        bool can_undo;
+        bool can_redo;
     };
 
     void set_text(const std::string& v);
@@ -69,9 +71,38 @@ class TextInputBase::Impl : public detail::WidgetHooks
     bool get_has_selection() const { return anchor_ != cursor_; }
     std::string get_selected_text() const;
 
+    /// 編集の種類(元に戻す履歴に積むかと、まとめ方。docs/adr/0063)。
+    enum class Edit
+    {
+        NONE,         ///< 編集ではない(移動・選択など)。続けて打った文字のまとまりを切る
+        TYPING,       ///< 文字を打った(続けて打った文字は 1 回で戻す)
+        DELETE_BACK,  ///< Backspace(続けて消した文字は 1 回で戻す)
+        DELETE_FORWARD,  ///< Delete(続けて消した文字は 1 回で戻す)
+        OTHER         ///< 貼り付け・切り取り・改行など(まとめない)
+    };
+
+    /// 元に戻す履歴の 1 つ: start から removed を除き inserted を入れた。前後のキャレットと選択の起点。
+    struct UndoStep
+    {
+        Edit kind;
+        std::size_t start;
+        std::string removed;
+        std::string inserted;
+        std::size_t cursor_before, anchor_before;
+        std::size_t cursor_after, anchor_after;
+    };
+
     State state() const;
     /// before から変わったプロパティを知らせ、テキストが変わっていれば on_change を呼ぶ。
-    void finish(const State& before);
+    /// edit が NONE でなくテキストが変わっていれば、元に戻す履歴に積む。
+    void finish(const State& before, Edit edit = Edit::NONE);
+    /// before から今のテキストへの変更を履歴に積む(続けて打った文字などはまとめる)。
+    void record(const State& before, Edit edit);
+    /// 履歴の 1 つを戻す(undo)・やり直す(redo)。
+    void apply_step(const UndoStep& step, bool undo);
+    void clear_history();
+    bool get_can_undo() const { return !undo_.empty(); }
+    bool get_can_redo() const { return !redo_.empty(); }
     std::string sanitize(const std::string& s) const;
 
     void invalidate_layout();
@@ -111,6 +142,9 @@ class TextInputBase::Impl : public detail::WidgetHooks
     mutable TextLayout layout_;
     mutable float layout_wrap_;
     mutable TextLayout placeholder_layout_;
+    std::vector<UndoStep> undo_;  ///< 元に戻す履歴(古い順)
+    std::vector<UndoStep> redo_;  ///< やり直す履歴(新しく戻したものが最後)
+    bool merge_open_;  ///< 最後の履歴に、続けて打った文字などを足してよいか
 };
 
 }  // namespace tokotachi
