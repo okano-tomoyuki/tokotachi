@@ -31,6 +31,7 @@ class TOKOTACHI_API StatusBar : public Widget
 {
 public:
     explicit StatusBar(Widget* parent = nullptr);
+    ~StatusBar() override;
 
     /// 普段に出す文字。
     Property<std::string> text;
@@ -52,15 +53,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    void set_text(const std::string& v);
-    std::string get_message() const { return message_; }
-    const TextLayout& shown_layout() const;
-
-    std::string text_;
-    std::string message_;
-    std::vector<Widget*> widgets_;
-    Timer timer_;
-    mutable TextLayout layout_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

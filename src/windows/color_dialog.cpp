@@ -12,12 +12,55 @@
 #include <tokotachi/widgets/spin_box.hpp>
 
 #include "../core/locale.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "../widgets/color_util.hpp"
 #include "../widgets/theme.hpp"
 
 namespace tokotachi
 {
+
+namespace detail
+{
+class ColorPlane;
+class ColorStrip;
+class ColorPreview;
+class ColorSwatches;
+}  // namespace detail
+
+class ColorDialog::Impl
+{
+    TOKOTACHI_IMPL(ColorDialog);
+
+    explicit Impl(ColorDialog* object) : q(object) {}
+
+    Color get_color() const { return color_; }
+    void set_color(const Color& v);
+    bool get_alpha_enabled() const { return alpha_enabled_; }
+    void set_alpha_enabled(const bool& v);
+
+    /// 色相・彩度・明度・不透明度から色を決め、ほかの欄を合わせる(changed_by の欄は変えない)。
+    void apply_hsv(const void* changed_by);
+    /// 色から色相などを決め、ほかの欄を合わせる。
+    void apply_color(const Color& c, const void* changed_by);
+    /// 欄(16 進数・数値・四角・帯・見本)を今の色に合わせる。
+    void sync(const void* changed_by);
+
+    Color color_;
+    Color original_;    ///< 開いたときの色(比べて見せる)
+    bool alpha_enabled_;
+    float hue_;         ///< 0〜360
+    float saturation_;  ///< 0〜1
+    float value_;       ///< 0〜1
+    bool syncing_;
+    detail::ColorPlane* plane_;
+    detail::ColorStrip* hue_strip_;
+    detail::ColorStrip* alpha_strip_;
+    detail::ColorPreview* preview_;
+    detail::ColorSwatches* swatches_;
+    LineEdit* hex_;
+    SpinBox* channels_[4];  ///< R・G・B・A
+    Label* alpha_label_;
+};
 
 namespace detail
 {
@@ -49,7 +92,7 @@ protected:
     {
         const Rect r = local_rect;
         // 色相の色に、左から白を、上から黒を重ねる
-        canvas.fill_rect(r, color_from_hsv(dialog_->hue_, 1, 1));
+        canvas.fill_rect(r, color_from_hsv(detail::ImplAccess<ColorDialog>::of(dialog_)->hue_, 1, 1));
         std::vector<GradientStop> white;
         white.push_back(GradientStop(0, Color(255, 255, 255)));
         white.push_back(GradientStop(1, Color(255, 255, 255, 0)));
@@ -59,7 +102,7 @@ protected:
         black.push_back(GradientStop(1, Color(0, 0, 0)));
         canvas.fill_round_rect(r, 0, Paint::linear(Point(0, r.y), Point(0, r.bottom()), black));
         canvas.stroke_rect(r.adjusted(0.5f, 0.5f, 0.5f, 0.5f), 1, focused ? theme::focus_ring() : theme::border());
-        const float x = dialog_->saturation_ * r.width, y = (1 - dialog_->value_) * r.height;
+        const float x = detail::ImplAccess<ColorDialog>::of(dialog_)->saturation_ * r.width, y = (1 - detail::ImplAccess<ColorDialog>::of(dialog_)->value_) * r.height;
         canvas.save();
         canvas.clip_rect(r);
         paint_marker(canvas, Rect(x - 6, y - 6, 12, 12));
@@ -116,9 +159,9 @@ protected:
             return;
         }
         e.accepted = true;
-        dialog_->saturation_ = std::max(0.0f, std::min(1.0f, dialog_->saturation_ + ds));
-        dialog_->value_ = std::max(0.0f, std::min(1.0f, dialog_->value_ + dv));
-        dialog_->apply_hsv(this);
+        detail::ImplAccess<ColorDialog>::of(dialog_)->saturation_ = std::max(0.0f, std::min(1.0f, detail::ImplAccess<ColorDialog>::of(dialog_)->saturation_ + ds));
+        detail::ImplAccess<ColorDialog>::of(dialog_)->value_ = std::max(0.0f, std::min(1.0f, detail::ImplAccess<ColorDialog>::of(dialog_)->value_ + dv));
+        detail::ImplAccess<ColorDialog>::of(dialog_)->apply_hsv(this);
     }
 
     void focus_in() override
@@ -137,9 +180,9 @@ private:
     void pick(const Point& p)
     {
         const Rect r = local_rect;
-        dialog_->saturation_ = std::max(0.0f, std::min(1.0f, p.x / std::max(1.0f, r.width)));
-        dialog_->value_ = 1 - std::max(0.0f, std::min(1.0f, p.y / std::max(1.0f, r.height)));
-        dialog_->apply_hsv(this);
+        detail::ImplAccess<ColorDialog>::of(dialog_)->saturation_ = std::max(0.0f, std::min(1.0f, p.x / std::max(1.0f, r.width)));
+        detail::ImplAccess<ColorDialog>::of(dialog_)->value_ = 1 - std::max(0.0f, std::min(1.0f, p.y / std::max(1.0f, r.height)));
+        detail::ImplAccess<ColorDialog>::of(dialog_)->apply_hsv(this);
     }
 
     ColorDialog* dialog_;
@@ -168,7 +211,7 @@ protected:
         if (alpha_)
         {
             paint_checker(canvas, band);
-            const Color c = dialog_->color_;
+            const Color c = detail::ImplAccess<ColorDialog>::of(dialog_)->color_;
             stops.push_back(GradientStop(0, c.with_alpha(0)));
             stops.push_back(GradientStop(1, c.with_alpha(255)));
         }
@@ -181,7 +224,7 @@ protected:
         }
         canvas.fill_round_rect(band, 0, Paint::linear(Point(band.x, 0), Point(band.right(), 0), stops));
         canvas.stroke_rect(band.adjusted(0.5f, 0.5f, 0.5f, 0.5f), 1, focused ? theme::focus_ring() : theme::border());
-        const float t = alpha_ ? dialog_->color_.a / 255.0f : dialog_->hue_ / 360.0f;
+        const float t = alpha_ ? detail::ImplAccess<ColorDialog>::of(dialog_)->color_.a / 255.0f : detail::ImplAccess<ColorDialog>::of(dialog_)->hue_ / 360.0f;
         const float x = band.x + t * band.width;
         paint_marker(canvas, Rect(x - 4, r.y + 1, 8, r.height - 2));
         Widget::paint(canvas);
@@ -222,7 +265,7 @@ protected:
         }
         e.accepted = true;
         const float step = (e.key == Key::LEFT ? -1.0f : 1.0f) * (e.has_modifier(MODIFIER_SHIFT) ? 10.0f : 1.0f);
-        const float now = alpha_ ? dialog_->color_.a / 255.0f : dialog_->hue_ / 360.0f;
+        const float now = alpha_ ? detail::ImplAccess<ColorDialog>::of(dialog_)->color_.a / 255.0f : detail::ImplAccess<ColorDialog>::of(dialog_)->hue_ / 360.0f;
         pick(now + step / (alpha_ ? 255.0f : 360.0f));
     }
 
@@ -244,13 +287,13 @@ private:
         t = std::max(0.0f, std::min(1.0f, t));
         if (alpha_)
         {
-            dialog_->color_.a = static_cast<std::uint8_t>(std::floor(t * 255 + 0.5f));
+            detail::ImplAccess<ColorDialog>::of(dialog_)->color_.a = static_cast<std::uint8_t>(std::floor(t * 255 + 0.5f));
         }
         else
         {
-            dialog_->hue_ = std::min(t * 360, 359.99f);
+            detail::ImplAccess<ColorDialog>::of(dialog_)->hue_ = std::min(t * 360, 359.99f);
         }
-        dialog_->apply_hsv(this);
+        detail::ImplAccess<ColorDialog>::of(dialog_)->apply_hsv(this);
     }
 
     ColorDialog* dialog_;
@@ -271,8 +314,8 @@ protected:
     {
         const Rect r = local_rect;
         paint_checker(canvas, r);
-        canvas.fill_rect(Rect(r.x, r.y, r.width, r.height / 2), dialog_->color_);
-        canvas.fill_rect(Rect(r.x, r.y + r.height / 2, r.width, r.height - r.height / 2), dialog_->original_);
+        canvas.fill_rect(Rect(r.x, r.y, r.width, r.height / 2), detail::ImplAccess<ColorDialog>::of(dialog_)->color_);
+        canvas.fill_rect(Rect(r.x, r.y + r.height / 2, r.width, r.height - r.height / 2), detail::ImplAccess<ColorDialog>::of(dialog_)->original_);
         canvas.stroke_rect(r.adjusted(0.5f, 0.5f, 0.5f, 0.5f), 1, theme::border());
         Widget::paint(canvas);
     }
@@ -283,7 +326,7 @@ protected:
         if (e.button == MouseButton::LEFT && e.pos.y >= height.get() / 2)
         {
             e.accepted = true;
-            dialog_->apply_color(dialog_->original_, this);
+            detail::ImplAccess<ColorDialog>::of(dialog_)->apply_color(detail::ImplAccess<ColorDialog>::of(dialog_)->original_, this);
         }
     }
 
@@ -371,7 +414,7 @@ protected:
         {
             e.accepted = true;
             // 見本は不透明。不透明度は今のまま
-            dialog_->apply_color(colors_[static_cast<std::size_t>(i)].with_alpha(dialog_->color_.a), this);
+            detail::ImplAccess<ColorDialog>::of(dialog_)->apply_color(colors_[static_cast<std::size_t>(i)].with_alpha(detail::ImplAccess<ColorDialog>::of(dialog_)->color_.a), this);
         }
     }
 
@@ -392,16 +435,17 @@ std::string default_title() { return detail::prefers_japanese() ? "色の選択"
 
 ColorDialog::ColorDialog(Window* parent, const std::string& title_text)
     : Dialog(parent, title_text.empty() ? default_title() : title_text),
-      TOKOTACHI_PROPERTY_GETTER(ColorDialog, Color, color),
-      TOKOTACHI_PROPERTY_GETTER(ColorDialog, bool, alpha_enabled),
-      color_(255, 255, 255),
-      original_(255, 255, 255),
-      alpha_enabled_(false),
-      hue_(0),
-      saturation_(0),
-      value_(1),
-      syncing_(false)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, Color, color),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, bool, alpha_enabled),
+      d_(new Impl(this))
 {
+    d_->color_ = Color(255, 255, 255);
+    d_->original_ = Color(255, 255, 255);
+    d_->alpha_enabled_ = false;
+    d_->hue_ = 0;
+    d_->saturation_ = 0;
+    d_->value_ = 1;
+    d_->syncing_ = false;
     BoxLayout* box = new BoxLayout(this, Orientation::HORIZONTAL);
     box->margins = Margins(16, 16, 16, 8);
     box->spacing = 16;
@@ -410,27 +454,27 @@ ColorDialog::ColorDialog(Window* parent, const std::string& title_text)
     Widget* left = new Widget(this);
     BoxLayout* left_box = new BoxLayout(left);
     left_box->spacing = 8;
-    plane_ = new detail::ColorPlane(left, this);
-    hue_strip_ = new detail::ColorStrip(left, this, false);
-    alpha_strip_ = new detail::ColorStrip(left, this, true);
-    left_box->add(plane_, 1);
-    left_box->add(hue_strip_);
-    left_box->add(alpha_strip_);
+    d_->plane_ = new detail::ColorPlane(left, this);
+    d_->hue_strip_ = new detail::ColorStrip(left, this, false);
+    d_->alpha_strip_ = new detail::ColorStrip(left, this, true);
+    left_box->add(d_->plane_, 1);
+    left_box->add(d_->hue_strip_);
+    left_box->add(d_->alpha_strip_);
 
     // 右: 比べる見本・16 進数・RGB(A)・よく使う色
     Widget* right = new Widget(this);
     BoxLayout* right_box = new BoxLayout(right);
     right_box->spacing = 10;
-    preview_ = new detail::ColorPreview(right, this);
-    right_box->add(preview_);
+    d_->preview_ = new detail::ColorPreview(right, this);
+    right_box->add(d_->preview_);
     Widget* form = new Widget(right);
     GridLayout* grid = new GridLayout(form);
     grid->row_spacing = 6;
     grid->column_spacing = 8;
     const bool ja = detail::prefers_japanese();
     grid->add(new Label(form, ja ? "16 進数" : "Hex"), 0, 0);
-    hex_ = new LineEdit(form);
-    grid->add(hex_, 0, 1);
+    d_->hex_ = new LineEdit(form);
+    grid->add(d_->hex_, 0, 1);
     const char* const NAMES[] = {"R", "G", "B", "A"};
     for (int k = 0; k < 4; ++k)
     {
@@ -439,65 +483,67 @@ ColorDialog::ColorDialog(Window* parent, const std::string& title_text)
         SpinBox* spin = new SpinBox(form);
         spin->maximum = 255;
         grid->add(spin, k + 1, 1);
-        channels_[k] = spin;
+        d_->channels_[k] = spin;
         if (k == 3)
         {
-            alpha_label_ = label;
+            d_->alpha_label_ = label;
         }
         spin->on_change = [this, k](Object*)
         {
-            if (syncing_)
+            if (d_->syncing_)
             {
                 return;
             }
-            Color c = color_;
-            const std::uint8_t v = static_cast<std::uint8_t>(channels_[k]->value.get());
+            Color c = d_->color_;
+            const std::uint8_t v = static_cast<std::uint8_t>(d_->channels_[k]->value.get());
             (k == 0 ? c.r : k == 1 ? c.g : k == 2 ? c.b : c.a) = v;
-            apply_color(c, channels_[k]);
+            d_->apply_color(c, d_->channels_[k]);
         };
     }
     grid->set_column_stretch(1, 1);
     right_box->add(form);
-    swatches_ = new detail::ColorSwatches(right, this);
-    right_box->add(swatches_);
+    d_->swatches_ = new detail::ColorSwatches(right, this);
+    right_box->add(d_->swatches_);
     right_box->add_stretch();
 
     box->add(left, 1);
     box->add(right);
 
     // 16 進数: 打ち込み中も、読める長さになったら色にする。Enter で読めなければ元に戻す
-    hex_->on_change = [this](Object*)
+    d_->hex_->on_change = [this](Object*)
     {
-        if (syncing_)
+        if (d_->syncing_)
         {
             return;
         }
-        const std::string s = hex_->text;
+        const std::string s = d_->hex_->text;
         Color c;
         const std::size_t digits = s.size() - (s.find('#') == std::string::npos ? 0 : 1);
         if ((digits == 6 || digits == 8) && detail::color_from_hex(s, c))
         {
-            apply_color(digits == 8 ? c : c.with_alpha(color_.a), hex_);
+            d_->apply_color(digits == 8 ? c : c.with_alpha(d_->color_.a), d_->hex_);
         }
     };
-    hex_->on_submit = [this](Object*)
+    d_->hex_->on_submit = [this](Object*)
     {
         Color c;
-        if (detail::color_from_hex(hex_->text, c))
+        if (detail::color_from_hex(d_->hex_->text, c))
         {
-            apply_color(hex_->text.get().size() > 7 ? c : c.with_alpha(color_.a), nullptr);
+            d_->apply_color(d_->hex_->text.get().size() > 7 ? c : c.with_alpha(d_->color_.a), nullptr);
         }
         else
         {
-            sync(nullptr);
+            d_->sync(nullptr);
         }
     };
 
     add_button(DialogButton::OK);
     add_button(DialogButton::CANCEL);
-    set_alpha_enabled(false);
-    sync(nullptr);
+    d_->set_alpha_enabled(false);
+    d_->sync(nullptr);
 }
+
+ColorDialog::~ColorDialog() { delete d_; }
 
 ColorDialog* ColorDialog::show(Window* parent, const Color& initial, const NotifyHandler& handler, bool alpha,
                                const std::string& title_text)
@@ -517,7 +563,7 @@ ColorDialog* ColorDialog::show(Window* parent, const Color& initial, const Notif
     return d;
 }
 
-void ColorDialog::set_color(const Color& v)
+void ColorDialog::Impl::set_color(const Color& v)
 {
     color_ = alpha_enabled_ ? v : v.with_alpha(255);
     original_ = color_;
@@ -525,7 +571,7 @@ void ColorDialog::set_color(const Color& v)
     sync(nullptr);
 }
 
-void ColorDialog::set_alpha_enabled(const bool& v)
+void ColorDialog::Impl::set_alpha_enabled(const bool& v)
 {
     alpha_enabled_ = v;
     alpha_strip_->visible = v;
@@ -535,27 +581,27 @@ void ColorDialog::set_alpha_enabled(const bool& v)
     {
         color_.a = 255;
         original_.a = 255;
-        notify_changed(color);
+        q->notify_changed(q->color);
     }
     sync(nullptr);
 }
 
-void ColorDialog::apply_hsv(const void* changed_by)
+void ColorDialog::Impl::apply_hsv(const void* changed_by)
 {
     color_ = detail::color_from_hsv(hue_, saturation_, value_, color_.a);
     sync(changed_by);
-    notify_changed(color);
+    q->notify_changed(q->color);
 }
 
-void ColorDialog::apply_color(const Color& c, const void* changed_by)
+void ColorDialog::Impl::apply_color(const Color& c, const void* changed_by)
 {
     color_ = alpha_enabled_ ? c : c.with_alpha(255);
     detail::color_to_hsv(color_, hue_, saturation_, value_);
     sync(changed_by);
-    notify_changed(color);
+    q->notify_changed(q->color);
 }
 
-void ColorDialog::sync(const void* changed_by)
+void ColorDialog::Impl::sync(const void* changed_by)
 {
     syncing_ = true;
     if (changed_by != hex_)

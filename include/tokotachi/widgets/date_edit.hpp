@@ -15,11 +15,6 @@ namespace tokotachi
 class Calendar;
 class Popup;
 
-namespace detail
-{
-class DateText;
-}
-
 /// 日付の入力欄(docs/adr/0051)。打ち込むか、↑↓・ホイールで年・月・日を増減するか、右のボタンで暦(Calendar)を開いて選ぶ。
 ///
 /// @image html widget_date_edit.png

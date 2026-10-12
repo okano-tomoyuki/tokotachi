@@ -17,12 +17,6 @@ class MenuBar;
 class Popup;
 class Widget;
 
-namespace detail
-{
-class MenuView;
-struct MenuAccess;
-}
-
 /// メニュー(右クリックのメニュー・メニューバーのメニュー。docs/adr/0022、0027)。項目は Action で表す。
 ///
 /// @code
@@ -73,40 +67,10 @@ public:
 
 private:
     friend class MenuBar;
-    friend class detail::MenuView;
-    friend struct detail::MenuAccess;
-
-    /// 項目: action・submenu のどちらか(両方 nullptr なら区切り)。
-    struct Entry
-    {
-        Action* action;
-        Menu* submenu;
-        bool owned;  ///< action をこのメニューが作った
-    };
-
-    void set_title(const std::string& v);
-    std::vector<Action*> get_actions() const;
-    void changed();
-
-    std::string title_;
-    std::vector<Entry> entries_;
-    Menu* parent_menu_;
-    MenuBar* bar_;  ///< メニューバーのメニューならそのバー
-    Popup* popup_;
-    detail::MenuView* view_;
-    Widget* anchor_;  ///< popup_ を作ったときの基準のウィジェット
-    bool cues_;       ///< ニーモニックの下線を出す(キーボードで開いた)
-    bool destroying_;
-
-    /// popup_ と view_ を、anchor のウィンドウの上に作る(作ってあれば作り直さない)。
-    void ensure_popup(Widget* anchor);
-    /// anchor の座標系の矩形 r の下に開く(メニューバー)。keyboard なら最初の項目を強調する。
-    void open_below(Widget* anchor, const Rect& r, bool keyboard);
-    /// 親のメニューの項目の右に開く(サブメニュー)。
-    void open_beside(detail::MenuView* parent_view, const Rect& row);
-    /// 項目を選んだ: 一番上のメニューから閉じ、Action を実行する。
-    void activate(Action* action);
-    Menu* root();
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

@@ -18,11 +18,6 @@ namespace tokotachi
 class Menu;
 class Widget;
 
-namespace detail
-{
-struct ActionAccess;
-}
-
 /// 利用者が実行できる操作(docs/adr/0027)。メニューの項目・ショートカットのキーが同じ Action を指す。
 ///
 /// @code
@@ -67,28 +62,10 @@ public:
     void trigger();
 
 private:
-    friend struct detail::ActionAccess;
-
-    void set_text(const std::string& v);
-    void set_shortcut(const Shortcut& v);
-    void set_icon(const Image& v);
-    void set_tooltip(const std::string& v);
-    void set_enabled(const bool& v);
-    void set_checkable(const bool& v);
-    void set_checked(const bool& v);
-    void changed();
-
-    std::string text_;
-    Shortcut shortcut_;
-    Image icon_;
-    std::string tooltip_;
-    bool enabled_;
-    bool checkable_;
-    bool checked_;
-    NotifyHandler on_trigger_;
-    /// この Action を入れたメニュー・ウィジェット(破棄するときに外すため)。
-    std::vector<Menu*> menus_;
-    std::vector<Widget*> widgets_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

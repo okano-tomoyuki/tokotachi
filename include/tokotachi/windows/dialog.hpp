@@ -79,20 +79,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    DialogButton get_result() const { return result_; }
-    /// 並べる順に並べたボタン。
-    std::vector<std::pair<DialogButton, Button*> > ordered_buttons() const;
-    Button* button_for(DialogButton role) const;
-    /// Esc・閉じるボタンのときの結果。
-    DialogButton cancel_result() const;
-    float button_row_height() const;
-    float button_row_width() const;
-
-    Window* parent_window_;
-    std::vector<std::pair<DialogButton, Button*> > buttons_;
-    DialogButton result_;
-    NotifyHandler on_finish_;
-    bool running_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

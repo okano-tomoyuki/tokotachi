@@ -17,11 +17,6 @@ class MenuBar;
 class StatusBar;
 class ToolBar;
 
-namespace detail
-{
-struct WindowImpl;
-}
-
 /// トップレベルのウィンドウ。ウィジェットのツリーの根になる。
 /// 表示は visible に true を代入する(初めは表示されていない)。
 ///
@@ -56,8 +51,6 @@ public:
     /// 全体を描いて Bitmap にする(大きさはピクセル。scale は dp からピクセルへの倍率)。表示していなくても描く。
     Bitmap capture();
 
-    detail::WindowImpl* impl() const { return d_; }
-
 protected:
     /// ポップアップ(Popup)のための作り方。SDL3 のウィンドウは Popup::open で作る。
     explicit Window(Object* owner_object);
@@ -69,24 +62,10 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    std::string get_title() const;
-    void set_title(const std::string& v);
-    ThemeColor get_background() const { return background_; }
-    void set_background(const ThemeColor& v);
-    Widget* get_focused_widget() const;
-    MenuBar* get_menu_bar() const { return menu_bar_; }
-    void set_menu_bar(MenuBar* const& v);
-    ToolBar* get_tool_bar() const { return tool_bar_; }
-    void set_tool_bar(ToolBar* const& v);
-    StatusBar* get_status_bar() const { return status_bar_; }
-    void set_status_bar(StatusBar* const& v);
-
-    detail::WindowImpl* d_;
-    ThemeColor background_;
-    CloseHandler on_close_;
-    MenuBar* menu_bar_;
-    ToolBar* tool_bar_;
-    StatusBar* status_bar_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

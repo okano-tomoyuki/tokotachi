@@ -12,11 +12,6 @@
 namespace tokotachi
 {
 
-namespace detail
-{
-class SpinEdit;
-}
-
 /// 数値の入力欄: 数値を打ち込むか、上下のボタン・矢印キーで single_step ずつ増減する(docs/adr/0024)。
 ///
 /// @image html widget_spin_box.png

@@ -11,18 +11,6 @@
 namespace tokotachi
 {
 
-class LineEdit;
-class SpinBox;
-class Label;
-
-namespace detail
-{
-class ColorPlane;
-class ColorStrip;
-class ColorPreview;
-class ColorSwatches;
-}
-
 /// 色を選ぶダイアログ(docs/adr/0051)。
 ///
 /// @image html color_dialog.png
@@ -45,6 +33,7 @@ class TOKOTACHI_API ColorDialog : public Dialog
 public:
     /// title が空なら、言語に合わせた標準の題(「色の選択」)。OK・キャンセルのボタンを持つ。
     explicit ColorDialog(Window* parent, const std::string& title = std::string());
+    ~ColorDialog() override;
 
     /// 選んでいる色。代入すると、開いたときの色(比べて見せる色)も同じにする(開いている間の利用者の操作では変えない)。
     Property<Color> color;
@@ -56,38 +45,10 @@ public:
                              bool alpha = false, const std::string& title = std::string());
 
 private:
-    friend class detail::ColorPlane;
-    friend class detail::ColorStrip;
-    friend class detail::ColorSwatches;
-    friend class detail::ColorPreview;
-
-    Color get_color() const { return color_; }
-    void set_color(const Color& v);
-    bool get_alpha_enabled() const { return alpha_enabled_; }
-    void set_alpha_enabled(const bool& v);
-
-    /// 色相・彩度・明度・不透明度から色を決め、ほかの欄を合わせる(changed_by の欄は変えない)。
-    void apply_hsv(const void* changed_by);
-    /// 色から色相などを決め、ほかの欄を合わせる。
-    void apply_color(const Color& c, const void* changed_by);
-    /// 欄(16 進数・数値・四角・帯・見本)を今の色に合わせる。
-    void sync(const void* changed_by);
-
-    Color color_;
-    Color original_;    ///< 開いたときの色(比べて見せる)
-    bool alpha_enabled_;
-    float hue_;         ///< 0〜360
-    float saturation_;  ///< 0〜1
-    float value_;       ///< 0〜1
-    bool syncing_;
-    detail::ColorPlane* plane_;
-    detail::ColorStrip* hue_strip_;
-    detail::ColorStrip* alpha_strip_;
-    detail::ColorPreview* preview_;
-    detail::ColorSwatches* swatches_;
-    LineEdit* hex_;
-    SpinBox* channels_[4];  ///< R・G・B・A
-    Label* alpha_label_;
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

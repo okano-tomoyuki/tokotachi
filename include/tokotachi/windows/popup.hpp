@@ -60,12 +60,8 @@ protected:
     void paint(Canvas& canvas) override;
 
 private:
-    Widget* get_owner_widget() const { return owner_widget_; }
-    PopupKind get_kind() const { return kind_; }
-
-    Widget* owner_widget_;
-    PopupKind kind_;
-    NotifyHandler on_closed_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

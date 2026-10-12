@@ -86,31 +86,10 @@ public:
     void open();
 
 private:
-    std::vector<std::string> get_paths() const { return paths_; }
-    int get_selected_filter() const { return selected_filter_; }
-    std::string get_error() const { return error_; }
-    bool get_running() const { return request_ != 0; }
-    void set_mode(const FileDialogMode& v) { mode_ = v; }
-    void set_title(const std::string& v) { title_ = v; }
-    void set_filters(const std::vector<FileFilter>& v) { filters_ = v; }
-    void set_location(const std::string& v) { location_ = v; }
-    void set_allow_many(const bool& v) { allow_many_ = v; }
-    /// 結果が届いた(メインスレッド)。
-    void finished(const std::vector<std::string>& result, int filter, const std::string& failure);
-
-    friend struct FileDialogAccess;
-
-    Window* parent_;
-    FileDialogMode mode_;
-    std::string title_;
-    std::vector<FileFilter> filters_;
-    std::string location_;
-    bool allow_many_;
-    std::vector<std::string> paths_;
-    int selected_filter_;
-    std::string error_;
-    NotifyHandler on_finish_;
-    int request_;  ///< 開いている要求の番号(0 なら開いていない)
+    template <typename>
+    friend struct detail::ImplAccess;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

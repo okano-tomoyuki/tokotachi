@@ -14,11 +14,6 @@ namespace tokotachi
 
 class Label;
 
-namespace detail
-{
-class MessageIcon;
-}
-
 /// 左に出す印。
 enum class MessageType
 {
@@ -52,6 +47,7 @@ class TOKOTACHI_API MessageDialog : public Dialog
 public:
     MessageDialog(Window* parent, const std::string& title, const std::string& text,
                   MessageType type = MessageType::INFORMATION);
+    ~MessageDialog() override;
 
     Property<std::string> text;
     Property<MessageType> type;
@@ -63,14 +59,8 @@ public:
                                MessageType type = MessageType::INFORMATION);
 
 private:
-    std::string get_text() const;
-    void set_text(const std::string& v);
-    MessageType get_type() const { return type_; }
-    void set_type(const MessageType& v);
-
-    MessageType type_;
-    detail::MessageIcon* icon_;
-    Label* label_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

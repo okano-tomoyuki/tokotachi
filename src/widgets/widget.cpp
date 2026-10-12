@@ -95,7 +95,7 @@ void Widget::Impl::set_cursor(const MouseCursor& v)
     // ポインタの下(またはドラッグ中)のウィジェットなら、すぐに OS のカーソルを変える。
     if (Window* w = get_window())
     {
-        w->impl()->cursor_changed(q);
+        detail::window_impl_of(w)->cursor_changed(q);
     }
 }
 
@@ -140,7 +140,7 @@ Widget::~Widget()
     }
     if (Window* w = d_->get_window())
     {
-        w->impl()->widget_destroyed(this);
+        detail::window_impl_of(w)->widget_destroyed(this);
         if (d_->parent_ && d_->displayed())
         {
             d_->parent_->invalidate(d_->bounds_);
@@ -194,7 +194,7 @@ void Widget::Impl::set_parent(Widget* const& p)
     // 移る前のウィンドウが持つ、自分と子孫への参照(フォーカス・ホバー・捕捉)を外す。
     if (old_window)
     {
-        old_window->impl()->widget_hidden(q);
+        detail::window_impl_of(old_window)->widget_hidden(q);
     }
     parent_ = p;
     detail::change_owner(q, p);
@@ -265,7 +265,7 @@ void Widget::Impl::set_bounds(const Rect& r)
     if (is_window_)
     {
         // ウィンドウの大きさの変更は SDL3 に依頼し、実際の大きさを反映する(位置は扱わない。docs/adr/0002)。
-        static_cast<Window*>(q)->impl()->request_size(r.size());
+        detail::window_impl_of(static_cast<Window*>(q))->request_size(r.size());
         return;
     }
     const Rect old = bounds_;
@@ -320,7 +320,7 @@ void Widget::Impl::set_visible(const bool& v)
     }
     if (is_window_)
     {
-        static_cast<Window*>(q)->impl()->set_shown(v);
+        detail::window_impl_of(static_cast<Window*>(q))->set_shown(v);
         return;
     }
     if (parent_ && !hidden_by_parent_)
@@ -338,12 +338,12 @@ void Widget::Impl::set_visible(const bool& v)
     {
         if (!v)
         {
-            w->impl()->widget_hidden(q);
+            detail::window_impl_of(w)->widget_hidden(q);
         }
         else
         {
             // フォーカスのあるウィジェット(またはその祖先)が表示されたら、文字入力を有効にするかを判断し直す。
-            w->impl()->update_text_input();
+            detail::window_impl_of(w)->update_text_input();
         }
     }
 }
@@ -425,11 +425,11 @@ void Widget::Impl::set_hidden_by_parent(bool hide)
     {
         if (hide)
         {
-            w->impl()->widget_hidden(q);
+            detail::window_impl_of(w)->widget_hidden(q);
         }
         else
         {
-            w->impl()->update_text_input();
+            detail::window_impl_of(w)->update_text_input();
         }
     }
 }
@@ -473,7 +473,7 @@ void Widget::Impl::set_enabled(const bool& v)
     {
         if (Window* w = get_window())
         {
-            w->impl()->widget_hidden(q);
+            detail::window_impl_of(w)->widget_hidden(q);
         }
     }
 }
@@ -493,7 +493,7 @@ bool Widget::Impl::get_effectively_enabled() const
 bool Widget::Impl::get_focused() const
 {
     Window* w = get_window();
-    return w && w->impl()->focus == q;
+    return w && detail::window_impl_of(w)->focus == q;
 }
 
 void Widget::Impl::set_focused(const bool& v)
@@ -503,11 +503,11 @@ void Widget::Impl::set_focused(const bool& v)
     const bool before = get_focused();
     if (w && v && !before && focus_policy_ != FocusPolicy::NONE && get_effectively_enabled() && shown_in_window())
     {
-        w->impl()->set_focus(q);
+        detail::window_impl_of(w)->set_focus(q);
     }
     else if (w && !v && before)
     {
-        w->impl()->set_focus(nullptr);
+        detail::window_impl_of(w)->set_focus(nullptr);
     }
 }
 
@@ -520,14 +520,14 @@ void Widget::Impl::set_accepts_text_input(const bool& v)
     accepts_text_input_ = v;
     if (get_focused())
     {
-        get_window()->impl()->update_text_input();
+        detail::window_impl_of(get_window())->update_text_input();
     }
 }
 
 float Widget::Impl::get_display_scale() const
 {
     Window* w = get_window();
-    return w ? w->impl()->scale : 1.0f;
+    return w ? detail::window_impl_of(w)->scale : 1.0f;
 }
 
 Size Widget::Impl::get_minimum_hint() const
@@ -567,7 +567,7 @@ void Widget::request_layout()
     }
     if (Window* w = d_->get_window())
     {
-        w->impl()->layout_pending = true;
+        detail::window_impl_of(w)->layout_pending = true;
     }
 }
 
@@ -576,7 +576,7 @@ void Widget::mark_layout_dirty()
     d_->layout_dirty_ = true;
     if (Window* w = d_->get_window())
     {
-        w->impl()->layout_pending = true;
+        detail::window_impl_of(w)->layout_pending = true;
     }
 }
 
@@ -584,7 +584,7 @@ void Widget::apply_layout()
 {
     if (Window* w = d_->get_window())
     {
-        w->impl()->run_layout();
+        detail::window_impl_of(w)->run_layout();
     }
 }
 
@@ -598,7 +598,7 @@ void Widget::invalidate(const Rect& r)
         return;
     }
     const Point origin = map_to_window(Point());
-    w->impl()->invalidate(r.intersected(d_->get_local_rect()).translated(origin.x, origin.y));
+    detail::window_impl_of(w)->invalidate(r.intersected(d_->get_local_rect()).translated(origin.x, origin.y));
 }
 
 Point Widget::map_to_window(const Point& p) const
@@ -632,7 +632,7 @@ void Widget::update_input_method()
 {
     if (d_->get_focused())
     {
-        d_->get_window()->impl()->ime_dirty = true;
+        detail::window_impl_of(d_->get_window())->ime_dirty = true;
     }
 }
 
@@ -710,7 +710,7 @@ void Widget::mouse_wheel(WheelEvent& e)
 bool Widget::start_drag(const DragData& data, const std::string& label)
 {
     Window* w = d_->get_window();
-    return w && w->impl()->start_drag(this, data, label);
+    return w && detail::window_impl_of(w)->start_drag(this, data, label);
 }
 
 void Widget::drag_move(DragEvent& e)
@@ -824,19 +824,19 @@ bool Widget::handles_tab_key() const { return false; }
 bool Widget::mnemonic_cues() const
 {
     const Window* w = d_->get_window();
-    return w && w->impl()->cues;
+    return w && detail::window_impl_of(w)->cues;
 }
 
 bool Widget::focus_next_after()
 {
     Window* w = d_->get_window();
-    return w && w->impl()->focus_after(this);
+    return w && detail::window_impl_of(w)->focus_after(this);
 }
 
 bool Widget::focus_first_within()
 {
     Window* w = d_->get_window();
-    return w && w->impl()->focus_first_in(this);
+    return w && detail::window_impl_of(w)->focus_first_in(this);
 }
 
 Size Widget::compute_preferred_size() const

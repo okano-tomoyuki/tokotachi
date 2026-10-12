@@ -14,11 +14,6 @@
 namespace tokotachi
 {
 
-namespace detail
-{
-class PopupList;
-}
-
 class ScrollArea;
 
 /// 項目の一覧から 1 つを選ぶ(docs/adr/0022)。押すと一覧をポップアップで出す。

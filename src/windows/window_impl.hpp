@@ -11,6 +11,7 @@
 #include <tokotachi/core/timer.hpp>
 #include <tokotachi/windows/window.hpp>
 
+#include "../core/impl.hpp"
 #include "../graphics/raster_canvas.hpp"
 
 namespace tokotachi
@@ -140,6 +141,40 @@ private:
     // ショートカットが一致する Action を実行する。実行したら true。
     bool trigger_shortcut(const KeyEvent& ev);
 };
+
+}  // namespace detail
+
+class Window::Impl
+{
+    TOKOTACHI_IMPL(Window);
+
+    explicit Impl(Window* object) : q(object) {}
+
+    std::string get_title() const;
+    void set_title(const std::string& v);
+    ThemeColor get_background() const { return background_; }
+    void set_background(const ThemeColor& v);
+    Widget* get_focused_widget() const;
+    MenuBar* get_menu_bar() const { return menu_bar_; }
+    void set_menu_bar(MenuBar* const& v);
+    ToolBar* get_tool_bar() const { return tool_bar_; }
+    void set_tool_bar(ToolBar* const& v);
+    StatusBar* get_status_bar() const { return status_bar_; }
+    void set_status_bar(StatusBar* const& v);
+
+    detail::WindowImpl* native_;
+    ThemeColor background_;
+    CloseHandler on_close_;
+    MenuBar* menu_bar_;
+    ToolBar* tool_bar_;
+    StatusBar* status_bar_;
+};
+
+namespace detail
+{
+
+// w の SDL3 のウィンドウなどの中身。
+inline WindowImpl* window_impl_of(const Window* w) { return ImplAccess<Window>::of(w)->native_; }
 
 }  // namespace detail
 }  // namespace tokotachi

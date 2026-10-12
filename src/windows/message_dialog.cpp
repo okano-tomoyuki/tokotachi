@@ -4,7 +4,7 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/widgets/label.hpp>
 
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "../widgets/theme.hpp"
 
 namespace tokotachi
@@ -54,31 +54,50 @@ protected:
 
 }  // namespace detail
 
+class MessageDialog::Impl
+{
+    TOKOTACHI_IMPL(MessageDialog);
+
+    explicit Impl(MessageDialog* object) : q(object) {}
+
+    std::string get_text() const;
+    void set_text(const std::string& v);
+    MessageType get_type() const { return type_; }
+    void set_type(const MessageType& v);
+
+    MessageType type_;
+    detail::MessageIcon* icon_;
+    Label* label_;
+};
+
 MessageDialog::MessageDialog(Window* parent, const std::string& title_text, const std::string& initial_text,
                              MessageType initial_type)
     : Dialog(parent, title_text),
-      TOKOTACHI_PROPERTY_GETTER(MessageDialog, std::string, text),
-      TOKOTACHI_PROPERTY_GETTER(MessageDialog, MessageType, type),
-      type_(initial_type),
-      icon_(nullptr),
-      label_(nullptr)
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, text),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MessageType, type),
+      d_(new Impl(this))
 {
+    d_->type_ = initial_type;
+    d_->icon_ = nullptr;
+    d_->label_ = nullptr;
     BoxLayout* box = new BoxLayout(this, Orientation::HORIZONTAL);
     box->margins = Margins(20, 20, 20, 16);
     box->spacing = 16;
-    icon_ = new detail::MessageIcon(this);
-    icon_->type = initial_type;
-    label_ = new Label(this, initial_text);
-    label_->word_wrap = true;
-    box->add(icon_, 0, Align::START);
-    box->add(label_, 1);
+    d_->icon_ = new detail::MessageIcon(this);
+    d_->icon_->type = initial_type;
+    d_->label_ = new Label(this, initial_text);
+    d_->label_->word_wrap = true;
+    box->add(d_->icon_, 0, Align::START);
+    box->add(d_->label_, 1);
 }
 
-std::string MessageDialog::get_text() const { return label_->text; }
+MessageDialog::~MessageDialog() { delete d_; }
 
-void MessageDialog::set_text(const std::string& v) { label_->text = v; }
+std::string MessageDialog::Impl::get_text() const { return label_->text; }
 
-void MessageDialog::set_type(const MessageType& v)
+void MessageDialog::Impl::set_text(const std::string& v) { label_->text = v; }
+
+void MessageDialog::Impl::set_type(const MessageType& v)
 {
     type_ = v;
     icon_->type = v;

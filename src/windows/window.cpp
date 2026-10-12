@@ -19,7 +19,7 @@
 #include "../actions/menu_access.hpp"
 #include "../actions/action_access.hpp"
 #include "../core/application_impl.hpp"
-#include "../core/property_impl.hpp"
+#include "../core/impl.hpp"
 #include "../widgets/widget_access.hpp"
 #include "window_impl.hpp"
 
@@ -1387,19 +1387,20 @@ void WindowImpl::handle(const SDL_Event& e)
 }  // namespace detail
 
 Window::Window(const std::string& title_text, float width_dp, float height_dp)
-    : TOKOTACHI_PROPERTY_GETTER(Window, std::string, title),
-      TOKOTACHI_PROPERTY_GETTER(Window, ThemeColor, background),
-      TOKOTACHI_READONLY_PROPERTY(Window, Widget*, focused_widget),
-      TOKOTACHI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
-      TOKOTACHI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
-      d_(nullptr),
-      background_(ColorRole::WINDOW),
-      menu_bar_(nullptr),
-      tool_bar_(nullptr),
-      status_bar_(nullptr)
+    : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, focused_widget),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MenuBar*, menu_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      d_(new Impl(this))
 {
+    d_->native_ = nullptr;
+    d_->background_ = ColorRole::WINDOW;
+    d_->menu_bar_ = nullptr;
+    d_->tool_bar_ = nullptr;
+    d_->status_bar_ = nullptr;
     Application* app = Application::instance();
     if (!app)
     {
@@ -1408,22 +1409,22 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
     }
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
-    d_ = new detail::WindowImpl(this);
-    d_->window = SDL_CreateWindow(title_text.c_str(), static_cast<int>(width_dp), static_cast<int>(height_dp),
+    d_->native_ = new detail::WindowImpl(this);
+    d_->native_->window = SDL_CreateWindow(title_text.c_str(), static_cast<int>(width_dp), static_cast<int>(height_dp),
                                   SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN);
-    if (!d_->window)
+    if (!d_->native_->window)
     {
         std::fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
         return;
     }
-    d_->renderer = SDL_CreateRenderer(d_->window, nullptr);
-    if (!d_->renderer)
+    d_->native_->renderer = SDL_CreateRenderer(d_->native_->window, nullptr);
+    if (!d_->native_->renderer)
     {
         std::fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
     }
-    d_->update_scale();
-    d_->request_size(Size(width_dp, height_dp));
-    detail::impl_of(app)->windows.push_back(d_);
+    d_->native_->update_scale();
+    d_->native_->request_size(Size(width_dp, height_dp));
+    detail::impl_of(app)->windows.push_back(d_->native_);
 }
 
 Window::~Window()
@@ -1433,50 +1434,52 @@ Window::~Window()
     if (Application* app = Application::instance())
     {
         std::vector<detail::WindowImpl*>& ws = detail::impl_of(app)->windows;
-        ws.erase(std::remove(ws.begin(), ws.end(), d_), ws.end());
+        ws.erase(std::remove(ws.begin(), ws.end(), d_->native_), ws.end());
     }
     detail::WidgetAccess::set_is_window(this, false);
+    delete d_->native_;
     delete d_;
 }
 
-std::string Window::get_title() const
+std::string Window::Impl::get_title() const
 {
-    const char* t = SDL_GetWindowTitle(d_->window);
+    const char* t = SDL_GetWindowTitle(native_->window);
     return t ? t : "";
 }
 
-void Window::set_title(const std::string& v) { SDL_SetWindowTitle(d_->window, v.c_str()); }
+void Window::Impl::set_title(const std::string& v) { SDL_SetWindowTitle(native_->window, v.c_str()); }
 
-void Window::set_background(const ThemeColor& v)
+void Window::Impl::set_background(const ThemeColor& v)
 {
     background_ = v;
-    invalidate();
+    q->invalidate();
 }
 
-Widget* Window::get_focused_widget() const { return d_->focus; }
+Widget* Window::Impl::get_focused_widget() const { return native_->focus; }
 
 Window::Window(Object* owner_object)
-    : TOKOTACHI_PROPERTY_GETTER(Window, std::string, title),
-      TOKOTACHI_PROPERTY_GETTER(Window, ThemeColor, background),
-      TOKOTACHI_READONLY_PROPERTY(Window, Widget*, focused_widget),
-      TOKOTACHI_PROPERTY_GETTER(Window, MenuBar*, menu_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, ToolBar*, tool_bar),
-      TOKOTACHI_PROPERTY_GETTER(Window, StatusBar*, status_bar),
-      TOKOTACHI_HANDLER_PROPERTY(Window, CloseHandler, on_close),
-      d_(nullptr),
-      background_(ColorRole::POPUP),
-      menu_bar_(nullptr),
-      tool_bar_(nullptr),
-      status_bar_(nullptr)
+    : TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, std::string, title),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ThemeColor, background),
+      TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Widget*, focused_widget),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, MenuBar*, menu_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolBar*, tool_bar),
+      TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, StatusBar*, status_bar),
+      TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
+      d_(new Impl(this))
 {
+    d_->native_ = nullptr;
+    d_->background_ = ColorRole::POPUP;
+    d_->menu_bar_ = nullptr;
+    d_->tool_bar_ = nullptr;
+    d_->status_bar_ = nullptr;
     detail::WidgetAccess::set_is_window(this, true);
     detail::WidgetAccess::set_visible_flag(this, false);
     detail::change_owner(this, owner_object);
-    d_ = new detail::WindowImpl(this);
-    d_->popup = true;
+    d_->native_ = new detail::WindowImpl(this);
+    d_->native_->popup = true;
     if (Application* app = Application::instance())
     {
-        detail::impl_of(app)->windows.push_back(d_);
+        detail::impl_of(app)->windows.push_back(d_->native_);
     }
 }
 
@@ -1491,10 +1494,10 @@ void Window::close()
 
 bool Window::save_png(const std::string& path)
 {
-    d_->invalidate_all();
-    d_->render(false);
-    SDL_Surface* s = SDL_CreateSurfaceFrom(d_->pixel_width, d_->pixel_height, SDL_PIXELFORMAT_ARGB8888,
-                                           &d_->buffer[0], d_->pixel_width * 4);
+    d_->native_->invalidate_all();
+    d_->native_->render(false);
+    SDL_Surface* s = SDL_CreateSurfaceFrom(d_->native_->pixel_width, d_->native_->pixel_height, SDL_PIXELFORMAT_ARGB8888,
+                                           &d_->native_->buffer[0], d_->native_->pixel_width * 4);
     const bool ok = s && SDL_SavePNG(s, path.c_str());
     if (!ok)
     {
@@ -1506,14 +1509,14 @@ bool Window::save_png(const std::string& path)
 
 Bitmap Window::capture()
 {
-    d_->invalidate_all();
-    d_->render(false);
-    Bitmap b(d_->pixel_width, d_->pixel_height, d_->scale);
+    d_->native_->invalidate_all();
+    d_->native_->render(false);
+    Bitmap b(d_->native_->pixel_width, d_->native_->pixel_height, d_->native_->scale);
     std::uint32_t* out = b.pixels();
     // ウィンドウの描画先は不透明(ARGB8888)。Bitmap はアルファ乗算済みなので、アルファを 255 にして写す
-    for (std::size_t i = 0; i < d_->buffer.size(); ++i)
+    for (std::size_t i = 0; i < d_->native_->buffer.size(); ++i)
     {
-        out[i] = d_->buffer[i] | 0xff000000u;
+        out[i] = d_->native_->buffer[i] | 0xff000000u;
     }
     return b;
 }
@@ -1546,28 +1549,28 @@ void replace_bar(Window* self, T*& slot, T* v)
 
 }  // namespace
 
-void Window::set_menu_bar(MenuBar* const& v) { replace_bar(this, menu_bar_, v); }
+void Window::Impl::set_menu_bar(MenuBar* const& v) { replace_bar(q, menu_bar_, v); }
 
-void Window::set_tool_bar(ToolBar* const& v) { replace_bar(this, tool_bar_, v); }
+void Window::Impl::set_tool_bar(ToolBar* const& v) { replace_bar(q, tool_bar_, v); }
 
-void Window::set_status_bar(StatusBar* const& v) { replace_bar(this, status_bar_, v); }
+void Window::Impl::set_status_bar(StatusBar* const& v) { replace_bar(q, status_bar_, v); }
 
 void Window::child_removed(Widget* child)
 {
     bool removed = true;
-    if (child == menu_bar_)
+    if (child == d_->menu_bar_)
     {
-        menu_bar_ = nullptr;
+        d_->menu_bar_ = nullptr;
         notify_changed(menu_bar);
     }
-    else if (child == tool_bar_)
+    else if (child == d_->tool_bar_)
     {
-        tool_bar_ = nullptr;
+        d_->tool_bar_ = nullptr;
         notify_changed(tool_bar);
     }
-    else if (child == status_bar_)
+    else if (child == d_->status_bar_)
     {
-        status_bar_ = nullptr;
+        d_->status_bar_ = nullptr;
         notify_changed(status_bar);
     }
     else
@@ -1585,7 +1588,7 @@ void Window::arrange_children()
 {
     // 上端にメニューバー・ツールバー、下端にステータスバーを置き、レイアウトはその間に配置する。
     Rect area = local_rect;
-    Widget* const top[] = {menu_bar_, tool_bar_};
+    Widget* const top[] = {d_->menu_bar_, d_->tool_bar_};
     for (int i = 0; i < 2; ++i)
     {
         if (top[i])
@@ -1595,10 +1598,10 @@ void Window::arrange_children()
             area = area.adjusted(0, h, 0, 0);
         }
     }
-    if (status_bar_)
+    if (d_->status_bar_)
     {
-        const float h = status_bar_->preferred_size.get().height;
-        status_bar_->bounds = Rect(0, area.bottom() - h, area.width, h);
+        const float h = d_->status_bar_->preferred_size.get().height;
+        d_->status_bar_->bounds = Rect(0, area.bottom() - h, area.width, h);
         area = area.adjusted(0, 0, 0, h);
     }
     if (Layout* l = layout)
@@ -1610,13 +1613,13 @@ void Window::arrange_children()
 Size Window::compute_preferred_size() const
 {
     Size s = Widget::compute_preferred_size();
-    Widget* const bars[] = {menu_bar_, tool_bar_, status_bar_};
+    Widget* const bars[] = {d_->menu_bar_, d_->tool_bar_, d_->status_bar_};
     for (int i = 0; i < 3; ++i)
     {
         if (bars[i])
         {
             const Size b = bars[i]->preferred_size;
-            s = Size(std::max(s.width, bars[i] == menu_bar_ ? b.width : 0.0f), s.height + b.height);
+            s = Size(std::max(s.width, bars[i] == d_->menu_bar_ ? b.width : 0.0f), s.height + b.height);
         }
     }
     return s;
@@ -1625,7 +1628,7 @@ Size Window::compute_preferred_size() const
 Size Window::compute_minimum_size() const
 {
     Size s = Widget::compute_minimum_size();
-    Widget* const bars[] = {menu_bar_, tool_bar_, status_bar_};
+    Widget* const bars[] = {d_->menu_bar_, d_->tool_bar_, d_->status_bar_};
     for (int i = 0; i < 3; ++i)
     {
         if (bars[i])
@@ -1639,7 +1642,7 @@ Size Window::compute_minimum_size() const
 
 void Window::paint(Canvas& canvas)
 {
-    canvas.fill_rect(local_rect, background_.resolve());
+    canvas.fill_rect(local_rect, d_->background_.resolve());
     Widget::paint(canvas);
 }
 

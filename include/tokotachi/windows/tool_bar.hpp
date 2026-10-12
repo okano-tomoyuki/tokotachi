@@ -15,11 +15,6 @@ namespace tokotachi
 
 class Menu;
 
-namespace detail
-{
-class ToolButton;
-}
-
 enum class ToolButtonStyle
 {
     ICON_ONLY,         ///< 画像だけ(画像が無ければ文字)
@@ -71,29 +66,8 @@ protected:
     Size compute_minimum_size() const override;
 
 private:
-    /// 項目: ボタン(Action)・部品・区切りのどれか。
-    struct Entry
-    {
-        Action* action;
-        detail::ToolButton* button;
-        Widget* widget;
-        bool hidden;  ///< 幅に収まらず隠している
-        float x;      ///< 区切りの位置
-    };
-
-    ToolButtonStyle get_button_style() const { return button_style_; }
-    void set_button_style(const ToolButtonStyle& v);
-    Widget* item_widget(const Entry& e) const;
-    /// 並べない項目: 利用者が隠した部品と、それによって端に来た・続いた区切り。
-    std::vector<bool> absent_entries() const;
-    float separator_width() const;
-    void show_overflow();
-
-    std::vector<Entry> entries_;
-    ToolButtonStyle button_style_;
-    detail::ToolButton* overflow_button_;  ///< »
-    Menu* overflow_menu_;
-    bool destroying_;
+    class Impl;
+    Impl* d_;
 };
 
 }  // namespace tokotachi

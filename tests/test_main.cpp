@@ -1091,10 +1091,10 @@ TEST(text_input_enabled_when_shown_after_focus)
     tokotachi::Window window("t", 200, 100);
     tokotachi::LineEdit* edit = new tokotachi::LineEdit(&window);
     edit->focused = true;
-    CHECK(!window.impl()->text_input_active);  // 表示されていないうちは有効にしない
+    CHECK(!tokotachi::detail::window_impl_of(&window)->text_input_active);  // 表示されていないうちは有効にしない
     window.visible = true;
-    CHECK(window.impl()->text_input_active);
-    CHECK(SDL_TextInputActive(window.impl()->window));
+    CHECK(tokotachi::detail::window_impl_of(&window)->text_input_active);
+    CHECK(SDL_TextInputActive(tokotachi::detail::window_impl_of(&window)->window));
 
     tokotachi::Widget* panel = new tokotachi::Widget(&window);
     tokotachi::LineEdit* inner = new tokotachi::LineEdit(panel);
@@ -1445,14 +1445,14 @@ TEST(wheel_goes_to_widget_under_pointer_then_parents)
     SDL_Event e;
     SDL_zero(e);
     e.type = SDL_EVENT_MOUSE_WHEEL;
-    e.wheel.windowID = SDL_GetWindowID(window.impl()->window);
+    e.wheel.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.wheel.x = 0;
     e.wheel.y = -1;
     e.wheel.direction = SDL_MOUSEWHEEL_NORMAL;
-    const float to_window = window.impl()->scale / window.impl()->density;
+    const float to_window = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     e.wheel.mouse_x = 10 * to_window;
     e.wheel.mouse_y = 10 * to_window;
-    window.impl()->handle(e);
+    tokotachi::detail::window_impl_of(&window)->handle(e);
     CHECK(area->scroll_position.get().y > 0);
 }
 
@@ -1462,7 +1462,7 @@ void dispatch_key(tokotachi::Window& window, SDL_Keycode key, bool down = true, 
     SDL_Event e;
     SDL_zero(e);
     e.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
-    e.key.windowID = SDL_GetWindowID(window.impl()->window);
+    e.key.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.key.key = key;
     e.key.mod = mod;
     e.key.down = down;
@@ -1471,13 +1471,13 @@ void dispatch_key(tokotachi::Window& window, SDL_Keycode key, bool down = true, 
 
 void dispatch_click(tokotachi::Window& window, const tokotachi::Point& p)
 {
-    const float k = window.impl()->scale / window.impl()->density;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     for (int i = 0; i < 2; ++i)
     {
         SDL_Event e;
         SDL_zero(e);
         e.type = i == 0 ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
-        e.button.windowID = SDL_GetWindowID(window.impl()->window);
+        e.button.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
         e.button.button = SDL_BUTTON_LEFT;
         e.button.down = i == 0;
         e.button.clicks = 1;
@@ -1498,18 +1498,18 @@ TEST(popup_opens_relative_to_owner)
     popup->on_closed = [&](tokotachi::Object*) { ++closed; };
     popup->open(button->local_rect, tokotachi::Size(120, 60));
     CHECK(popup->visible);
-    CHECK(popup->impl()->window != nullptr);
+    CHECK(tokotachi::detail::window_impl_of(popup)->window != nullptr);
     CHECK(near(popup->width, 120) && near(popup->height, 60));
     CHECK(tokotachi::detail::impl_of(tokotachi::Application::instance())->open_menus.size() == 1);
     int x = 0, y = 0;
-    SDL_GetWindowPosition(popup->impl()->window, &x, &y);
+    SDL_GetWindowPosition(tokotachi::detail::window_impl_of(popup)->window, &x, &y);
     int px = 0, py = 0;
-    SDL_GetWindowPosition(window.impl()->window, &px, &py);
+    SDL_GetWindowPosition(tokotachi::detail::window_impl_of(&window)->window, &px, &py);
     // ポップアップの位置は、親のウィンドウの button の左下(SDL3 はポップアップの位置を親からの相対で返す)。
     // ポップアップに対応しないドライバ(offscreen)の代わりの通常のウィンドウは、絶対の位置なので確かめない。
-    if (!popup->impl()->popup_parent)
+    if (!tokotachi::detail::window_impl_of(popup)->popup_parent)
     {
-        const float k = window.impl()->scale / window.impl()->density;
+        const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
         CHECK(x == static_cast<int>(20 * k + 0.5f) && y == static_cast<int>(54 * k + 0.5f));
     }
     (void)px;
@@ -1637,12 +1637,12 @@ TEST(window_capture)
     window.background = tokotachi::Color(0x10, 0x20, 0x30);
     window.visible = true;
     tokotachi::Bitmap b = window.capture();
-    CHECK(b.width() == window.impl()->pixel_width && b.height() == window.impl()->pixel_height);
+    CHECK(b.width() == tokotachi::detail::window_impl_of(&window)->pixel_width && b.height() == tokotachi::detail::window_impl_of(&window)->pixel_height);
     CHECK(b.width() >= 120 && b.height() >= 60);
     // 背景の色(不透明)。描画先の画素と同じ
     const tokotachi::Color c = b.pixel(5, 5);
     CHECK(c.r == 0x10 && c.g == 0x20 && c.b == 0x30 && c.a == 255);
-    CHECK((b.pixels()[0] | 0xff000000u) == (window.impl()->buffer[0] | 0xff000000u));
+    CHECK((b.pixels()[0] | 0xff000000u) == (tokotachi::detail::window_impl_of(&window)->buffer[0] | 0xff000000u));
 }
 
 TEST(window_grows_to_minimum_before_capture)
@@ -1685,7 +1685,7 @@ void dispatch_text(tokotachi::Window& window, const char* text)
     SDL_Event e;
     SDL_zero(e);
     e.type = SDL_EVENT_TEXT_INPUT;
-    e.text.windowID = SDL_GetWindowID(window.impl()->window);
+    e.text.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.text.text = text;
     tokotachi::detail::impl_of(tokotachi::Application::instance())->dispatch(e);
 }
@@ -1873,18 +1873,18 @@ TEST(theme_switch_notifies_and_repaints)
     tokotachi::Window window("t", 120, 60);
     tokotachi::Label* label = new tokotachi::Label(&window, "テスト");
     window.visible = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(window.background.get() == tokotachi::ThemeColor(tokotachi::ColorRole::WINDOW));
-    CHECK(window.impl()->buffer[0] == packed(tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]));
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[0] == packed(tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]));
 
     app->color_scheme = tokotachi::ColorScheme::DARK;
     CHECK(app->dark);
     CHECK(app->theme.get() == tokotachi::Theme::dark());
     CHECK(changes == 1);
     CHECK(dark_changes == 1 && dark->value);
-    CHECK(!window.impl()->dirty.empty());  // 描き直しを依頼済み
-    window.impl()->render(false);
-    CHECK(window.impl()->buffer[0] == packed(tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]));
+    CHECK(!tokotachi::detail::window_impl_of(&window)->dirty.empty());  // 描き直しを依頼済み
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[0] == packed(tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]));
     CHECK(label->color.get().resolve() == tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT]);
 
     app->color_scheme = tokotachi::ColorScheme::DARK;  // 同じ値: 知らせない
@@ -1956,13 +1956,13 @@ TEST(theme_override_inherits_to_descendants)
     CHECK(inner->theme.get()[tokotachi::ColorRole::WINDOW] == tokotachi::Theme::light()[tokotachi::ColorRole::WINDOW]);
 
     window.visible = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(painted_inner == red && painted_outside == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
     // 描き終えたら、今のテーマはアプリケーションのものに戻る
     CHECK(tokotachi::ThemeColor(tokotachi::ColorRole::ACCENT).resolve() == tokotachi::Theme::light()[tokotachi::ColorRole::ACCENT]);
     const float scale = window.display_scale;
     const int px = static_cast<int>(15 * scale), stride = static_cast<int>(200 * scale);
-    CHECK(window.impl()->buffer[static_cast<std::size_t>(px * stride + px)] == packed(red));
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[static_cast<std::size_t>(px * stride + px)] == packed(red));
 
     // 子で別の役割を上書きすると、親の上書きと合わさる。ダークにすると、ダークの色を使う。
     tokotachi::ThemeOverride field;
@@ -1974,7 +1974,7 @@ TEST(theme_override_inherits_to_descendants)
     app->color_scheme = tokotachi::ColorScheme::DARK;
     CHECK(inner->theme.get()[tokotachi::ColorRole::ACCENT] == dark_red && inner->theme.get()[tokotachi::ColorRole::FIELD] == pale);
     CHECK(inner->theme.get()[tokotachi::ColorRole::WINDOW] == tokotachi::Theme::dark()[tokotachi::ColorRole::WINDOW]);
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(painted_inner == dark_red);
     app->color_scheme = tokotachi::ColorScheme::LIGHT;
 
@@ -2137,19 +2137,19 @@ TEST(tab_widget_scrolls_overflowing_titles)
 // マウスのボタン・移動のイベント(位置は dp)。修飾キーは SDL_SetModState で決める。
 void dispatch_mouse(tokotachi::Window& window, SDL_EventType type, const tokotachi::Point& p, int clicks = 1)
 {
-    const float k = window.impl()->scale / window.impl()->density;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     SDL_Event e;
     SDL_zero(e);
     e.type = type;
     if (type == SDL_EVENT_MOUSE_MOTION)
     {
-        e.motion.windowID = SDL_GetWindowID(window.impl()->window);
+        e.motion.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
         e.motion.x = p.x * k;
         e.motion.y = p.y * k;
     }
     else
     {
-        e.button.windowID = SDL_GetWindowID(window.impl()->window);
+        e.button.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
         e.button.button = SDL_BUTTON_LEFT;
         e.button.down = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
         e.button.clicks = static_cast<Uint8>(clicks);
@@ -2194,9 +2194,9 @@ TEST(image_from_pixels_and_draw)
     w->bounds = tokotachi::Rect(0, 0, 40, 40);
     w->on_paint = [=](tokotachi::Object*, tokotachi::Canvas& canvas) { canvas.draw_image(image, tokotachi::Rect(0, 0, 20, 20)); };
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    CHECK(window.impl()->buffer[2 * stride + 2] == 0xffff0000u);
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[2 * stride + 2] == 0xffff0000u);
 }
 
 // 線画のアイコン(Image::icon。docs/adr/0054)。
@@ -2240,15 +2240,15 @@ TEST(widgets_tint_icons_with_text_color)
     image_box->bounds = tokotachi::Rect(0, 0, 48, 48);
     image_box->fit = tokotachi::ImageFit::CONTAIN;
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    const float k = window.impl()->scale;
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale;
     const auto at = [&](float x, float y)
-    { return window.impl()->buffer[static_cast<int>(y * k) * stride + static_cast<int>(x * k)] & 0xffffffu; };
+    { return tokotachi::detail::window_impl_of(&window)->buffer[static_cast<int>(y * k) * stride + static_cast<int>(x * k)] & 0xffffffu; };
     const tokotachi::Color text = tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT];
     CHECK(at(6.5f, 24) == ((static_cast<std::uint32_t>(text.r) << 16) | (text.g << 8) | text.b));
     image_box->enabled = false;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     const tokotachi::Color disabled = tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT_DISABLED];
     CHECK(at(6.5f, 24) == ((static_cast<std::uint32_t>(disabled.r) << 16) | (disabled.g << 8) | disabled.b));
     tokotachi::Application::instance()->color_scheme = tokotachi::ColorScheme::SYSTEM;
@@ -2257,11 +2257,11 @@ TEST(widgets_tint_icons_with_text_color)
 // OS からのドロップ(SDL_EVENT_DROP_*。位置は dp)。
 void dispatch_drop(tokotachi::Window& window, SDL_EventType type, const tokotachi::Point& p, const char* data = nullptr)
 {
-    const float k = window.impl()->scale / window.impl()->density;
+    const float k = tokotachi::detail::window_impl_of(&window)->scale / tokotachi::detail::window_impl_of(&window)->density;
     SDL_Event e;
     SDL_zero(e);
     e.type = type;
-    e.drop.windowID = SDL_GetWindowID(window.impl()->window);
+    e.drop.windowID = SDL_GetWindowID(tokotachi::detail::window_impl_of(&window)->window);
     e.drop.x = p.x * k;
     e.drop.y = p.y * k;
     e.drop.data = data;
@@ -2315,7 +2315,7 @@ TEST(drag_and_drop_in_window_and_from_outside)
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 20));  // inner の上: box が受け取る
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(280, 20));  // 受け取らない位置
     dispatch_mouse(window, SDL_EVENT_MOUSE_MOTION, tokotachi::Point(170, 30));
-    window.impl()->render(false);                                              // 像を描ける
+    tokotachi::detail::window_impl_of(&window)->render(false);                                              // 像を描ける
     dispatch_mouse(window, SDL_EVENT_MOUSE_BUTTON_UP, tokotachi::Point(170, 30));
     CHECK(log.size() == 6 && log[0] == "move" && log[1] == "move" && log[2] == "leave" && log[5] == "drop りんご");  // 離した位置でも聞き直す
     CHECK(finished == tokotachi::DropAction::MOVE);
@@ -2348,7 +2348,7 @@ TEST(drag_and_drop_in_window_and_from_outside)
     dispatch_drop(window, SDL_EVENT_DROP_BEGIN, tokotachi::Point());
     dispatch_drop(window, SDL_EVENT_DROP_POSITION, tokotachi::Point(200, 50));
     dispatch_drop(window, SDL_EVENT_DROP_COMPLETE, tokotachi::Point(200, 50));
-    CHECK(files.empty() && !window.impl()->drag.active);
+    CHECK(files.empty() && !tokotachi::detail::window_impl_of(&window)->drag.active);
 }
 
 TEST(list_view_selection_and_keys)
@@ -2440,7 +2440,7 @@ TEST(item_view_text_style_search_and_edit)
     CHECK(list->text_color(list->index_of(items[1]), 0) == tokotachi::ThemeColor(tokotachi::Color(220, 38, 38)));
     CHECK(list->font(list->index_of(items[1]), 0).bold);
     CHECK(list->text_color(list->index_of(items[0]), 0) == tokotachi::ThemeColor());
-    window.impl()->render(false);  // 描ける
+    tokotachi::detail::window_impl_of(&window)->render(false);  // 描ける
 
     // 押した文字で始まる項目へ(大文字・小文字は区別しない。続けて押すと前方一致)
     dispatch_click(window, row_point(0));
@@ -3053,7 +3053,7 @@ TEST(item_view_queries_only_visible_rows)
     tokotachi::ListView* view = new tokotachi::ListView(&window);
     view->bounds = tokotachi::Rect(0, 0, 200, 250);
     view->model = model;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(model->queries > 0 && model->queries < 20);
     dispatch_click(window, row_point(0));
     dispatch_key(window, SDLK_END);
@@ -3853,11 +3853,11 @@ TEST(mnemonics_move_focus_and_click)
 
     // Alt を押している間は下線を出す
     dispatch_key(window, SDLK_LALT, true, SDL_KMOD_LALT);
-    CHECK(window.impl()->cues);
+    CHECK(tokotachi::detail::window_impl_of(&window)->cues);
     dispatch_key(window, SDLK_N, true, SDL_KMOD_LALT);
     CHECK(line_edit_name->focused);  // ラベルの次の部品
     dispatch_key(window, SDLK_LALT, false);
-    CHECK(!window.impl()->cues);
+    CHECK(!tokotachi::detail::window_impl_of(&window)->cues);
     dispatch_key(window, SDLK_S, true, SDL_KMOD_LALT);
     CHECK(saves == 1 && button_save->focused);
     dispatch_key(window, SDLK_O, true, SDL_KMOD_LALT);
@@ -4057,9 +4057,9 @@ TEST(canvas_transforms_clip_and_dashes)
         c.restore();
     };
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    const std::uint32_t* px = &window.impl()->buffer[0];
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    const std::uint32_t* px = &tokotachi::detail::window_impl_of(&window)->buffer[0];
     const auto at = [&](int x, int y) { return px[y * stride + x]; };
     CHECK(at(100, 30) == packed(red) && at(100, 90) == packed(red));  // 縦に伸びた
     CHECK(at(70, 60) != packed(red) && at(130, 60) != packed(red));
@@ -4116,9 +4116,9 @@ TEST(canvas_layer_group_opacity)
         c.restore();
     };
     window.visible = true;
-    window.impl()->render(false);
-    const int stride = window.impl()->pixel_width;
-    const std::uint32_t* px = &window.impl()->buffer[0];
+    tokotachi::detail::window_impl_of(&window)->render(false);
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    const std::uint32_t* px = &tokotachi::detail::window_impl_of(&window)->buffer[0];
     const auto at = [&](int x, int y) { return px[y * stride + x]; };
     CHECK(at(20, 20) != at(40, 20));    // 図形ごと: 重なりが濃い
     CHECK(at(120, 20) == at(140, 20));  // グループ: 同じ濃さ
@@ -4199,23 +4199,23 @@ TEST(paint_box_cached)
         c.fill_rect(tokotachi::Rect(0, 0, 50, 60), tokotachi::Color::rgb(0x059669));
     };
     window.visible = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     box->invalidate();
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 2);  // 覚えないとき: 描き直すたびに呼ぶ
     box->cached = true;
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     box->invalidate();
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 3);  // 覚えるとき: 1 回だけ
-    const int stride = window.impl()->pixel_width;
-    CHECK(window.impl()->buffer[10 * stride + 10] == packed(tokotachi::Color::rgb(0x059669)));  // 覚えた絵を貼る
-    CHECK(window.impl()->buffer[10 * stride + 70] != packed(tokotachi::Color::rgb(0x059669)));
+    const int stride = tokotachi::detail::window_impl_of(&window)->pixel_width;
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[10 * stride + 10] == packed(tokotachi::Color::rgb(0x059669)));  // 覚えた絵を貼る
+    CHECK(tokotachi::detail::window_impl_of(&window)->buffer[10 * stride + 70] != packed(tokotachi::Color::rgb(0x059669)));
     box->refresh();
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 4);
     box->bounds = tokotachi::Rect(0, 0, 110, 60);  // 大きさが変わると描き直す
-    window.impl()->render(false);
+    tokotachi::detail::window_impl_of(&window)->render(false);
     CHECK(calls == 5);
 }
 
