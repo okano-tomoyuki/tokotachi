@@ -11,6 +11,7 @@
 #include <tokotachi/core/timer.hpp>
 #include <tokotachi/windows/window.hpp>
 
+#include "../widgets/widget_access.hpp"
 #include "../core/impl.hpp"
 #include "../graphics/raster_canvas.hpp"
 
@@ -144,11 +145,14 @@ private:
 
 }  // namespace detail
 
-class Window::Impl
+class Window::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(Window);
 
     explicit Impl(Window* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
 
     std::string get_title() const;
     void set_title(const std::string& v);

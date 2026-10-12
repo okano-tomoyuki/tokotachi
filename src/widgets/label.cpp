@@ -5,6 +5,7 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
+#include "widget_access.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../core/impl.hpp"
 #include "theme.hpp"
@@ -12,11 +13,15 @@
 namespace tokotachi
 {
 
-class Label::Impl
+class Label::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(Label);
 
     explicit Impl(Label* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    Key mnemonic_key() const override;
+    void mnemonic_activated() override;
 
     void set_text(const std::string& v);
     void set_font(const Font& v);
@@ -58,6 +63,7 @@ Label::Label(Widget* parent_widget, const std::string& initial_text)
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, Widget*, buddy),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->text_ = initial_text;
     d_->mnemonic_offset_ = std::string::npos;
     d_->mnemonic_ = Key::UNKNOWN;
@@ -92,17 +98,17 @@ void Label::Impl::set_text(const std::string& v)
 
 void Label::Impl::set_buddy(Widget* const& v) { buddy_ = WeakRef<Widget>(v); }
 
-Key Label::mnemonic_key() const { return d_->mnemonic_; }
+Key Label::Impl::mnemonic_key() const { return mnemonic_; }
 
-void Label::mnemonic_activated()
+void Label::Impl::mnemonic_activated()
 {
-    if (Widget* b = d_->buddy_.get())
+    if (Widget* b = buddy_.get())
     {
         b->focus_first_within();
     }
     else
     {
-        focus_next_after();
+        q->focus_next_after();
     }
 }
 
@@ -261,7 +267,7 @@ void Label::paint(Canvas& canvas)
     }
     const Point at(tx, (height - l.height()) / 2);
     canvas.draw_text(l, at, fg);
-    if (mnemonic_cues())
+    if (detail::WidgetAccess::mnemonic_cues(this))
     {
         detail::paint_mnemonic_underline(canvas, l, at, d_->mnemonic_offset_, fg);
     }

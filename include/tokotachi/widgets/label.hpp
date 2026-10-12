@@ -60,8 +60,6 @@ protected:
     /// 文字が切れないよう、望む大きさを最小とする。
     Size compute_minimum_size() const override;
     void resized() override;
-    Key mnemonic_key() const override;
-    void mnemonic_activated() override;
 
 private:
     class Impl;

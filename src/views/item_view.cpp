@@ -125,7 +125,7 @@ void Column::Impl::set_alignment(const Align& v)
 
 // ---- ItemView ----
 
-bool ItemView::handles_tab_key() const { return d_->table_; }
+bool ItemView::Impl::handles_tab_key() const { return table_; }
 
 float ItemView::get_indentation() const { return d_->indentation_; }
 
@@ -156,6 +156,7 @@ ItemView::ItemView(Widget* parent_widget, bool tree, bool table)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_activate),
       d_(new Impl(this, tree, table))
 {
+    d_->install(this);
     d_->model_ = nullptr;
     d_->header_visible_ = true;
     d_->sorting_enabled_ = false;
@@ -284,7 +285,7 @@ void ItemView::Impl::structure_changed()
     {
         reset_ranges();
     }
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->invalidate();
 }
 
@@ -507,7 +508,7 @@ void ItemView::remove_column(Column* column)
 
 void ItemView::Impl::column_changed()
 {
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->invalidate();
 }
 

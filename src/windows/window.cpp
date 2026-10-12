@@ -1396,6 +1396,7 @@ Window::Window(const std::string& title_text, float width_dp, float height_dp)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->native_ = nullptr;
     d_->background_ = ColorRole::WINDOW;
     d_->menu_bar_ = nullptr;
@@ -1467,6 +1468,7 @@ Window::Window(Object* owner_object)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, CloseHandler, on_close),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->native_ = nullptr;
     d_->background_ = ColorRole::POPUP;
     d_->menu_bar_ = nullptr;
@@ -1555,23 +1557,23 @@ void Window::Impl::set_tool_bar(ToolBar* const& v) { replace_bar(q, tool_bar_, v
 
 void Window::Impl::set_status_bar(StatusBar* const& v) { replace_bar(q, status_bar_, v); }
 
-void Window::child_removed(Widget* child)
+void Window::Impl::child_removed(Widget* child)
 {
     bool removed = true;
-    if (child == d_->menu_bar_)
+    if (child == menu_bar_)
     {
-        d_->menu_bar_ = nullptr;
-        notify_changed(menu_bar);
+        menu_bar_ = nullptr;
+        q->notify_changed(q->menu_bar);
     }
-    else if (child == d_->tool_bar_)
+    else if (child == tool_bar_)
     {
-        d_->tool_bar_ = nullptr;
-        notify_changed(tool_bar);
+        tool_bar_ = nullptr;
+        q->notify_changed(q->tool_bar);
     }
-    else if (child == d_->status_bar_)
+    else if (child == status_bar_)
     {
-        d_->status_bar_ = nullptr;
-        notify_changed(status_bar);
+        status_bar_ = nullptr;
+        q->notify_changed(q->status_bar);
     }
     else
     {
@@ -1579,8 +1581,8 @@ void Window::child_removed(Widget* child)
     }
     if (removed)
     {
-        mark_layout_dirty();
-        request_layout();
+        detail::WidgetAccess::mark_layout_dirty(q);
+        q->request_layout();
     }
 }
 

@@ -76,7 +76,6 @@ protected:
     void focus_in() override;
     void focus_out() override;
     void scale_changed() override;
-    Rect input_method_rect() const override;
 
 private:
     class Impl;

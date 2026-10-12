@@ -42,8 +42,6 @@ protected:
     void arrange_children() override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
-    Key mnemonic_key() const override;
-    void mnemonic_activated() override;
 
 private:
     class Impl;

@@ -67,6 +67,7 @@ Widget::Widget(Widget* parent_widget)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_focus_out),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->parent_ = parent_widget;
     d_->maximum_size_ = Size(1e9f, 1e9f);
     d_->layout_ = nullptr;
@@ -108,7 +109,7 @@ void Widget::add_action(Action* action)
     d_->actions_.push_back(action);
     detail::ActionAccess::attach_widget(action, this);
     notify_changed(actions);
-    action_added(action);
+    d_->hooks_->action_added(action);
 }
 
 void Widget::remove_action(Action* action)
@@ -121,7 +122,7 @@ void Widget::remove_action(Action* action)
     d_->actions_.erase(it);
     detail::ActionAccess::detach_widget(action, this);
     notify_changed(actions);
-    action_removed(action);
+    d_->hooks_->action_removed(action);
 }
 
 Widget::~Widget()
@@ -150,7 +151,7 @@ Widget::~Widget()
     {
         std::vector<Widget*>& siblings = d_->parent_->d_->children_;
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
-        d_->parent_->child_removed(this);
+        d_->parent_->d_->hooks_->child_removed(this);
     }
     delete d_;
 }
@@ -189,7 +190,7 @@ void Widget::Impl::set_parent(Widget* const& p)
         }
         std::vector<Widget*>& siblings = parent_->d_->children_;
         siblings.erase(std::remove(siblings.begin(), siblings.end(), q), siblings.end());
-        parent_->child_removed(q);
+        parent_->d_->hooks_->child_removed(q);
     }
     // 移る前のウィンドウが持つ、自分と子孫への参照(フォーカス・ホバー・捕捉)を外す。
     if (old_window)
@@ -282,7 +283,7 @@ void Widget::Impl::set_bounds(const Rect& r)
     notify_bounds(old);
     if (old.size() != r.size())
     {
-        q->mark_layout_dirty();
+        mark_layout_dirty();
         q->resized();
     }
 }
@@ -571,10 +572,10 @@ void Widget::request_layout()
     }
 }
 
-void Widget::mark_layout_dirty()
+void Widget::Impl::mark_layout_dirty()
 {
-    d_->layout_dirty_ = true;
-    if (Window* w = d_->get_window())
+    layout_dirty_ = true;
+    if (Window* w = get_window())
     {
         detail::window_impl_of(w)->layout_pending = true;
     }
@@ -628,11 +629,11 @@ Widget* Widget::child_at(const Point& p) const
     return nullptr;
 }
 
-void Widget::update_input_method()
+void Widget::Impl::update_input_method()
 {
-    if (d_->get_focused())
+    if (get_focused())
     {
-        detail::window_impl_of(d_->get_window())->ime_dirty = true;
+        detail::window_impl_of(get_window())->ime_dirty = true;
     }
 }
 
@@ -805,25 +806,81 @@ void Widget::scale_changed() {}
 
 void Widget::theme_changed() {}
 
-void Widget::child_removed(Widget*) {}
-
-void Widget::action_added(Action*) {}
-
-void Widget::action_removed(Action*) {}
-
-void Widget::action_changed(Action*) {}
-
-Rect Widget::input_method_rect() const { return d_->get_local_rect(); }
-
-Key Widget::mnemonic_key() const { return Key::UNKNOWN; }
-
-void Widget::mnemonic_activated() {}
-
-bool Widget::handles_tab_key() const { return false; }
-
-bool Widget::mnemonic_cues() const
+namespace detail
 {
-    const Window* w = d_->get_window();
+
+WidgetHooks::~WidgetHooks()
+{
+    if (widget_)
+    {
+        ImplAccess<Widget>::Impl* d = ImplAccess<Widget>::of(widget_);
+        // Widget 自身の実装のクラスは、破棄されるときには外さない(フックを呼ぶものはもう無い)
+        if (d && static_cast<WidgetHooks*>(d) != this && d->hooks_ == this)
+        {
+            d->hooks_ = base_;
+        }
+    }
+}
+
+void WidgetHooks::install(Widget* w)
+{
+    widget_ = w;
+    ImplAccess<Widget>::Impl* d = ImplAccess<Widget>::of(w);
+    base_ = d->hooks_;
+    d->hooks_ = this;
+}
+
+void WidgetHooks::child_removed(Widget* child)
+{
+    if (base_)
+    {
+        base_->child_removed(child);
+    }
+}
+
+void WidgetHooks::action_added(Action* action)
+{
+    if (base_)
+    {
+        base_->action_added(action);
+    }
+}
+
+void WidgetHooks::action_removed(Action* action)
+{
+    if (base_)
+    {
+        base_->action_removed(action);
+    }
+}
+
+void WidgetHooks::action_changed(Action* action)
+{
+    if (base_)
+    {
+        base_->action_changed(action);
+    }
+}
+
+Key WidgetHooks::mnemonic_key() const { return base_ ? base_->mnemonic_key() : Key::UNKNOWN; }
+
+void WidgetHooks::mnemonic_activated()
+{
+    if (base_)
+    {
+        base_->mnemonic_activated();
+    }
+}
+
+bool WidgetHooks::handles_tab_key() const { return base_ && base_->handles_tab_key(); }
+
+Rect WidgetHooks::input_method_rect() const { return base_ ? base_->input_method_rect() : widget_->local_rect.get(); }
+
+}  // namespace detail
+
+bool Widget::Impl::mnemonic_cues() const
+{
+    const Window* w = get_window();
     return w && detail::window_impl_of(w)->cues;
 }
 

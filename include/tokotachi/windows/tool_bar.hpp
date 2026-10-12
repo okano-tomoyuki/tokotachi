@@ -58,10 +58,6 @@ public:
 protected:
     void paint(Canvas& canvas) override;
     void arrange_children() override;
-    void child_removed(Widget* child) override;
-    void action_added(Action* action) override;
-    void action_removed(Action* action) override;
-    void action_changed(Action* action) override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
 

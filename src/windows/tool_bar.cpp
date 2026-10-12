@@ -209,11 +209,17 @@ private:
 
 }  // namespace detail
 
-class ToolBar::Impl
+class ToolBar::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(ToolBar);
 
     explicit Impl(ToolBar* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
+    void action_added(Action* action) override;
+    void action_removed(Action* action) override;
+    void action_changed(Action* action) override;
 
     /// 項目: ボタン(Action)・部品・区切りのどれか。
     struct Entry
@@ -245,6 +251,7 @@ ToolBar::ToolBar(Widget* parent_widget)
       TOKOTACHI_IMPL_PROPERTY_GETTER(Impl, ToolButtonStyle, button_style),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->button_style_ = ToolButtonStyle::ICON_ONLY;
     d_->overflow_button_ = nullptr;
     d_->overflow_menu_ = nullptr;
@@ -300,51 +307,51 @@ void ToolBar::add_widget(Widget* widget)
     request_layout();
 }
 
-void ToolBar::action_added(Action* action)
+void ToolBar::Impl::action_added(Action* action)
 {
-    const Impl::Entry e = {action, new detail::ToolButton(this, action, d_->button_style_), nullptr, false, 0};
-    d_->entries_.push_back(e);
-    request_layout();
+    const Impl::Entry e = {action, new detail::ToolButton(q, action, button_style_), nullptr, false, 0};
+    entries_.push_back(e);
+    q->request_layout();
 }
 
-void ToolBar::action_removed(Action* action)
+void ToolBar::Impl::action_removed(Action* action)
 {
-    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
+    for (std::size_t i = 0; i < entries_.size(); ++i)
     {
-        if (d_->entries_[i].action == action)
+        if (entries_[i].action == action)
         {
-            detail::ToolButton* button = d_->entries_[i].button;
-            d_->entries_.erase(d_->entries_.begin() + static_cast<std::ptrdiff_t>(i));
+            detail::ToolButton* button = entries_[i].button;
+            entries_.erase(entries_.begin() + static_cast<std::ptrdiff_t>(i));
             delete button;
-            request_layout();
+            q->request_layout();
             return;
         }
     }
 }
 
-void ToolBar::action_changed(Action* action)
+void ToolBar::Impl::action_changed(Action* action)
 {
-    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
+    for (std::size_t i = 0; i < entries_.size(); ++i)
     {
-        if (d_->entries_[i].action == action)
+        if (entries_[i].action == action)
         {
-            d_->entries_[i].button->update();
+            entries_[i].button->update();
         }
     }
 }
 
-void ToolBar::child_removed(Widget* child)
+void ToolBar::Impl::child_removed(Widget* child)
 {
-    if (d_->destroying_)
+    if (destroying_)
     {
         return;
     }
-    for (std::size_t i = 0; i < d_->entries_.size(); ++i)
+    for (std::size_t i = 0; i < entries_.size(); ++i)
     {
-        if (d_->entries_[i].widget == child)
+        if (entries_[i].widget == child)
         {
-            d_->entries_.erase(d_->entries_.begin() + static_cast<std::ptrdiff_t>(i));
-            request_layout();
+            entries_.erase(entries_.begin() + static_cast<std::ptrdiff_t>(i));
+            q->request_layout();
             return;
         }
     }

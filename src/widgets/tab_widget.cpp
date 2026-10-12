@@ -41,11 +41,14 @@ class Tab::Impl
     mutable TextLayout layout_;
 };
 
-class TabWidget::Impl
+class TabWidget::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(TabWidget);
 
     explicit Impl(TabWidget* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
 
     std::vector<Tab*> get_tabs() const { return tabs_; }
     int get_current_index() const { return current_; }
@@ -126,6 +129,7 @@ TabWidget::TabWidget(Widget* parent_widget)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->current_ = -1;
     d_->scroll_ = 0;
     d_->hover_ = -1;
@@ -225,17 +229,17 @@ void TabWidget::Impl::erase_tab(int i)
     }
 }
 
-void TabWidget::child_removed(Widget* child)
+void TabWidget::Impl::child_removed(Widget* child)
 {
-    if (d_->destroying_)
+    if (destroying_)
     {
         return;
     }
-    for (std::size_t i = 0; i < d_->tabs_.size(); ++i)
+    for (std::size_t i = 0; i < tabs_.size(); ++i)
     {
-        if (d_->tabs_[i]->d_->page_ == child)
+        if (tabs_[i]->d_->page_ == child)
         {
-            d_->erase_tab(static_cast<int>(i));
+            erase_tab(static_cast<int>(i));
             detail::WidgetAccess::set_hidden_by_parent(child, false);  // 別の親へ移った: もう隠さない
             return;
         }

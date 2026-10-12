@@ -11,11 +11,57 @@
 namespace tokotachi
 {
 
-class Widget::Impl
+namespace detail
+{
+
+/// 部品どうしの都合のための仮想関数(内部。docs/adr/0058)。公開の仮想関数の表には置かない。
+/// 部品の実装のクラスがこれを継いで上書きし、部品のコンストラクタで install する。前に差し込まれていたもの(基底の部品の分)は
+/// base_ として呼べる(基底の振る舞いを呼ぶには base_->child_removed(child) など)。実装のクラスが破棄されると、自分を外して
+/// 基底の分に戻す(デストラクタの中では基底の振る舞いになる。仮想関数と同じ)。
+class WidgetHooks
+{
+public:
+    WidgetHooks() : widget_(nullptr), base_(nullptr) {}
+    virtual ~WidgetHooks();
+
+    /// w に差し込む。
+    void install(Widget* w);
+
+    /// 子が外れた(親の付け替え・破棄)。
+    virtual void child_removed(Widget* child);
+    /// add_action・remove_action で Action が付いた・外れた。
+    virtual void action_added(Action* action);
+    virtual void action_removed(Action* action);
+    /// 付いている Action の表示(文字・有効など)が変わった。
+    virtual void action_changed(Action* action);
+    /// Alt と組み合わせて押すニーモニックのキー(無ければ Key::UNKNOWN。docs/adr/0049)。
+    virtual Key mnemonic_key() const;
+    /// ニーモニックのキーが押された。
+    virtual void mnemonic_activated();
+    /// Tab のキーを自分で使うか(表など。使うならフォーカスを移さない)。
+    virtual bool handles_tab_key() const;
+    /// IME の変換の候補を出す位置(部品の座標系)。
+    virtual Rect input_method_rect() const;
+
+protected:
+    Widget* widget_;
+    WidgetHooks* base_;
+};
+
+}  // namespace detail
+
+class Widget::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(Widget);
 
-    explicit Impl(Widget* object) : q(object) {}
+    explicit Impl(Widget* object) : q(object), hooks_(nullptr) {}
+
+    /// 配置のやり直しの印を付ける(子の望む大きさが変わりうるとき。描画の前にまとめて配置し直す)。
+    void mark_layout_dirty();
+    /// IME の変換の候補の位置を、次の描画で OS に知らせ直す(フォーカスがあるときだけ)。
+    void update_input_method();
+    /// ニーモニックの下線を出すか(Alt を押している間)。
+    bool mnemonic_cues() const;
 
     Widget* get_parent() const { return parent_; }
     void set_parent(Widget* const& p);
@@ -77,6 +123,8 @@ class Widget::Impl
     bool compose_theme(Theme& out) const;
     std::vector<Action*> get_actions() const { return actions_; }
 
+    /// 差し込まれている内部のフック(いちばん派生した部品の分)。
+    detail::WidgetHooks* hooks_;
     Widget* parent_;
     std::vector<Widget*> children_;
     Rect bounds_;
@@ -122,7 +170,7 @@ struct ImplAccess<Widget>
     TOKOTACHI_IMPL_ACCESS(Widget)
 
     static const std::vector<Action*>& actions_of(const Widget* w) { return of(w)->actions_; }
-    static void action_changed(Widget* w, Action* a) { w->action_changed(a); }
+    static void action_changed(Widget* w, Action* a) { of(w)->hooks_->action_changed(a); }
     // 表示されるか(visible で、親に隠されていない)。
     static bool displayed(const Widget* w) { return of(w)->displayed(); }
     // ToolBar・Splitter・TabWidget が、利用者の visible を変えずに子を隠す・戻す。
@@ -134,9 +182,9 @@ struct ImplAccess<Widget>
     static const std::vector<Widget*>& children(const Widget* w) { return of(w)->children_; }
     static const Rect& bounds(const Widget* w) { return of(w)->bounds_; }
     static Window* window_of(const Widget* w) { return of(w)->get_window(); }
-    static Key mnemonic_key(const Widget* w) { return w->mnemonic_key(); }
-    static void mnemonic_activated(Widget* w) { w->mnemonic_activated(); }
-    static bool handles_tab_key(const Widget* w) { return w->handles_tab_key(); }
+    static Key mnemonic_key(const Widget* w) { return of(w)->hooks_->mnemonic_key(); }
+    static void mnemonic_activated(Widget* w) { of(w)->hooks_->mnemonic_activated(); }
+    static bool handles_tab_key(const Widget* w) { return of(w)->hooks_->handles_tab_key(); }
     // bounds への代入と違い、親への描き直しの依頼と resized を行わない。
     static void set_bounds_raw(Widget* w, const Rect& r) { of(w)->bounds_ = r; }
     static void notify_bounds(Widget* w, const Rect& old) { of(w)->notify_bounds(old); }
@@ -146,7 +194,9 @@ struct ImplAccess<Widget>
     static void set_layout(Widget* w, Layout* l) { of(w)->layout_ = l; }
     static bool layout_dirty(const Widget* w) { return of(w)->layout_dirty_; }
     static void clear_layout_dirty(Widget* w) { of(w)->layout_dirty_ = false; }
-    static void mark_layout_dirty(Widget* w) { w->mark_layout_dirty(); }
+    static void mark_layout_dirty(Widget* w) { of(w)->mark_layout_dirty(); }
+    static void update_input_method(Widget* w) { of(w)->update_input_method(); }
+    static bool mnemonic_cues(const Widget* w) { return of(w)->mnemonic_cues(); }
 
     // 描く・イベントを処理する間は、w に効いているテーマを今のテーマにする(docs/adr/0042)。
     static void paint(Widget* w, Canvas& c)
@@ -248,7 +298,7 @@ struct ImplAccess<Widget>
     static Rect input_method_rect(const Widget* w)
     {
         ThemeScope scope(w);
-        return w->input_method_rect();
+        return of(w)->hooks_->input_method_rect();
     }
 
     // w と子孫すべてに theme_changed を送る。

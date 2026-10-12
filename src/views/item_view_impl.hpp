@@ -6,16 +6,20 @@
 #include <string>
 #include <vector>
 #include <tokotachi/views/item_view.hpp>
+#include "../widgets/widget_access.hpp"
 #include "../core/impl.hpp"
 
 namespace tokotachi
 {
 
-class ItemView::Impl
+class ItemView::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(ItemView);
 
     Impl(ItemView* object, bool tree, bool table) : q(object), tree_(tree), table_(table) {}
+
+    // 内部のフック(docs/adr/0058)
+    bool handles_tab_key() const override;
 
     struct Row
     {

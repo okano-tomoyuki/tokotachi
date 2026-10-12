@@ -192,38 +192,13 @@ protected:
     virtual void scale_changed();
     /// アプリケーションのテーマが変わった(色・寸法から作ったキャッシュを捨てる)。この後、描き直しと配置のやり直しが行われる。
     virtual void theme_changed();
-    /// IME の候補窓を置く位置(キャレットの矩形。自分の座標系)。
-    virtual Rect input_method_rect() const;
     /// 子を配置する(配置のやり直しの印が付いているときに、描画の前に呼ばれる)。既定の実装はレイアウトに任せる。
     /// 子の配置を自分で決めるウィジェット(ScrollArea 等)が上書きする(docs/adr/0021)。
     virtual void arrange_children();
-    /// 子が外れた(破棄された・別の親へ移った)。子を覚えているウィジェット(TabWidget 等)が忘れるために使う。
-    virtual void child_removed(Widget* child);
-    /// add_action で Action が加わった・remove_action(Action の破棄を含む)で外れた・Action の表示(文字・画像・有効など)が
-    /// 変わった。Action をボタンとして見せるウィジェット(ToolBar 等)が使う。
-    virtual void action_added(Action* action);
-    virtual void action_removed(Action* action);
-    virtual void action_changed(Action* action);
-    /// 自分の配置だけをやり直す印を付ける(子の配置が変わるが、自分の望む大きさは変わらないとき)。
-    void mark_layout_dirty();
-
-    /// ニーモニック(「名前(&N)」の & の次の文字。docs/adr/0049)。Alt と一緒に押すと mnemonic_activated を呼ぶキー
-    /// (既定は Key::UNKNOWN: 無し)。表示されていて有効な部品だけが受ける。同じキーの部品が複数あれば、押すたびに順に移る。
-    virtual Key mnemonic_key() const;
-    /// ニーモニックのキーが押された(既定は何もしない)。
-    virtual void mnemonic_activated();
-    /// Tab・Shift+Tab を自分で使うか(既定 false)。true なら、フォーカスが自分か子孫にあるときに Tab を key_down で受け、
-    /// 受け取らなかった(accepted が false の)ときだけ次の部品へフォーカスを移す(表のセルの移動など)。
-    virtual bool handles_tab_key() const;
-    /// ニーモニックの下線を出すか(ウィンドウで Alt を押している間 true)。変わるとウィンドウ全体を描き直す。
-    bool mnemonic_cues() const;
 
     /// 望む大きさ・ウィジェットが決める最小の大きさ。既定の実装は、レイアウトがあればその大きさ、無ければ 0。
     virtual Size compute_preferred_size() const;
     virtual Size compute_minimum_size() const;
-
-    /// input_method_rect() が変わったことをウィンドウに知らせる。
-    void update_input_method();
 
 private:
     template <typename>

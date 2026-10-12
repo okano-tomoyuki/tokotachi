@@ -21,11 +21,15 @@ const float TITLE_X = 10;    // 見出しの左端(枠の左端から)
 const float TITLE_GAP = 4;   // 見出しの左右の、枠の線を切る幅
 }  // namespace
 
-class GroupBox::Impl
+class GroupBox::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(GroupBox);
 
     explicit Impl(GroupBox* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    Key mnemonic_key() const override;
+    void mnemonic_activated() override;
 
     void set_title(const std::string& v);
     Rect get_content_rect() const;
@@ -46,6 +50,7 @@ GroupBox::GroupBox(Widget* parent_widget, const std::string& initial_title)
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, Rect, content_rect),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->title_ = initial_title;
     d_->mnemonic_offset_ = std::string::npos;
     d_->mnemonic_ = Key::UNKNOWN;
@@ -147,7 +152,7 @@ void GroupBox::paint(Canvas& canvas)
         const Point at(TITLE_X + TITLE_GAP, 0);
         const Color fg = enabled_now ? theme::text() : theme::text_disabled();
         canvas.draw_text(l, at, fg);
-        if (mnemonic_cues())
+        if (detail::WidgetAccess::mnemonic_cues(this))
         {
             detail::paint_mnemonic_underline(canvas, l, at, d_->mnemonic_offset_, fg);
         }
@@ -157,8 +162,8 @@ void GroupBox::paint(Canvas& canvas)
 
 void GroupBox::scale_changed() { d_->layout_ = TextLayout(); }
 
-Key GroupBox::mnemonic_key() const { return d_->mnemonic_; }
+Key GroupBox::Impl::mnemonic_key() const { return mnemonic_; }
 
-void GroupBox::mnemonic_activated() { focus_first_within(); }
+void GroupBox::Impl::mnemonic_activated() { q->focus_first_within(); }
 
 }  // namespace tokotachi

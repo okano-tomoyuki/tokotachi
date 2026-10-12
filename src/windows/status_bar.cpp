@@ -5,6 +5,7 @@
 
 #include <tokotachi/graphics/canvas.hpp>
 
+#include "../widgets/widget_access.hpp"
 #include "../core/impl.hpp"
 #include "../widgets/theme.hpp"
 
@@ -18,11 +19,14 @@ const float PADDING_Y = 4;   // 上下の余白
 const float GAP = 12;        // 部品の間(区切りの線を挟む)
 }  // namespace
 
-class StatusBar::Impl
+class StatusBar::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(StatusBar);
 
     explicit Impl(StatusBar* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
 
     void set_text(const std::string& v);
     std::string get_message() const { return message_; }
@@ -41,6 +45,7 @@ StatusBar::StatusBar(Widget* parent_widget)
       TOKOTACHI_IMPL_READONLY_PROPERTY(Impl, std::string, message),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->timer_.repeat = false;
     d_->timer_.on_timer = [this](Object*) { clear_message(); };
 }
@@ -89,10 +94,10 @@ void StatusBar::add_widget(Widget* widget)
     request_layout();
 }
 
-void StatusBar::child_removed(Widget* child)
+void StatusBar::Impl::child_removed(Widget* child)
 {
-    d_->widgets_.erase(std::remove(d_->widgets_.begin(), d_->widgets_.end(), child), d_->widgets_.end());
-    request_layout();
+    widgets_.erase(std::remove(widgets_.begin(), widgets_.end(), child), widgets_.end());
+    q->request_layout();
 }
 
 void StatusBar::scale_changed() { d_->layout_ = TextLayout(); }

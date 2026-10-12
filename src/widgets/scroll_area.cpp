@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "widget_access.hpp"
 #include "../core/impl.hpp"
 
 namespace tokotachi
@@ -81,14 +82,14 @@ void ScrollArea::Impl::set_content(Widget* const& v)
         v->parent = viewport_;
     }
     delete old;
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->request_layout();
 }
 
 void ScrollArea::Impl::set_fit_width(const bool& v)
 {
     fit_width_ = v;
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
 }
 
 Point ScrollArea::Impl::get_scroll_position() const { return Point(horizontal_->value, vertical_->value); }

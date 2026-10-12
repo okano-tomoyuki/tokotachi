@@ -1,16 +1,21 @@
 #include <tokotachi/widgets/button_base.hpp>
 
+#include "widget_access.hpp"
 #include "../actions/mnemonic.hpp"
 #include "../core/impl.hpp"
 
 namespace tokotachi
 {
 
-class ButtonBase::Impl
+class ButtonBase::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(ButtonBase);
 
     explicit Impl(ButtonBase* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    Key mnemonic_key() const override;
+    void mnemonic_activated() override;
 
     void set_text(const std::string& v);
     void set_font(const Font& v);
@@ -34,6 +39,7 @@ ButtonBase::ButtonBase(Widget* parent_widget, const std::string& initial_text)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_click),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->text_ = initial_text;
     d_->mnemonic_offset_ = std::string::npos;
     d_->mnemonic_ = Key::UNKNOWN;
@@ -94,18 +100,18 @@ const TextLayout& ButtonBase::text_layout() const
 
 void ButtonBase::paint_mnemonic(Canvas& canvas, const Point& at, const Color& color) const
 {
-    if (mnemonic_cues())
+    if (detail::WidgetAccess::mnemonic_cues(this))
     {
         detail::paint_mnemonic_underline(canvas, text_layout(), at, d_->mnemonic_offset_, color);
     }
 }
 
-Key ButtonBase::mnemonic_key() const { return d_->mnemonic_; }
+Key ButtonBase::Impl::mnemonic_key() const { return mnemonic_; }
 
-void ButtonBase::mnemonic_activated()
+void ButtonBase::Impl::mnemonic_activated()
 {
-    focused = true;
-    click();
+    q->focused = true;
+    q->click();
 }
 
 void ButtonBase::click()

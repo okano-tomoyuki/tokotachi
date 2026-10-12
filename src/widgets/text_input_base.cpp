@@ -7,6 +7,7 @@
 #include <tokotachi/graphics/canvas.hpp>
 #include <tokotachi/core/clipboard.hpp>
 
+#include "widget_access.hpp"
 #include "../core/impl.hpp"
 #include "../graphics/utf8.hpp"
 #include "theme.hpp"
@@ -19,11 +20,14 @@ namespace
 const int BLINK_MS = 530;
 }
 
-class TextInputBase::Impl
+class TextInputBase::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(TextInputBase);
 
     Impl(TextInputBase* object, bool multi_line) : q(object), multi_line_(multi_line) {}
+
+    // 内部のフック(docs/adr/0058)
+    Rect input_method_rect() const override;
 
     /// 操作の前の状態。操作の後に、変わったプロパティを知らせるために使う(docs/adr/0016)。
     struct State
@@ -96,6 +100,7 @@ TextInputBase::TextInputBase(Widget* parent_widget, const std::string& initial_t
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
       d_(new Impl(this, multi_line))
 {
+    d_->install(this);
     d_->text_ = multi_line ? detail::normalize_multiline(initial_text) : detail::strip_control(initial_text);
     d_->cursor_ = d_->text_.size();
     d_->anchor_ = d_->text_.size();
@@ -197,7 +202,7 @@ void TextInputBase::Impl::set_font(const Font& v)
     invalidate_layout();
     placeholder_layout_ = TextLayout();
     q->invalidate();
-    q->update_input_method();
+    detail::WidgetAccess::update_input_method(q);
     q->request_layout();
 }
 
@@ -339,7 +344,7 @@ void TextInputBase::Impl::caret_touched()
     restart_blink();
     update_scroll(true);
     q->invalidate();
-    q->update_input_method();
+    detail::WidgetAccess::update_input_method(q);
 }
 
 const TextLayout& TextInputBase::text_layout() const
@@ -423,7 +428,7 @@ void TextInputBase::Impl::update_scroll(bool follow_caret)
     {
         scroll_ = s;
         q->invalidate();
-        q->update_input_method();
+        detail::WidgetAccess::update_input_method(q);
     }
     q->scroll_changed();
 }
@@ -535,7 +540,7 @@ void TextInputBase::resized()
 {
     invalidate();
     d_->update_scroll(true);
-    update_input_method();
+    detail::WidgetAccess::update_input_method(this);
     Widget::resized();
 }
 
@@ -742,7 +747,7 @@ void TextInputBase::text_editing(TextEditingEvent& e)
             d_->preedit_.clear();
             d_->invalidate_layout();
             invalidate();
-            update_input_method();
+            detail::WidgetAccess::update_input_method(this);
         }
         return;
     }
@@ -784,10 +789,10 @@ void TextInputBase::scale_changed()
     d_->placeholder_layout_ = TextLayout();
 }
 
-Rect TextInputBase::input_method_rect() const
+Rect TextInputBase::Impl::input_method_rect() const
 {
-    const TextLayout& l = text_layout();
-    const Point c = d_->caret_in_layout() + d_->text_origin();
+    const TextLayout& l = q->text_layout();
+    const Point c = caret_in_layout() + text_origin();
     return Rect(c.x, c.y, 1, l.ascent() + l.descent());
 }
 

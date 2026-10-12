@@ -115,11 +115,14 @@ std::string standard_text(DialogButton b)
 
 }  // namespace
 
-class Dialog::Impl
+class Dialog::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(Dialog);
 
     explicit Impl(Dialog* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
 
     DialogButton get_result() const { return result_; }
     /// 並べる順に並べたボタン。
@@ -143,6 +146,7 @@ Dialog::Dialog(Window* parent, const std::string& title_text)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_finish),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->parent_window_ = parent;
     d_->result_ = DialogButton::NONE;
     d_->running_ = false;
@@ -176,18 +180,18 @@ Button* Dialog::add_button(DialogButton button, const std::string& text_value)
     return b;
 }
 
-void Dialog::child_removed(Widget* child)
+void Dialog::Impl::child_removed(Widget* child)
 {
-    for (std::size_t i = 0; i < d_->buttons_.size(); ++i)
+    for (std::size_t i = 0; i < buttons_.size(); ++i)
     {
-        if (d_->buttons_[i].second == child)
+        if (buttons_[i].second == child)
         {
-            d_->buttons_.erase(d_->buttons_.begin() + static_cast<std::ptrdiff_t>(i));
-            request_layout();
+            buttons_.erase(buttons_.begin() + static_cast<std::ptrdiff_t>(i));
+            q->request_layout();
             break;
         }
     }
-    Window::child_removed(child);
+    base_->child_removed(child);
 }
 
 std::vector<std::pair<DialogButton, Button*> > Dialog::Impl::ordered_buttons() const

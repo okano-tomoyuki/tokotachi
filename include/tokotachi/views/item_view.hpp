@@ -168,7 +168,6 @@ protected:
     void key_down(KeyEvent& e) override;
     void text_input(TextInputEvent& e) override;
     void text_editing(TextEditingEvent& e) override;
-    bool handles_tab_key() const override;
     void focus_in() override;
     void focus_out() override;
     void drag_move(DragEvent& e) override;

@@ -57,7 +57,6 @@ protected:
 
     void paint(Canvas& canvas) override;
     void arrange_children() override;
-    void child_removed(Widget* child) override;
     Size compute_preferred_size() const override;
     Size compute_minimum_size() const override;
 

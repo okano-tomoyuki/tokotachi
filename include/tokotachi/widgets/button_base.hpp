@@ -41,8 +41,6 @@ protected:
     void focus_in() override;
     void focus_out() override;
     void scale_changed() override;
-    Key mnemonic_key() const override;
-    void mnemonic_activated() override;
     /// 文字が切れないよう、望む大きさを最小とする(派生クラスの compute_preferred_size を使う)。
     Size compute_minimum_size() const override;
 

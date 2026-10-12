@@ -42,11 +42,14 @@ class SplitterPane::Impl
     bool collapsed_;  ///< たたんでいる(大きさ 0 として扱い、部品を隠す)
 };
 
-class Splitter::Impl
+class Splitter::Impl : public detail::WidgetHooks
 {
     TOKOTACHI_IMPL(Splitter);
 
     explicit Impl(Splitter* object) : q(object) {}
+
+    // 内部のフック(docs/adr/0058)
+    void child_removed(Widget* child) override;
 
     Orientation get_orientation() const { return orientation_; }
     void set_orientation(const Orientation& v);
@@ -121,6 +124,7 @@ Splitter::Splitter(Widget* parent_widget, Orientation initial_orientation)
       TOKOTACHI_IMPL_HANDLER_PROPERTY(Impl, NotifyHandler, on_change),
       d_(new Impl(this))
 {
+    d_->install(this);
     d_->orientation_ = initial_orientation;
     d_->hover_handle_ = -1;
     d_->drag_handle_ = -1;
@@ -153,7 +157,7 @@ void Splitter::Impl::set_orientation(const Orientation& v)
         panes_[i]->d_->size_ = -1;  // 望む大きさから決め直す
     }
     q->request_layout();
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->invalidate();
 }
 
@@ -186,26 +190,26 @@ SplitterPane* Splitter::insert_widget(int index, Widget* w, int stretch_value)
     d_->panes_.insert(d_->panes_.begin() + at, pane);
     notify_changed(panes);
     request_layout();
-    mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(this);
     return pane;
 }
 
-void Splitter::child_removed(Widget* child)
+void Splitter::Impl::child_removed(Widget* child)
 {
-    if (d_->destroying_)
+    if (destroying_)
     {
         return;
     }
-    for (std::size_t i = 0; i < d_->panes_.size(); ++i)
+    for (std::size_t i = 0; i < panes_.size(); ++i)
     {
-        if (d_->panes_[i]->d_->widget_ == child)
+        if (panes_[i]->d_->widget_ == child)
         {
-            delete d_->panes_[i];
-            d_->panes_.erase(d_->panes_.begin() + static_cast<std::ptrdiff_t>(i));
-            d_->hover_handle_ = d_->drag_handle_ = -1;
-            notify_changed(panes);
-            request_layout();
-            mark_layout_dirty();
+            delete panes_[i];
+            panes_.erase(panes_.begin() + static_cast<std::ptrdiff_t>(i));
+            hover_handle_ = drag_handle_ = -1;
+            q->notify_changed(q->panes);
+            q->request_layout();
+            detail::WidgetAccess::mark_layout_dirty(q);
             return;
         }
     }
@@ -237,7 +241,7 @@ void Splitter::Impl::set_sizes(const std::vector<float>& v)
             p->d_->size_ = std::max(0.0f, v[i]);
         }
     }
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->invalidate();
 }
 
@@ -307,7 +311,7 @@ bool Splitter::Impl::collapse_pane(SplitterPane* pane, bool collapse)
     }
     pane->d_->collapsed_ = collapse;
     pane->notify_changed(pane->collapsed);
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->invalidate();
     q->notify_changed(q->sizes);
     return true;
@@ -586,7 +590,7 @@ void Splitter::Impl::drag_to(int handle, float position)
     {
         b->notify_changed(b->collapsed);
     }
-    q->mark_layout_dirty();
+    detail::WidgetAccess::mark_layout_dirty(q);
     q->invalidate();
     q->notify_changed(q->sizes);
     Object* self = q;
