@@ -1475,8 +1475,8 @@ void ItemView::paint_row(Canvas& canvas, int row, const Rect& view)
             const Image icon = model_->icon(index);
             if (!icon.is_null())
             {
-                canvas.draw_image(icon, Rect(tx, y + std::floor((h - ICON_SIZE) / 2), ICON_SIZE, ICON_SIZE),
-                                  enabled_now ? 1.0f : 0.4f);
+                canvas.draw_image(icon, Rect(tx, y + std::floor((h - ICON_SIZE) / 2), ICON_SIZE, ICON_SIZE), fg,
+                                  enabled_now || icon.is_icon() ? 1.0f : 0.4f);
                 tx += ICON_SIZE + GAP;
             }
         }

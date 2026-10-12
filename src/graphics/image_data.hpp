@@ -5,6 +5,8 @@
 #include <mutex>
 #include <vector>
 
+#include <tokotachi/core/geometry.hpp>
+
 struct plutovg_surface;
 
 namespace tokotachi
@@ -14,7 +16,7 @@ namespace detail
 
 struct ImageData
 {
-    explicit ImageData(plutovg_surface* s) : surface(s) {}
+    explicit ImageData(plutovg_surface* s) : surface(s), icon(-1), has_color(false) {}
     ~ImageData();
 
     ImageData(const ImageData&) = delete;
@@ -25,6 +27,11 @@ struct ImageData
     plutovg_surface* scaled(int width, int height) const;
 
     plutovg_surface* surface;
+    /// アイコン(Image::icon)なら、その番号(線画で描く。surface は 24 × 24 に描いたもの)。ほかは -1。
+    int icon;
+    /// アイコンの色を決めたか(決めていなければ、描くときに渡す色で塗る)。
+    bool has_color;
+    Color color;
 
 private:
     struct Scaled

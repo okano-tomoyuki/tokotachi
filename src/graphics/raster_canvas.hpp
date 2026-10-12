@@ -64,6 +64,7 @@ public:
     void stroke_path(const Path& path, const StrokeStyle& style, const Paint& paint) override;
     void draw_text(const TextLayout& layout, const Point& pos, const Color& color) override;
     void draw_image(const Image& image, const Rect& dst, float opacity) override;
+    using Canvas::draw_image;
 
 private:
     struct State

@@ -21,12 +21,13 @@ inline std::string screenshot_path(int argc, char** argv)
     return std::string();
 }
 
-// window を表示して動かす。--screenshot なら target(既定は window)を PNG に保存して終える。
+// window を表示して動かす。--screenshot なら target(既定は window)を PNG に保存して終える
+// (keep_scheme でなければ、ライトのテーマで撮る)。
 inline int run_gallery(tokotachi::Application& app, tokotachi::Window& window, int argc, char** argv,
-                       tokotachi::Window* target = nullptr)
+                       tokotachi::Window* target = nullptr, bool keep_scheme = false)
 {
     const std::string shot = screenshot_path(argc, argv);
-    if (!shot.empty())
+    if (!shot.empty() && !keep_scheme)
     {
         app.color_scheme = tokotachi::ColorScheme::LIGHT;
     }

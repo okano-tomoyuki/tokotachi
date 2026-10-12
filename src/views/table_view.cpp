@@ -20,7 +20,6 @@ namespace
 const float BORDER = 1;             // 枠の太さ(item_view.cpp と同じ)
 const float HEADER_PADDING = 8;     // 行の見出しの番号の左右の余白
 const float MIN_ROW_HEADER = 32;    // 行の見出しの最小の幅
-const float ICON_SIZE = 16;         // チェックボックスの大きさ(item_view.cpp と同じ)
 
 // セルの文字を、写す文字の中で区切りと紛れないようにする(タブ・改行は空白に)。
 std::string flatten(const std::string& s)

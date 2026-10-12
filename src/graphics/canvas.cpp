@@ -1,10 +1,30 @@
 // Canvas の手軽な描画(基本の描画を組み合わせる)。
 #include <tokotachi/graphics/canvas.hpp>
 
+#include <tokotachi/graphics/image.hpp>
 #include <tokotachi/graphics/text_layout.hpp>
+
+#include <algorithm>
+#include <cstdint>
+
+#include "icon_data.hpp"
+#include "image_data.hpp"
 
 namespace tokotachi
 {
+
+void Canvas::draw_image(const Image& image, const Rect& dst, const Color& tint, float opacity)
+{
+    if (!image.is_icon())
+    {
+        draw_image(image, dst, opacity);
+        return;
+    }
+    const detail::ImageData* d = image.data();
+    const Color c = d->has_color ? d->color : tint;
+    const float a = std::max(0.0f, std::min(1.0f, opacity)) * c.a;
+    detail::draw_icon(*this, d->icon, dst, c.with_alpha(static_cast<std::uint8_t>(a + 0.5f)));
+}
 
 void Canvas::stroke_path(const Path& path, float width, const Paint& paint, LineCap cap)
 {

@@ -2199,6 +2199,61 @@ TEST(image_from_pixels_and_draw)
     CHECK(window.impl()->buffer[2 * stride + 2] == 0xffff0000u);
 }
 
+// 線画のアイコン(Image::icon。docs/adr/0054)。
+TEST(image_icon_is_drawn_with_tint)
+{
+    const tokotachi::Image save = tokotachi::Image::icon(tokotachi::Icon::SAVE);
+    CHECK(!save.is_null() && save.is_icon() && save.width() == 24 && save.height() == 24);
+    CHECK(!tokotachi::Image::from_pixels(1, 1, std::vector<tokotachi::Color>(1)).is_icon());
+    // 24 × 24 に描いた画像も持つ(色を決めていなければ黒)。四角の左の辺(x = 3 の縦の線)の上
+    CHECK(save.pixel(3, 12).a > 200 && save.pixel(3, 12).r < 40);
+    CHECK(save.pixel(12, 17).a == 0 || save.pixel(0, 0).a == 0);
+    const tokotachi::Image red = tokotachi::Image::icon(tokotachi::Icon::SQUARE, tokotachi::Color::rgb(0xff0000));
+    CHECK(red.pixel(3, 12).r > 200 && red.pixel(3, 12).g < 40);
+    // 範囲の外の値は空の画像
+    CHECK(tokotachi::Image::icon(static_cast<tokotachi::Icon>(1000)).is_null());
+    CHECK(static_cast<int>(tokotachi::Icon::MOON) == 70);  // 71 個(並びの最後)
+
+    // 描くときは渡した色(tint)で塗り、大きさに合わせて線を引く(ぼやけない: 48 × 48 でも線の中は濃い)
+    tokotachi::Bitmap bitmap(48, 48);
+    bitmap.canvas().draw_image(tokotachi::Image::icon(tokotachi::Icon::SQUARE), tokotachi::Rect(0, 0, 48, 48),
+                               tokotachi::Color::rgb(0x00ff00));
+    // square は (3, 3)〜(21, 21) の角の丸い四角。48 では x = 6 の縦の線(太さ 4)
+    CHECK(bitmap.pixel(6, 24) == tokotachi::Color::rgb(0x00ff00));
+    CHECK(bitmap.pixel(24, 24).a == 0);
+    // 色を決めたアイコンは tint によらない。opacity で薄くできる
+    tokotachi::Bitmap other(48, 48);
+    other.canvas().draw_image(red, tokotachi::Rect(0, 0, 48, 48), tokotachi::Color::rgb(0x00ff00), 0.5f);
+    CHECK(other.pixel(6, 24).r > 200 && other.pixel(6, 24).g < 40 && other.pixel(6, 24).a > 100 && other.pixel(6, 24).a < 150);
+    // tint を渡さない形では、色を決めていなければ黒
+    tokotachi::Bitmap plain(48, 48);
+    plain.canvas().draw_image(tokotachi::Image::icon(tokotachi::Icon::SQUARE), tokotachi::Rect(0, 0, 48, 48));
+    CHECK(plain.pixel(6, 24) == tokotachi::Color::rgb(0x000000));
+}
+
+// 部品は、アイコンを文字の色で塗る(無効なら無効の文字の色。薄くはしない)。
+TEST(widgets_tint_icons_with_text_color)
+{
+    tokotachi::Application::instance()->color_scheme = tokotachi::ColorScheme::DARK;
+    tokotachi::Window window("t", 120, 60);
+    tokotachi::ImageBox* image_box = new tokotachi::ImageBox(&window, tokotachi::Image::icon(tokotachi::Icon::SQUARE));
+    image_box->bounds = tokotachi::Rect(0, 0, 48, 48);
+    image_box->fit = tokotachi::ImageFit::CONTAIN;
+    window.visible = true;
+    window.impl()->render(false);
+    const int stride = window.impl()->pixel_width;
+    const float k = window.impl()->scale;
+    const auto at = [&](float x, float y)
+    { return window.impl()->buffer[static_cast<int>(y * k) * stride + static_cast<int>(x * k)] & 0xffffffu; };
+    const tokotachi::Color text = tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT];
+    CHECK(at(6.5f, 24) == ((static_cast<std::uint32_t>(text.r) << 16) | (text.g << 8) | text.b));
+    image_box->enabled = false;
+    window.impl()->render(false);
+    const tokotachi::Color disabled = tokotachi::Theme::dark()[tokotachi::ColorRole::TEXT_DISABLED];
+    CHECK(at(6.5f, 24) == ((static_cast<std::uint32_t>(disabled.r) << 16) | (disabled.g << 8) | disabled.b));
+    tokotachi::Application::instance()->color_scheme = tokotachi::ColorScheme::SYSTEM;
+}
+
 // OS からのドロップ(SDL_EVENT_DROP_*。位置は dp)。
 void dispatch_drop(tokotachi::Window& window, SDL_EventType type, const tokotachi::Point& p, const char* data = nullptr)
 {

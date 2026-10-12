@@ -2,10 +2,13 @@
 
 #include <plutovg.h>
 
+#include <tokotachi/graphics/bitmap.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 
+#include "icon_data.hpp"
 #include "image_data.hpp"
 
 namespace tokotachi
@@ -211,6 +214,32 @@ Image Image::from_pixels(int width, int height, const std::vector<Color>& pixels
     }
     return Image(std::make_shared<detail::ImageData>(s));
 }
+
+// アイコンを作る(24 × 24 に描いた画像も持つ。画素を読む・線画で描けないときに使う)。
+Image Image::make_icon(Icon icon, bool has_color, const Color& color)
+{
+    const int index = static_cast<int>(icon);
+    if (index < 0 || index >= detail::ICON_COUNT)
+    {
+        return Image();
+    }
+    const int size = static_cast<int>(detail::ICON_GRID);
+    Bitmap bitmap(size, size);
+    detail::draw_icon(bitmap.canvas(), index, Rect(0, 0, detail::ICON_GRID, detail::ICON_GRID),
+                      has_color ? color : Color(0, 0, 0));
+    plutovg_surface_t* s = plutovg_surface_reference(const_cast<plutovg_surface_t*>(bitmap.to_image().data()->surface));
+    std::shared_ptr<detail::ImageData> d = std::make_shared<detail::ImageData>(s);
+    d->icon = index;
+    d->has_color = has_color;
+    d->color = color;
+    return Image(d);
+}
+
+Image Image::icon(Icon icon) { return make_icon(icon, false, Color(0, 0, 0)); }
+
+Image Image::icon(Icon icon, const Color& color) { return make_icon(icon, true, color); }
+
+bool Image::is_icon() const { return d_ && d_->icon >= 0; }
 
 int Image::width() const { return d_ ? plutovg_surface_get_width(d_->surface) : 0; }
 

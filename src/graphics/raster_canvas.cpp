@@ -531,6 +531,12 @@ void RasterCanvas::draw_image(const Image& image, const Rect& dst, float opacity
     {
         return;
     }
+    if (image.is_icon())
+    {
+        // アイコンは線画で描く(色を決めていなければ黒)
+        Canvas::draw_image(image, dst, Color(0, 0, 0), opacity);
+        return;
+    }
     plutovg_matrix_t m;
     PixelRect area;
     if (axis_aligned())

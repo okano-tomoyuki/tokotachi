@@ -126,7 +126,8 @@ void Button::paint(Canvas& canvas)
     const float x = (r.width - extent - (l.text().empty() ? 0 : l.width())) / 2;
     if (!icon_.is_null())
     {
-        canvas.draw_image(icon_, Rect(x, (r.height - icon_size_) / 2, icon_size_, icon_size_), enabled_now ? 1.0f : 0.4f);
+        canvas.draw_image(icon_, Rect(x, (r.height - icon_size_) / 2, icon_size_, icon_size_), fg,
+                          enabled_now || icon_.is_icon() ? 1.0f : 0.4f);
     }
     const Point at(x + extent, (r.height - l.height()) / 2);
     canvas.draw_text(l, at, fg);

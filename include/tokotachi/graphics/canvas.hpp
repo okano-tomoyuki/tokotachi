@@ -176,6 +176,7 @@ public:
     /// pos はレイアウトの左上(ベースラインは pos.y + layout.ascent())。
     virtual void draw_text(const TextLayout& layout, const Point& pos, const Color& color) = 0;
     /// 画像を矩形 dst(dp)に合わせて伸縮して描く。opacity は 0〜1(無効な部品のアイコンを薄くするときなど)。
+    /// アイコン(Image::icon)は、色を決めていなければ黒で塗る(部品の文字の色で塗るには、下の tint を渡す形を使う)。
     virtual void draw_image(const Image& image, const Rect& dst, float opacity = 1) = 0;
 
     // ---- 手軽な描画(上の関数で描く) ----
@@ -190,6 +191,9 @@ public:
     /// 1 行の文字(pos は左上)。描くたびに文字のレイアウトを作るので、同じ文字を何度も描くなら TextLayout を持って使う。
     void draw_text(const std::string& text, const Point& pos, const Color& color);
     void draw_text(const std::string& text, const Point& pos, const Color& color, const Font& font);
+    /// 画像を描く。アイコン(Image::icon)は tint で塗り、dst の大きさに合わせて線を引く(色を決めたアイコンはその色)。
+    /// ほかの画像は tint を使わない。部品は文字の色を渡す。
+    void draw_image(const Image& image, const Rect& dst, const Color& tint, float opacity = 1);
 };
 
 }  // namespace tokotachi

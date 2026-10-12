@@ -64,6 +64,7 @@ API の規則(プロパティ・ハンドラ・命名・書式)は [ADR 0013](do
 | plutovg | 1.3.3 | MIT | 2D のベクター描画 |
 | libunibreak | 8.0 | zlib | 改行・単語・書記素の境界(UAX #14・#29) |
 | SheenBidi | 3.0.0 | Apache-2.0 | 双方向テキスト(UAX #9) |
+| Lucide | 1.48.0 | ISC(一部 MIT) | よく使うアイコン(`Icon`。線画のデータだけを取り込む。[tools/icons](tools/icons/generate.mjs)) |
 
 OS の一部であるライブラリはシステムのものを使う。
 

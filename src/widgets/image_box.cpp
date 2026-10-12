@@ -5,6 +5,7 @@
 #include <tokotachi/graphics/canvas.hpp>
 
 #include "../core/property_impl.hpp"
+#include "theme.hpp"
 
 namespace tokotachi
 {
@@ -64,7 +65,10 @@ void ImageBox::paint(Canvas& canvas)
         }
         canvas.save();
         canvas.clip_rect(Rect(0, 0, w, h));
-        canvas.draw_image(image_, Rect((w - iw) / 2, (h - ih) / 2, iw, ih), effectively_enabled ? 1.0f : 0.4f);
+        const bool enabled_now = effectively_enabled;
+        canvas.draw_image(image_, Rect((w - iw) / 2, (h - ih) / 2, iw, ih),
+                          enabled_now ? theme::text() : theme::text_disabled(),
+                          enabled_now || image_.is_icon() ? 1.0f : 0.4f);
         canvas.restore();
     }
     Widget::paint(canvas);

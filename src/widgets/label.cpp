@@ -215,13 +215,14 @@ void Label::paint(Canvas& canvas)
         x = 0;  // 折り返すときは、行のそろえ方を TextLayout が折り返しの幅(= 自分の幅から画像を除いた幅)に対して行う
     }
     const float tx = rtl ? x : x + extent;
+    const Color fg = effectively_enabled ? color_.resolve() : theme::text_disabled();
     if (!icon_.is_null())
     {
         const float ix = rtl ? x + content_w - icon_size_ : x;
-        canvas.draw_image(icon_, Rect(ix, (height - icon_size_) / 2, icon_size_, icon_size_), effectively_enabled ? 1.0f : 0.4f);
+        canvas.draw_image(icon_, Rect(ix, (height - icon_size_) / 2, icon_size_, icon_size_), fg,
+                          effectively_enabled || icon_.is_icon() ? 1.0f : 0.4f);
     }
     const Point at(tx, (height - l.height()) / 2);
-    const Color fg = effectively_enabled ? color_.resolve() : theme::text_disabled();
     canvas.draw_text(l, at, fg);
     if (mnemonic_cues())
     {

@@ -70,6 +70,7 @@ SDL3 を土台にした C++11 のクロスプラットフォーム GUI ライブ
 | [0051](adr/0051-date-and-color-input.md) | 日付の値 Date と、日付の入力欄 DateEdit・暦 Calendar・色を選ぶダイアログ ColorDialog・色のボタン ColorButton を加える | 承認 |
 | [0052](adr/0052-designer-band-selection-and-references.md) | デザイナーで範囲で囲んで選び、選んだものをまとめて並べ替え、参照のプロパティを編集し、はみ出した部品を示す | 承認 |
 | [0053](adr/0053-designer-image-source-file.md) | デザイナーが埋め込む画像は別のソースに書き、大きい画像は警告する | 承認 |
+| [0054](adr/0054-icons.md) | よく使うアイコンを Lucide の線画としてライブラリに組み込み、部品の文字の色で塗る | 承認 |
 
 ADR の書式は、`# NNNN. タイトル`、状態・日付、「背景」「検討した選択肢」「決定」「影響」とする。
 覆した ADR は消さず、状態を「置換(→ 新しい番号)」にする。

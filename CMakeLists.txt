@@ -110,6 +110,8 @@ add_library(tokotachi_objects OBJECT
     src/graphics/bitmap.cpp
     src/graphics/canvas.cpp
     src/graphics/font_cache.cpp
+    src/graphics/icon.cpp
+    src/graphics/icon_data.cpp
     src/graphics/image.cpp
     src/graphics/path.cpp
     src/graphics/raster_canvas.cpp
@@ -289,7 +291,7 @@ if(TOKOTACHI_BUILD_EXAMPLES)
     tokotachi_copy_runtime(hello)
 
     # 部品ごとの小さなサンプル(リファレンスのサンプルの一覧。docs/guide/gallery.md)。
-    set(TOKOTACHI_GALLERY buttons inputs pickers views table window dialog drawing drop images)
+    set(TOKOTACHI_GALLERY buttons inputs pickers views table window dialog drawing drop images icons)
     foreach(_name ${TOKOTACHI_GALLERY})
         add_executable(gallery_${_name} examples/gallery/${_name}.cpp)
         target_link_libraries(gallery_${_name} PRIVATE tokotachi::tokotachi)

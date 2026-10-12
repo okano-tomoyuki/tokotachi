@@ -55,6 +55,16 @@ button_open->icon = tokotachi::Image::load("open.png");
 action_open->icon = tokotachi::Image::load("open.png");
 ```
 
+よく使うアイコンは、画像のファイルを用意しなくても `Image::icon` で使えます(Lucide の線画。約 70 個。一覧は @ref gallery の「アイコン」)。
+部品の文字の色で塗るので、ダークのテーマ・無効の部品・強調したボタンでも文字と同じ色になり、どの大きさでもぼやけません。
+
+```cpp
+action_save->icon = tokotachi::Image::icon(tokotachi::Icon::SAVE);
+button_delete->icon = tokotachi::Image::icon(tokotachi::Icon::TRASH, tokotachi::Color::rgb(0xDC2626));  // 色を決める
+// 自分で描くときは、塗る色を渡す(渡さなければ黒)
+canvas.draw_image(tokotachi::Image::icon(tokotachi::Icon::INFO), tokotachi::Rect(0, 0, 20, 20), text_color);
+```
+
 ## 重い描画
 
 - `PaintBox::cached` を true にすると、描いた結果を覚え、`refresh()`・大きさ・倍率・テーマが変わるまで `on_paint` を呼びません。

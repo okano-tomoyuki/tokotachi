@@ -125,17 +125,17 @@ protected:
             canvas.fill_round_rect(r, theme::radius(), theme::selection_inactive().with_alpha(128));
         }
         const Color fg = enabled_now ? theme::text() : theme::text_disabled();
-        const float opacity = enabled_now ? 1.0f : 0.4f;
+        const float opacity = enabled_now || ActionAccess::icon(action).is_icon() ? 1.0f : 0.4f;
         const TextLayout l(label(), Font(), display_scale);
         const bool icon = shows_icon(), text = shows_text();
         if (icon && !text)
         {
-            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, (r.height - ICON) / 2, ICON, ICON),
+            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, (r.height - ICON) / 2, ICON, ICON), fg,
                               opacity);
         }
         else if (icon && style == ToolButtonStyle::TEXT_UNDER_ICON)
         {
-            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, 6, ICON, ICON), opacity);
+            canvas.draw_image(ActionAccess::icon(action), Rect((r.width - ICON) / 2, 6, ICON, ICON), fg, opacity);
             canvas.draw_text(l, Point((r.width - l.width()) / 2, 6 + ICON + 4), fg);
         }
         else
@@ -143,7 +143,7 @@ protected:
             float x = BUTTON_PADDING;
             if (icon)
             {
-                canvas.draw_image(ActionAccess::icon(action), Rect(x, (r.height - ICON) / 2, ICON, ICON), opacity);
+                canvas.draw_image(ActionAccess::icon(action), Rect(x, (r.height - ICON) / 2, ICON, ICON), fg, opacity);
                 x += ICON + ICON_TEXT_GAP;
             }
             canvas.draw_text(l, Point(x, (r.height - l.height()) / 2), fg);

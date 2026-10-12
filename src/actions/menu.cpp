@@ -274,7 +274,8 @@ protected:
                     canvas.fill_round_rect(box, 3, hot ? theme::on_selection().with_alpha(48) : theme::selection_inactive());
                     canvas.stroke_round_rect(box, 3, 1, hot ? theme::on_selection() : theme::accent());
                 }
-                canvas.draw_image(ActionAccess::icon(e.action), icon_rect, enabled_now ? 1.0f : 0.4f);
+                const Image& icon = ActionAccess::icon(e.action);
+                canvas.draw_image(icon, icon_rect, fg, enabled_now || icon.is_icon() ? 1.0f : 0.4f);
             }
             else if (checked)
             {

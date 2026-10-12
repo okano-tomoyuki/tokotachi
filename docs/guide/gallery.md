@@ -87,3 +87,11 @@ PaintBox の Canvas に、棒グラフ・円グラフ・回転とグラデーシ
 ![画像](images.png)
 
 @include images.cpp
+
+## アイコン
+
+よく使うアイコン(`Image::icon`)を、メニュー・ツールバー・ボタン(無効・色を決めたもの)に出し、すべてのアイコンを名前と一緒に並べます。
+
+![アイコン](icons.png)
+
+@include icons.cpp
